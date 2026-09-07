@@ -9,8 +9,8 @@
       Deliberately does NOT set statusBarColor / navigationBarColor /
       windowLightNavigationBar. `enableEdgeToEdge()` owns the system bars at
       runtime, so those attributes would be a second place claiming the same
-      decision — and one of them (windowLightNavigationBar) is API 27 against a
-      minSdk of 26, which is how lint found the duplication.
+      decision. Lint found the duplication when minSdk was 26 and one of them
+      was API 27; raising minSdk to 29 silenced the check, not the reason.
     -->
     <style name="Theme.Tuji" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/tuji_paper</item>

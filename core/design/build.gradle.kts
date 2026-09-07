@@ -11,7 +11,8 @@ android {
     // release's runtime behaviour, and androidx now forces the first.
     compileSdk = 37
     compileSdkMinor = 1
-    defaultConfig { minSdk = 26 }
+    // 29, not the plan's 26 — see app/build.gradle.kts and docs/SPIKE-FURIGANA.md.
+    defaultConfig { minSdk = 29 }
     buildFeatures { compose = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

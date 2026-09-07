@@ -2,7 +2,6 @@ package app.tuji.android.core.design
 
 import android.content.Context
 import android.graphics.Typeface
-import android.os.Build
 import androidx.annotation.FontRes
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -13,26 +12,17 @@ import androidx.compose.ui.text.font.FontFamily
  *
  * The rule being preserved: **the CJK face must not replace the Latin one.**
  * GenSenRounded 2 ships its own Latin — a Source Sans derivative that is
- * neither rounded nor Plus Jakarta — so setting a CJK font as the typeface
+ * neither rounded nor Plus Jakarta — so setting a CJK font as *the* typeface
  * recolours every English word in the app as a side effect of fixing Chinese.
  * iOS avoids that with `UIFontDescriptor.cascadeList`: Plus Jakarta draws what
  * it can, and only the glyphs it lacks fall through.
  *
- * Android's equivalent is [Typeface.CustomFallbackBuilder], and it is **API 29**
- * while `minSdk` is 26. So there are two paths, and they are not equivalent:
- *
- *  - **API 29+** — a real cascade. Plus Jakarta first, GenSenRounded second.
- *    Same behaviour as iOS.
- *  - **API 26–28** — no cascade API exists. Plus Jakarta is set alone and the
- *    platform falls back to the *system* CJK face (Noto Sans CJK) for kanji and
- *    kana. Latin stays correct; Chinese and Japanese are drawn in the system
- *    face rather than GenSenRounded, so those two OS versions get a rounded-less
- *    but entirely legible CJK.
- *
- * That is a deliberate trade, not an oversight: the alternative on 26–28 is to
- * set GenSenRounded as the primary face, which trades a wrong CJK face for a
- * wrong *Latin* face across the whole app — the exact outcome ADR-0003 exists
- * to prevent. See `docs/SPIKE-FURIGANA.md` for what this actually looks like.
+ * **This file is why `minSdk` is 29.** Android's equivalent of that cascade is
+ * [Typeface.CustomFallbackBuilder], which is API 29, while the architecture
+ * plan had chosen 26. On 26–28 there was no third option — only a wrong CJK
+ * face (platform Noto instead of GenSenRounded) or a wrong Latin face
+ * everywhere. The floor was raised rather than shipping either. See
+ * `docs/SPIKE-FURIGANA.md` for the measurement that settled it.
  */
 enum class TujiFace {
     TW,
@@ -51,7 +41,7 @@ enum class TujiFace {
     }
 }
 
-/** The Latin weights that are bundled. Two only — see [TujiEmphasis]. */
+/** The Latin weights that are bundled. */
 enum class LatinFace(@FontRes val res: Int) {
     Regular(R.font.plusjakartasans_regular),
     SemiBold(R.font.plusjakartasans_semibold),
@@ -88,9 +78,6 @@ enum class TujiEmphasis {
 }
 
 object TujiTypefaces {
-    /** Whether this device can express the Latin→CJK cascade at all. */
-    val supportsCascade: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
     private val cache = HashMap<Key, FontFamily>()
 
     private data class Key(val latin: LatinFace, val face: TujiFace)
@@ -116,13 +103,18 @@ object TujiTypefaces {
             TujiFace.JP -> if (latin.wantsBoldCjk) R.font.gensenrounded2jp_b else R.font.gensenrounded2jp_r
         }
 
-    private fun build(context: Context, latin: LatinFace, face: TujiFace): FontFamily {
-        if (!supportsCascade) return FontFamily(Font(latin.res))
-        return runCatching { FontFamily(cascade(context, latin.res, cjkRes(latin, face))) }
+    /**
+     * Falls back to the bare Latin family if the cascade cannot be built.
+     *
+     * Not a version guard — `minSdk` 29 makes the API always present. It guards
+     * a font file that fails to parse, and it degrades toward *Latin* on
+     * purpose: losing the rounded CJK is a wrong face, losing Plus Jakarta is a
+     * wrong app.
+     */
+    private fun build(context: Context, latin: LatinFace, face: TujiFace): FontFamily =
+        runCatching { FontFamily(cascade(context, latin.res, cjkRes(latin, face))) }
             .getOrElse { FontFamily(Font(latin.res)) }
-    }
 
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.Q)
     private fun cascade(context: Context, @FontRes latinRes: Int, @FontRes cjkRes: Int): Typeface {
         val res = context.resources
         val latinFamily = android.graphics.fonts.FontFamily.Builder(
@@ -133,9 +125,9 @@ object TujiTypefaces {
         ).build()
         return Typeface.CustomFallbackBuilder(latinFamily)
             .addCustomFallback(cjkFamily)
-            // Without this the builder appends the *system* fallback chain after
-            // ours, which is what we want for emoji and scripts neither font
-            // covers — but the CJK family has to come first or Noto wins.
+            // Without this the builder appends no system chain at all, and
+            // anything neither font covers — emoji, other scripts — draws as
+            // tofu. Ours is added first, so Noto never wins a CJK glyph.
             .setSystemFallback("sans-serif")
             .build()
     }

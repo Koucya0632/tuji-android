@@ -28,9 +28,17 @@ android {
 
     defaultConfig {
         applicationId = "app.tuji.android"
-        // 26 = Android 8.0. Chosen for java.time, adaptive icons and
-        // notification channels — see the architecture plan §02.
-        minSdk = 26
+        // 29 = Android 10. The architecture plan said 26, and the M0 日文排版
+        // spike is what moved it: `Typeface.CustomFallbackBuilder` is API 29,
+        // and it is the only way to keep Latin in Plus Jakarta while CJK comes
+        // from GenSenRounded. Below 29 the choice is a wrong CJK face or — far
+        // worse — a wrong Latin face across the whole app (ADR-0003).
+        //
+        // Costs 5 points of global device reach (96.1% → 91.1%). Cheap next to
+        // what iOS already asks: `IPHONEOS_DEPLOYMENT_TARGET = 18.0` is a 2024
+        // OS and drops the iPhone X outright. Android 10 is from 2019.
+        // See docs/SPIKE-FURIGANA.md.
+        minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"

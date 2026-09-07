@@ -56,11 +56,7 @@ fun CjkCascadeProbe(
         ProbeRow("latin only", sample, type.h2.copy(fontFamily = latinOnly))
         ProbeRow("cjk only", sample, type.h2.copy(fontFamily = cjkOnly))
         Text(
-            "cascade: " + if (TujiTypefaces.supportsCascade) {
-                "CustomFallbackBuilder (API 29+)"
-            } else {
-                "none — platform substitutes CJK (API 26–28)"
-            },
+            "cascade: Typeface.CustomFallbackBuilder",
             style = type.monoLabel,
             color = TujiColor.Ink3,
         )
