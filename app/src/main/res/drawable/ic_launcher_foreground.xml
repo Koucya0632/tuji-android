@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder. The real mark is the mascot, and it has to be exported from the
+  same source the iOS icon uses rather than redrawn here — see the plan's note
+  about the cutout work. This is a "T" in brand yellow so the launcher has
+  something recognisable during M0, and it is expected to be replaced.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#F5C84B"
+        android:pathData="M34,38 h40 v9 h-15.5 v33 h-9 v-33 h-15.5 z" />
+</vector>

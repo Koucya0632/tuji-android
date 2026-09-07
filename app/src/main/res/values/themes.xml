@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The Android-side ground, used before Compose has drawn anything. It exists
+      so the window does not flash the platform's default white behind 紙
+      (#FBF7EF) on cold start — the same reason iOS pins its launch screen
+      colour. Everything after the first frame comes from TujiTheme.
+
+      Deliberately does NOT set statusBarColor / navigationBarColor /
+      windowLightNavigationBar. `enableEdgeToEdge()` owns the system bars at
+      runtime, so those attributes would be a second place claiming the same
+      decision — and one of them (windowLightNavigationBar) is API 27 against a
+      minSdk of 26, which is how lint found the duplication.
+    -->
+    <style name="Theme.Tuji" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/tuji_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

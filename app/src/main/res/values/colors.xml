@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The only XML copy of a token, and it exists because the window background
+      is set before Compose runs. Kept to one value on purpose: TujiColor.kt is
+      the source of truth, and a second full palette here would be a second
+      thing to keep in step.
+    -->
+    <color name="tuji_paper">#FBF7EF</color>
+    <!-- Adaptive icon ground, shared with the iOS app icon background. -->
+    <color name="tuji_brand_secondary">#59483D</color>
+</resources>
