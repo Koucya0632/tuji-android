@@ -60,8 +60,78 @@ app.tuji.android://auth-callback
 但 redirect 沒有），所以只需要登記一筆。對應的 intent-filter 在
 `app/src/main/AndroidManifest.xml`。
 
-Apple Developer 那邊的 Service ID 與 return URL 是 iOS 上架時就設好的，
-Android 不需要另外開——它走的是 Supabase 的 OAuth，不是 Apple 的原生 SDK。
+## 4. Apple — Services ID 與金鑰（**這一段本來寫錯了**）
+
+這份文件原本說「Service ID 與 return URL 是 iOS 上架時就設好的，Android 不需要
+另外開」。**那是錯的**，2026-09-08 實測推翻：
+
+```
+GET {SUPABASE_URL}/auth/v1/authorize?provider=apple&redirect_to=app.tuji.android://auth-callback
+→ HTTP 400 {"error_code":"validation_failed",
+            "msg":"Unsupported provider: missing OAuth secret"}
+
+對照組（Google 同一個呼叫）→ HTTP 302，導向 accounts.google.com
+```
+
+原因是**兩條 Apple 流程需要的東西不一樣**：
+
+| | iOS 走的 | Android 走的 |
+|---|---|---|
+| 機制 | 原生 Sign in with Apple，直接拿 `id_token` | 網頁 OAuth，離開 App 進瀏覽器 |
+| Supabase 需要 | Client ID 清單填 **bundle ID** | Client ID 填 **Services ID**，外加一把 **secret** |
+| 目前狀態 | 已設定（`app.tuji.ios` 等三個） | `external_apple_secret` 是空的 |
+
+所以 Android 的 Apple 登入要多做這些，全部在 Apple Developer：
+
+1. **Identifiers → Services IDs** 新增一個（例如 `app.tuji.signin`）。
+   它不是 bundle ID，是另一種識別碼，之後會變成 Supabase 的 Apple Client ID。
+2. 該 Services ID 的 **Sign in with Apple → Configure**：
+   - Primary App ID 選現有的 `app.tuji.ios`
+   - **Return URLs** 填 Supabase 的 callback，不是 App 的 scheme：
+     `https://<project-ref>.supabase.co/auth/v1/callback`
+3. **Keys** 新增一把 Sign in with Apple 金鑰，下載 `.p8`（**只能下載一次**）。
+4. 用 Team ID／Key ID／Services ID／`.p8` 簽出一個 client secret JWT
+   （Supabase Dashboard 的 Apple provider 頁面有產生器）。
+5. Supabase Dashboard → Authentication → Providers → Apple：
+   - Client IDs 加上那個 **Services ID**（原本的 bundle ID 要保留，iOS 還在用）
+   - Secret Key 填上第 4 步的 JWT
+
+> ⚠️ 第 4 步簽出來的 JWT **有效期最長六個月**，到期後 Android 的 Apple 登入
+> 會整條停掉而 iOS 不受影響——因為 iOS 根本不走這條。到期日要記在行事曆上。
+
+如果不想現在做，Apple 登入在 Android 上就先關掉按鈕，比留一個按下去 400 好。
+
+---
+
+## 2026-09-08 實際查到的狀態
+
+用 Supabase Management API 讀 `config/auth` 對照出來的，不是照文件推的：
+
+| 項目 | 狀態 |
+|---|---|
+| Google provider 已啟用 | ✅ |
+| Google client ID 清單含 App 用的那個（`…fih629…`） | ✅ 已經在裡面 |
+| `skip_nonce_check` | ✅ 開著（見上面第 2 節） |
+| **GCP 的 Android OAuth client** | ❌ 只能在 GCP Console 開，沒有 API |
+| Apple provider 已啟用 | ✅ 但只有 iOS 的原生路徑 |
+| **Apple 的 Services ID 與 secret** | ❌ `external_apple_secret` 是空的 |
+| `app.tuji.android://auth-callback` 在 redirect 清單裡 | ✅ 2026-09-08 用 Management API 補上（原本三條保留） |
+
+也就是說 **Google 只差 GCP 那一步**（Supabase 這側早就好了），
+而 **Apple 差一整段 Apple Developer 的設定**。
+
+### 那條 redirect URL 是給誰用的
+
+不是給 Google 的。兩條路走的機制不同：
+
+| | Google | Apple |
+|---|---|---|
+| 程式 | `GoogleCredentialBridge` → Credential Manager | `supabase.auth.signInWith(Apple)` |
+| 流程 | **原生**，直接拿 `id_token` 交給 Supabase | **離開 App** 進 Custom Tab，再 deep link 回來 |
+| 用到 redirect URL 嗎 | 否 | 是 |
+
+所以補上那條 redirect 是 **Apple 的前置**，它本身不會讓任何一條路變得能用——
+Google 仍然卡在 GCP，Apple 仍然卡在 Services ID。
 
 ---
 
