@@ -1,7 +1,10 @@
 package app.tuji.android.core.network
 
+import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyAnswerResponse
+import app.tuji.android.core.model.StudyMode
+import app.tuji.android.core.model.StudyQueueResponse
 
 /**
  * Submitting an answer, as a role.
@@ -15,7 +18,37 @@ interface AnswerSubmission {
     suspend fun submitAnswer(payload: StudyAnswerPayload): StudyAnswerResponse
 }
 
-class StudyRepository(private val api: TujiApiClient) : AnswerSubmission {
+/** Fetching a session's cards, as a role. */
+interface StudyQueueReading {
+    suspend fun queue(
+        mode: StudyMode,
+        limit: Int,
+        new: Int,
+        categories: List<String>,
+        lang: String,
+        learning: LearningDirection,
+    ): StudyQueueResponse
+}
+
+class StudyRepository(private val api: TujiApiClient) : AnswerSubmission, StudyQueueReading {
     override suspend fun submitAnswer(payload: StudyAnswerPayload): StudyAnswerResponse =
         api.post(Endpoint.StudyAnswer, payload)
+
+    override suspend fun queue(
+        mode: StudyMode,
+        limit: Int,
+        new: Int,
+        categories: List<String>,
+        lang: String,
+        learning: LearningDirection,
+    ): StudyQueueResponse = api.get(
+        Endpoint.StudyQueue(
+            mode = mode,
+            limit = limit,
+            new = new,
+            categories = categories,
+            lang = lang,
+            learning = learning,
+        )
+    )
 }

@@ -1,6 +1,7 @@
 package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.StudyMode
 
 /**
  * Every route the app can call, and the facts about each one.
@@ -41,6 +42,45 @@ interface Endpoint {
             path = "/api/categories",
             query = listOf("lang" to lang),
             policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    /**
+     * A study session's cards.
+     *
+     * `lang` and `learning` are the **live** UI language and direction, not the
+     * debounced server settings: a queue built seconds after a switch would
+     * otherwise come from the language the user just left.
+     */
+    data class StudyQueue(
+        val mode: StudyMode,
+        val limit: Int,
+        val new: Int,
+        val categories: List<String>,
+        val lang: String,
+        val learning: LearningDirection,
+    ) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/queue",
+            query = listOf(
+                "mode" to mode.wire,
+                "limit" to limit.toString(),
+                "new" to new.toString(),
+                // Comma-separated category ids; empty = no filter (study all).
+                // The backend strips empty / "all" sentinels for us.
+                "category" to categories.joinToString(","),
+                "lang" to lang,
+                "learning" to learning.wire,
+            ),
+            policy = EndpointPolicy.PrivateServerCached,
+        )
+    }
+
+    data class StudyStats(val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/stats",
+            query = listOf("learning" to learning.wire),
+            policy = EndpointPolicy.PrivateServerCached,
         )
     }
 
