@@ -107,6 +107,15 @@ data class ReviewSession(
     /** Bumps each time the word leaves the screen, so a re-test reshuffles. */
     fun choicesVariant(item: StudyQueueItem): Int = presentedCounts[item.word.id] ?: 0
 
+    /**
+     * Word ids still to be asked this session, the current one included.
+     *
+     * An image distractor drawn from them would be a free look at a question
+     * the user has not reached yet.
+     */
+    val upcomingWordIds: Set<String>
+        get() = if (index >= queue.size) emptySet() else queue.drop(index).map { it.word.id }.toSet()
+
     /** A transition plus what the caller still has to do about it. */
     data class Step(
         val session: ReviewSession,

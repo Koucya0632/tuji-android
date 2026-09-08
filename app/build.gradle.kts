@@ -66,6 +66,13 @@ android {
         }
     }
 
+    testOptions {
+        // `android.util.Log` is a stub that throws in unit tests, so any code
+        // path that logs is unreachable from them — which is how a decision
+        // that logs once per card left the screen on 載入中… in nine suites.
+        unitTests.isReturnDefaultValues = true
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

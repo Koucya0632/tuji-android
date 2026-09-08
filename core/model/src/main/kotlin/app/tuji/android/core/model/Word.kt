@@ -84,3 +84,31 @@ enum class LearningDirection(val wire: String) {
     val targetLanguage: TargetLanguage
         get() = if (this == ZH_JA) TargetLanguage.JA else TargetLanguage.EN
 }
+
+/**
+ * What a word's picture looks like, which decides whether two of them can
+ * stand side by side.
+ *
+ * The dictionary's own artwork is a cut-out on white; a captured or saved word
+ * is a photograph of a room. Offer one of each and the odd one out is visible
+ * without listening to anything — so 聽句's image pair draws only within a
+ * kind. It also keeps 自製圖鑑 out of the draw for free.
+ *
+ * Derived from `category` rather than stored, because `Word`, `StudyQueueWord`
+ * and the catalogue all carry that same string: one rule, so a fourth model
+ * asking the question gets the answer without a fourth copy of the test.
+ */
+enum class WordImageKind {
+    /** White-backdrop product shot. Blends into the paper. */
+    Cutout,
+
+    /** A real photograph. Rendered as-is. */
+    Photograph;
+
+    companion object {
+        fun of(category: String?): WordImageKind = when (category) {
+            "custom", "community" -> Photograph
+            else -> Cutout
+        }
+    }
+}
