@@ -24,6 +24,7 @@ rootProject.name = "tuji-android"
 
 include(":app")
 include(":core:auth")
+include(":core:catalog")
 include(":core:design")
 include(":core:model")
 include(":core:network")

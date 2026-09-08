@@ -20,8 +20,8 @@ import app.tuji.android.core.study.ReviewFlash
 import app.tuji.android.core.study.ReviewOutcome
 import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
-import app.tuji.android.core.study.SentencePlayback
-import app.tuji.android.core.study.SentencePlaying
+import app.tuji.android.core.model.ClipPlayback
+import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.studyChoices
 import kotlinx.coroutines.CoroutineScope
@@ -59,9 +59,9 @@ class ReviewViewModel(
     /**
      * Plays 聽句's sentence. Defaults to a player that can do nothing, which
      * is not a stub but the honest answer for a build with no audio wired: it
-     * reports [SentencePlaying.canPlay] false, and every card lands on 選字.
+     * reports [ClipPlaying.canPlay] false, and every card lands on 選字.
      */
-    private val audio: SentencePlaying = SilentPlaying,
+    private val audio: ClipPlaying = SilentPlaying,
     /**
      * Whether the device has usable internet, asked per card rather than held.
      * Freezing it when the queue loaded would decide a whole session's
@@ -376,7 +376,7 @@ class ReviewViewModel(
             _state.value = studying(
                 settled.session.withQuestion(
                     current.playbackEnded(
-                        finished = outcome == SentencePlayback.Finished,
+                        finished = outcome == ClipPlayback.Finished,
                         isReplay = isReplay,
                         nowMs = nowMs(),
                     ),
@@ -413,9 +413,9 @@ class ReviewViewModel(
  * false is the correct description of a build with no audio wired, and it sends
  * every card to 選字 rather than raising a listening question nobody can hear.
  */
-object SilentPlaying : SentencePlaying {
+object SilentPlaying : ClipPlaying {
     override fun canPlay(url: String?, online: Boolean): Boolean = false
-    override suspend fun play(url: String?, rate: Float): SentencePlayback =
-        SentencePlayback.Failed
+    override suspend fun play(url: String?, rate: Float): ClipPlayback =
+        ClipPlayback.Failed
     override fun stop() = Unit
 }

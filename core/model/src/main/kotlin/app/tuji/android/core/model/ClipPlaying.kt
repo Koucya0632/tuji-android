@@ -1,7 +1,7 @@
-package app.tuji.android.core.study
+package app.tuji.android.core.model
 
-/** How a sentence's audio ended. */
-enum class SentencePlayback {
+/** How a clip ended. */
+enum class ClipPlayback {
     /** The pre-generated clip played to its end. */
     Finished,
 
@@ -11,6 +11,15 @@ enum class SentencePlayback {
 
 /**
  * Playing a recording, and being told when it has ended.
+ *
+ * It was `ClipPlaying`, in `core:study`, and it had one caller — 聽句. Both
+ * halves of that name were wrong for the next one: 圖鑑's pronunciation button
+ * plays a *word*, not a sentence, and it is not a study screen. **A module
+ * named after one of its callers does not get found by the second**, and the
+ * fix is not a second interface with the same body.
+ *
+ * It lives in `core:model` now because that is the vocabulary every layer
+ * already shares — the same reason `Headworded` is here.
  *
  * A seam rather than a singleton call inside the caller, because 聽句's clock
  * hangs off the *end* of the audio — the question starts when the sentence
@@ -23,7 +32,7 @@ enum class SentencePlayback {
  * kanji is not a worse question, it is an unanswerable one — so a card with no
  * real clip is simply not asked as 聽句. That is what [canPlay] is for.
  */
-interface SentencePlaying {
+interface ClipPlaying {
 
     /**
      * Whether this clip plays *right now* — already on disk, or a live
@@ -38,7 +47,7 @@ interface SentencePlaying {
      *
      * @param rate a multiplier on normal speed — 慢讀 passes 0.8.
      */
-    suspend fun play(url: String?, rate: Float = 1f): SentencePlayback
+    suspend fun play(url: String?, rate: Float = 1f): ClipPlayback
 
     /**
      * Cut playback off. Leaving 複習 mid-sentence must not narrate the screen

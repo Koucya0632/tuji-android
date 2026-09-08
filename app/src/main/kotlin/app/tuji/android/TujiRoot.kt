@@ -32,6 +32,16 @@ import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.onboarding.LearningDirectionScreen
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
+import app.tuji.android.atlas.AtlasSearchScreen
+import app.tuji.android.atlas.AtlasShelvesScreen
+import app.tuji.android.atlas.AtlasWordsScreen
+import app.tuji.android.atlas.WordDetailScreen
+import app.tuji.android.atlas.WordDetailViewModel
+import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -122,27 +132,24 @@ private fun SplashScreen() {
 }
 
 /**
- * The catalogue, with a one-line account bar above it.
+ * The signed-in app: three tabs, one back stack, and the study flows on top.
  *
- * A placeholder shell, not the real 首頁 — M1 replaces the body. The bar is
- * here because M0's gate is "sign in to the production account and pull real
- * data", and that is only demonstrated if the screen says *which* account.
+ * The stack is [NavStack] and nothing else — the hardware back button and 返回
+ * pop the same list, so the two can never disagree about where "back" is.
  */
 @Composable
 private fun SignedInShell(app: TujiApplication, identity: String?) {
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
-
     val direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN
+    val uiLang = "zh-Hant"
 
-    // Ahead of 複習 rather than inside it: 聽句 asks the catalogue for its
-    // second picture the moment the first card is prepared, and a pool that
-    // arrives late does not make that question worse, it makes it not happen.
-    LaunchedEffect(direction) { app.loadCatalog(direction) }
+    // Ahead of every screen that reads it: 圖鑑 draws it, 搜尋 filters it, and
+    // 複習's 聽句 draws its second picture from it — a pool that arrives late
+    // does not make that question worse, it makes it not happen.
+    LaunchedEffect(direction) { app.catalog.load(direction) }
+    val catalog by app.catalog.contents.collectAsStateWithLifecycle()
 
-    // Two flows, not one screen with a mode: 複習 and 學新字 ask different
-    // questions in a different order and hold different state, and the only
-    // thing they share is the queue endpoint.
     val today = remember(direction) {
         TodayViewModel(
             stats = app.study,
@@ -152,106 +159,257 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     }
     val todayInputs by today.inputs.collectAsStateWithLifecycle()
 
-    var route by remember { mutableStateOf<StudyRoute?>(null) }
+    var nav by remember { mutableStateOf(NavStack()) }
     var showSpike by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = nav.canGoBack || showSpike) {
+        if (showSpike) showSpike = false else nav = nav.pop()
+    }
+
     if (showSpike) {
-        FuriganaSpikeScreen(catalog = app.catalog)
+        FuriganaSpikeScreen(catalog = app.catalogReading)
         return
     }
-    when (route) {
-        StudyRoute.Review -> {
+
+    // The study flows own the whole screen — no tab bar, no account row: a
+    // session that can be left by tapping a tab is a session that gets left by
+    // accident.
+    when (nav.current) {
+        AppRoute.Review -> {
             val vm = remember {
                 ReviewViewModel(
                     queues = app.study,
                     writer = app.answerWriter,
                     direction = direction,
-                    uiLang = "zh-Hant",
-                    pool = { app.catalogPool },
+                    uiLang = uiLang,
+                    pool = { app.catalog.words },
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
                     audio = app.clipPlayer,
                     online = { app.isOnline() },
                 ).also { it.load(StudyMode.Review) }
             }
-            ReviewScreen(vm = vm, onClose = { route = null })
+            ReviewScreen(vm = vm, onClose = { nav = nav.pop() })
             return
         }
-        StudyRoute.New -> {
+        AppRoute.LearnNew -> {
             val vm = remember {
                 NewFlowViewModel(
                     queues = app.study,
                     writer = app.answerWriter,
                     direction = direction,
-                    uiLang = "zh-Hant",
-                    pool = { app.catalogPool },
+                    uiLang = uiLang,
+                    pool = { app.catalog.words },
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
                 ).also { it.load() }
             }
-            NewFlowScreen(vm = vm, onClose = { route = null })
+            NewFlowScreen(vm = vm, onClose = { nav = nav.pop() })
             return
         }
-        null -> Unit
+        else -> Unit
     }
 
-    // On every return to 今日, not only at launch: a session that just wrote
-    // three ratings has changed every number on this screen.
-    LaunchedEffect(route) { if (route == null) today.refresh() }
+    // Every return to 今日, not only at launch: a session that just wrote three
+    // ratings has changed every number on that screen.
+    LaunchedEffect(nav.current) { if (nav.current == AppRoute.Today) today.refresh() }
 
     Column(
         Modifier
             .fillMaxSize()
             .background(TujiColor.Paper),
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = insets.calculateTopPadding())
-                .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        TopBar(
+            nav = nav,
+            identity = identity,
+            wordTitle = { id -> catalog.words.firstOrNull { it.id == id }?.word },
+            onBack = { nav = nav.pop() },
+            topPadding = insets.calculateTopPadding(),
+            onAccount = {
+                if (identity == null) app.auth.exitGuestMode() else scope.launch { app.auth.signOut() }
+            },
+        )
+
+        Box(Modifier.weight(1f)) {
+            when (val route = nav.current) {
+                AppRoute.Today -> TodayColumn(
+                    inputs = todayInputs,
+                    identity = identity,
+                    onReview = { nav = nav.push(AppRoute.Review) },
+                    onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
+                    onSpike = { showSpike = true },
+                )
+
+                AppRoute.Atlas -> AtlasShelvesScreen(
+                    shelves = catalog.shelves,
+                    uiLang = uiLang,
+                    loading = !catalog.loaded,
+                    bottomPadding = 0.dp,
+                    onOpen = { id ->
+                        val shelf = catalog.shelves.first { it.category.id == id }
+                        nav = nav.push(
+                            AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)),
+                        )
+                    },
+                )
+
+                AppRoute.Search -> AtlasSearchScreen(
+                    words = catalog.words,
+                    bottomPadding = 0.dp,
+                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                )
+
+                is AppRoute.Shelf -> AtlasWordsScreen(
+                    words = CategoryShelf.words(route.categoryId, catalog.words),
+                    bottomPadding = 0.dp,
+                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                )
+
+                is AppRoute.Word -> {
+                    val vm = remember(route.wordId) {
+                        WordDetailViewModel(
+                            catalog = app.catalogReading,
+                            audio = app.clipPlayer,
+                            direction = direction,
+                            uiLang = uiLang,
+                        ).also { it.load(route.wordId) }
+                    }
+                    WordDetailScreen(
+                        vm = vm,
+                        bottomPadding = 0.dp,
+                        resolve = { id -> catalog.words.firstOrNull { it.id == id } },
+                        onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
+                    )
+                }
+
+                else -> Unit
+            }
+        }
+
+        TabBar(
+            selected = nav.tab,
+            bottomPadding = insets.calculateBottomPadding(),
+            onSelect = { nav = nav.select(it) },
+        )
+    }
+}
+
+/**
+ * 返回 and the account line.
+ *
+ * The title is the stack's, so a shelf says which shelf: a screen of 64 nouns
+ * with no header is indistinguishable from a different screen of 64 nouns.
+ */
+@Composable
+private fun TopBar(
+    nav: NavStack,
+    identity: String?,
+    wordTitle: (String) -> String?,
+    onBack: () -> Unit,
+    onAccount: () -> Unit,
+    topPadding: androidx.compose.ui.unit.Dp,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = topPadding)
+            .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (nav.canGoBack) {
+            Text(
+                "← " + title(nav.current, wordTitle),
+                style = TujiType.bodySmStrong,
+                color = TujiColor.Ink2,
+                modifier = Modifier.tujiClickable(onClick = onBack).padding(TujiSpace.S1),
+            )
+        } else {
             Text(
                 identity ?: stringResource(R.string.guest_mode),
                 style = TujiType.monoLabel,
                 color = TujiColor.Ink3,
             )
-            Text(
-                stringResource(
-                    if (identity == null) R.string.sign_in_or_up else R.string.sign_out
-                ),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink2,
-                modifier = Modifier
-                    .tujiClickable {
-                        if (identity == null) {
-                            app.auth.exitGuestMode()
-                        } else {
-                            scope.launch { app.auth.signOut() }
-                        }
-                    }
-                    .padding(TujiSpace.S1),
-            )
         }
-        TodayScreen(
-            inputs = todayInputs,
-            name = identity,
-            onReview = { route = StudyRoute.Review },
-            onLearnNew = { route = StudyRoute.New },
+        Text(
+            stringResource(if (identity == null) R.string.sign_in_or_up else R.string.sign_out),
+            style = TujiType.bodySmStrong,
+            color = TujiColor.Ink2,
+            modifier = Modifier.tujiClickable(onClick = onAccount).padding(TujiSpace.S1),
         )
-        // The spike stays reachable — `docs/SPIKE-FURIGANA.md` promises anyone
-        // who touches the fonts can re-run it — but it is a font test, and it
-        // spent M1 pasted under the real 今日. A debug-only door instead.
-        if (BuildConfig.DEBUG) {
-            Text(
-                stringResource(R.string.debug_font_spike),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-                modifier = Modifier
-                    .padding(TujiSpace.S4)
-                    .tujiClickable { showSpike = true },
-            )
+    }
+}
+
+/** The current screen's own name, so 64 nouns are distinguishable from 64 others. */
+@Composable
+private fun title(route: AppRoute, wordTitle: (String) -> String?): String = when (route) {
+    is AppRoute.Shelf -> route.title
+    is AppRoute.Word -> wordTitle(route.wordId) ?: stringResource(R.string.atlas_title)
+    AppRoute.Search -> stringResource(R.string.nav_search)
+    AppRoute.Atlas -> stringResource(R.string.nav_atlas)
+    else -> stringResource(R.string.atlas_back)
+}
+
+@Composable
+private fun TabBar(
+    selected: AppRoute.Tab?,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    onSelect: (AppRoute.Tab) -> Unit,
+) {
+    Column {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(TujiColor.Rule))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = bottomPadding),
+        ) {
+            listOf(
+                AppRoute.Today to R.string.nav_today,
+                AppRoute.Atlas to R.string.nav_atlas,
+                AppRoute.Search to R.string.nav_search,
+            ).forEach { (tab, label) ->
+                val active = selected == tab
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .tujiClickable { onSelect(tab) }
+                        .padding(vertical = TujiSpace.S3),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(label),
+                        style = if (active) TujiType.bodySmStrong else TujiType.bodySm,
+                        color = if (active) TujiColor.Ink else TujiColor.Ink3,
+                    )
+                }
+            }
         }
     }
 }
 
-/** Which study flow is on screen. */
-private enum class StudyRoute { Review, New }
+/** 今日, plus the debug-only door to the font spike. */
+@Composable
+private fun TodayColumn(
+    inputs: TodayInputs,
+    identity: String?,
+    onReview: () -> Unit,
+    onLearnNew: () -> Unit,
+    onSpike: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        TodayScreen(
+            inputs = inputs,
+            name = identity,
+            onReview = onReview,
+            onLearnNew = onLearnNew,
+        )
+        if (BuildConfig.DEBUG) {
+            // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts
+            // can re-run it, so the door stays — off the release build.
+            Text(
+                stringResource(R.string.debug_font_spike),
+                style = TujiType.monoLabel,
+                color = TujiColor.Ink3,
+                modifier = Modifier.padding(TujiSpace.S4).tujiClickable(onClick = onSpike),
+            )
+        }
+    }
+}
