@@ -64,6 +64,15 @@ class NavStackTest {
         assertEquals(AppRoute.Word("a"), nav.pop().current)
     }
 
+    @Test fun `物見 stacks the same way 圖鑑 does`() {
+        val nav = NavStack()
+            .select(AppRoute.Community)
+            .push(AppRoute.PublicItem("atlas-abc"))
+            .push(AppRoute.Author("TJ11111111"))
+        assertEquals(AppRoute.Community, nav.tab)
+        assertEquals(AppRoute.PublicItem("atlas-abc"), nav.pop().current)
+    }
+
     @Test fun `going back to a tab you never opened lands on it fresh`() {
         val nav = NavStack().select(AppRoute.Search)
         assertEquals(AppRoute.Search, nav.current)

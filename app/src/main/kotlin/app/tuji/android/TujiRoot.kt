@@ -40,6 +40,11 @@ import app.tuji.android.atlas.AtlasShelvesScreen
 import app.tuji.android.atlas.AtlasWordsScreen
 import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
+import app.tuji.android.community.AuthorScreen
+import app.tuji.android.community.CommunityScreen
+import app.tuji.android.community.CollectionScreen
+import app.tuji.android.community.CommunityViewModel
+import app.tuji.android.community.PublicItemScreen
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.design.TujiColor
@@ -150,6 +155,21 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     LaunchedEffect(direction) { app.catalog.load(direction) }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
 
+    val community = remember(direction) {
+        CommunityViewModel(
+            atlas = app.atlas,
+            saver = app.atlas,
+            reporter = app.atlas,
+            blocks = app.atlas,
+            direction = direction,
+            uiLang = uiLang,
+        ).also { it.load() }
+    }
+    val communityFeed by community.feed.collectAsStateWithLifecycle()
+    val communityItem by community.item.collectAsStateWithLifecycle()
+    val communityAuthor by community.author.collectAsStateWithLifecycle()
+    val communityCollection by community.collection.collectAsStateWithLifecycle()
+
     val today = remember(direction) {
         TodayViewModel(
             stats = app.study,
@@ -251,6 +271,46 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     },
                 )
 
+                AppRoute.Community -> CommunityScreen(
+                    feed = communityFeed,
+                    bottomPadding = 0.dp,
+                    onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
+                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
+                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                )
+
+                is AppRoute.PublicItem -> {
+                    LaunchedEffect(route.slug) { community.openItem(route.slug) }
+                    PublicItemScreen(
+                        state = communityItem,
+                        bottomPadding = 0.dp,
+                        onSave = community::save,
+                        onReport = { target, reason -> community.report(target, reason) },
+                        onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                    )
+                }
+
+                is AppRoute.Collection -> {
+                    LaunchedEffect(route.slug) { community.openCollection(route.slug) }
+                    CollectionScreen(
+                        detail = communityCollection,
+                        bottomPadding = 0.dp,
+                        onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
+                        onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                        onReport = { target, reason -> community.report(target, reason) },
+                    )
+                }
+
+                is AppRoute.Author -> {
+                    LaunchedEffect(route.handle) { community.openAuthor(route.handle) }
+                    AuthorScreen(
+                        page = communityAuthor,
+                        bottomPadding = 0.dp,
+                        onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
+                        onReport = { target, reason -> community.report(target, reason) },
+                    )
+                }
+
                 AppRoute.Search -> AtlasSearchScreen(
                     words = catalog.words,
                     bottomPadding = 0.dp,
@@ -343,6 +403,10 @@ private fun TopBar(
 private fun title(route: AppRoute, wordTitle: (String) -> String?): String = when (route) {
     is AppRoute.Shelf -> route.title
     is AppRoute.Word -> wordTitle(route.wordId) ?: stringResource(R.string.atlas_title)
+    is AppRoute.PublicItem -> stringResource(R.string.nav_community)
+    is AppRoute.Author -> stringResource(R.string.nav_community)
+    is AppRoute.Collection -> stringResource(R.string.community_collections)
+    AppRoute.Community -> stringResource(R.string.nav_community)
     AppRoute.Search -> stringResource(R.string.nav_search)
     AppRoute.Atlas -> stringResource(R.string.nav_atlas)
     else -> stringResource(R.string.atlas_back)
@@ -364,6 +428,7 @@ private fun TabBar(
             listOf(
                 AppRoute.Today to R.string.nav_today,
                 AppRoute.Atlas to R.string.nav_atlas,
+                AppRoute.Community to R.string.nav_community,
                 AppRoute.Search to R.string.nav_search,
             ).forEach { (tab, label) ->
                 val active = selected == tab

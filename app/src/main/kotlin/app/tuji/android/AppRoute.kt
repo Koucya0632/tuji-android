@@ -16,6 +16,7 @@ sealed interface AppRoute {
 
     data object Today : Tab
     data object Atlas : Tab
+    data object Community : Tab
     data object Search : Tab
 
     /** One category's words. */
@@ -23,6 +24,15 @@ sealed interface AppRoute {
 
     /** One catalogue entry. */
     data class Word(val wordId: String) : AppRoute
+
+    /** One published 物見 word. */
+    data class PublicItem(val slug: String) : AppRoute
+
+    /** One author's public shelf. */
+    data class Author(val handle: String) : AppRoute
+
+    /** One published 合集. */
+    data class Collection(val slug: String) : AppRoute
 
     /** The study flows, which take over the whole screen. */
     data object Review : AppRoute
