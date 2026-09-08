@@ -28,7 +28,8 @@ enum class MascotPose(
     /** The cat's visual ground line (lowest mass), from the top of the frame. */
     val groundLine: Float,
 ) {
-    Peek(R.drawable.mascot_peek, topInset = 0.10f, groundLine = 0.99f);
+    Peek(R.drawable.mascot_peek, topInset = 0.10f, groundLine = 0.99f),
+    Wave(R.drawable.mascot_wave, topInset = 0.05f, groundLine = 0.96f);
 
     /** Drawn height, after trimming the transparent margins. */
     val visibleHeightRatio: Float get() = groundLine - topInset

@@ -11,6 +11,7 @@ import app.tuji.android.core.study.ActiveAccount
 import app.tuji.android.core.study.AnswerSubmitting
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.StudyAnswerOutbox
+import app.tuji.android.onboarding.OnboardingStore
 import app.tuji.android.study.AnswerDrainWorker
 import java.io.File
 import io.github.jan.supabase.SupabaseClient
@@ -64,6 +65,10 @@ class TujiApplication : Application() {
     }
 
     val catalog: CatalogRepository by lazy { CatalogRepository(api) }
+
+    /** Which language, and whether the intro has been seen. See the class doc
+     *  for why the direction is local-only until the settings module lands. */
+    val onboarding: OnboardingStore by lazy { OnboardingStore(this) }
 
     private val study: StudyRepository by lazy { StudyRepository(api) }
 
