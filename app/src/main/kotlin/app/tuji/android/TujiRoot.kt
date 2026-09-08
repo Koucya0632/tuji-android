@@ -19,8 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
+import app.tuji.android.core.model.LaunchAccountState
+import app.tuji.android.core.model.LaunchContext
+import app.tuji.android.core.model.LaunchDestination
+import app.tuji.android.core.model.LaunchRouting
+import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.onboarding.LearningDirectionScreen
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -39,14 +48,48 @@ import kotlinx.coroutines.launch
 @Composable
 fun TujiRoot(app: TujiApplication) {
     val session by app.auth.session.collectAsStateWithLifecycle()
+    // Held in composition as well as on disk so picking a language re-routes
+    // immediately rather than on the next launch.
+    var direction by remember { mutableStateOf<LearningDirection?>(app.onboarding.learningDirection) }
 
-    when (val state = session.state) {
-        is AuthState.Checking -> SplashScreen()
-        is AuthState.SignedOut -> WelcomeScreen(app.auth)
-        is AuthState.Guest -> SignedInShell(app, identity = null)
-        is AuthState.SignedIn -> SignedInShell(
+    val account = when (val s = session.state) {
+        is AuthState.Checking -> LaunchAccountState.Checking
+        is AuthState.SignedOut -> LaunchAccountState.SignedOut
+        is AuthState.Guest -> LaunchAccountState.Guest
+        // `setupDone` is 設定 the account's first-run profile step, which
+        // arrives with M4. Until it exists, nobody is held at it.
+        is AuthState.SignedIn -> LaunchAccountState.SignedIn(s.user.id, setupDone = true)
+    }
+
+    val destination = LaunchRouting.destination(
+        LaunchContext(
+            account = account,
+            learningDirectionSelected = direction != null,
+            introDone = app.onboarding.introDone,
+        ),
+        // The 3-page intro is not ported yet, so nobody is held waiting for a
+        // catalogue that no screen consumes.
+        catalogReady = true,
+    )
+
+    when (destination) {
+        is LaunchDestination.Splash -> SplashScreen()
+        is LaunchDestination.LearningDirection -> LearningDirectionScreen(
+            onPick = {
+                app.onboarding.learningDirection = it
+                direction = it
+            },
+        )
+        // The 3-page marketing intro is not ported. Treating it as seen sends a
+        // signed-out user to Welcome, which is where they were going anyway.
+        is LaunchDestination.Onboarding -> WelcomeScreen(app.auth)
+        is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
+        is LaunchDestination.Setup -> SignedInShell(app, identity = null)
+        is LaunchDestination.Main -> SignedInShell(
             app,
-            identity = state.user.nickname ?: state.user.username ?: state.user.email,
+            identity = (session.state as? AuthState.SignedIn)?.user?.let {
+                it.nickname ?: it.username ?: it.email
+            },
         )
     }
 }

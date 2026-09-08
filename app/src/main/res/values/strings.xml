@@ -8,6 +8,14 @@
 <resources>
     <string name="app_name">Tuji</string>
 
+    <!-- Onboarding: 想學哪一種語言？ Comes before Welcome on a first launch. -->
+    <string name="onboarding_which_language">想學哪一種語言？</string>
+    <string name="onboarding_which_language_detail">之後可以隨時在設定中切換，兩種語言的學習進度會分開保留。</string>
+    <string name="direction_en_title">英文圖鑑</string>
+    <string name="direction_en_detail">圖片、中文提示與英文發音</string>
+    <string name="direction_ja_title">日文圖鑑</string>
+    <string name="direction_ja_detail">圖片、中文提示與日文發音</string>
+
     <!-- Welcome. Copy is the iOS catalogue's, verbatim — the two apps say the
          same sentences or they are not the same product. -->
     <string name="welcome_continue_with_apple">繼續使用 Apple</string>
