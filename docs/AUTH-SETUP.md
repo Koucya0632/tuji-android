@@ -32,7 +32,24 @@ OAuth client ID → **Android**：
 
 **這個 Android client ID 不會寫進程式碼。** 它的作用只是讓 Google 驗證呼叫端；
 App 傳給 Credential Manager 的是 **web** client ID（`TUJI_GOOGLE_WEB_CLIENT_ID`，
-在 `secrets.properties`，與 iOS 用的是同一個）。這一點很容易搞反。
+在 `secrets.properties`）。這一點很容易搞反——**而且第一次就搞反了**。
+
+### 那個 web client ID 不是 iOS 用的那個
+
+這份文件原本寫「與 iOS 用的是同一個」。錯的，2026-09-08 從 GCP 憑證頁對出來：
+
+| 名稱 | 類型 | ID 開頭 | 誰用 |
+|---|---|---|---|
+| `Tuji iOS (debug)` | **iOS** | `…fih6` | iOS 的 `TUJI_GOOGLE_CLIENT_ID` |
+| `EEPD Web` | **Web application** | `…k3od` | Supabase 自己的 OAuth，**以及 Android** |
+
+`GetSignInWithGoogleOption` 的 `serverClientId` 要的是**後端的 web client**，
+而這裡的後端是 Supabase——打 `authorize?provider=google` 時它 302 導向
+`accounts.google.com` 帶的 `client_id` 就是 `…k3od` 那個。填 iOS 的那把不會
+編譯失敗，只會在使用者按下按鈕之後拿到一個看不出原因的錯誤。
+
+iOS 用 iOS client 是**對的**：兩邊要的東西本來就不一樣。從 iOS 的設定檔
+抄值過來，是這個缺陷的來源。
 
 ## 2. Google — Supabase 的授權 client ID 清單
 
@@ -110,7 +127,7 @@ GET {SUPABASE_URL}/auth/v1/authorize?provider=apple&redirect_to=app.tuji.android
 | 項目 | 狀態 |
 |---|---|
 | Google provider 已啟用 | ✅ |
-| Google client ID 清單含 App 用的那個（`…fih629…`） | ✅ 已經在裡面 |
+| Google client ID 清單含 Android 用的那個（`…k3od…`／EEPD Web） | ✅ 已經在裡面 |
 | `skip_nonce_check` | ✅ 開著（見上面第 2 節） |
 | **GCP 的 Android OAuth client** | ❌ 只能在 GCP Console 開，沒有 API |
 | Apple provider 已啟用 | ✅ 但只有 iOS 的原生路徑 |
@@ -149,5 +166,6 @@ Google 仍然卡在 GCP，Apple 仍然卡在 Services ID。
 |---|---|
 | Google 按下去立刻失敗，log 有 `NoCredentialException` | 裝置上沒有 Google 帳號，或步驟 1 沒做 |
 | Google 拿到 token 但 Supabase 拒絕 | 步驟 2 的 client ID 清單 |
+| Google 跳出帳號選單、選完卻失敗 | `TUJI_GOOGLE_WEB_CLIENT_ID` 填成 iOS 那把了（見第 1 節） |
 | Apple 開了瀏覽器，登入完回到 App 仍是登出 | 步驟 3 的 redirect URL，或 intent-filter 沒對上 |
 | 畫面顯示「登入沒有成功，請稍後再試」 | 這是 `AuthFailure.Unknown` 的文案。**真正的原因在 logcat 的 `TujiAuth` tag**——伺服器的英文訊息刻意不顯示給使用者 |
