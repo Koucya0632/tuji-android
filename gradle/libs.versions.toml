@@ -14,6 +14,7 @@ coroutines = "1.10.2"
 activityCompose = "1.12.4"
 lifecycle = "2.10.0"
 navigation = "2.9.6"
+camerax = "1.5.2"
 coil = "3.3.0"
 supabase = "3.8.0"
 credentials = "1.6.0"
@@ -54,6 +55,10 @@ androidx-credentials-play-services = { group = "androidx.credentials", name = "c
 google-identity-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 androidx-work = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 

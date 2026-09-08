@@ -133,6 +133,63 @@ interface Endpoint {
         )
     }
 
+    // MARK: 自製圖鑑（拍照 → 辨識 → 確認 → 發布）
+
+    /** Upload a photo. Recognition runs server-side in the same request. */
+    data object AtlasImages : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/images",
+            // Upload plus a vision pass in one round trip; the default timeout
+            // is for reads and this is neither fast nor retriable.
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
+    /** A second, explicit recognition pass. Costs another AI call. */
+    data class AtlasRecognize(val imageId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/images/$imageId/recognize",
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
+    data class AtlasConfirm(val imageId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/images/$imageId/confirm",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** Make the study cards for a confirmed item. */
+    data class AtlasCards(val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/cards",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
+     * Put a finished item on 物見.
+     *
+     * A separate, explicit step — confirming a capture makes a private card and
+     * nothing more. Publishing someone's own photograph to a public feed is a
+     * decision, not a side effect of naming it.
+     */
+    data class AtlasPublish(val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/publish",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 取消公開. Reversible by design — the item and its SRS history stay. */
+    data class AtlasWithdraw(val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/withdraw",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** Tier, limits and usage. The server re-checks on every write; this is a mirror. */
     data object Entitlement : Endpoint {
         override val descriptor get() = EndpointDescriptor(

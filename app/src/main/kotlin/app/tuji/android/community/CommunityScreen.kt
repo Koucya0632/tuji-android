@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
+import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -33,21 +34,41 @@ import app.tuji.android.core.model.AtlasPublicItem
 import coil3.compose.AsyncImage
 
 /**
- * 物見 — what other people published.
+ * 物見 — what other people published, and the way in to publishing your own.
  *
- * **There is no camera entry here, and that is the milestone's whole point.**
- * M3 ships the consuming half; publishing is M5. A greyed 拍照 button that
- * never enables would promise something this build cannot do.
+ * M3 shipped this screen with **no camera entry at all**, because publishing did
+ * not exist yet and a greyed 拍照 button promises what a build cannot do. M5
+ * added the flow, so the entry is here now — gated on the account's remaining
+ * 自製圖鑑 slots rather than always drawn, for the same reason.
  */
 @Composable
 fun CommunityScreen(
     feed: CommunityViewModel.Feed,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    /** Remaining 自製圖鑑 slots, or null while the entitlement has not landed. */
+    slotsLeft: Int? = null,
+    onCapture: (() -> Unit)? = null,
     onOpenItem: (String) -> Unit,
     onOpenCollection: (String) -> Unit,
     onOpenAuthor: (String) -> Unit,
 ) {
-    when {
+    Column(Modifier.fillMaxSize()) {
+        // Outside the feed's state, deliberately. Making your own card has
+        // nothing to do with whether other people's are readable — and putting
+        // it inside the success branch meant a failed feed also took away the
+        // camera, which is the one thing on this screen that still works
+        // offline right up to the upload.
+        if (onCapture != null && slotsLeft != null && slotsLeft > 0) {
+            TujiButton(
+                text = stringResource(R.string.capture_entry),
+                onClick = onCapture,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
+            )
+        }
+
+        when {
         feed.loading -> Centered(stringResource(R.string.community_loading))
         feed.failed -> Centered(stringResource(R.string.community_failed))
         feed.items.isEmpty() && feed.collections.isEmpty() ->
@@ -79,6 +100,7 @@ fun CommunityScreen(
                     onAuthor = { entry.author?.handle?.let(onOpenAuthor) },
                 )
             }
+        }
         }
     }
 }

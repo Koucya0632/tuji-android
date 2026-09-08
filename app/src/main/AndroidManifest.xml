@@ -3,6 +3,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 自製圖鑑 拍照. Requested at the moment the user opens the camera, not
+         at launch: a permission asked for before the feature is visible is a
+         permission most people decline. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- `required="false"` so a device with no camera can still install and
+         use everything else. 自製圖鑑 is one feature, not the app. -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:name=".TujiApplication"
         android:allowBackup="false"
