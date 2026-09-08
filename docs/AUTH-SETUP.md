@@ -116,7 +116,42 @@ GET {SUPABASE_URL}/auth/v1/authorize?provider=apple&redirect_to=app.tuji.android
 > ⚠️ 第 4 步簽出來的 JWT **有效期最長六個月**，到期後 Android 的 Apple 登入
 > 會整條停掉而 iOS 不受影響——因為 iOS 根本不走這條。到期日要記在行事曆上。
 
-如果不想現在做，Apple 登入在 Android 上就先關掉按鈕，比留一個按下去 400 好。
+### 2026-09-08 已完成，實際用的值
+
+| 項目 | 值 |
+|---|---|
+| Services ID | `app.tuji.signin` |
+| Primary App ID | `app.tuji.ios` |
+| Return URL | `https://pobmxnxdftnvdmnbkmvi.supabase.co/auth/v1/callback` |
+| Team ID | `TH28V27744` |
+| Key ID | `3Y26WS7U67` |
+| **client secret 到期日** | **2027-03-07 UTC** ← 到期前要重簽 |
+
+`.p8` 在 `~/Desktop/tuji_docs/`，**不在版控裡**，而且 Apple 只給下載一次。
+
+重簽的工具不需要 PyJWT（本機沒裝）：
+`scripts/apple-client-secret.py <p8> <TeamID> <KeyID> <ServicesID>`，
+只用 openssl 簽，然後把 DER 簽章轉成 ES256 要的 raw r‖s。
+
+**兩個踩到的坑：**
+
+1. **`external_apple_client_id` 的第一個才是網頁流程用的 client_id。**
+   把 Services ID 加在清單*最後*，Supabase 仍然送 `app.tuji.ios.debug`
+   給 Apple，Apple 回 `invalid_request`。要放**第一個**；其餘 bundle ID
+   留在後面，iOS 的原生路徑照樣通過。
+2. **設定改完不會立刻生效。** PATCH 回 200 之後仍會讀到舊的 client_id，
+   等幾十秒才換。改完先重打 authorize 確認，不要急著再改一次設定——
+   否則會把生效延遲當成設定錯誤，愈改愈亂。
+
+驗證方式（**先問 Apple，再寫 Supabase**）：拿簽好的 secret 打 Apple 的
+token 端點，帶一個假的 code。
+
+```
+invalid_grant  → client_id 與 secret 都對，只有 code 是假的   ← 要的答案
+invalid_client → client_id 或 secret 有問題
+```
+
+這樣不會把一份壞設定寫進正式站才發現。
 
 ---
 
