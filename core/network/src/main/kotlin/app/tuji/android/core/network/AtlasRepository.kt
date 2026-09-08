@@ -10,6 +10,9 @@ import app.tuji.android.core.model.AtlasPublicDetail
 import app.tuji.android.core.model.AtlasPublicDetailResponse
 import app.tuji.android.core.model.AtlasPublicFeed
 import app.tuji.android.core.model.BlockedHandles
+import app.tuji.android.core.model.Entitlement
+import app.tuji.android.core.model.UserMe
+import app.tuji.android.core.model.UserMeResponse
 import kotlinx.serialization.Serializable
 
 /** Reading 物見, as a role. */
@@ -37,6 +40,16 @@ interface ReportSubmitting {
     suspend fun report(target: ReportTarget, reason: ReportReason, detail: String?)
 }
 
+/** Reading the account's tier, limits and usage. */
+interface EntitlementReading {
+    suspend fun entitlement(): Entitlement
+}
+
+/** Who is signed in. */
+interface AccountReading {
+    suspend fun me(): UserMe?
+}
+
 /** The 封鎖 list. Stored on the server so it follows the account. */
 interface BlockListing {
     suspend fun blockedHandles(): List<String>
@@ -49,7 +62,13 @@ private data class ReportBody(val reason: String, val detail: String? = null)
 private data class Empty(val ok: Boolean? = null)
 
 class AtlasRepository(private val api: TujiApiClient) :
-    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing {
+    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
+    EntitlementReading, AccountReading {
+
+    override suspend fun entitlement(): Entitlement = api.get(Endpoint.Entitlement)
+
+    override suspend fun me(): UserMe? = api.get<UserMeResponse>(Endpoint.Me).user
+
 
     override suspend fun feed(limit: Int): AtlasPublicFeed =
         api.get(Endpoint.AtlasFeed(limit = limit))

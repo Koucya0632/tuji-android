@@ -40,6 +40,8 @@ import app.tuji.android.atlas.AtlasShelvesScreen
 import app.tuji.android.atlas.AtlasWordsScreen
 import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
+import app.tuji.android.account.AccountScreen
+import app.tuji.android.account.AccountViewModel
 import app.tuji.android.community.AuthorScreen
 import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
@@ -170,6 +172,11 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     val communityAuthor by community.author.collectAsStateWithLifecycle()
     val communityCollection by community.collection.collectAsStateWithLifecycle()
 
+    val account = remember {
+        AccountViewModel(accounts = app.atlas, entitlements = app.atlas)
+    }
+    val accountState by account.state.collectAsStateWithLifecycle()
+
     val today = remember(direction) {
         TodayViewModel(
             stats = app.study,
@@ -230,7 +237,10 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
 
     // Every return to 今日, not only at launch: a session that just wrote three
     // ratings has changed every number on that screen.
-    LaunchedEffect(nav.current) { if (nav.current == AppRoute.Today) today.refresh() }
+    LaunchedEffect(nav.current) {
+        if (nav.current == AppRoute.Today) today.refresh()
+        if (nav.current == AppRoute.Me) account.refresh()
+    }
 
     Column(
         Modifier
@@ -310,6 +320,14 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                         onReport = { target, reason -> community.report(target, reason) },
                     )
                 }
+
+                AppRoute.Me -> AccountScreen(
+                    state = accountState,
+                    direction = direction,
+                    bottomPadding = 0.dp,
+                    onOpenPaywall = { /* M4：商店設好之前不會走到這裡 */ },
+                    onSignOut = { scope.launch { app.auth.signOut() } },
+                )
 
                 AppRoute.Search -> AtlasSearchScreen(
                     words = catalog.words,
@@ -407,6 +425,7 @@ private fun title(route: AppRoute, wordTitle: (String) -> String?): String = whe
     is AppRoute.Author -> stringResource(R.string.nav_community)
     is AppRoute.Collection -> stringResource(R.string.community_collections)
     AppRoute.Community -> stringResource(R.string.nav_community)
+    AppRoute.Me -> stringResource(R.string.nav_me)
     AppRoute.Search -> stringResource(R.string.nav_search)
     AppRoute.Atlas -> stringResource(R.string.nav_atlas)
     else -> stringResource(R.string.atlas_back)
@@ -430,6 +449,7 @@ private fun TabBar(
                 AppRoute.Atlas to R.string.nav_atlas,
                 AppRoute.Community to R.string.nav_community,
                 AppRoute.Search to R.string.nav_search,
+                AppRoute.Me to R.string.nav_me,
             ).forEach { (tab, label) ->
                 val active = selected == tab
                 Box(

@@ -18,6 +18,7 @@ sealed interface AppRoute {
     data object Atlas : Tab
     data object Community : Tab
     data object Search : Tab
+    data object Me : Tab
 
     /** One category's words. */
     data class Shelf(val categoryId: String, val title: String) : AppRoute
