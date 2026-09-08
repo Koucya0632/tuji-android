@@ -18,6 +18,23 @@ class AuthFailureTest {
     }
 
     @Test
+    fun `an unconfirmed email is its own case, not the generic line`() {
+        // Real strings, from signing up against production on 2026-09-08 and
+        // then trying to sign in. The generic fallback tells this person to
+        // 「請稍後再試」, and retrying can never work — their inbox is the fix.
+        assertEquals(AuthFailure.EmailNotConfirmed, classify("Email not confirmed: email_not_confirmed"))
+        assertEquals(AuthFailure.EmailNotConfirmed, classify("Email not confirmed"))
+        assertEquals(AuthFailure.EmailNotConfirmed, classify("email_not_confirmed"))
+    }
+
+    @Test
+    fun `an unconfirmed email is not mistaken for a bad address`() {
+        // Both messages contain "email". The address one needs "email address"
+        // together with "invalid", so the two cannot collide.
+        assertEquals(AuthFailure.InvalidEmail, classify("Email address is invalid"))
+    }
+
+    @Test
     fun `classification does not depend on the server's capitalisation`() {
         assertEquals(AuthFailure.InvalidCredentials, classify("INVALID LOGIN CREDENTIALS"))
         assertEquals(AuthFailure.InvalidCredentials, classify("invalid login credentials"))

@@ -17,6 +17,7 @@ import app.tuji.android.core.auth.AuthFailure
 fun AuthFailure.messageRes(): Int = when (this) {
     AuthFailure.InvalidCredentials -> R.string.auth_error_invalid_credentials
     AuthFailure.EmailAlreadyRegistered -> R.string.auth_error_email_taken
+    AuthFailure.EmailNotConfirmed -> R.string.auth_error_email_not_confirmed
     AuthFailure.RateLimited -> R.string.auth_error_rate_limited
     AuthFailure.ProviderNotEnabled -> R.string.auth_error_provider_disabled
     AuthFailure.PasswordTooShort -> R.string.auth_error_password_too_short

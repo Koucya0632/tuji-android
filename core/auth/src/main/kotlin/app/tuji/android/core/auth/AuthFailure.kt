@@ -19,6 +19,17 @@ package app.tuji.android.core.auth
  */
 enum class AuthFailure {
     InvalidCredentials,
+
+    /**
+     * The account exists but its email was never confirmed.
+     *
+     * Its own case because the generic line actively misleads here: it says
+     * 「請稍後再試」 to someone whose problem is an unopened inbox, and no
+     * amount of retrying will ever fix it. Found by signing up for real and
+     * then trying to sign in — iOS has the same gap, and the same wrong
+     * sentence, because its `friendly()` has no branch for this either.
+     */
+    EmailNotConfirmed,
     EmailAlreadyRegistered,
     RateLimited,
     ProviderNotEnabled,
@@ -37,6 +48,11 @@ enum class AuthFailure {
         fun from(error: Throwable?): AuthFailure {
             val msg = error?.message?.lowercase() ?: return Unknown
             return when {
+                // Matched on the machine-readable code first: the prose
+                // ("Email not confirmed") is what a Supabase release is free
+                // to reword, the code is not.
+                "email_not_confirmed" in msg -> EmailNotConfirmed
+                "email not confirmed" in msg -> EmailNotConfirmed
                 "invalid login credentials" in msg -> InvalidCredentials
                 "user already registered" in msg -> EmailAlreadyRegistered
                 "rate limit" in msg -> RateLimited
