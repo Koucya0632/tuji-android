@@ -6,8 +6,8 @@ import android.media.MediaPlayer
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
-import app.tuji.android.core.study.SentencePlayback
-import app.tuji.android.core.study.SentencePlaying
+import app.tuji.android.core.model.ClipPlayback
+import app.tuji.android.core.model.ClipPlaying
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
 
 /**
- * The real [SentencePlaying]: an on-disk clip cache and one [MediaPlayer].
+ * The real [ClipPlaying]: an on-disk clip cache and one [MediaPlayer].
  *
  * **The clip is downloaded before it is played, not streamed.** Streaming would
  * be less code, but then a clip is only ever available while online and 聽句
@@ -32,9 +32,12 @@ import kotlin.coroutines.resume
  * touches a handful; when that stops being true the fix is a size cap here, not
  * at the call site.
  */
-class ClipPlayer(private val context: Context) : SentencePlaying {
+class ClipPlayer(private val context: Context) : ClipPlaying {
 
-    private val cacheDir = File(context.cacheDir, "sentence-clips").apply { mkdirs() }
+    // `clips`, not `sentence-clips`: 圖鑑's pronunciation button caches here
+    // too. No migration — the app has never shipped, so there is no device with
+    // the old directory but the one this was written on.
+    private val cacheDir = File(context.cacheDir, "clips").apply { mkdirs() }
     private var player: MediaPlayer? = null
 
     /**
@@ -49,17 +52,17 @@ class ClipPlayer(private val context: Context) : SentencePlaying {
         return cacheFile(url).exists() || online
     }
 
-    override suspend fun play(url: String?, rate: Float): SentencePlayback {
-        if (url.isNullOrBlank()) return SentencePlayback.Failed
+    override suspend fun play(url: String?, rate: Float): ClipPlayback {
+        if (url.isNullOrBlank()) return ClipPlayback.Failed
         val mine = generation.incrementAndGet()
 
         val file = try {
             withContext(Dispatchers.IO) { download(url) }
         } catch (e: Exception) {
             Log.w(TAG, "clip download failed: $url", e)
-            return SentencePlayback.Failed
+            return ClipPlayback.Failed
         }
-        if (generation.get() != mine) return SentencePlayback.Failed
+        if (generation.get() != mine) return ClipPlayback.Failed
 
         return withContext(Dispatchers.Main) { start(file, rate, mine) }
     }
@@ -102,7 +105,7 @@ class ClipPlayer(private val context: Context) : SentencePlaying {
         return target
     }
 
-    private suspend fun start(file: File, rate: Float, mine: Int): SentencePlayback =
+    private suspend fun start(file: File, rate: Float, mine: Int): ClipPlayback =
         suspendCancellableCoroutine { cont ->
             release()
             val mp = MediaPlayer()
@@ -115,10 +118,10 @@ class ClipPlayer(private val context: Context) : SentencePlaying {
                         .build(),
                 )
                 mp.setDataSource(file.path)
-                mp.setOnCompletionListener { finish(cont, mine, SentencePlayback.Finished) }
+                mp.setOnCompletionListener { finish(cont, mine, ClipPlayback.Finished) }
                 mp.setOnErrorListener { _, what, extra ->
                     Log.w(TAG, "playback error what=$what extra=$extra")
-                    finish(cont, mine, SentencePlayback.Failed)
+                    finish(cont, mine, ClipPlayback.Failed)
                     true
                 }
                 mp.prepare()
@@ -131,19 +134,19 @@ class ClipPlayer(private val context: Context) : SentencePlaying {
                 mp.start()
             } catch (e: Exception) {
                 Log.w(TAG, "could not start ${file.name}", e)
-                finish(cont, mine, SentencePlayback.Failed)
+                finish(cont, mine, ClipPlayback.Failed)
             }
             cont.invokeOnCancellation { stop() }
         }
 
     /** Resume once, and only for the play that is still current. */
     private fun finish(
-        cont: CancellableContinuation<SentencePlayback>,
+        cont: CancellableContinuation<ClipPlayback>,
         mine: Int,
-        outcome: SentencePlayback,
+        outcome: ClipPlayback,
     ) {
         if (!cont.isActive) return
-        cont.resume(if (generation.get() == mine) outcome else SentencePlayback.Failed)
+        cont.resume(if (generation.get() == mine) outcome else ClipPlayback.Failed)
     }
 
     private fun cacheFile(url: String): File {

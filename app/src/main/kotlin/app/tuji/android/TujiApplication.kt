@@ -64,38 +64,12 @@ class TujiApplication : Application() {
         TujiApiClient(baseUrl = BuildConfig.TUJI_BASE_URL, tokens = auth)
     }
 
-    val catalog: CatalogRepository by lazy { CatalogRepository(api) }
+    /** The transport. [catalog] is the store that holds what it fetched. */
+    val catalogReading: CatalogRepository by lazy { CatalogRepository(api) }
 
-    /**
-     * The catalogue, for topping up MCQ options and for 聽句's second picture.
-     *
-     * A plain field rather than a store: the real `WordsStore` (invalidated by
-     * a direction switch, reloaded on launch) arrives with M2's 圖鑑.
-     *
-     * It used to say an empty pool was "honest", because the only thing reading
-     * it was the MCQ top-up and the server fills `choices` itself. **That
-     * stopped being true when 聽句 started drawing its distractor picture from
-     * here**: an empty pool does not degrade that question, it deletes it — and
-     * it deletes it silently, by falling back to 選字, which is also what a
-     * card with no sentence does. Nothing was ever assigning this, so 聽句
-     * could not have appeared once. It is loaded at [loadCatalog] now.
-     */
-    @Volatile
-    var catalogPool: List<app.tuji.android.core.model.Word> = emptyList()
-
-    /**
-     * Fill [catalogPool] once per signed-in session.
-     *
-     * Failure is deliberately swallowed to a log: the catalogue is a *quality*
-     * input — better MCQ options, and 聽句 at all — and a review session
-     * without it is degraded, not broken. Blocking the study screen on 557 rows
-     * would be the worse trade.
-     */
-    suspend fun loadCatalog(learning: app.tuji.android.core.model.LearningDirection) {
-        if (catalogPool.isNotEmpty()) return
-        runCatching { catalog.words(lang = "zh-Hant", learning = learning).words }
-            .onSuccess { catalogPool = it }
-            .onFailure { android.util.Log.w("TujiApp", "catalogue load failed", it) }
+    /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
+    val catalog: app.tuji.android.atlas.CatalogStore by lazy {
+        app.tuji.android.atlas.CatalogStore(catalogReading)
     }
 
     /** Which language, and whether the intro has been seen. See the class doc

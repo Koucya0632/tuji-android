@@ -16,8 +16,8 @@ import app.tuji.android.core.study.ActiveAccount
 import app.tuji.android.core.study.AnswerSubmitting
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.ListeningQuestion
-import app.tuji.android.core.study.SentencePlayback
-import app.tuji.android.core.study.SentencePlaying
+import app.tuji.android.core.model.ClipPlayback
+import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.study.StudyAnswerOutbox
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -91,8 +91,8 @@ class ReviewViewModelListeningTest {
 
     private class FakePlayer(
         val playable: Boolean = true,
-        val outcome: SentencePlayback = SentencePlayback.Finished,
-    ) : SentencePlaying {
+        val outcome: ClipPlayback = ClipPlayback.Finished,
+    ) : ClipPlaying {
         var plays = 0
         var stops = 0
         var lastRate: Float? = null
@@ -100,7 +100,7 @@ class ReviewViewModelListeningTest {
         var gate: CompletableDeferred<Unit>? = null
 
         override fun canPlay(url: String?, online: Boolean) = playable && !url.isNullOrBlank()
-        override suspend fun play(url: String?, rate: Float): SentencePlayback {
+        override suspend fun play(url: String?, rate: Float): ClipPlayback {
             plays += 1
             lastRate = rate
             gate?.await()
@@ -111,7 +111,7 @@ class ReviewViewModelListeningTest {
 
     private fun vm(
         queue: List<StudyQueueItem>,
-        audio: SentencePlaying = FakePlayer(),
+        audio: ClipPlaying = FakePlayer(),
         online: Boolean = true,
         pool: List<Word> = this.pool,
     ): ReviewViewModel {
