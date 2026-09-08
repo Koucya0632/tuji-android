@@ -104,7 +104,13 @@ class TujiApiClient(
                 header(HttpHeaders.CacheControl, "no-cache")
             }
             if (body != null) {
-                contentType(ContentType.Application.Json)
+                // A multipart body carries its own content type — with the
+                // boundary in it — so stamping JSON over the top produces a
+                // request the server cannot parse and an error that says
+                // nothing about why.
+                if (body !is io.ktor.http.content.OutgoingContent) {
+                    contentType(ContentType.Application.Json)
+                }
                 setBody(body)
             }
         }

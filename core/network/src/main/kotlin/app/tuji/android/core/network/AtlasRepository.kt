@@ -9,7 +9,20 @@ import app.tuji.android.core.model.AtlasPublicCollection
 import app.tuji.android.core.model.AtlasPublicDetail
 import app.tuji.android.core.model.AtlasPublicDetailResponse
 import app.tuji.android.core.model.AtlasPublicFeed
+import app.tuji.android.core.model.AtlasCard
+import app.tuji.android.core.model.AtlasCardsResponse
+import app.tuji.android.core.model.AtlasConfirmPayload
+import app.tuji.android.core.model.AtlasItem
+import app.tuji.android.core.model.AtlasPublishResult
+import app.tuji.android.core.model.AtlasRecognitionResponse
+import app.tuji.android.core.model.AtlasUploadResponse
 import app.tuji.android.core.model.BlockedHandles
+import app.tuji.android.core.model.RecognitionMode
+import app.tuji.android.core.model.TargetLanguage
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import app.tuji.android.core.model.Entitlement
 import app.tuji.android.core.model.UserMe
 import app.tuji.android.core.model.UserMeResponse
@@ -40,6 +53,45 @@ interface ReportSubmitting {
     suspend fun report(target: ReportTarget, reason: ReportReason, detail: String?)
 }
 
+/**
+ * Making a 自製圖鑑 entry: photo → 辨識 → 確認 → 卡片.
+ *
+ * A role of its own rather than more methods on the reading seam. Consuming
+ * 物見 and producing it are different milestones with different failure modes,
+ * and a fake for one should not have to stub the other.
+ */
+interface AtlasAuthoring {
+    /**
+     * Upload one photo.
+     *
+     * The primary recognition runs server-side **in this same request**, so the
+     * response already carries candidates. That is why it uses the slow policy:
+     * it is an upload plus a vision pass, and it is not retriable for free.
+     */
+    suspend fun uploadImage(
+        bytes: ByteArray,
+        filename: String,
+        mimeType: String,
+        targetLanguage: TargetLanguage?,
+    ): AtlasUploadResponse
+
+    /** A second, explicit pass. Another AI call — `CaptureDraft` decides when. */
+    suspend fun recognize(imageId: String, mode: RecognitionMode): AtlasRecognitionResponse
+
+    suspend fun confirm(imageId: String, payload: AtlasConfirmPayload): AtlasItem
+
+    /** The study cards. An item is not reviewable until these exist. */
+    suspend fun createCards(itemId: String, cardTypes: List<String>): List<AtlasCard>
+
+    /**
+     * Offer it to 物見.
+     *
+     * The result says whether it actually went live: a machine gate publishes
+     * clean submissions immediately and queues risky ones for a human.
+     */
+    suspend fun publish(itemId: String): AtlasPublishResult
+}
+
 /** Reading the account's tier, limits and usage. */
 interface EntitlementReading {
     suspend fun entitlement(): Entitlement
@@ -56,6 +108,15 @@ interface BlockListing {
 }
 
 @Serializable
+private data class RecognizeBody(val mode: String)
+
+@Serializable
+private data class CardsBody(val cardTypes: List<String>)
+
+@Serializable
+private data class AtlasConfirmResponse(val item: AtlasItem)
+
+@Serializable
 private data class ReportBody(val reason: String, val detail: String? = null)
 
 @Serializable
@@ -63,7 +124,44 @@ private data class Empty(val ok: Boolean? = null)
 
 class AtlasRepository(private val api: TujiApiClient) :
     AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
-    EntitlementReading, AccountReading {
+    EntitlementReading, AccountReading, AtlasAuthoring {
+
+    override suspend fun uploadImage(
+        bytes: ByteArray,
+        filename: String,
+        mimeType: String,
+        targetLanguage: TargetLanguage?,
+    ): AtlasUploadResponse = api.post(
+        Endpoint.AtlasImages,
+        MultiPartFormDataContent(
+            formData {
+                append(
+                    "file", bytes,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, mimeType)
+                        append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
+                    },
+                )
+                targetLanguage?.let { append("targetLanguage", if (it == TargetLanguage.JA) "ja" else "en") }
+            },
+        ),
+    )
+
+    override suspend fun recognize(
+        imageId: String,
+        mode: RecognitionMode,
+    ): AtlasRecognitionResponse =
+        api.post(Endpoint.AtlasRecognize(imageId), RecognizeBody(mode.wire))
+
+    override suspend fun confirm(imageId: String, payload: AtlasConfirmPayload): AtlasItem =
+        api.post<AtlasConfirmResponse>(Endpoint.AtlasConfirm(imageId), payload).item
+
+    override suspend fun createCards(itemId: String, cardTypes: List<String>): List<AtlasCard> =
+        api.post<AtlasCardsResponse>(Endpoint.AtlasCards(itemId), CardsBody(cardTypes)).cards
+
+    override suspend fun publish(itemId: String): AtlasPublishResult =
+        api.post(Endpoint.AtlasPublish(itemId), Empty())
+
 
     override suspend fun entitlement(): Entitlement = api.get(Endpoint.Entitlement)
 

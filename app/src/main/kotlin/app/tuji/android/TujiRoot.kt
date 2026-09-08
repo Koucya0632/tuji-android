@@ -42,6 +42,8 @@ import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
 import app.tuji.android.account.AccountScreen
 import app.tuji.android.account.AccountViewModel
+import app.tuji.android.capture.CaptureScreen
+import app.tuji.android.capture.CaptureViewModel
 import app.tuji.android.community.AuthorScreen
 import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
@@ -240,6 +242,10 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     LaunchedEffect(nav.current) {
         if (nav.current == AppRoute.Today) today.refresh()
         if (nav.current == AppRoute.Me) account.refresh()
+        // 物見 needs it too: the 自製圖鑑 entry is gated on remaining slots, and
+        // an entitlement that only loads on 我的 would hide the entry from
+        // anyone who never opened that tab.
+        if (nav.current == AppRoute.Community) account.refresh()
     }
 
     Column(
@@ -284,6 +290,10 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                 AppRoute.Community -> CommunityScreen(
                     feed = communityFeed,
                     bottomPadding = 0.dp,
+                    slotsLeft = accountState.entitlement?.let {
+                        it.atlasSlotsLimit - it.usage.atlasSlots
+                    },
+                    onCapture = { nav = nav.push(AppRoute.Capture) },
                     onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
                     onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
                     onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
@@ -318,6 +328,17 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                         bottomPadding = 0.dp,
                         onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
                         onReport = { target, reason -> community.report(target, reason) },
+                    )
+                }
+
+                AppRoute.Capture -> {
+                    val vm = remember {
+                        CaptureViewModel(authoring = app.atlas, direction = direction)
+                    }
+                    CaptureScreen(
+                        vm = vm,
+                        bottomPadding = 0.dp,
+                        onDone = { nav = nav.pop() },
                     )
                 }
 
@@ -426,6 +447,7 @@ private fun title(route: AppRoute, wordTitle: (String) -> String?): String = whe
     is AppRoute.Collection -> stringResource(R.string.community_collections)
     AppRoute.Community -> stringResource(R.string.nav_community)
     AppRoute.Me -> stringResource(R.string.nav_me)
+    AppRoute.Capture -> stringResource(R.string.capture_title)
     AppRoute.Search -> stringResource(R.string.nav_search)
     AppRoute.Atlas -> stringResource(R.string.nav_atlas)
     else -> stringResource(R.string.atlas_back)

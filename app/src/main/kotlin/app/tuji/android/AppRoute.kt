@@ -35,6 +35,9 @@ sealed interface AppRoute {
     /** One published 合集. */
     data class Collection(val slug: String) : AppRoute
 
+    /** 自製圖鑑：拍照 → 辨識 → 確認. */
+    data object Capture : AppRoute
+
     /** The study flows, which take over the whole screen. */
     data object Review : AppRoute
     data object LearnNew : AppRoute
