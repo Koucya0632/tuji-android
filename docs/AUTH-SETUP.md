@@ -155,8 +155,24 @@ Google 仍然卡在 GCP，Apple 仍然卡在 Services ID。
 ## 驗證順序
 
 1. **Email** — 現在就能驗，不需要上面任何一步。
-2. **Google** — 做完 1 與 2 之後，在**有 Google 帳號的實機或 Play 版模擬器**上測。
-   `google_apis` 的模擬器映像沒有登入帳號，會拿到 `NoCredentialException`。
+2. **Google** — 做完 1 與 2 之後，在**有 Google Play 服務且已登入 Google 帳號**
+   的裝置上測。兩個實測到的坑：
+
+   - **這個專案的 HUAWEI（LIO-L29 / Mate 30 Pro）不能用來驗。**
+     它是 2019 禁令後的機器，`pm list packages | grep com.google.android.gms`
+     回 0 —— 完全沒有 Play 服務。Google 登入在上面**不可能成功**，
+     和設定對不對無關。它側載了幾個 Google App，很容易誤判成「有 Google」。
+   - **本機的模擬器可以用。** 它是 **Play Store 映像**（`com.google.android.gms`
+     與 `com.android.vending` 都在），只是預設沒有登入帳號。
+     用 `adb shell am start -a android.settings.ADD_ACCOUNT_SETTINGS` 加一個即可。
+     （早期版本的這份文件說模擬器不能測，那是把 `google_apis` 映像
+     和 Play Store 映像搞混了。）
+
+   分辨裝置能不能用，一行就夠：
+   ```
+   adb -s <serial> shell pm list packages | grep -c com.google.android.gms
+   ```
+   回 0 就換一台，不要浪費時間查設定。
 3. **Apple** — 做完 3 之後，觀察是否開啟瀏覽器、且回到 App 時已登入。
    回不來的話先查 redirect URL 有沒有登記，再查 intent-filter。
 
