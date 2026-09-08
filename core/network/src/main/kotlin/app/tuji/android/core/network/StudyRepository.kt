@@ -5,6 +5,7 @@ import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueResponse
+import app.tuji.android.core.model.StudyStatsResponse
 
 /**
  * Submitting an answer, as a role.
@@ -16,6 +17,11 @@ import app.tuji.android.core.model.StudyQueueResponse
  */
 interface AnswerSubmission {
     suspend fun submitAnswer(payload: StudyAnswerPayload): StudyAnswerResponse
+}
+
+/** Reading the day's counts, as a role. */
+interface StudyStatsReading {
+    suspend fun stats(learning: LearningDirection): StudyStatsResponse
 }
 
 /** Fetching a session's cards, as a role. */
@@ -30,7 +36,12 @@ interface StudyQueueReading {
     ): StudyQueueResponse
 }
 
-class StudyRepository(private val api: TujiApiClient) : AnswerSubmission, StudyQueueReading {
+class StudyRepository(private val api: TujiApiClient) :
+    AnswerSubmission, StudyQueueReading, StudyStatsReading {
+
+    override suspend fun stats(learning: LearningDirection): StudyStatsResponse =
+        api.get(Endpoint.StudyStats(learning = learning))
+
     override suspend fun submitAnswer(payload: StudyAnswerPayload): StudyAnswerResponse =
         api.post(Endpoint.StudyAnswer, payload)
 

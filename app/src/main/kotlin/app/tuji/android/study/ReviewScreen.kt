@@ -100,7 +100,7 @@ fun ReviewScreen(
             is ReviewViewModel.State.Studying -> {
                 Column(Modifier.fillMaxSize()) {
                     Spacer(Modifier.height(insets.calculateTopPadding()))
-                    Header(
+                    StudyHeader(
                         progress = s.session.progress,
                         unsynced = s.unsynced,
                         onClose = {
@@ -143,50 +143,6 @@ private fun Centered(text: String, color: androidx.compose.ui.graphics.Color = T
     }
 }
 
-@Composable
-private fun Header(progress: Double, unsynced: Int, onClose: () -> Unit) {
-    Column {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                stringResource(R.string.study_leave),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink2,
-                modifier = Modifier.tujiClickable(onClick = onClose).padding(TujiSpace.S1),
-            )
-            if (unsynced > 0) {
-                // Said out loud rather than swallowed: these answers are on
-                // disk and will replay, and a silent count is how iOS's
-                // predecessor lost them.
-                Text(
-                    stringResource(R.string.study_unsynced, unsynced),
-                    style = TujiType.label,
-                    color = TujiColor.Ink3,
-                )
-            }
-        }
-        // 3dp, the selection width — a progress bar is a selection of how far
-        // along the session is, and 紙與墨 has no other way to draw one.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(TujiBorder.Bw3)
-                .background(TujiColor.Paper3),
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth(progress.toFloat())
-                    .height(TujiBorder.Bw3)
-                    .background(TujiColor.Current),
-            )
-        }
-    }
-}
 
 @Composable
 private fun QuestionBody(

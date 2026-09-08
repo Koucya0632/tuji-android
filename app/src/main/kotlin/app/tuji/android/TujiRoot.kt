@@ -36,8 +36,13 @@ import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
+import app.tuji.android.BuildConfig
 import app.tuji.android.spike.FuriganaSpikeScreen
 import app.tuji.android.study.AnswerDrainWorker
+import app.tuji.android.study.NewFlowScreen
+import app.tuji.android.study.NewFlowViewModel
+import app.tuji.android.today.TodayScreen
+import app.tuji.android.today.TodayViewModel
 import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
@@ -135,23 +140,61 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     // arrives late does not make that question worse, it makes it not happen.
     LaunchedEffect(direction) { app.loadCatalog(direction) }
 
-    var mode by remember { mutableStateOf<StudyMode?>(null) }
-    mode?.let { picked ->
-        val vm = remember(picked) {
-            ReviewViewModel(
-                queues = app.study,
-                writer = app.answerWriter,
-                direction = direction,
-                uiLang = "zh-Hant",
-                pool = { app.catalogPool },
-                requestDrain = { AnswerDrainWorker.enqueue(app) },
-                audio = app.clipPlayer,
-                online = { app.isOnline() },
-            ).also { it.load(picked) }
-        }
-        ReviewScreen(vm = vm, onClose = { mode = null })
+    // Two flows, not one screen with a mode: 複習 and 學新字 ask different
+    // questions in a different order and hold different state, and the only
+    // thing they share is the queue endpoint.
+    val today = remember(direction) {
+        TodayViewModel(
+            stats = app.study,
+            direction = direction,
+            isGuest = { app.auth.session.value.state is AuthState.Guest },
+        )
+    }
+    val todayInputs by today.inputs.collectAsStateWithLifecycle()
+
+    var route by remember { mutableStateOf<StudyRoute?>(null) }
+    var showSpike by remember { mutableStateOf(false) }
+    if (showSpike) {
+        FuriganaSpikeScreen(catalog = app.catalog)
         return
     }
+    when (route) {
+        StudyRoute.Review -> {
+            val vm = remember {
+                ReviewViewModel(
+                    queues = app.study,
+                    writer = app.answerWriter,
+                    direction = direction,
+                    uiLang = "zh-Hant",
+                    pool = { app.catalogPool },
+                    requestDrain = { AnswerDrainWorker.enqueue(app) },
+                    audio = app.clipPlayer,
+                    online = { app.isOnline() },
+                ).also { it.load(StudyMode.Review) }
+            }
+            ReviewScreen(vm = vm, onClose = { route = null })
+            return
+        }
+        StudyRoute.New -> {
+            val vm = remember {
+                NewFlowViewModel(
+                    queues = app.study,
+                    writer = app.answerWriter,
+                    direction = direction,
+                    uiLang = "zh-Hant",
+                    pool = { app.catalogPool },
+                    requestDrain = { AnswerDrainWorker.enqueue(app) },
+                ).also { it.load() }
+            }
+            NewFlowScreen(vm = vm, onClose = { route = null })
+            return
+        }
+        null -> Unit
+    }
+
+    // On every return to 今日, not only at launch: a session that just wrote
+    // three ratings has changed every number on this screen.
+    LaunchedEffect(route) { if (route == null) today.refresh() }
 
     Column(
         Modifier
@@ -188,23 +231,27 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     .padding(TujiSpace.S1),
             )
         }
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        ) {
-            TujiButton(
-                text = stringResource(R.string.study_start_review),
-                onClick = { mode = StudyMode.Review },
-            )
-            // A debug affordance, and labelled as one: a brand-new account has
-            // nothing due, so this is the only way to see a card before the
-            // 學新字 flow exists.
-            TujiButton(
-                text = stringResource(R.string.study_start_new_debug),
-                style = TujiButtonStyle.Secondary,
-                onClick = { mode = StudyMode.New },
+        TodayScreen(
+            inputs = todayInputs,
+            name = identity,
+            onReview = { route = StudyRoute.Review },
+            onLearnNew = { route = StudyRoute.New },
+        )
+        // The spike stays reachable — `docs/SPIKE-FURIGANA.md` promises anyone
+        // who touches the fonts can re-run it — but it is a font test, and it
+        // spent M1 pasted under the real 今日. A debug-only door instead.
+        if (BuildConfig.DEBUG) {
+            Text(
+                stringResource(R.string.debug_font_spike),
+                style = TujiType.monoLabel,
+                color = TujiColor.Ink3,
+                modifier = Modifier
+                    .padding(TujiSpace.S4)
+                    .tujiClickable { showSpike = true },
             )
         }
-        FuriganaSpikeScreen(catalog = app.catalog)
     }
 }
+
+/** Which study flow is on screen. */
+private enum class StudyRoute { Review, New }

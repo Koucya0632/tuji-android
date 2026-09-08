@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -47,6 +48,16 @@ fun FuriganaHeadword(
     rubyRatio: Float = TujiHeadwordSize.RUBY_RATIO,
     /** Ruby sits closer to its base than normal line spacing would put it. */
     rubySpacing: Dp = 1.dp,
+    /**
+     * Where the row sits in the width it was given.
+     *
+     * A parameter because the row is laid out by hand: a `Text` given
+     * `fillMaxWidth()` centres itself with `textAlign`, and this does not —
+     * it draws at its natural width wherever the arrangement puts it. On a
+     * card whose every other line is centred, a headword quietly pinned to
+     * the left reads as a broken layout, and no unit test sees it.
+     */
+    arrangement: Arrangement.Horizontal = Arrangement.Start,
 ) {
     val type = TujiType
     val measurer = rememberTextMeasurer()
@@ -63,9 +74,12 @@ fun FuriganaHeadword(
         }
 
         Row(
-            horizontalArrangement = Arrangement.Start,
+            // fillMaxWidth so the arrangement has room to place the row in;
+            // without it the Row shrinks to its content and every arrangement
+            // looks identical.
+            horizontalArrangement = arrangement,
             verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.clearAndSetSemantics {
+            modifier = Modifier.fillMaxWidth().clearAndSetSemantics {
                 // Segment by segment a screen reader would announce 歯・磨・き・粉
                 // as four items and then say the kana twice over. One label,
                 // the word as written.

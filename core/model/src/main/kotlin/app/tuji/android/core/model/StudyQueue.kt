@@ -158,6 +158,10 @@ data class StudyQueueResponse(
     val stats: StudyStats? = null,
 )
 
+/** `/api/study/stats` — the same object the queue route also carries. */
+@Serializable
+data class StudyStatsResponse(val stats: StudyStats? = null)
+
 @Serializable
 data class StudyStats(
     val total: Int,
