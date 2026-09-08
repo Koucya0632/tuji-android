@@ -25,6 +25,7 @@
          never reaches this file. -->
     <string name="auth_error_invalid_credentials">Email 或密碼錯誤</string>
     <string name="auth_error_email_taken">此 Email 已註冊，請改用登入</string>
+    <string name="auth_error_email_not_confirmed">這個 Email 還沒確認。收信點一下連結，就能登入了</string>
     <string name="auth_error_rate_limited">嘗試太頻繁，請稍後再試</string>
     <string name="auth_error_provider_disabled">這個登入方式尚未啟用，請稍後再試</string>
     <string name="auth_error_password_too_short">密碼太短（至少 8 字）</string>
