@@ -30,7 +30,11 @@ import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.core.os.ConfigurationCompat
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.UiLanguage
+import java.util.Locale
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.height
@@ -151,12 +155,26 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
     val direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN
-    val uiLang = "zh-Hant"
+    // From the device, not a constant. The app's own strings come from
+    // Android's resource resolution, but the *server* writes glosses and
+    // definitions in whatever `lang` asks for — and hard-coding it is how a
+    // fully Japanese interface ends up wrapped around Chinese content.
+    val configuration = LocalConfiguration.current
+    val uiLanguage = remember(configuration) {
+        val locale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
+        UiLanguage.of(locale.language, locale.script, locale.country)
+    }
+    val uiLang = uiLanguage.wire
 
     // Ahead of every screen that reads it: 圖鑑 draws it, 搜尋 filters it, and
     // 複習's 聽句 draws its second picture from it — a pool that arrives late
     // does not make that question worse, it makes it not happen.
-    LaunchedEffect(direction) { app.catalog.load(direction) }
+    LaunchedEffect(direction, uiLang) {
+        // Retuning first: the catalogue holds the *server's* words, and those
+        // came back in whatever language was asked for last time.
+        app.catalog.retune(uiLang)
+        app.catalog.load(direction)
+    }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
 
     val community = remember(direction) {

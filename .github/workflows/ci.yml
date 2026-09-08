@@ -42,6 +42,11 @@ jobs:
           TUJI_GOOGLE_WEB_CLIENT_ID: ${{ secrets.TUJI_GOOGLE_WEB_CLIENT_ID }}
         run: ./gradlew --no-daemon build
 
+      # A missing translation is not a compile error, so without this step
+      # nothing in the pipeline would ever notice one.
+      - name: Check localisation
+        run: python3 scripts/check-localization.py
+
       # A green tick is not the same as tests having run. The iOS project has
       # been bitten by a crashed suite that still printed ✔ with a smaller test
       # count, so the count is asserted rather than assumed.
