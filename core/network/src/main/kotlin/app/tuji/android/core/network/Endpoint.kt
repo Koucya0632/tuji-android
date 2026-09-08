@@ -133,6 +133,22 @@ interface Endpoint {
         )
     }
 
+    /** Tier, limits and usage. The server re-checks on every write; this is a mirror. */
+    data object Entitlement : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/entitlement",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** Who the signed-in user is. */
+    data object Me : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/me",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** The account's 封鎖 list. Server-stored, client-applied. */
     data object Blocks : Endpoint {
         override val descriptor get() = EndpointDescriptor(
