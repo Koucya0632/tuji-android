@@ -8,18 +8,37 @@
 <resources>
     <string name="app_name">Tuji</string>
 
-    <!-- Welcome -->
-    <string name="welcome_tagline">看得見的字，記得住</string>
-    <string name="welcome_continue_with_google">用 Google 繼續</string>
-    <string name="welcome_continue_with_apple">用 Apple 繼續</string>
-    <string name="welcome_email">Email</string>
-    <string name="welcome_password">密碼</string>
-    <string name="welcome_sign_in">登入</string>
-    <string name="welcome_sign_up">註冊</string>
-    <string name="welcome_browse_as_guest">先逛逛</string>
-    <string name="welcome_back_to_browsing">回去逛逛</string>
+    <!-- Welcome. Copy is the iOS catalogue's, verbatim — the two apps say the
+         same sentences or they are not the same product. -->
+    <string name="welcome_continue_with_apple">繼續使用 Apple</string>
+    <string name="welcome_continue_with_google">繼續使用 Google</string>
+    <string name="welcome_google_signing_in">Google 登入中...</string>
+    <string name="welcome_use_email">使用 Email</string>
+    <string name="welcome_have_account">已有帳號？登入</string>
+    <string name="welcome_browse_as_guest">先逛逛 → 訪客模式</string>
+    <string name="welcome_back_to_guest">返回訪客模式</string>
+    <string name="welcome_close">關閉</string>
     <string name="welcome_opening_browser">正在開啟 Apple 登入…</string>
-    <string name="welcome_check_your_email">確認信寄出了，收信後就能登入</string>
+
+    <!-- Email signup / signin -->
+    <string name="auth_create_account">建立帳號</string>
+    <string name="auth_create_account_detail">填入登入信箱和密碼，開始建立你的單字卡。</string>
+    <string name="auth_sign_in">登入</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_hint">用來登入與接收驗證信</string>
+    <string name="auth_email_placeholder">name@example.com</string>
+    <string name="auth_password">密碼</string>
+    <string name="auth_password_hint">至少 8 個字元，英文、數字或符號皆可</string>
+    <string name="auth_password_min">至少 8 個字元</string>
+    <string name="auth_password_short">還差 %1$d 個字元</string>
+    <string name="auth_password_charset">密碼只能使用英文、數字或符號</string>
+    <string name="auth_creating">建立中...</string>
+    <string name="auth_signing_in">登入中...</string>
+    <string name="auth_have_account">已有帳號？</string>
+    <string name="auth_no_account">沒有帳號？</string>
+    <string name="auth_confirmation_sent">確認信已寄出</string>
+    <string name="auth_confirmation_detail">請開信箱點擊驗證連結，完成後再用這組 Email 和密碼登入。</string>
+    <string name="auth_back">返回</string>
 
     <!-- Auth failures. One sentence per decision; the server's own English
          never reaches this file. -->
