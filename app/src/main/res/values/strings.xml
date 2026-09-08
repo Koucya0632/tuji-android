@@ -1,4 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  zh-Hant is the base locale, matching the iOS catalogue. The other three
+  (zh-Hans / ja / en) arrive in M6 through the xcstrings → strings.xml
+  conversion, with the iOS catalogue as the single source of truth — a second
+  authored copy is how 713 strings × 4 languages stop being reconcilable.
+-->
 <resources>
     <string name="app_name">Tuji</string>
+
+    <!-- Welcome -->
+    <string name="welcome_tagline">看得見的字，記得住</string>
+    <string name="welcome_continue_with_google">用 Google 繼續</string>
+    <string name="welcome_continue_with_apple">用 Apple 繼續</string>
+    <string name="welcome_email">Email</string>
+    <string name="welcome_password">密碼</string>
+    <string name="welcome_sign_in">登入</string>
+    <string name="welcome_sign_up">註冊</string>
+    <string name="welcome_browse_as_guest">先逛逛</string>
+    <string name="welcome_back_to_browsing">回去逛逛</string>
+    <string name="welcome_opening_browser">正在開啟 Apple 登入…</string>
+    <string name="welcome_check_your_email">確認信寄出了，收信後就能登入</string>
+
+    <!-- Auth failures. One sentence per decision; the server's own English
+         never reaches this file. -->
+    <string name="auth_error_invalid_credentials">Email 或密碼錯誤</string>
+    <string name="auth_error_email_taken">此 Email 已註冊，請改用登入</string>
+    <string name="auth_error_rate_limited">嘗試太頻繁，請稍後再試</string>
+    <string name="auth_error_provider_disabled">這個登入方式尚未啟用，請稍後再試</string>
+    <string name="auth_error_password_too_short">密碼太短（至少 8 字）</string>
+    <string name="auth_error_invalid_email">Email 格式或網域不被接受</string>
+    <string name="auth_error_unknown">登入沒有成功，請稍後再試</string>
+
+    <!-- Signed in -->
+    <string name="signed_in_as">已登入</string>
+    <string name="sign_out">登出</string>
+    <string name="guest_mode">訪客瀏覽中</string>
+    <string name="sign_in_or_up">登入 / 註冊</string>
 </resources>

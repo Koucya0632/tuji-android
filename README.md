@@ -39,6 +39,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 | 模組 | 內容 | 對應 iOS |
 |---|---|---|
 | `app` | Compose 畫面與 navigation | `Tuji/Features`、`Tuji/Navigation` |
+| `core:auth` | 登入狀態機、Supabase、Google／Apple 通路 | `Tuji/Core/Auth` |
 | `core:design` | 紙與墨 token、字型 cascade、共用元件 | `Tuji/Core/Theme`、`Tuji/Components` |
 | `core:model` | DTO 與純邏輯（無 Android 相依，測試跑在 JVM 上） | `Tuji/Core/Models` |
 | `core:network` | Ktor client、endpoint 與存取策略 | `Tuji/Core/Networking` |
@@ -56,11 +57,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
   硬解 Double 會變成使用者看到的「資料解析失敗」。
 - **CJK 字型不能整組蓋掉拉丁字型**（ADR-0003）。見 `docs/SPIKE-FURIGANA.md`。
 - **測試不要斷言在地化文案。** 斷言決策，不斷言句子。
+- **伺服器的錯誤訊息不要直接顯示給使用者。** iOS 的登入畫面曾經印出一段
+  「Service for this project is restricted due to… exceed_cached_egress_quota」——
+  那是給開發者看的帳單通知。`AuthFailure` 是 enum 就是為了讓這件事在結構上不可能發生。
 - **Debug build 打的是正式 Supabase。** 這個專案的 dev 與 prod 是同一個 project ref，
   模擬器上動的是真實使用者的資料。
 
 ## 文件
 
-- `docs/SPIKE-FURIGANA.md` — M0 的日文排版閘門，含結論與 `minSdk` 的待決事項
+- `docs/SPIKE-FURIGANA.md` — M0 的日文排版閘門，含結論與 `minSdk` 的決定
+- `docs/AUTH-SETUP.md` — 登入在控制台上的三步設定（GCP／Supabase），**沒做不會編譯失敗，只會在使用者按下去之後失敗**
 - `../docs/android/PLAY_LAUNCH_PLAN.md` — 上架計劃
 - `../docs/android/PLAY_COMPLIANCE_CHECKLIST.md` — 送審前逐項勾選

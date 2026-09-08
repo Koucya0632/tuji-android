@@ -78,7 +78,7 @@ fun FuriganaSpikeScreen(catalog: CatalogReading) {
             .background(TujiColor.Paper)
             .padding(horizontal = TujiSpace.S4),
     ) {
-        Spacer(Modifier.height(insets.calculateTopPadding() + TujiSpace.S4))
+        Spacer(Modifier.height(TujiSpace.S3))
         CjkCascadeProbe()
         Spacer(Modifier.height(TujiSpace.S5))
 

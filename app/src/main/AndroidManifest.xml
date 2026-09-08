@@ -16,10 +16,32 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Tuji"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+              Where Apple sign-in comes back to.
+
+              Apple has no native Android sign-in, so the flow leaves for a
+              Custom Tab and returns through this filter; MainActivity hands the
+              Intent to Supabase's handleDeeplinks. `singleTask` above is what
+              routes a warm return to onNewIntent instead of a second Activity.
+
+              The scheme is fixed rather than derived from applicationId, which
+              carries a `.debug` suffix — a redirect URL that differs per build
+              type is a second entry somebody has to remember to register in the
+              Supabase dashboard. Both must be listed there under
+              Authentication → URL Configuration → Redirect URLs.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="app.tuji.android" android:host="auth-callback" />
             </intent-filter>
         </activity>
     </application>

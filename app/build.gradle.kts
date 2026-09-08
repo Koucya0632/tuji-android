@@ -48,6 +48,10 @@ android {
         buildConfigField("String", "TUJI_BASE_URL", "\"${secret("TUJI_BASE_URL", "https://everyday-english-picture-dictionary.vercel.app")}\"")
         buildConfigField("String", "TUJI_SUPABASE_URL", "\"${secret("TUJI_SUPABASE_URL")}\"")
         buildConfigField("String", "TUJI_SUPABASE_ANON_KEY", "\"${secret("TUJI_SUPABASE_ANON_KEY")}\"")
+        // The **web** client ID. Credential Manager wants that one, not the
+        // Android client — the Android client exists only so Google can
+        // check the calling app's signing certificate.
+        buildConfigField("String", "TUJI_GOOGLE_WEB_CLIENT_ID", "\"${secret("TUJI_GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
     buildTypes {
@@ -79,6 +83,7 @@ android {
 
 
 dependencies {
+    implementation(project(":core:auth"))
     implementation(project(":core:design"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))

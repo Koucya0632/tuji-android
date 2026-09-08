@@ -23,6 +23,7 @@ dependencyResolutionManagement {
 rootProject.name = "tuji-android"
 
 include(":app")
+include(":core:auth")
 include(":core:design")
 include(":core:model")
 include(":core:network")
