@@ -43,6 +43,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 | `core:design` | 紙與墨 token、字型 cascade、共用元件 | `Tuji/Core/Theme`、`Tuji/Components` |
 | `core:model` | DTO 與純邏輯（無 Android 相依，測試跑在 JVM 上） | `Tuji/Core/Models` |
 | `core:network` | Ktor client、endpoint 與存取策略 | `Tuji/Core/Networking` |
+| `core:study` | SRS 耐久寫入（純 JVM，無 Android） | `Tuji/Core/Study` |
 
 ## 已經踩過的雷，不要再踩一次
 
@@ -60,6 +61,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **伺服器的錯誤訊息不要直接顯示給使用者。** iOS 的登入畫面曾經印出一段
   「Service for this project is restricted due to… exceed_cached_egress_quota」——
   那是給開發者看的帳單通知。`AuthFailure` 是 enum 就是為了讓這件事在結構上不可能發生。
+- **作答寫不出去時要留在磁碟上，不是留在記憶體。** 沒有暫存匣之前，離線作答只會
+  變成完成畫面的「未同步」提示然後消失——畫面說已儲存，SRS 排程從來不知道有這回事。
+  四條性質（帳號標記／崩潰後不遺失／重複安全／失敗看得見）在 `core:study` 有測試釘住。
 - **Debug build 打的是正式 Supabase。** 這個專案的 dev 與 prod 是同一個 project ref，
   模擬器上動的是真實使用者的資料。
 

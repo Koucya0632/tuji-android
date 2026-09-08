@@ -45,6 +45,17 @@ interface Endpoint {
     }
 
     /**
+     * One SRS answer. `PrivateFresh`: it is a write, and there is nothing to
+     * cache about it.
+     */
+    data object StudyAnswer : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/answer",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
      * Technically anonymous-friendly (returns null), but kept authed so a debug
      * button actually exercises the Bearer path. The backend tolerates either.
      */

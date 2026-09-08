@@ -87,6 +87,7 @@ dependencies {
     implementation(project(":core:design"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))
+    implementation(project(":core:study"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -99,6 +100,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.work)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.compose.bom))

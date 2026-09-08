@@ -5,7 +5,14 @@ import app.tuji.android.core.auth.AuthService
 import app.tuji.android.core.auth.GoogleCredentialBridge
 import app.tuji.android.core.auth.SupabaseProvider
 import app.tuji.android.core.network.CatalogRepository
+import app.tuji.android.core.network.StudyRepository
 import app.tuji.android.core.network.TujiApiClient
+import app.tuji.android.core.study.ActiveAccount
+import app.tuji.android.core.study.AnswerSubmitting
+import app.tuji.android.core.study.DurableAnswerWriter
+import app.tuji.android.core.study.StudyAnswerOutbox
+import app.tuji.android.study.AnswerDrainWorker
+import java.io.File
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -57,4 +64,41 @@ class TujiApplication : Application() {
     }
 
     val catalog: CatalogRepository by lazy { CatalogRepository(api) }
+
+    private val study: StudyRepository by lazy { StudyRepository(api) }
+
+    /**
+     * The network primitive, as the shape `core:study` asks for.
+     *
+     * The adapter is one line and it is the whole reason the durability rules
+     * live in a pure-JVM module: nothing there knows what HTTP is.
+     */
+    val answerSubmitting: AnswerSubmitting by lazy {
+        AnswerSubmitting { study.submitAnswer(it) }
+    }
+
+    /**
+     * Parked answers, on disk, tagged with whoever was signed in.
+     *
+     * `filesDir` rather than the cache directory: the system deletes a cache
+     * under pressure, and these are ratings the user cannot re-enter.
+     */
+    val answerOutbox: StudyAnswerOutbox by lazy {
+        StudyAnswerOutbox(
+            file = File(filesDir, "study-answer-outbox.json"),
+            account = ActiveAccount { auth.session.value.signedInUser?.id },
+        )
+    }
+
+    /** Retries a few times, then parks. Never throws — parking is the fallback. */
+    val answerWriter: DurableAnswerWriter by lazy {
+        DurableAnswerWriter(submit = answerSubmitting, outbox = answerOutbox)
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        // Anything parked by a previous run goes out as soon as there is a
+        // network, whether or not the user opens 複習 again.
+        AnswerDrainWorker.enqueue(this)
+    }
 }
