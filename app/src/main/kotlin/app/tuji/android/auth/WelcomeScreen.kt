@@ -67,7 +67,12 @@ fun WelcomeScreen(auth: AuthService, modifier: Modifier = Modifier) {
 
     when (val r = route) {
         null -> WelcomeContent(auth, modifier) { route = it }
-        else -> EmailAuthScreen(auth = auth, mode = r, onBack = { route = null })
+        else -> EmailAuthScreen(
+            auth = auth,
+            mode = r,
+            onBack = { route = null },
+            onSwitchMode = { route = it },
+        )
     }
 }
 

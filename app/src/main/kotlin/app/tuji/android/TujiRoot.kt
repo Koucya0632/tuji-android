@@ -35,6 +35,12 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.spike.FuriganaSpikeScreen
+import app.tuji.android.study.ReviewScreen
+import app.tuji.android.study.ReviewViewModel
+import app.tuji.android.core.design.TujiButton
+import app.tuji.android.core.model.StudyMode
+import app.tuji.android.core.model.Word
+import app.tuji.android.core.design.TujiButtonStyle
 import kotlinx.coroutines.launch
 
 /**
@@ -118,6 +124,21 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    var mode by remember { mutableStateOf<StudyMode?>(null) }
+    mode?.let { picked ->
+        val vm = remember(picked) {
+            ReviewViewModel(
+                queues = app.study,
+                writer = app.answerWriter,
+                direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN,
+                uiLang = "zh-Hant",
+                pool = { app.catalogPool },
+            ).also { it.load(picked) }
+        }
+        ReviewScreen(vm = vm, onClose = { mode = null })
+        return
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -151,6 +172,23 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                         }
                     }
                     .padding(TujiSpace.S1),
+            )
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        ) {
+            TujiButton(
+                text = stringResource(R.string.study_start_review),
+                onClick = { mode = StudyMode.Review },
+            )
+            // A debug affordance, and labelled as one: a brand-new account has
+            // nothing due, so this is the only way to see a card before the
+            // 學新字 flow exists.
+            TujiButton(
+                text = stringResource(R.string.study_start_new_debug),
+                style = TujiButtonStyle.Secondary,
+                onClick = { mode = StudyMode.New },
             )
         }
         FuriganaSpikeScreen(catalog = app.catalog)

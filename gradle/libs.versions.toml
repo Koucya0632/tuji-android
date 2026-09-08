@@ -54,6 +54,8 @@ androidx-credentials-play-services = { group = "androidx.credentials", name = "c
 google-identity-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 androidx-work = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
