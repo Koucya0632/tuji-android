@@ -122,6 +122,17 @@ data class StudyExample(
      * correct.
      */
     val audioUrls: Map<String, String>? = null,
+    /**
+     * Every catalogue word this sentence names, the target included.
+     *
+     * The image distractor must avoid all of them. Nearly half the authored
+     * sentences name a second catalogue noun — the B1 sentence for 空気清浄機
+     * also names 窓 — and drawing that one makes **both** pictures correct:
+     * the user hears the sentence perfectly, picks a thing that is in it, and
+     * the SRS records a failure. Resolved server-side from the sentence's own
+     * 詞塊, which is the only place the base-form → word id mapping exists.
+     */
+    val mentionedWordIds: List<String>? = null,
 )
 
 @Serializable

@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import app.tuji.android.auth.WelcomeScreen
@@ -36,6 +38,7 @@ import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.spike.FuriganaSpikeScreen
 import app.tuji.android.study.AnswerDrainWorker
+import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.core.design.TujiButton
@@ -125,16 +128,25 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    val direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN
+
+    // Ahead of 複習 rather than inside it: 聽句 asks the catalogue for its
+    // second picture the moment the first card is prepared, and a pool that
+    // arrives late does not make that question worse, it makes it not happen.
+    LaunchedEffect(direction) { app.loadCatalog(direction) }
+
     var mode by remember { mutableStateOf<StudyMode?>(null) }
     mode?.let { picked ->
         val vm = remember(picked) {
             ReviewViewModel(
                 queues = app.study,
                 writer = app.answerWriter,
-                direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN,
+                direction = direction,
                 uiLang = "zh-Hant",
                 pool = { app.catalogPool },
                 requestDrain = { AnswerDrainWorker.enqueue(app) },
+                audio = app.clipPlayer,
+                online = { app.isOnline() },
             ).also { it.load(picked) }
         }
         ReviewScreen(vm = vm, onClose = { mode = null })

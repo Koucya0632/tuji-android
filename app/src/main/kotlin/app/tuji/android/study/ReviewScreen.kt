@@ -33,6 +33,7 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -46,6 +47,19 @@ import app.tuji.android.core.study.ReviewPhase
 import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
 import app.tuji.android.core.study.StudyOptionState
+import android.os.Build
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import app.tuji.android.core.model.ReviewQuestionKind
+import app.tuji.android.core.model.StudyExample
+import app.tuji.android.core.study.ImageChoiceOption
+import app.tuji.android.core.study.ReviewQuestion
+import app.tuji.android.core.study.maskedSentence
 import coil3.compose.AsyncImage
 
 /**
@@ -100,7 +114,11 @@ fun ReviewScreen(
                     QuestionBody(
                         state = s,
                         onPick = vm::pick,
+                        onPickImage = vm::pickImage,
                         onToggleHint = vm::toggleHint,
+                        onReplay = vm::replaySentence,
+                        onReveal = vm::revealSentence,
+                        onOptOut = vm::optOutOfListening,
                         bottomPadding = insets.calculateBottomPadding(),
                     )
                 }
@@ -174,7 +192,11 @@ private fun Header(progress: Double, unsynced: Int, onClose: () -> Unit) {
 private fun QuestionBody(
     state: ReviewViewModel.State.Studying,
     onPick: (String) -> Unit,
+    onPickImage: (ImageChoiceOption) -> Unit,
     onToggleHint: () -> Unit,
+    onReplay: (Float) -> Unit,
+    onReveal: () -> Unit,
+    onOptOut: () -> Unit,
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val question = state.session.question ?: return
@@ -190,24 +212,58 @@ private fun QuestionBody(
     ) {
         Spacer(Modifier.height(TujiSpace.S3))
 
-        HeroCard(item = item, faceUp = question.hintFaceUp, onFlip = onToggleHint)
-
-        state.flash?.let { FlashLine(it) }
-
-        state.choices.forEachIndexed { i, label ->
-            StudyOptionRow(
-                label = label,
-                letter = ('A' + i).toString(),
-                state = StudyOptionState.forOption(
-                    label = label,
-                    answer = item.word.word,
-                    picked = question.picked?.label,
-                    revealed = revealed,
-                    wrongPicks = question.wrongPicks,
-                ),
-                enabled = !revealed && label !in question.wrongPicks,
-                onClick = { onPick(label) },
+        val example = question.example
+        val imageOptions = question.imageOptions
+        if (question.kind == ReviewQuestionKind.HearSentence &&
+            example != null && imageOptions != null
+        ) {
+            ListenCard(
+                question = question,
+                example = example,
+                onReplay = onReplay,
+                onReveal = onReveal,
             )
+
+            state.flash?.let { FlashLine(it) }
+
+            ImagePair(options = imageOptions, question = question, onPick = onPickImage)
+
+            // An "I cannot hear right now" escape, not an "this is too hard"
+            // one — 聽句 is the only question in the app that cannot be
+            // answered without audio, and no headphones on a train is not a
+            // difficulty problem. Which is also why it carries no rating cost.
+            if (!revealed) {
+                Text(
+                    stringResource(R.string.study_listen_opt_out),
+                    style = TujiType.bodySm,
+                    color = TujiColor.Ink3,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .tujiClickable(onClick = onOptOut)
+                        .padding(vertical = TujiSpace.S3),
+                )
+            }
+        } else {
+            HeroCard(item = item, faceUp = question.hintFaceUp, onFlip = onToggleHint)
+
+            state.flash?.let { FlashLine(it) }
+
+            state.choices.forEachIndexed { i, label ->
+                StudyOptionRow(
+                    label = label,
+                    letter = ('A' + i).toString(),
+                    state = StudyOptionState.forOption(
+                        label = label,
+                        answer = item.word.word,
+                        picked = question.picked?.label,
+                        revealed = revealed,
+                        wrongPicks = question.wrongPicks,
+                    ),
+                    enabled = !revealed && label !in question.wrongPicks,
+                    onClick = { onPick(label) },
+                )
+            }
         }
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
@@ -390,3 +446,199 @@ private fun CompleteView(
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
+
+// MARK: - 聽句
+
+/**
+ * 聽句's question: the sentence, hidden, with its audio — and the two pictures
+ * to choose between.
+ *
+ * The sentence is drawn with a plain [Text], never anything tappable. The queue
+ * deliberately carries no 詞塊 spans for it, and a sentence that looks tappable
+ * and is not is worse than one that never pretended.
+ */
+@Composable
+private fun ListenCard(
+    question: ReviewQuestion,
+    example: StudyExample,
+    onReplay: (Float) -> Unit,
+    onReveal: () -> Unit,
+) {
+    // Readable once the answer is in, or once the eye bought it. Answering
+    // removes the reason to hide it: from that moment the sentence is study
+    // material, exactly like the answer on the reveal sheet.
+    val legible = question.sentenceRevealed || question.phase == ReviewPhase.Review
+    val maskedLabel = stringResource(R.string.study_listen_masked)
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .background(TujiColor.Paper2),
+    ) {
+        // Three states, not two. The blur is the design — it leaves the shape
+        // of the words, the line count, where it breaks — but it needs
+        // RenderEffect, which is API 31, and `minSdk` is 29. Below that
+        // `Modifier.blur` silently draws nothing at all, so those two API
+        // levels replace the glyphs instead of covering them.
+        val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        Text(
+            when {
+                legible -> example.sentence
+                canBlur -> example.sentence
+                else -> maskedSentence(example.sentence)
+            },
+            style = TujiType.body,
+            color = TujiColor.Ink,
+            textAlign = TextAlign.Center,
+            lineHeight = 28.sp,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = TujiSpace.S4)
+                // 12dp, not something gentler: enough to say "there is a
+                // sentence here" without leaving one letter legible.
+                .then(if (!legible && canBlur) Modifier.blur(12.dp) else Modifier)
+                // The blur is a *visual* effect and a screen reader does not
+                // see through it — it reads the sentence out, handing over the
+                // answer without the eye ever being pressed and therefore
+                // without the rating cost the eye carries. Worse here than a
+                // missing label: the sentence names the word the two pictures
+                // are asking about. So the sentence is not in the
+                // accessibility tree until it is legible, and 顯示例句 next to
+                // it is a real labelled control for anyone who wants it.
+                .then(
+                    if (legible) {
+                        Modifier
+                    } else {
+                        Modifier.clearAndSetSemantics {
+                            contentDescription = maskedLabel
+                        }
+                    },
+                ),
+        )
+
+        Row(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(TujiSpace.S3),
+            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        ) {
+            // 慢讀, drawn as a sibling of the speaker rather than hidden behind
+            // a long-press: an affordance nobody can see is found only by the
+            // people who did not need it, and someone who needs a sentence read
+            // slowly is the least likely to go hunting for a gesture. The label
+            // is the number, which needs no translating.
+            ListenButton(
+                label = stringResource(R.string.study_listen_slow),
+                onClick = { onReplay(SLOW_RATE) },
+            ) {
+                Text("0.8×", style = TujiType.monoLabel, color = TujiColor.Ink2)
+            }
+            // Always available, and unlimited: a replay does not reset the
+            // clock, it spends time that honestly means the word was hard, so
+            // there is no reason to make hearing it again feel expensive.
+            ListenButton(
+                label = stringResource(R.string.study_listen_replay),
+                background = if (question.isPlayingSentence) TujiColor.Current else TujiColor.Paper,
+                onClick = { onReplay(1f) },
+            ) {
+                TujiGlyph.Speaker(tint = TujiColor.Ink)
+            }
+        }
+
+        // Drawn from the first frame, unlike 選字's hint which is deliberately
+        // invisible for 8 seconds. That delay compensates for an affordance
+        // with nothing on screen to announce it; this one is on screen.
+        if (!legible) {
+            ListenButton(
+                label = stringResource(R.string.study_listen_reveal),
+                onClick = onReveal,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(TujiSpace.S3),
+            ) {
+                TujiGlyph.Eye(tint = TujiColor.Ink2)
+            }
+        }
+
+        if (question.audioFailed) {
+            Text(
+                stringResource(R.string.study_listen_failed),
+                style = TujiType.bodySm,
+                color = TujiColor.Ink3,
+                modifier = Modifier.align(Alignment.TopEnd).padding(TujiSpace.S3),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ListenButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    background: androidx.compose.ui.graphics.Color = TujiColor.Paper,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier
+            .size(48.dp)
+            .background(background)
+            .semantics { contentDescription = label }
+            .tujiClickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
+
+/**
+ * The two pictures, side by side as equal squares.
+ *
+ * Two rather than four is the whole reason 聽句 never auto-rates: the trade is a
+ * 50% floor on guessing, bought so the options can be pictures at a size worth
+ * looking at.
+ *
+ * Each keeps its **word** as its accessibility label. Hiding the sentence
+ * removes a shortcut — reading the answer instead of hearing it — but the
+ * pictures are not a shortcut, they are the options; labelling them 「選項一／
+ * 選項二」 would leave a blind user flipping a coin while the SRS kept score.
+ */
+@Composable
+private fun ImagePair(
+    options: List<ImageChoiceOption>,
+    question: ReviewQuestion,
+    onPick: (ImageChoiceOption) -> Unit,
+) {
+    val revealed = question.phase == ReviewPhase.Review
+    val answerId = question.item.word.id
+
+    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+        options.forEach { option ->
+            val picked = question.picked?.id == option.id
+            val border = when {
+                !revealed -> null
+                option.id == answerId -> TujiColor.Current
+                picked -> TujiColor.Alert
+                else -> null
+            }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .aspectRatio(1f)
+                    .background(TujiColor.Paper2)
+                    .then(border?.let { Modifier.border(3.dp, it) } ?: Modifier)
+                    .semantics { contentDescription = option.word }
+                    .tujiClickable(enabled = !revealed) { onPick(option) },
+            ) {
+                AsyncImage(
+                    model = option.imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
+                )
+            }
+        }
+    }
+}
+
+/** 慢讀's multiplier. Slow enough to separate the syllables, not so slow it warbles. */
+private const val SLOW_RATE = 0.8f

@@ -73,6 +73,12 @@
     <string name="study_done_title">這輪結束</string>
     <string name="study_done_count">複習了 %1$d 個字</string>
     <string name="study_was_wrong">答錯過</string>
+    <string name="study_listen_replay">再聽一次</string>
+    <string name="study_listen_slow">慢速播放</string>
+    <string name="study_listen_reveal">顯示例句</string>
+    <string name="study_listen_masked">例句（已遮蔽）</string>
+    <string name="study_listen_opt_out">這輪不做聽句題</string>
+    <string name="study_listen_failed">這句話播不出來</string>
     <string name="study_close">回到首頁</string>
     <string name="rating_again">重來</string>
     <string name="rating_hard">困難</string>

@@ -1,20 +1,27 @@
 package app.tuji.android.study
 
 import android.util.Log
+import app.tuji.android.BuildConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
+import app.tuji.android.core.study.ImageChoiceOption
+import app.tuji.android.core.study.ImageChoicePair
+import app.tuji.android.core.study.ListeningQuestion
 import app.tuji.android.core.study.PendingWrite
 import app.tuji.android.core.study.ReviewFlash
 import app.tuji.android.core.study.ReviewOutcome
 import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
+import app.tuji.android.core.study.SentencePlayback
+import app.tuji.android.core.study.SentencePlaying
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.studyChoices
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +56,18 @@ class ReviewViewModel(
      * moment the user is least likely to be watching for it.
      */
     private val requestDrain: () -> Unit = {},
+    /**
+     * Plays 聽句's sentence. Defaults to a player that can do nothing, which
+     * is not a stub but the honest answer for a build with no audio wired: it
+     * reports [SentencePlaying.canPlay] false, and every card lands on 選字.
+     */
+    private val audio: SentencePlaying = SilentPlaying,
+    /**
+     * Whether the device has usable internet, asked per card rather than held.
+     * Freezing it when the queue loaded would decide a whole session's
+     * questions against the network as it was a minute ago.
+     */
+    private val online: () -> Boolean = { false },
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -73,6 +92,7 @@ class ReviewViewModel(
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
+    private var clipJob: Job? = null
     private var unsynced = 0
 
     /**
@@ -101,13 +121,13 @@ class ReviewViewModel(
                 _state.value = State.Failed(it.message ?: "load failed")
                 return@launch
             }
-            val session = ReviewSession(queue, nowMs())
-                .present(app.tuji.android.core.model.ReviewQuestionKind.PickWord)
+            val session = prepared(ReviewSession(queue, nowMs()))
             _state.value = if (session.finished) {
                 State.Done(session, unsynced)
             } else {
                 studying(session)
             }
+            autoPlay()
         }
     }
 
@@ -149,6 +169,7 @@ class ReviewViewModel(
     fun leave() {
         beat?.cancel()
         beat = null
+        stopAudio()
     }
 
     override fun onCleared() {
@@ -193,8 +214,9 @@ class ReviewViewModel(
             _state.value = if (next.finished) {
                 State.Done(next, unsynced)
             } else {
-                studying(next.present(app.tuji.android.core.model.ReviewQuestionKind.PickWord))
+                studying(prepared(next))
             }
+            autoPlay()
         }
     }
 
@@ -229,7 +251,171 @@ class ReviewViewModel(
         return State.Studying(session, choices, revealMode, flash, unsynced)
     }
 
+    // 聽句
+
+    /** One of the two pictures. */
+    fun pickImage(option: ImageChoiceOption) {
+        val now = current() ?: return
+        if (now.revealMode != null || now.flash != null) return
+        apply(now.session.pickImage(option, nowMs()))
+    }
+
+    /**
+     * 再聽一次 / 慢讀. The latter passes 0.8 and counts as a replay, because it
+     * is one: reaching for it says the sentence did not land at speed.
+     */
+    fun replaySentence(rate: Float = 1f) {
+        val now = current() ?: return
+        val replayed = now.session.question?.willReplay() ?: return
+        _state.value = studying(now.session.withQuestion(replayed), now.revealMode, now.flash)
+        autoPlay(rate = rate, isReplay = true)
+    }
+
+    /** Lift the blur — from here this is a reading question, not a listening one. */
+    fun revealSentence() {
+        val now = current() ?: return
+        val q = now.session.question ?: return
+        _state.value = studying(
+            now.session.withQuestion(q.revealSentence()), now.revealMode, now.flash,
+        )
+    }
+
+    /** 這輪不做聽句題. Stops the clip too: it is answering a question that just left. */
+    fun optOutOfListening() {
+        val now = current() ?: return
+        stopAudio()
+        val next = now.session.optOutOfListening(nowMs())
+        if (next === now.session) return
+        _state.value = studying(next, now.revealMode, now.flash)
+    }
+
+    // Choosing the question
+
+    /**
+     * Decide what to ask about the current card.
+     *
+     * The catalogue and connectivity are read here, per card, rather than
+     * frozen at construction — see [online].
+     */
+    private fun prepared(session: ReviewSession): ReviewSession {
+        val item = session.current ?: return session.present(ReviewQuestionKind.PickWord)
+        val presentation = session.choicesVariant(item)
+        val example = ListeningQuestion.example(item, item.mastery, presentation)
+        val clip = example?.audioUrls?.get(voice)
+
+        var kind = ListeningQuestion.kind(
+            wordId = item.word.id,
+            canHear = !session.listeningOptedOut &&
+                example != null &&
+                audio.canPlay(clip, online()),
+            previous = session.previousKind,
+            alreadyHeard = item.word.id in session.heardWordIds,
+        )
+
+        // Two pictures or it is not this question. A pool that cannot produce a
+        // fair distractor sends the card to 選字 — the same fallback every
+        // other ineligible card takes.
+        var options: List<ImageChoiceOption>? = null
+        if (kind == ReviewQuestionKind.HearSentence) {
+            options = ImageChoicePair.options(
+                item = item,
+                pool = pool(),
+                session = direction.targetLanguage,
+                mentionedWordIds = example?.mentionedWordIds.orEmpty().toSet(),
+                queuedWordIds = session.upcomingWordIds,
+                variant = presentation,
+            )
+            if (options == null) kind = ReviewQuestionKind.PickWord
+        }
+
+        // Kept, not deleted after it did its job. 聽句 declining to appear is
+        // *silent* — every reason falls back to 選字, which is also what a
+        // perfectly ordinary card does — and that is exactly how an unassigned
+        // catalogue pool hid the whole question type from every card in a run.
+        if (BuildConfig.DEBUG) Log.d(
+            TAG,
+            "listen? word=${item.word.id} slot=${ListeningQuestion.fallsOnSlot(item.word.id)} " +
+                "example=${example != null} clip=${clip != null} online=${online()} " +
+                "canPlay=${audio.canPlay(clip, online())} pool=${pool().size} " +
+                "options=${options?.size} -> $kind",
+        )
+
+        // Ready *before* the audio: the card is fully drawn and answerable
+        // while the sentence plays. Only the clock waits.
+        return session.present(
+            kind = kind,
+            example = example,
+            imageOptions = options,
+            awaitsAudio = kind == ReviewQuestionKind.HearSentence,
+        )
+    }
+
+    /**
+     * Play the current card's sentence, if it has one.
+     *
+     * The card id is captured and re-checked on the way out: a clip that
+     * finishes after the user has moved on must not start the *next* card's
+     * clock, and cancelling the job is not enough on its own because the
+     * completion can already be in flight.
+     */
+    private fun autoPlay(rate: Float = 1f, isReplay: Boolean = false) {
+        val now = current() ?: return
+        val q = now.session.question ?: return
+        val began = q.playbackBegan() ?: return
+        val clip = q.example?.audioUrls?.get(voice)
+        val askedBy = q.item.card.id
+
+        _state.value = studying(now.session.withQuestion(began), now.revealMode, now.flash)
+
+        clipJob?.cancel()
+        clipJob = work.launch {
+            val outcome = audio.play(clip, rate)
+            val settled = current() ?: return@launch
+            val current = settled.session.question ?: return@launch
+            if (current.item.card.id != askedBy) return@launch
+            _state.value = studying(
+                settled.session.withQuestion(
+                    current.playbackEnded(
+                        finished = outcome == SentencePlayback.Finished,
+                        isReplay = isReplay,
+                        nowMs = nowMs(),
+                    ),
+                ),
+                settled.revealMode,
+                settled.flash,
+            )
+        }
+    }
+
+    private fun stopAudio() {
+        clipJob?.cancel()
+        clipJob = null
+        audio.stop()
+    }
+
+    /**
+     * Which recording to ask for. English has two accents on the server and the
+     * 發音口音 setting that picks between them has no Android home yet, so this
+     * takes the same default iOS does when nothing is saved.
+     */
+    private val voice: String
+        get() = if (direction.targetLanguage == TargetLanguage.JA) "ja-JP" else "en-US"
+
     private companion object {
         const val TAG = "TujiStudy"
     }
+}
+
+/**
+ * A player that can play nothing.
+ *
+ * The default for [ReviewViewModel.audio], and not a stub: `canPlay` answering
+ * false is the correct description of a build with no audio wired, and it sends
+ * every card to 選字 rather than raising a listening question nobody can hear.
+ */
+object SilentPlaying : SentencePlaying {
+    override fun canPlay(url: String?, online: Boolean): Boolean = false
+    override suspend fun play(url: String?, rate: Float): SentencePlayback =
+        SentencePlayback.Failed
+    override fun stop() = Unit
 }

@@ -1,6 +1,7 @@
 package app.tuji.android.core.study
 
 import app.tuji.android.core.model.ReviewQuestionKind
+import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyExample
@@ -62,11 +63,18 @@ sealed interface ReviewTap {
     data class Resolved(val resolution: ReviewResolution) : ReviewTap
 }
 
-/** One of the two pictures in a 聽句 question. */
+/**
+ * One of the two pictures in a 聽句 question.
+ *
+ * Carries the id so a pick can be compared against the answer without
+ * comparing labels — two catalogue words can share a label, they cannot share
+ * an id.
+ */
 data class ImageChoiceOption(
     val id: String,
     val word: String,
     val imageUrl: String,
+    val imageKind: WordImageKind = WordImageKind.Cutout,
 )
 
 /**
