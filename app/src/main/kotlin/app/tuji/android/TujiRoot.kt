@@ -35,6 +35,7 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.spike.FuriganaSpikeScreen
+import app.tuji.android.study.AnswerDrainWorker
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.core.design.TujiButton
@@ -133,6 +134,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                 direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN,
                 uiLang = "zh-Hant",
                 pool = { app.catalogPool },
+                requestDrain = { AnswerDrainWorker.enqueue(app) },
             ).also { it.load(picked) }
         }
         ReviewScreen(vm = vm, onClose = { mode = null })
