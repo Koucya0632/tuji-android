@@ -59,6 +59,26 @@
     <string name="auth_error_invalid_email">Email 格式或網域不被接受</string>
     <string name="auth_error_unknown">登入沒有成功，請稍後再試</string>
 
+    <!-- 複習 -->
+    <string name="study_start_review">開始複習</string>
+    <string name="study_start_new_debug">抽 5 個新字試跑（debug）</string>
+    <string name="study_loading">載入中…</string>
+    <string name="study_failed">拿不到今天的複習，請稍後再試</string>
+    <string name="study_leave">先離開</string>
+    <string name="study_unsynced">%1$d 筆待同步</string>
+    <string name="study_unsynced_done">有 %1$d 筆評分還沒送出，連上網路後會自動補送</string>
+    <string name="study_next">下一題</string>
+    <string name="study_retest_passed">這次對了</string>
+    <string name="study_auto_rated">已記為 %1$s</string>
+    <string name="study_done_title">這輪結束</string>
+    <string name="study_done_count">複習了 %1$d 個字</string>
+    <string name="study_was_wrong">答錯過</string>
+    <string name="study_close">回到首頁</string>
+    <string name="rating_again">重來</string>
+    <string name="rating_hard">困難</string>
+    <string name="rating_good">穩定</string>
+    <string name="rating_easy">熟練</string>
+
     <!-- Signed in -->
     <string name="signed_in_as">已登入</string>
     <string name="sign_out">登出</string>

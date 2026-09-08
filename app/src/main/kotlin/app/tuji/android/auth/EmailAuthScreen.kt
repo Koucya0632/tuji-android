@@ -57,6 +57,7 @@ fun EmailAuthScreen(
     auth: AuthService,
     mode: EmailRoute,
     onBack: () -> Unit,
+    onSwitchMode: (EmailRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -210,7 +211,20 @@ fun EmailAuthScreen(
         }
 
         Spacer(Modifier.height(TujiSpace.S4))
-        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
+        // The whole row is the target, not just the two words at the end of
+        // it: this was rendered as decoration once, and a screen whose only
+        // way to the other mode is a piece of text that does nothing is a
+        // dead end you cannot see.
+        Row(
+            Modifier
+                .tujiClickable(enabled = !busy) {
+                    onSwitchMode(
+                        if (mode == EmailRoute.SignUp) EmailRoute.SignIn else EmailRoute.SignUp
+                    )
+                }
+                .padding(vertical = TujiSpace.S2),
+            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1),
+        ) {
             Text(
                 stringResource(
                     if (mode == EmailRoute.SignUp) R.string.auth_have_account

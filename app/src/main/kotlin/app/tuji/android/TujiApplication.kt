@@ -66,11 +66,22 @@ class TujiApplication : Application() {
 
     val catalog: CatalogRepository by lazy { CatalogRepository(api) }
 
+    /**
+     * The catalogue, for topping up MCQ options the server did not fill.
+     *
+     * A plain field rather than a store: the real `WordsStore` (invalidated by
+     * a direction switch, reloaded on launch) arrives with M2's 圖鑑. Until it
+     * does, an empty pool is honest — the distractor top-up simply has nothing
+     * to draw from and the server's own choices carry the question.
+     */
+    @Volatile
+    var catalogPool: List<app.tuji.android.core.model.Word> = emptyList()
+
     /** Which language, and whether the intro has been seen. See the class doc
      *  for why the direction is local-only until the settings module lands. */
     val onboarding: OnboardingStore by lazy { OnboardingStore(this) }
 
-    private val study: StudyRepository by lazy { StudyRepository(api) }
+    val study: StudyRepository by lazy { StudyRepository(api) }
 
     /**
      * The network primitive, as the shape `core:study` asks for.

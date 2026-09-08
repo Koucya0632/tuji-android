@@ -23,12 +23,19 @@ android {
 
 dependencies {
     api(project(":core:model"))
+    // The option-state decision lives in core:study; this module only colours it.
+    api(project(":core:study"))
 
     implementation(platform(libs.compose.bom))
     api(libs.compose.ui)
     api(libs.compose.ui.graphics)
     api(libs.compose.foundation)
     api(libs.compose.material3)
+    // Nuke on iOS. The signed-URL cache key it needs is a later problem
+    // (see the plan): a private-bucket photo re-signs on every response,
+    // so a whole-URL key misses forever on the user's own pictures.
+    api(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 

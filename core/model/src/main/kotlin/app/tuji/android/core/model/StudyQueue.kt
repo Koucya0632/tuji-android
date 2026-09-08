@@ -1,6 +1,8 @@
 package app.tuji.android.core.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -54,23 +56,43 @@ private object FlexibleIdSerializer : KSerializer<String> {
     override fun serialize(encoder: Encoder, value: String) = encoder.encodeString(value)
 }
 
+/**
+ * ⚠️ **`/api/study/queue` does not speak camelCase.**
+ *
+ * It hands back near-raw rows, so `image_url`, `target_language`, `card_type`,
+ * `deck_key` and `word_id` arrive in the database's own naming — while
+ * `readingSegments`, `cefrLevel` and `audioUrls` in the same payload are
+ * camelCase. It is genuinely mixed.
+ *
+ * iOS never had to notice: its decoder sets `.convertFromSnakeCase`, which
+ * rewrites the snake keys and leaves the camel ones alone. kotlinx has no
+ * equivalent that tolerates *both*, so each affected field names its
+ * alternative here — which has the advantage of saying, in the model, exactly
+ * which routes are raw.
+ *
+ * Found by running the flow against production: the whole study queue failed
+ * to decode with 「資料解析失敗」, on a field that looks entirely ordinary in the
+ * iOS source it was ported from.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class StudyCard(
     @Serializable(with = FlexibleIdSerializer::class) val id: String,
-    val cardType: String? = null,
-    val deckKey: String? = null,
+    @JsonNames("card_type") val cardType: String? = null,
+    @JsonNames("deck_key") val deckKey: String? = null,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class StudyQueueWord(
     val id: String,
     override val word: String,
     val chinese: String,
-    val imageUrl: String,
+    @JsonNames("image_url") val imageUrl: String,
     val pronunciation: String,
     override val reading: String? = null,
     override val readingSegments: List<FuriganaSegment>? = null,
-    override val targetLanguage: TargetLanguage? = null,
+    @JsonNames("target_language") override val targetLanguage: TargetLanguage? = null,
     val category: String,
     /**
      * The 釋義 — the explanatory sentence the detail page prints, in the
