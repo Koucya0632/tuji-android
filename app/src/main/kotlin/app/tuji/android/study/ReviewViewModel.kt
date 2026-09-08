@@ -40,6 +40,15 @@ class ReviewViewModel(
     private val uiLang: String,
     /** The catalogue, for topping up MCQ options on cards the server did not fill. */
     private val pool: () -> List<Word>,
+    /**
+     * Ask for a drain, because an answer was just parked.
+     *
+     * The worker's own doc said it was enqueued "at launch and whenever an
+     * answer is parked" and only the first half was true — so a rating parked
+     * mid-session sat on disk until the next cold start, which is the one
+     * moment the user is least likely to be watching for it.
+     */
+    private val requestDrain: () -> Unit = {},
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -194,6 +203,7 @@ class ReviewViewModel(
         work.launch {
             if (writer.submitAnswer(pending.payload) is StudyWriteOutcome.Parked) {
                 unsynced += 1
+                requestDrain()
                 (_state.value as? State.Studying)
                     ?.let { _state.value = it.copy(unsynced = unsynced) }
                 (_state.value as? State.Done)
