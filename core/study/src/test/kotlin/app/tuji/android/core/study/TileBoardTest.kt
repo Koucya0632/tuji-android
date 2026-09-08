@@ -5,6 +5,7 @@ import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.StudyQueueWord
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class TileBoardTest {
@@ -81,5 +82,50 @@ class TileBoardTest {
     fun `the board is the same on every retry`() {
         val subject = item("あかさたなはまやらわをん", reading = "あかさたなはまやらわをん")
         assertEquals(TileBoard.of(subject), TileBoard.of(subject))
+    }
+}
+
+class TileBoardScrambleTest {
+
+    private fun item(id: String, word: String, reading: String? = null) = StudyQueueItem(
+        card = StudyCard(id = "c-$id"),
+        word = StudyQueueWord(
+            id = id, word = word, chinese = id,
+            imageUrl = "https://img.test/$id.webp",
+            pronunciation = "", category = "kitchen", reading = reading,
+        ),
+    )
+
+    @Test fun `the pool holds exactly the board's units`() {
+        val it = item("cutting-board", "cutting board")
+        val board = TileBoard.of(it)
+        assertEquals(
+            board.orderedUnits.sorted(),
+            TileBoard.scrambled(it, attempt = 0).sorted(),
+        )
+    }
+
+    @Test fun `it does not reshuffle between two identical asks`() {
+        val it = item("kettle", "kettle")
+        assertEquals(TileBoard.scrambled(it, 0), TileBoard.scrambled(it, 0))
+    }
+
+    @Test fun `a retry gets a new scramble`() {
+        val it = item("refrigerator", "refrigerator")
+        val draws = (0 until 5).map { a -> TileBoard.scrambled(it, a) }
+        assertTrue("an attempt that repeats the layout is a free re-read", draws.toSet().size > 1)
+    }
+
+    @Test fun `the tiles are never already the answer`() {
+        // A two-tile board lands in order half the time by chance, so this is
+        // the case the swap exists for rather than a theoretical one.
+        (0 until 60).forEach { a ->
+            val it = item("w$a", "はし", reading = "はし")
+            val pool = TileBoard.scrambled(it, a)
+            assertNotEquals(
+                "attempt $a handed over the answer",
+                TileBoard.of(it).target, pool.joinToString(""),
+            )
+        }
     }
 }

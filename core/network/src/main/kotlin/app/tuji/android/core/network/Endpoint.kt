@@ -37,6 +37,22 @@ interface Endpoint {
         )
     }
 
+    /**
+     * The day's counts, without the cards.
+     *
+     * A separate route from [StudyQueue] even though that one returns `stats`
+     * too: 今日 needs the numbers on every appearance and a queue only when the
+     * user actually starts a session. Reading them off a queue fetch would
+     * mean drawing twenty cards, with their images, to print a 3.
+     */
+    data class StudyStats(val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/stats",
+            query = listOf("learning" to learning.wire),
+            policy = EndpointPolicy.PrivateServerCached,
+        )
+    }
+
     data class Categories(val lang: String) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/categories",
@@ -72,14 +88,6 @@ interface Endpoint {
                 "lang" to lang,
                 "learning" to learning.wire,
             ),
-            policy = EndpointPolicy.PrivateServerCached,
-        )
-    }
-
-    data class StudyStats(val learning: LearningDirection) : Endpoint {
-        override val descriptor get() = EndpointDescriptor(
-            path = "/api/study/stats",
-            query = listOf("learning" to learning.wire),
             policy = EndpointPolicy.PrivateServerCached,
         )
     }

@@ -80,6 +80,28 @@ data class TileBoard(val tokenUnits: List<List<String>>) {
             return TileBoard(tokenUnits)
         }
 
+        /**
+         * The scrambled tile pool — deterministic per (item, attempt) so a
+         * recomposition does not reshuffle the tiles mid-task, while a retry
+         * gets a fresh scramble.
+         *
+         * **It never reads as the answer itself.** A shuffle that happens to
+         * land in order hands the user a free win on the one stage that is
+         * supposed to be about recall, so that case swaps the ends. Rare, and
+         * near-certain on a two-tile board.
+         */
+        fun scrambled(item: StudyQueueItem, attempt: Int): List<String> {
+            val board = of(item)
+            val units = board.orderedUnits
+                .shuffled(SeededRandom(studyStableHash("${item.id}#tiles#$attempt")))
+                .toMutableList()
+            if (units.size >= 2 && units.joinToString("") == board.target) {
+                val last = units.size - 1
+                val tmp = units[0]; units[0] = units[last]; units[last] = tmp
+            }
+            return units
+        }
+
         /** One grapheme per unit, with small kana glued to their base kana. */
         private fun baseUnits(token: String): List<String> {
             val units = mutableListOf<String>()
