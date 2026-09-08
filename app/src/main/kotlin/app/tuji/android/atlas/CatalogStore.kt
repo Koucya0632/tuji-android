@@ -30,8 +30,19 @@ import kotlinx.coroutines.sync.withLock
  */
 class CatalogStore(
     private val catalog: CatalogReading,
-    private val uiLang: String = "zh-Hant",
+    /**
+     * The language the server should write in. Set from the device — see
+     * [app.tuji.android.core.model.UiLanguage].
+     */
+    private var uiLang: String = "zh-Hant",
 ) {
+    /** Change the language and drop what was fetched in the old one. */
+    fun retune(lang: String) {
+        if (lang == uiLang) return
+        uiLang = lang
+        _contents.value = Contents()
+    }
+
     data class Contents(
         val words: List<Word> = emptyList(),
         val categories: List<Category> = emptyList(),

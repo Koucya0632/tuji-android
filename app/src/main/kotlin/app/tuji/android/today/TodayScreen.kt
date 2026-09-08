@@ -92,8 +92,12 @@ fun TodayScreen(
 @Composable
 private fun Greeting(name: String?, subtitle: String) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
+        // One format string, not a prefix plus a name. Concatenating them
+        // makes the word order English's choice for every language — and
+        // Android strips the trailing space off `"Good evening, "` anyway, so
+        // the seam showed up as 「Good evening,TJ16227931」.
         Text(
-            stringResource(greetingPrefix()) + (name ?: ""),
+            stringResource(greetingPrefix(), name.orEmpty()),
             style = TujiType.h2,
             color = TujiColor.Ink,
         )
