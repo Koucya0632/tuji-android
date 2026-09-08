@@ -24,11 +24,26 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
 ## 跑起來
 
 ```bash
+./scripts/emulator.sh           # 開機 + 建置 + 安裝 + 啟動（冷開約 25 秒）
 ./gradlew build                 # 編譯 + 全部單元測試
 ./scripts/check-test-counts.sh  # 測試「有沒有真的跑」，不是「有沒有紅」
-./gradlew :app:assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+
+`emulator.sh` 還有幾個子命令：
+
+| | |
+|---|---|
+| `up` | 只開機並等到真的好了 |
+| `install` | 建置 + 安裝 + 啟動（假設已經開著） |
+| `shot [檔案]` | 截圖，預設寫到 `captures/`；只印路徑，可以 `f=$(./scripts/emulator.sh shot)` |
+| `log` | 只跟這個 App 的 logcat |
+| `kill` | 關掉 |
+
+`TUJI_AVD=<名字>` 可以換 AVD。SDK 位置依序找 `ANDROID_HOME` → `local.properties` 的
+`sdk.dir` → Homebrew 預設 —— 第二項是 Gradle 自己讀的那個，所以腳本跟建置不會各說各話。
+
+⚠️ **模擬器映像沒有 Google 帳號**（`google_apis` 不是 `google_apis_playstore`），
+所以 **Google 登入在上面必然拿到 `NoCredentialException`**。那不是 bug，要實機測。
 
 `check-test-counts.sh` 不是多餘的。iOS 那邊付過代價：suite 崩潰時 xcodebuild
 照樣印 ✔，唯一的差別是測試總數變小。Gradle 的等價情形是某個模組的 test task
