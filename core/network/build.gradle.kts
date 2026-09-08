@@ -25,6 +25,7 @@ android {
 
 dependencies {
     api(project(":core:model"))
+    api(project(":core:community"))
 
     api(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)

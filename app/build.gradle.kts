@@ -92,6 +92,7 @@ android {
 dependencies {
     implementation(project(":core:auth"))
     implementation(project(":core:catalog"))
+    implementation(project(":core:community"))
     implementation(project(":core:design"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))

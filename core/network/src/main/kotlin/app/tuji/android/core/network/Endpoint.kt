@@ -53,6 +53,94 @@ interface Endpoint {
         )
     }
 
+    // MARK: 物見（wire 上叫 public/community）
+
+    /**
+     * The 物見 feed.
+     *
+     * `PublicCached` on purpose: these routes are anonymous and share one CDN
+     * cache. That is also why 封鎖 filters on the client — see `BlockList`.
+     */
+    data class AtlasFeed(val limit: Int) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public",
+            query = listOf("limit" to limit.toString()),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    data class AtlasItem(val slug: String, val lang: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/$slug",
+            query = listOf("lang" to lang),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    data class AtlasAuthorPage(val handle: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/authors/$handle",
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    /**
+     * Published collections.
+     *
+     * `lang` is required — the backend 400s without it — because the feed is
+     * scoped to the direction the user is learning.
+     */
+    data class AtlasCollections(val lang: String, val limit: Int) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections",
+            query = listOf("lang" to lang, "limit" to limit.toString()),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    data class AtlasCollection(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections/$slug",
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    data class AtlasSave(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/$slug/save",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    data class AtlasItemReport(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/$slug/report",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    data class AtlasCollectionReport(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections/$slug/report",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    data class AtlasAuthorReport(val handle: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/authors/$handle/report",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** The account's 封鎖 list. Server-stored, client-applied. */
+    data object Blocks : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/blocks",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     data class Categories(val lang: String) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/categories",

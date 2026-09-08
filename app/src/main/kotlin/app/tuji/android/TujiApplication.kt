@@ -78,6 +78,11 @@ class TujiApplication : Application() {
 
     val study: StudyRepository by lazy { StudyRepository(api) }
 
+    /** 物見 — reading, saving, reporting and the 封鎖 list, all one client. */
+    val atlas: app.tuji.android.core.network.AtlasRepository by lazy {
+        app.tuji.android.core.network.AtlasRepository(api)
+    }
+
     /** One player for the process: its clip cache and its MediaPlayer are both
      *  things there should be exactly one of. */
     val clipPlayer: app.tuji.android.study.ClipPlayer by lazy {
