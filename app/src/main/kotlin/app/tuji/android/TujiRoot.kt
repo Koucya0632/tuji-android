@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -175,8 +176,30 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
         // came back in whatever language was asked for last time.
         app.catalog.retune(uiLang)
         app.catalog.load(direction)
+        // The two decks score separately — the same word id holds one score as
+        // 中→日 and another as 中→英 — so a direction change drops the map
+        // before asking for the new one.
+        app.masteryStore.retune()
+        app.masteryStore.load(direction)
     }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
+    val scores by app.masteryStore.scores.collectAsStateWithLifecycle()
+
+    // Bumped as a study flow closes. A signal here rather than a call at the
+    // close site, because the fetch has to outlive the composable that asked
+    // for it — and that composable is the one being popped.
+    //
+    // **A counter, not a flag.** The first version was a `Boolean` the effect
+    // reset on entry, which changed the very key it was launched on: Compose
+    // cancelled the effect mid-flight and restarted it with the new key, which
+    // returned immediately. The refresh never ran once. A key that only ever
+    // moves forward, and nothing inside the effect touching it, is the shape
+    // that cannot do that.
+    var refreshTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(refreshTick) {
+        if (refreshTick == 0) return@LaunchedEffect
+        app.masteryStore.load(direction, force = true)
+    }
 
     val community = remember(direction) {
         CommunityViewModel(
@@ -237,7 +260,18 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     hints = app.onboarding,
                 ).also { it.load(StudyMode.Review) }
             }
-            ReviewScreen(vm = vm, onClose = { nav = nav.pop() })
+            ReviewScreen(
+                vm = vm,
+                onClose = {
+                    // A session just moved the scores every badge in 圖鑑
+                    // draws. Without this the user finishes twenty cards,
+                    // opens 圖鑑, and sees the tiers they had before they
+                    // started — on the screen they went to in order to see
+                    // the change.
+                    refreshTick++
+                    nav = nav.pop()
+                },
+            )
             return
         }
         AppRoute.LearnNew -> {
@@ -251,7 +285,13 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
                 ).also { it.load() }
             }
-            NewFlowScreen(vm = vm, onClose = { nav = nav.pop() })
+            NewFlowScreen(
+                vm = vm,
+                onClose = {
+                    refreshTick++
+                    nav = nav.pop()
+                },
+            )
             return
         }
         else -> Unit
@@ -319,6 +359,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
 
                 AppRoute.Atlas -> AtlasCardsScreen(
                     words = catalog.words,
+                    scores = scores,
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
                     onOpenThemes = { nav = nav.push(AppRoute.Themes) },
@@ -327,6 +368,8 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
 
                 AppRoute.Themes -> AtlasThemesScreen(
                     shelves = catalog.shelves,
+                    words = catalog.words,
+                    scores = scores,
                     uiLang = uiLang,
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
@@ -410,6 +453,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                 is AppRoute.Shelf -> AtlasThemeScreen(
                     category = catalog.categories.firstOrNull { it.id == route.categoryId },
                     words = CategoryShelf.words(route.categoryId, catalog.words),
+                    scores = scores,
                     uiLang = uiLang,
                     topPadding = insets.calculateTopPadding(),
                     bottomPadding = 0.dp,
@@ -430,6 +474,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                         vm = vm,
                         bottomPadding = 0.dp,
                         resolve = { id -> catalog.words.firstOrNull { it.id == id } },
+                        scores = scores,
                         onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
                     )
                 }

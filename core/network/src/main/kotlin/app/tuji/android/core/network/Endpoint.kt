@@ -53,6 +53,25 @@ interface Endpoint {
         )
     }
 
+    /**
+     * Every word this account has a score for, in one call.
+     *
+     * `PrivateFresh`, not server-cached: the map is what 圖鑑 and 單字詳情 draw
+     * their badges from, and a cached one would show yesterday's tier for the
+     * word the user answered thirty seconds ago — on the screen they opened to
+     * check exactly that.
+     *
+     * `learning` because the two decks score separately: the same word id can
+     * hold one score as 中→日 and another as 中→英.
+     */
+    data class UsersMastery(val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/mastery",
+            query = listOf("learning" to learning.wire),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     // MARK: 物見（wire 上叫 public/community）
 
     /**

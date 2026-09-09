@@ -6,6 +6,7 @@ import app.tuji.android.core.model.Category
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.CatalogReading
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,19 +70,29 @@ class CatalogStore(
     suspend fun load(learning: LearningDirection, force: Boolean = false) {
         gate.withLock {
             if (_contents.value.loaded && !force) return
-            val words = runCatching { catalog.words(uiLang, learning).words }
-                .getOrElse {
-                    Log.w(TAG, "catalogue load failed", it)
-                    return
-                }
+            // Not `runCatching`: it catches `CancellationException` as well,
+            // so a torn-down load is reported as a failed one and the caller's
+            // cancellation never propagates. See MasteryStore, where that
+            // swallow hid a refresh that never ran.
+            val words = try {
+                catalog.words(uiLang, learning).words
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "catalogue load failed", failure)
+                return
+            }
             // Categories are a smaller, separate failure: without them 圖鑑 has
             // no shelves, but 聽句 and 搜尋 still work off the words. So the
             // words are kept even when this half fails.
-            val categories = runCatching { catalog.categories(uiLang).categories }
-                .getOrElse {
-                    Log.w(TAG, "categories load failed", it)
-                    emptyList()
-                }
+            val categories = try {
+                catalog.categories(uiLang).categories
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "categories load failed", failure)
+                emptyList()
+            }
             _contents.value = Contents(words = words, categories = categories)
         }
     }

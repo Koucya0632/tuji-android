@@ -42,6 +42,13 @@ fun WordTile(
     /** Fixed image height. Null — the grid case — makes the picture square. */
     height: Dp? = null,
     showLabel: Boolean = true,
+    /**
+     * The mastery scale, drawn between the picture and the word. A slot rather
+     * than a score, because resolving a tier into copy needs the app module's
+     * strings and this one has none — and because the tile has no business
+     * knowing whether the caller wants mastery shown at all.
+     */
+    badge: (@Composable () -> Unit)? = null,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
         Box(
@@ -60,6 +67,7 @@ fun WordTile(
         }
 
         if (showLabel) {
+            badge?.invoke()
             Text(
                 word.word,
                 style = TujiType.h3,
