@@ -1,6 +1,7 @@
 package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.MasteryListResponse
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
@@ -24,6 +25,11 @@ interface StudyStatsReading {
     suspend fun stats(learning: LearningDirection): StudyStatsResponse
 }
 
+/** Every word this account has a score for. */
+interface MasteryReading {
+    suspend fun mastery(learning: LearningDirection): MasteryListResponse
+}
+
 /** Fetching a session's cards, as a role. */
 interface StudyQueueReading {
     suspend fun queue(
@@ -37,7 +43,10 @@ interface StudyQueueReading {
 }
 
 class StudyRepository(private val api: TujiApiClient) :
-    AnswerSubmission, StudyQueueReading, StudyStatsReading {
+    AnswerSubmission, StudyQueueReading, StudyStatsReading, MasteryReading {
+
+    override suspend fun mastery(learning: LearningDirection): MasteryListResponse =
+        api.get(Endpoint.UsersMastery(learning))
 
     override suspend fun stats(learning: LearningDirection): StudyStatsResponse =
         api.get(Endpoint.StudyStats(learning = learning))

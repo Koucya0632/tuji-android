@@ -1,6 +1,9 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.study.ThemeStatus
+import app.tuji.android.core.study.MasteryLevel
+import app.tuji.android.core.design.MasteryBadge
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
@@ -64,6 +67,7 @@ import coil3.compose.AsyncImage
 @Composable
 fun AtlasCardsScreen(
     words: List<Word>,
+    scores: MasteryStore.Scores,
     loading: Boolean,
     bottomPadding: Dp,
     onOpenThemes: () -> Unit,
@@ -113,7 +117,11 @@ fun AtlasCardsScreen(
         }
 
         items(page.words, key = { it.id }) { word ->
-            WordTile(word = word, modifier = Modifier.tujiClickable { onOpen(word.id) })
+            WordTile(
+                word = word,
+                modifier = Modifier.tujiClickable { onOpen(word.id) },
+                badge = { MasteryScale(scores.score(word.id)) },
+            )
         }
 
         if (page.canShowMore) {
@@ -144,6 +152,8 @@ fun AtlasCardsScreen(
 @Composable
 fun AtlasThemesScreen(
     shelves: List<CategoryShelf.Shelf>,
+    words: List<Word>,
+    scores: MasteryStore.Scores,
     uiLang: String,
     loading: Boolean,
     bottomPadding: Dp,
@@ -164,18 +174,46 @@ fun AtlasThemesScreen(
         modifier = Modifier.fillMaxSize(),
     ) {
         items(shelves, key = { it.category.id }) { shelf ->
-            ThemeTile(shelf = shelf, uiLang = uiLang, onClick = { onOpen(shelf.category.id) })
+            val status = remember(shelf.category.id, words, scores) {
+                ThemeStatus.of(
+                    wordIds = CategoryShelf.words(shelf.category.id, words).map { it.id },
+                    masteryScore = scores::score,
+                    // `/api/users/progress` is not wired yet, so 完成 is
+                    // currently unreachable and 全精通 is the only badge that
+                    // can appear. The rule is whole; one of its inputs is not.
+                    seenAndTotal = null,
+                )
+            }
+            ThemeTile(
+                shelf = shelf,
+                status = status,
+                uiLang = uiLang,
+                onClick = { onOpen(shelf.category.id) },
+            )
         }
     }
 }
 
 @Composable
-private fun ThemeTile(shelf: CategoryShelf.Shelf, uiLang: String, onClick: () -> Unit) {
+private fun ThemeTile(
+    shelf: CategoryShelf.Shelf,
+    status: ThemeStatus,
+    uiLang: String,
+    onClick: () -> Unit,
+) {
+    // The edge carries the claim, so a finished theme is legible in a grid
+    // without reading any of them: 墨 for 全精通, 積累 for 完成, paper otherwise.
+    val edge = when (status) {
+        ThemeStatus.Mastered -> TujiColor.Ink
+        ThemeStatus.Completed -> TujiColor.Accumulation
+        ThemeStatus.None -> TujiColor.Paper3
+    }
+    Box {
     Column(
         Modifier
             .fillMaxWidth()
             .background(TujiColor.Paper)
-            .border(1.dp, TujiColor.Paper3)
+            .border(if (status == ThemeStatus.None) 1.dp else 2.dp, edge)
             .tujiClickable(onClick = onClick)
             .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S3),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -194,6 +232,32 @@ private fun ThemeTile(shelf: CategoryShelf.Shelf, uiLang: String, onClick: () ->
             color = TujiColor.Ink3,
         )
     }
+    if (status != ThemeStatus.None) {
+        Text(
+            stringResource(
+                if (status == ThemeStatus.Mastered) {
+                    R.string.theme_mastered
+                } else {
+                    R.string.theme_completed
+                },
+            ),
+            style = TujiType.label,
+            color = if (status == ThemeStatus.Mastered) TujiColor.Current else TujiColor.Paper,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(5.dp)
+                .background(edge)
+                .padding(horizontal = TujiSpace.S1, vertical = 2.dp),
+        )
+    }
+    }
+}
+
+/** The five-segment scale, with its copy resolved. */
+@Composable
+private fun MasteryScale(score: Int?) {
+    val level = MasteryLevel.of(score)
+    MasteryBadge(level = level, label = level.label(), spoken = masterySpoken(score))
 }
 
 /**
@@ -209,6 +273,7 @@ private fun ThemeTile(shelf: CategoryShelf.Shelf, uiLang: String, onClick: () ->
 fun AtlasThemeScreen(
     category: Category?,
     words: List<Word>,
+    scores: MasteryStore.Scores,
     uiLang: String,
     topPadding: Dp,
     bottomPadding: Dp,
@@ -264,7 +329,11 @@ fun AtlasThemeScreen(
                 }
 
                 items(words, key = { it.id }) { word ->
-                    WordTile(word = word, modifier = Modifier.tujiClickable { onOpen(word.id) })
+                    WordTile(
+                        word = word,
+                        modifier = Modifier.tujiClickable { onOpen(word.id) },
+                        badge = { MasteryScale(scores.score(word.id)) },
+                    )
                 }
             }
         }

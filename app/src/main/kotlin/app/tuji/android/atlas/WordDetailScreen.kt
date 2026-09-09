@@ -1,6 +1,8 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.study.MasteryLevel
+import app.tuji.android.core.design.MasteryBar
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.design.WordPicture
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
@@ -55,6 +56,7 @@ fun WordDetailScreen(
      * catalogue is right there, so the row is resolved rather than fetched.
      */
     resolve: (String) -> app.tuji.android.core.model.Word?,
+    scores: MasteryStore.Scores,
     onOpenRelated: (String) -> Unit,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -93,6 +95,18 @@ fun WordDetailScreen(
             word.chinese?.let {
                 Text(it, style = TujiType.h3, color = TujiColor.Ink2)
             }
+
+            // Spelled out here, not drawn as a scale: this is the one screen
+            // given over to a single word, so it is the one place where "how
+            // well do I know this, and when does it come back" is worth a
+            // sentence rather than five segments of teal.
+            val score = scores.score(word.id)
+            MasteryBar(
+                score = score,
+                levelLabel = MasteryLevel.of(score).label(),
+                value = if (score != null) "$score" else stringResource(R.string.mastery_no_record),
+                nextReview = scores.nextReview(word.id)?.let { nextReviewLabel(it) },
+            )
 
             (word.chineseDefinition ?: word.targetDefinition)?.let {
                 Section(stringResource(R.string.word_definition)) {

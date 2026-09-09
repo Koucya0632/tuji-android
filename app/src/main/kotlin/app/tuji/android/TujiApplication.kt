@@ -72,6 +72,14 @@ class TujiApplication : Application() {
         app.tuji.android.atlas.CatalogStore(catalogReading)
     }
 
+    /**
+     * Every word's score, once, for the four surfaces that badge it. See
+     * [app.tuji.android.atlas.MasteryStore] for why it has no TTL.
+     */
+    val masteryStore: app.tuji.android.atlas.MasteryStore by lazy {
+        app.tuji.android.atlas.MasteryStore(study)
+    }
+
     /** Which language, and whether the intro has been seen. See the class doc
      *  for why the direction is local-only until the settings module lands. */
     val onboarding: OnboardingStore by lazy { OnboardingStore(this) }
