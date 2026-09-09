@@ -154,6 +154,8 @@ fun AtlasThemesScreen(
     shelves: List<CategoryShelf.Shelf>,
     words: List<Word>,
     scores: MasteryStore.Scores,
+    /** The theme's (seen, total) from the server, or null while unfetched. */
+    seenAndTotal: (String) -> Pair<Int, Int>?,
     uiLang: String,
     loading: Boolean,
     bottomPadding: Dp,
@@ -178,10 +180,7 @@ fun AtlasThemesScreen(
                 ThemeStatus.of(
                     wordIds = CategoryShelf.words(shelf.category.id, words).map { it.id },
                     masteryScore = scores::score,
-                    // `/api/users/progress` is not wired yet, so 完成 is
-                    // currently unreachable and 全精通 is the only badge that
-                    // can appear. The rule is whole; one of its inputs is not.
-                    seenAndTotal = null,
+                    seenAndTotal = seenAndTotal(shelf.category.id),
                 )
             }
             ThemeTile(

@@ -33,6 +33,7 @@ import app.tuji.android.core.model.LaunchRouting
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.os.ConfigurationCompat
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.study.MasteryDistribution
 import app.tuji.android.core.model.UiLanguage
 import java.util.Locale
 import app.tuji.android.onboarding.LearningDirectionScreen
@@ -181,9 +182,12 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
         // before asking for the new one.
         app.masteryStore.retune()
         app.masteryStore.load(direction)
+        app.progressStore.retune()
+        app.progressStore.load(direction)
     }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
     val scores by app.masteryStore.scores.collectAsStateWithLifecycle()
+    val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
 
     // Bumped as a study flow closes. A signal here rather than a call at the
     // close site, because the fetch has to outlive the composable that asked
@@ -199,8 +203,8 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     LaunchedEffect(refreshTick) {
         if (refreshTick == 0) return@LaunchedEffect
         app.masteryStore.load(direction, force = true)
+        app.progressStore.load(direction)
     }
-
     val community = remember(direction) {
         CommunityViewModel(
             atlas = app.atlas,
@@ -301,7 +305,14 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     // ratings has changed every number on that screen.
     LaunchedEffect(nav.current) {
         if (nav.current == AppRoute.Today) today.refresh()
-        if (nav.current == AppRoute.Me) account.refresh()
+        if (nav.current == AppRoute.Me) {
+            account.refresh()
+            // Unlike a score, the streak and the heatmap move on their own —
+            // 「目前連勝 5 天」 left over from yesterday is a claim about today
+            // that nobody made. So this one asks again on arrival rather than
+            // holding a copy that ages silently.
+            app.progressStore.load(direction)
+        }
         // 物見 needs it too: the 自製圖鑑 entry is gated on remaining slots, and
         // an entitlement that only loads on 我的 would hide the entry from
         // anyone who never opened that tab.
@@ -370,6 +381,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     shelves = catalog.shelves,
                     words = catalog.words,
                     scores = scores,
+                    seenAndTotal = progress::seenAndTotal,
                     uiLang = uiLang,
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
@@ -439,6 +451,14 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                 AppRoute.Me -> AccountScreen(
                     state = accountState,
                     direction = direction,
+                    // The same counts 今日 prints, from the same store: two
+                    // screens showing different 完成度 for one account is the
+                    // kind of bug that reads as a server problem for a week.
+                    stats = todayInputs.stats,
+                    progress = progress,
+                    spread = remember(scores) { MasteryDistribution.of(scores.byId) },
+                    masteryLoaded = scores.loaded,
+                    categories = catalog.categories,
                     bottomPadding = 0.dp,
                     onOpenPaywall = { /* M4：商店設好之前不會走到這裡 */ },
                     onSignOut = { scope.launch { app.auth.signOut() } },

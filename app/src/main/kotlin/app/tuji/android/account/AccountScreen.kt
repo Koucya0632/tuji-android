@@ -1,8 +1,12 @@
 package app.tuji.android.account
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.study.MasteryDistribution
+import app.tuji.android.core.study.CategoryStat
+import app.tuji.android.core.model.StudyStats
+import app.tuji.android.core.model.Category
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import app.tuji.android.R
@@ -24,7 +27,6 @@ import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.LearningDirection
 
 /**
@@ -38,6 +40,12 @@ import app.tuji.android.core.model.LearningDirection
 fun AccountScreen(
     state: AccountViewModel.State,
     direction: LearningDirection,
+    /** The day's counts — the same numbers 今日 prints, from the same store. */
+    stats: StudyStats?,
+    progress: ProgressStore.Snapshot,
+    spread: MasteryDistribution,
+    masteryLoaded: Boolean,
+    categories: List<Category>,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onOpenPaywall: () -> Unit,
     onSignOut: () -> Unit,
@@ -66,6 +74,27 @@ fun AccountScreen(
         }
 
         PlanCard(state = state, onOpenPaywall = onOpenPaywall)
+
+        // 我的 is no longer a name and a plan — it *is* your progress. The
+        // order is width (how far you have come) → depth (how well) → habit
+        // (whether you keep showing up) → detail (where exactly).
+        Spacer(Modifier.height(TujiSpace.S2))
+        CompletionCard(stats)
+        MasterySection(spread = spread, loaded = masteryLoaded)
+        StreakRow(
+            current = progress.streak?.current ?: 0,
+            longest = progress.streak?.longest ?: 0,
+        )
+        HeatmapSection(cells = progress.heatmap, activeDays = progress.activeDays)
+        CategoryBreakdown(
+            remember(progress.categories, categories) {
+                CategoryStat.breakdown(
+                    progress = progress.categories,
+                    categoryOrder = categories,
+                )
+            },
+        )
+        Spacer(Modifier.height(TujiSpace.S2))
 
         Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
             Text(

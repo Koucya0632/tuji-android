@@ -80,6 +80,11 @@ class TujiApplication : Application() {
         app.tuji.android.atlas.MasteryStore(study)
     }
 
+    /** The streak, the heatmap and the per-theme rows, for 我的 and 主題. */
+    val progressStore: app.tuji.android.account.ProgressStore by lazy {
+        app.tuji.android.account.ProgressStore(study)
+    }
+
     /** Which language, and whether the intro has been seen. See the class doc
      *  for why the direction is local-only until the settings module lands. */
     val onboarding: OnboardingStore by lazy { OnboardingStore(this) }
