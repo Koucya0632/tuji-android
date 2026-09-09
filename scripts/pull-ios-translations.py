@@ -17,7 +17,7 @@ so the generator downstream never has to know about xcstrings.
 import json, re, sys, xml.etree.ElementTree as ET
 
 IOS = "/Users/rex/Desktop/tuji/tuji-ios/Tuji/Resources/i18n/Localizable.xcstrings"
-ANDROID = "app/src/main/res/values/strings.xml"
+ANDROID = "app/src/main/res/values-zh-rTW/strings.xml"
 LANGS = ("en", "ja", "zh-Hans")
 
 PLACEHOLDER = re.compile(r"%\d\$[sd]|%[@sd]|%lld")
