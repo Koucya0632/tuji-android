@@ -59,6 +59,31 @@ object TujiGlyph {
         }
     }
 
+    /** A cross — leave, dismiss, close. */
+    @Composable
+    fun Close(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.11f
+            val inset = w * 0.18f
+            drawLine(tint, Offset(inset, inset), Offset(w - inset, h - inset), stroke)
+            drawLine(tint, Offset(w - inset, inset), Offset(inset, h - inset), stroke)
+        }
+    }
+
+    /** Three dots — 更多. */
+    @Composable
+    fun More(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val r = w * 0.075f
+            listOf(0.22f, 0.5f, 0.78f).forEach { x ->
+                drawCircle(tint, radius = r, center = Offset(w * x, this.size.height / 2f))
+            }
+        }
+    }
+
     /** An eye — 顯示例句. */
     @Composable
     fun Eye(size: Dp = 20.dp, tint: Color = TujiColor.Ink2, modifier: Modifier = Modifier) {

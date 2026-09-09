@@ -188,6 +188,14 @@
     <string name="today_themes">Topics</string>
     <string name="today_themes_all">Atlas →</string>
     <string name="today_theme_words">%1$d words</string>
+    <string name="study_leave_title">Leave this review?</string>
+    <string name="study_leave_message">Answered progress is saved; unfinished words will appear again next time.</string>
+    <string name="study_leave_confirm">Leave</string>
+    <string name="study_leave_cancel">Keep reviewing</string>
+    <string name="new_leave_title">Leave this session?</string>
+    <string name="new_leave_message">Words you finished are kept. The rest will come round again.</string>
+    <string name="new_leave_cancel">Keep learning</string>
+    <string name="study_close_label">Leave</string>
     <string name="study_close">Back to home</string>
     <string name="rating_again">Start over</string>
     <string name="rating_hard">Hard</string>

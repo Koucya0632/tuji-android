@@ -188,6 +188,14 @@
     <string name="today_themes">テーマ</string>
     <string name="today_themes_all">図鑑 →</string>
     <string name="today_theme_words">%1$d語</string>
+    <string name="study_leave_title">この復習を終了しますか？</string>
+    <string name="study_leave_message">解答済みの進捗は保存され、未完了の単語は次回また出題されます。</string>
+    <string name="study_leave_confirm">退出する</string>
+    <string name="study_leave_cancel">復習を続ける</string>
+    <string name="new_leave_title">この学習を終了しますか？</string>
+    <string name="new_leave_message">終えた単語は保存されます。残りは次回また出題されます。</string>
+    <string name="new_leave_cancel">学習を続ける</string>
+    <string name="study_close_label">閉じる</string>
     <string name="study_close">ホームに戻る</string>
     <string name="rating_again">やり直す</string>
     <string name="rating_hard">難しい</string>

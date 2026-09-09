@@ -188,6 +188,14 @@
     <string name="today_themes">主题</string>
     <string name="today_themes_all">图鉴 →</string>
     <string name="today_theme_words">%1$d 字</string>
+    <string name="study_leave_title">要离开这次复习吗？</string>
+    <string name="study_leave_message">已答的进度会保留，未完成的字下次还会出现。</string>
+    <string name="study_leave_confirm">先离开</string>
+    <string name="study_leave_cancel">继续复习</string>
+    <string name="new_leave_title">要离开这次学习吗？</string>
+    <string name="new_leave_message">已完成的字会保留，没学完的下次还会出现。</string>
+    <string name="new_leave_cancel">继续学</string>
+    <string name="study_close_label">离开</string>
     <string name="study_close">回到首页</string>
     <string name="rating_again">重来</string>
     <string name="rating_hard">困难</string>
