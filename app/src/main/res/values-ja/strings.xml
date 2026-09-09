@@ -107,6 +107,11 @@
     <string name="atlas_loading">図鑑を読み込んでいます…</string>
     <string name="atlas_failed">図鑑を読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="atlas_back">戻る</string>
+    <string name="atlas_themes_link">テーマ →</string>
+    <string name="atlas_themes_title">テーマ</string>
+    <string name="atlas_show_more">もっと見る</string>
+    <string name="atlas_words_header">単語</string>
+    <string name="atlas_theme_label">テーマ分類</string>
     <string name="word_play">発音を再生</string>
     <string name="word_definition">意味</string>
     <string name="word_examples">例文</string>
