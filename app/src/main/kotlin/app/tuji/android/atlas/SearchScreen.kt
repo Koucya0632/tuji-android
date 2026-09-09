@@ -1,6 +1,8 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.model.WordImageKind
+import app.tuji.android.core.design.WordPicture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,6 @@ import app.tuji.android.core.design.TujiTextField
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Word
-import coil3.compose.AsyncImage
 
 /**
  * 搜尋 over the catalogue already in memory.
@@ -94,11 +94,14 @@ private fun ResultRow(word: Word, onClick: () -> Unit) {
             Modifier.size(56.dp).background(TujiColor.Paper3),
             contentAlignment = Alignment.Center,
         ) {
-            AsyncImage(
-                model = word.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().padding(TujiSpace.S1),
+            WordPicture(
+                url = word.imageUrl,
+                kind = WordImageKind.of(word.category),
+                // A 56dp thumbnail inset by the page margin would have nothing
+                // left in the middle, and its ground is 紙3, not 紙2.
+                inset = TujiSpace.S1,
+                ground = TujiColor.Paper3,
+                modifier = Modifier.fillMaxSize(),
             )
         }
         Column(Modifier.weight(1f)) {

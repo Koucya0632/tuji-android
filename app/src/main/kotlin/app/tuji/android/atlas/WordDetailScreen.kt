@@ -1,6 +1,8 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.model.WordImageKind
+import app.tuji.android.core.design.WordPicture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -34,7 +35,6 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.WordDetail
-import coil3.compose.AsyncImage
 
 /**
  * One catalogue entry in full.
@@ -81,11 +81,10 @@ fun WordDetailScreen(
                     .background(TujiColor.Paper2),
                 contentAlignment = Alignment.Center,
             ) {
-                AsyncImage(
-                    model = word.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
+                WordPicture(
+                    url = word.imageUrl,
+                    kind = WordImageKind.of(word.category),
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
 

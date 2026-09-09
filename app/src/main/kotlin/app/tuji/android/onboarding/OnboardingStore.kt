@@ -2,6 +2,7 @@ package app.tuji.android.onboarding
 
 import android.content.Context
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.study.StudyHints
 
 /**
  * The two facts launch routing needs, kept across launches.
@@ -18,7 +19,7 @@ import app.tuji.android.core.model.LearningDirection
  * settings module lands, this store keeps [introDone] and hands the direction
  * over.
  */
-class OnboardingStore(context: Context) {
+class OnboardingStore(context: Context) : StudyHints {
 
     private val prefs = context.applicationContext
         .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -36,11 +37,21 @@ class OnboardingStore(context: Context) {
         get() = prefs.getBoolean(KEY_INTRO, false)
         set(value) = prefs.edit().putBoolean(KEY_INTRO, value).apply()
 
+    /**
+     * [StudyHints] — kept here rather than in a second preferences file because
+     * it is the same kind of fact as [introDone]: something the app has already
+     * shown this person once.
+     */
+    override var reviewHintTaught: Boolean
+        get() = prefs.getBoolean(KEY_REVIEW_HINT, false)
+        set(value) = prefs.edit().putBoolean(KEY_REVIEW_HINT, value).apply()
+
     private companion object {
         // The same key names iOS uses, so a future migration or a support
         // question does not have to translate between two vocabularies.
         const val PREFS = "tuji_onboarding"
         const val KEY_DIRECTION = "tuji.learning.direction"
         const val KEY_INTRO = "tuji.onboarding.introDone"
+        const val KEY_REVIEW_HINT = "tuji.study.reviewHintTaught"
     }
 }

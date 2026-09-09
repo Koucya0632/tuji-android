@@ -68,6 +68,11 @@ class ReviewViewModel(
      * questions against the network as it was a minute ago.
      */
     private val online: () -> Boolean = { false },
+    /**
+     * The one-time lessons this screen has already taught. Defaults to an
+     * in-memory one so a test never reaches for storage.
+     */
+    private val hints: StudyHints = InMemoryStudyHints(),
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -82,6 +87,16 @@ class ReviewViewModel(
             val flash: ReviewFlash?,
             /** Answers that could not be sent and are waiting on disk. */
             val unsynced: Int,
+            /** Whether this card's word has a recording, so the button can say so. */
+            val canPlayWord: Boolean = false,
+            /** Whether that recording is playing right now. */
+            val playingWord: Boolean = false,
+            /**
+             * Whether the user has already been taught that the picture turns
+             * over. Suppresses the nudge — a hint about a hint, offered forever,
+             * is just a label.
+             */
+            val hintTaught: Boolean = false,
         ) : State
 
         data class Done(val session: ReviewSession, val unsynced: Int) : State
@@ -93,6 +108,8 @@ class ReviewViewModel(
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
     private var clipJob: Job? = null
+    private var wordJob: Job? = null
+    private var playingWord = false
     private var unsynced = 0
 
     /**
@@ -158,7 +175,9 @@ class ReviewViewModel(
     fun toggleHint() {
         val now = current() ?: return
         val q = now.session.question ?: return
-        _state.value = studying(now.session.withQuestion(q.toggleHint()), now.revealMode, now.flash)
+        val flipped = q.toggleHint()
+        if (flipped.hintFaceUp) hints.reviewHintTaught = true
+        _state.value = studying(now.session.withQuestion(flipped), now.revealMode, now.flash)
     }
 
     /**
@@ -248,8 +267,64 @@ class ReviewViewModel(
                 variant = session.choicesVariant(it),
             )
         }.orEmpty()
-        return State.Studying(session, choices, revealMode, flash, unsynced)
+        return State.Studying(
+            session = session,
+            choices = choices,
+            revealMode = revealMode,
+            flash = flash,
+            unsynced = unsynced,
+            canPlayWord = wordClip(session) != null,
+            playingWord = playingWord,
+            hintTaught = hints.reviewHintTaught,
+        )
     }
+
+    // The word, said aloud
+
+    /**
+     * Play the word on the current card.
+     *
+     * The same [ClipPlaying] seam 聽句 uses, and the same pre-generated
+     * recordings — this is 圖鑑's pronunciation button on a study screen, not a
+     * second way to make sound. It shares the one player, so a word cuts a
+     * sentence off; the two never appear on the same card, and cutting is the
+     * right answer if they ever do.
+     */
+    fun playWord() {
+        val url = wordClip(current()?.session) ?: return
+        wordJob?.cancel()
+        wordJob = work.launch {
+            setPlayingWord(true)
+            audio.play(url)
+            setPlayingWord(false)
+        }
+    }
+
+    /**
+     * Looked up in the catalogue, not read off the card.
+     *
+     * `/api/study/queue` is lean and carries no recordings — [StudyQueueWord]
+     * has no `audioUrls` field at all, which is why reaching for one compiles
+     * into a different `get` and not an error. The catalogue is the only place
+     * a study card's clip lives, and a card the catalogue does not have (a
+     * 自製圖鑑 `atlas:` card) simply has none, so the button is not drawn.
+     */
+    private fun wordClip(session: ReviewSession?): String? {
+        val id = session?.question?.item?.word?.id ?: return null
+        return pool().firstOrNull { it.id == id }?.audioUrls?.get(voice)
+    }
+
+    private fun setPlayingWord(value: Boolean) {
+        playingWord = value
+        val now = current() ?: return
+        _state.value = now.copy(playingWord = value)
+    }
+
+    /**
+     * The picture turned over, so the nudge has done its job — for good, not
+     * for this card. Marked on the *flip*, not when the line appears: someone
+     * who ignored the nudge has not learned anything yet.
+     */
 
     // 聽句
 
@@ -390,6 +465,9 @@ class ReviewViewModel(
     private fun stopAudio() {
         clipJob?.cancel()
         clipJob = null
+        wordJob?.cancel()
+        wordJob = null
+        playingWord = false
         audio.stop()
     }
 

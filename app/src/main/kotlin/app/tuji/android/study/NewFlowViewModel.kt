@@ -53,6 +53,12 @@ class NewFlowViewModel(
             val ladder: StudyLadder,
             val stage: Stage,
             val unsynced: Int,
+            /**
+             * Words this session set out to teach. The ladder counts *stages*,
+             * which requeue and so cannot answer "N of how many words" — the
+             * denominator has to come from the queue that started it.
+             */
+            val total: Int,
         ) : State
 
         data class Done(val learned: Int, val unsynced: Int) : State
@@ -99,6 +105,7 @@ class NewFlowViewModel(
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
+    private var total = 0
     private var unsynced = 0
 
     /** Self-ratings waiting on the stages that get a vote. Keyed by card id. */
@@ -135,6 +142,7 @@ class NewFlowViewModel(
                 _state.value = State.Failed(it.message ?: "load failed")
                 return@launch
             }
+            total = queue.size
             show(StudyLadder(queue))
         }
     }
@@ -313,7 +321,7 @@ class NewFlowViewModel(
                 tiles = TileBoard.scrambled(item, spellAttempts[item.word.id] ?: 0),
             )
         }
-        _state.value = State.Studying(ladder, stage, unsynced)
+        _state.value = State.Studying(ladder, stage, unsynced, total)
     }
 
     /**
