@@ -1,7 +1,6 @@
 package app.tuji.android
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,8 +42,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import app.tuji.android.atlas.AtlasSearchScreen
-import app.tuji.android.atlas.AtlasShelvesScreen
-import app.tuji.android.atlas.AtlasWordsScreen
+import app.tuji.android.atlas.AtlasCardsScreen
+import app.tuji.android.atlas.AtlasThemeScreen
+import app.tuji.android.atlas.AtlasThemesScreen
 import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
 import app.tuji.android.account.AccountScreen
@@ -72,10 +72,8 @@ import app.tuji.android.today.TodayViewModel
 import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
-import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
-import app.tuji.android.core.design.TujiButtonStyle
 import kotlinx.coroutines.launch
 
 /**
@@ -275,12 +273,20 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
             .fillMaxSize()
             .background(TujiColor.Paper),
     ) {
-        // Only when there is somewhere to go back to. At a tab root iOS draws
-        // no bar at all — the row that used to live here held the app's own
-        // name, told to someone already inside the app, and the identity and
-        // 登出 it carried are both on 我的. Deleting it is worth ~56dp at the
-        // top of every tab.
-        if (nav.canGoBack) {
+        // Never at a tab root, and never over a bleeding hero.
+        //
+        // A tab root had one because switching tabs *pushes* — so 圖鑑 opened
+        // with 「← 圖鑑」 above it, offering to go back to a tab the bar below
+        // already reaches in one tap. iOS gives each tab its own stack and
+        // draws nothing at its root; Android's system back still walks out the
+        // way the user came in, which is the convention that actually matters
+        // here. The row was also the app telling its own name to somebody
+        // already inside it.
+        //
+        // 主題頁 opts out for a different reason: its hero bleeds to the top
+        // edge, and a row above it would mean the page no longer opens with
+        // the picture. It draws its own back, floating.
+        if (nav.canGoBack && nav.current !is AppRoute.Tab && nav.current !is AppRoute.Shelf) {
             TopBar(
                 nav = nav,
                 wordTitle = { id -> catalog.words.firstOrNull { it.id == id }?.word },
@@ -311,7 +317,15 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     onSpike = { showSpike = true },
                 )
 
-                AppRoute.Atlas -> AtlasShelvesScreen(
+                AppRoute.Atlas -> AtlasCardsScreen(
+                    words = catalog.words,
+                    loading = !catalog.loaded,
+                    bottomPadding = 0.dp,
+                    onOpenThemes = { nav = nav.push(AppRoute.Themes) },
+                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                )
+
+                AppRoute.Themes -> AtlasThemesScreen(
                     shelves = catalog.shelves,
                     uiLang = uiLang,
                     loading = !catalog.loaded,
@@ -393,9 +407,13 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )
 
-                is AppRoute.Shelf -> AtlasWordsScreen(
+                is AppRoute.Shelf -> AtlasThemeScreen(
+                    category = catalog.categories.firstOrNull { it.id == route.categoryId },
                     words = CategoryShelf.words(route.categoryId, catalog.words),
+                    uiLang = uiLang,
+                    topPadding = insets.calculateTopPadding(),
                     bottomPadding = 0.dp,
+                    onBack = { nav = nav.pop() },
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )
 
@@ -460,16 +478,12 @@ private fun TopBar(
 /** The current screen's own name, so 64 nouns are distinguishable from 64 others. */
 @Composable
 private fun title(route: AppRoute, wordTitle: (String) -> String?): String = when (route) {
-    is AppRoute.Shelf -> route.title
     is AppRoute.Word -> wordTitle(route.wordId) ?: stringResource(R.string.atlas_title)
     is AppRoute.PublicItem -> stringResource(R.string.nav_community)
     is AppRoute.Author -> stringResource(R.string.nav_community)
     is AppRoute.Collection -> stringResource(R.string.community_collections)
-    AppRoute.Community -> stringResource(R.string.nav_community)
-    AppRoute.Me -> stringResource(R.string.nav_me)
+    AppRoute.Themes -> stringResource(R.string.atlas_themes_title)
     AppRoute.Capture -> stringResource(R.string.capture_title)
-    AppRoute.Search -> stringResource(R.string.nav_search)
-    AppRoute.Atlas -> stringResource(R.string.nav_atlas)
     else -> stringResource(R.string.atlas_back)
 }
 

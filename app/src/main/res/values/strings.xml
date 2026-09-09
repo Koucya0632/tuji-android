@@ -107,6 +107,11 @@
     <string name="atlas_loading">Loading the atlas…</string>
     <string name="atlas_failed">Couldn’t load the atlas. Please try again later.</string>
     <string name="atlas_back">Back</string>
+    <string name="atlas_themes_link">Topics →</string>
+    <string name="atlas_themes_title">Topics</string>
+    <string name="atlas_show_more">Show more</string>
+    <string name="atlas_words_header">Word</string>
+    <string name="atlas_theme_label">Topic categories</string>
     <string name="word_play">Play pronunciation</string>
     <string name="word_definition">Definition</string>
     <string name="word_examples">Examples</string>

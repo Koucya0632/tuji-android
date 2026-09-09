@@ -20,7 +20,10 @@ sealed interface AppRoute {
     data object Search : Tab
     data object Me : Tab
 
-    /** One category's words. */
+    /** The index of every theme, reached from 圖鑑's count row. */
+    data object Themes : AppRoute
+
+    /** One theme's page: its hero, its description, its words. */
     data class Shelf(val categoryId: String, val title: String) : AppRoute
 
     /** One catalogue entry. */

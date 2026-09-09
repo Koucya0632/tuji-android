@@ -107,6 +107,11 @@
     <string name="atlas_loading">載入圖鑑中…</string>
     <string name="atlas_failed">拿不到圖鑑，請稍後再試</string>
     <string name="atlas_back">返回</string>
+    <string name="atlas_themes_link">主題 →</string>
+    <string name="atlas_themes_title">主題</string>
+    <string name="atlas_show_more">顯示更多</string>
+    <string name="atlas_words_header">單字</string>
+    <string name="atlas_theme_label">主題分類</string>
     <string name="word_play">播放發音</string>
     <string name="word_definition">釋義</string>
     <string name="word_examples">例句</string>
