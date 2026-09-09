@@ -236,6 +236,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
                     audio = app.clipPlayer,
                     online = { app.isOnline() },
+                    hints = app.onboarding,
                 ).also { it.load(StudyMode.Review) }
             }
             ReviewScreen(vm = vm, onClose = { nav = nav.pop() })

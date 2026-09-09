@@ -13,7 +13,7 @@
 # check that only runs on CI is a check that cannot be trusted before pushing.
 set -euo pipefail
 
-MINIMUM=${MINIMUM:-381}
+MINIMUM=${MINIMUM:-387}
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 total=0

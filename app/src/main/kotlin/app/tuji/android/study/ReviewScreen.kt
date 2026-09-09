@@ -1,6 +1,13 @@
 package app.tuji.android.study
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.rememberReduceMotion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +17,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,13 +30,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
 import app.tuji.android.core.design.TujiPrompt
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,16 +47,17 @@ import app.tuji.android.core.design.FuriganaHeadword
 import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.WordPicture
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.study.ReviewFlash
 import app.tuji.android.core.study.ReviewPhase
@@ -61,10 +74,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.StudyExample
+import app.tuji.android.core.study.HintFace
 import app.tuji.android.core.study.ImageChoiceOption
 import app.tuji.android.core.study.ReviewQuestion
 import app.tuji.android.core.study.maskedSentence
-import coil3.compose.AsyncImage
 
 /**
  * 複習. A picture, four words, and — when the answer is not obvious — a sheet
@@ -106,6 +119,12 @@ fun ReviewScreen(
                 Column(Modifier.fillMaxSize()) {
                     Spacer(Modifier.height(insets.calculateTopPadding()))
                     StudyHeader(
+                        label = stringResource(R.string.study_review_label),
+                        count = stringResource(
+                            R.string.study_count,
+                            s.session.passedCount,
+                            s.session.originalCount,
+                        ),
                         progress = s.session.progress,
                         unsynced = s.unsynced,
                         // Ask, do not leave. The ✕ sits a thumb's width from
@@ -121,6 +140,7 @@ fun ReviewScreen(
                         onReplay = vm::replaySentence,
                         onReveal = vm::revealSentence,
                         onOptOut = vm::optOutOfListening,
+                        onPlayWord = vm::playWord,
                         bottomPadding = insets.calculateBottomPadding(),
                     )
                 }
@@ -129,11 +149,18 @@ fun ReviewScreen(
                         session = s.session,
                         mode = mode,
                         bottomPadding = insets.calculateBottomPadding(),
+                        playing = s.playingWord,
+                        canPlay = s.canPlayWord,
+                        onPlay = vm::playWord,
                         onRate = vm::rate,
                         onContinue = vm::continueFromReveal,
                     )
                 }
             }
+        }
+
+        (state as? ReviewViewModel.State.Studying)?.flash?.let {
+            FlashCapsule(flash = it, bottomPadding = insets.calculateBottomPadding())
         }
 
         if (leaving) {
@@ -172,124 +199,322 @@ private fun QuestionBody(
     onReplay: (Float) -> Unit,
     onReveal: () -> Unit,
     onOptOut: () -> Unit,
+    onPlayWord: () -> Unit,
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val question = state.session.question ?: return
     val item = question.item
     val revealed = question.phase == ReviewPhase.Review
 
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = TujiSpace.S4),
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-    ) {
-        Spacer(Modifier.height(TujiSpace.S3))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // The picture takes what the four options leave, between a floor and a
+        // ceiling. A fixed aspect ratio cannot do this: on a short phone a 4:3
+        // picture pushes the last option under the fold, and on a tall one it
+        // stops short of the space that would have made the rice grains and
+        // bottle profiles legible.
+        val hero = heroHeight(available = maxHeight - bottomPadding)
 
-        val example = question.example
-        val imageOptions = question.imageOptions
-        if (question.kind == ReviewQuestionKind.HearSentence &&
-            example != null && imageOptions != null
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         ) {
-            ListenCard(
-                question = question,
-                example = example,
-                onReplay = onReplay,
-                onReveal = onReveal,
-            )
-
-            state.flash?.let { FlashLine(it) }
-
-            ImagePair(options = imageOptions, question = question, onPick = onPickImage)
-
-            // An "I cannot hear right now" escape, not an "this is too hard"
-            // one — 聽句 is the only question in the app that cannot be
-            // answered without audio, and no headphones on a train is not a
-            // difficulty problem. Which is also why it carries no rating cost.
-            if (!revealed) {
-                Text(
-                    stringResource(R.string.study_listen_opt_out),
-                    style = TujiType.bodySm,
-                    color = TujiColor.Ink3,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .tujiClickable(onClick = onOptOut)
-                        .padding(vertical = TujiSpace.S3),
+            val example = question.example
+            val imageOptions = question.imageOptions
+            if (question.kind == ReviewQuestionKind.HearSentence &&
+                example != null && imageOptions != null
+            ) {
+                ListenCard(
+                    question = question,
+                    example = example,
+                    height = hero,
+                    onReplay = onReplay,
+                    onReveal = onReveal,
                 )
-            }
-        } else {
-            HeroCard(item = item, faceUp = question.hintFaceUp, onFlip = onToggleHint)
 
-            state.flash?.let { FlashLine(it) }
+                Box(Modifier.padding(horizontal = TujiSpace.S4)) {
+                    ImagePair(options = imageOptions, question = question, onPick = onPickImage)
+                }
 
-            state.choices.forEachIndexed { i, label ->
-                StudyOptionRow(
-                    label = label,
-                    letter = ('A' + i).toString(),
-                    state = StudyOptionState.forOption(
-                        label = label,
-                        answer = item.word.word,
-                        picked = question.picked?.label,
-                        revealed = revealed,
-                        wrongPicks = question.wrongPicks,
-                    ),
-                    enabled = !revealed && label !in question.wrongPicks,
-                    onClick = { onPick(label) },
+                // An "I cannot hear right now" escape, not an "this is too
+                // hard" one — 聽句 is the only question in the app that cannot
+                // be answered without audio, and no headphones on a train is
+                // not a difficulty problem. Which is also why it carries no
+                // rating cost. Drawn under the options rather than up by the
+                // play button: it is the last resort, and should read after
+                // them rather than compete with them.
+                if (!revealed) {
+                    Text(
+                        stringResource(R.string.study_listen_opt_out),
+                        style = TujiType.label,
+                        color = TujiColor.Ink3,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .tujiClickable(onClick = onOptOut)
+                            .padding(vertical = TujiSpace.S2),
+                    )
+                }
+            } else {
+                // 求助提示 is deliberately invisible — nothing is drawn on the
+                // card — so a stalled item offers a line instead. Without it
+                // the affordance is undiscoverable, which is what this screen
+                // shipped with: `canNudge` existed, had tests, and no view
+                // read it.
+                //
+                // Past the 7s mark where the suggestion has already dropped to
+                // 困難, so by the time the line appears flipping only costs the
+                // 穩定/熟練 option.
+                var nudging by remember(question.item.id, question.startedAtMs) {
+                    mutableStateOf(false)
+                }
+                LaunchedEffect(question.item.id, question.startedAtMs) {
+                    nudging = false
+                    delay(NUDGE_DELAY_MS)
+                    nudging = true
+                }
+
+                HeroCard(
+                    item = item,
+                    faceUp = question.hintFaceUp,
+                    height = hero,
+                    nudging = nudging && question.canNudge && !state.hintTaught,
+                    playing = state.playingWord,
+                    canPlay = state.canPlayWord,
+                    onPlay = onPlayWord,
+                    onFlip = onToggleHint,
                 )
+
+                Column(
+                    Modifier.padding(horizontal = TujiSpace.S4),
+                    verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+                ) {
+                    state.choices.forEachIndexed { i, label ->
+                        StudyOptionRow(
+                            label = label,
+                            letter = ('A' + i).toString(),
+                            state = StudyOptionState.forOption(
+                                label = label,
+                                answer = item.word.word,
+                                picked = question.picked?.label,
+                                revealed = revealed,
+                                wrongPicks = question.wrongPicks,
+                            ),
+                            enabled = !revealed && label !in question.wrongPicks,
+                            onClick = { onPick(label) },
+                        )
+                    }
+                }
             }
+            Spacer(Modifier.height(bottomPadding + TujiSpace.S3))
         }
-        Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
 
 /**
- * The picture, and the gloss on its back.
+ * How tall the picture may be, given the height the question surface actually
+ * got.
  *
- * The flip is 求救提示: it costs the wrong-answer rating table (ADR-0007), which
- * is why it is a deliberate tap on the picture rather than a button that could
- * be pressed by accident.
+ * The reserved figure is the rest of the surface measured, not guessed: four
+ * 60dp options with 8dp between them (264), the 16dp between the picture and
+ * the first of them, and the 16dp under the last.
+ */
+private fun heroHeight(available: androidx.compose.ui.unit.Dp): androidx.compose.ui.unit.Dp {
+    val reserved = 296.dp
+    val room = available - reserved
+    return when {
+        room < HERO_MIN -> HERO_MIN
+        room > HERO_MAX -> HERO_MAX
+        else -> room
+    }
+}
+
+private val HERO_MIN = 200.dp
+private val HERO_MAX = 360.dp
+
+/**
+ * How long an item may sit unanswered before the card offers the hint.
+ *
+ * Deliberately past the 7s mark where the suggestion has already dropped to
+ * 困難 — by the time the line appears, the only thing flipping still costs is
+ * the 穩定/熟練 option.
+ */
+private const val NUDGE_DELAY_MS = 8_000L
+
+/**
+ * The picture, and what 求救提示 turns it over to.
+ *
+ * The flip costs the wrong-answer rating table (ADR-0007), which is why it is a
+ * deliberate tap on the picture rather than a button that could be pressed by
+ * accident. Nothing is drawn to say the card is tappable — [nudging] is the
+ * only announcement, and it waits eight seconds.
+ *
+ * Full-bleed on 紙2, not an inset white rectangle: an image framed inside the
+ * page margins puts a box around the one thing the whole screen is asking
+ * about.
+ *
+ * The hint *replaces* the picture rather than sitting beside it. Once the
+ * meaning is given the question is no longer 「這張圖是什麼字」 but 「這個意思是
+ * 哪個字」, and a card asks one question at a time.
  */
 @Composable
-private fun HeroCard(item: StudyQueueItem, faceUp: Boolean, onFlip: () -> Unit) {
+private fun HeroCard(
+    item: StudyQueueItem,
+    faceUp: Boolean,
+    height: androidx.compose.ui.unit.Dp,
+    nudging: Boolean,
+    playing: Boolean,
+    canPlay: Boolean,
+    onPlay: () -> Unit,
+    onFlip: () -> Unit,
+) {
+    // Reduce Motion keeps the opacity swap and drops the rotation, so the turn
+    // becomes a crossfade rather than nothing at all.
+    val reduceMotion = rememberReduceMotion()
+    val angle by animateFloatAsState(
+        targetValue = if (faceUp) 180f else 0f,
+        // D3 — the turn is meant to be *watched*; that is the whole reason it
+        // is a turn and not a swap. Under 移除動畫 it becomes a crossfade at D1,
+        // because the two faces still have to change places.
+        animationSpec = TujiMotion.ease(if (reduceMotion) TujiMotion.D1 else TujiMotion.D3),
+        label = "hintFlip",
+    )
+    val density = LocalDensity.current
+    val flipLabel = stringResource(if (faceUp) R.string.study_hint_see_image else R.string.study_hint_see_hint)
+    val faceLabel = if (faceUp) HintFace.of(item.word).text else stringResource(R.string.study_what_is_this)
+
     Box(
         Modifier
             .fillMaxWidth()
-            .aspectRatio(4f / 3f)
+            .height(height)
             .background(TujiColor.Paper2)
+            // One element with one action, not a clickable box wrapping an
+            // unlabelled image: a screen reader that cannot see the picture
+            // also cannot poke at it to find out that it turns over.
+            .semantics(mergeDescendants = true) {
+                contentDescription = faceLabel
+                onClick(label = flipLabel) { onFlip(); true }
+            }
             .tujiClickable(onClick = onFlip),
         contentAlignment = Alignment.Center,
     ) {
-        if (faceUp) {
+        // Two faces on one axis. Each is hidden for the half-turn where it
+        // would be seen from behind, which is what makes it read as one card
+        // turning rather than two cards crossfading.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    if (!reduceMotion) {
+                        rotationY = angle
+                        cameraDistance = 12f * density.density
+                    }
+                    alpha = if (angle < 90f) 1f else 0f
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            WordPicture(
+                url = item.word.imageUrl,
+                kind = WordImageKind.of(item.word.category),
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    if (!reduceMotion) {
+                        rotationY = angle - 180f
+                        cameraDistance = 12f * density.density
+                    }
+                    alpha = if (angle >= 90f) 1f else 0f
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            // A 釋義 is prose and sets as body text; a gloss is a word and sets
+            // as a headline. Which of the two this card has is [HintFace]'s
+            // decision, asked once — the same call that produced the label.
+            val face = HintFace.of(item.word)
             Text(
-                // The 釋義 when the catalogue has one; the gloss otherwise. For
-                // a zh reader the gloss alone is the answer translated, which
-                // is why the definition is preferred.
-                item.word.definition ?: item.word.chinese,
-                style = TujiType.body,
+                face.text,
+                style = if (face is HintFace.Definition) TujiType.body else TujiType.h2,
                 color = TujiColor.Ink,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(TujiSpace.S4),
+                maxLines = if (face is HintFace.Definition) 6 else 4,
+                modifier = Modifier.padding(horizontal = TujiSpace.S5),
             )
-        } else {
-            AsyncImage(
-                model = item.word.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
+        }
+
+        if (canPlay) {
+            val label = stringResource(R.string.word_play)
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(TujiSpace.S3)
+                    .size(48.dp)
+                    .background(if (playing) TujiColor.Current else TujiColor.Paper)
+                    .semantics { contentDescription = label }
+                    .tujiClickable(onClick = onPlay),
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Speaker(tint = TujiColor.Ink)
+            }
+        }
+
+        // The same slot the gloss occupies during 學新字 — the place the user
+        // already associates with "the meaning lives here". An overlay, so it
+        // costs no layout and the options do not shift under the thumb when it
+        // appears.
+        if (nudging) {
+            Text(
+                stringResource(R.string.study_nudge),
+                style = TujiType.bodySm,
+                color = TujiColor.Ink2,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(TujiSpace.S3)
+                    .background(TujiColor.Paper)
+                    .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S1),
             )
         }
     }
 }
 
+/**
+ * The capsule that acknowledges an answer which advanced **without** the rating
+ * sheet — a fast correct answer that auto-rated, or a passed re-test.
+ *
+ * At the bottom, over everything, for the ~700ms of the advance beat. Inline in
+ * the column it competed with the options for the same reading and moved them
+ * down as it appeared; the one thing it has to do is be noticed without being
+ * in the way.
+ */
 @Composable
-private fun FlashLine(flash: ReviewFlash) {
+private fun FlashCapsule(flash: ReviewFlash, bottomPadding: androidx.compose.ui.unit.Dp) {
     val text = when (flash) {
         is ReviewFlash.RetestPassed -> stringResource(R.string.study_retest_passed)
         is ReviewFlash.AutoRated -> stringResource(R.string.study_auto_rated, flash.rating.label())
     }
-    Text(text, style = TujiType.label, color = TujiColor.Ink3)
+    val tint = when (flash) {
+        is ReviewFlash.RetestPassed -> TujiColor.Accumulation
+        is ReviewFlash.AutoRated -> TujiColor.CurrentDeep
+    }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(bottom = bottomPadding + TujiSpace.S5),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Text(
+            text,
+            style = TujiType.bodyStrong,
+            color = TujiColor.Paper,
+            modifier = Modifier
+                .background(tint)
+                .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
+        )
+    }
 }
 
 /**
@@ -301,6 +526,9 @@ private fun RevealSheet(
     session: ReviewSession,
     mode: ReviewRevealMode,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    playing: Boolean,
+    canPlay: Boolean,
+    onPlay: () -> Unit,
     onRate: (SRSRating) -> Unit,
     onContinue: () -> Unit,
 ) {
@@ -317,30 +545,138 @@ private fun RevealSheet(
                 .padding(top = TujiSpace.S4, bottom = bottomPadding + TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
-            Headword(question.item)
-            Text(question.item.word.chinese, style = TujiType.bodySm, color = TujiColor.Ink3)
+            // The word, and it said aloud. The sheet is the first moment the
+            // answer is admitted, which is the moment worth hearing it — and
+            // the same button, on the same seam, as the one on the picture.
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Headword(question.item)
+                    Text(
+                        question.item.word.chinese,
+                        style = TujiType.bodySm,
+                        color = TujiColor.Ink3,
+                    )
+                }
+                if (canPlay) {
+                    val label = stringResource(R.string.word_play)
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .background(if (playing) TujiColor.Current else TujiColor.Paper2)
+                            .semantics { contentDescription = label }
+                            .tujiClickable(onClick = onPlay),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        TujiGlyph.Speaker(tint = TujiColor.Ink)
+                    }
+                }
+            }
             Spacer(Modifier.height(TujiSpace.S2))
 
             when (mode) {
-                ReviewRevealMode.ContinueOnly -> TujiButton(
-                    text = stringResource(R.string.study_next),
-                    onClick = onContinue,
-                )
-                ReviewRevealMode.Rate -> question.availableRatings.forEach { rating ->
-                    TujiButton(
-                        text = rating.label(),
-                        style = if (rating == question.suggested) {
-                            TujiButtonStyle.Primary
-                        } else {
-                            TujiButtonStyle.Secondary
-                        },
-                        onClick = { onRate(rating) },
+                ReviewRevealMode.ContinueOnly -> {
+                    Text(
+                        stringResource(R.string.reveal_again_later),
+                        style = TujiType.label,
+                        color = TujiColor.Ink3,
                     )
+                    TujiButton(
+                        text = stringResource(R.string.study_next),
+                        onClick = onContinue,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                ReviewRevealMode.Rate -> {
+                    Text(
+                        stringResource(
+                            if (question.wasCorrect) {
+                                R.string.reveal_how_well
+                            } else {
+                                R.string.reveal_mark_it
+                            },
+                        ),
+                        style = TujiType.label,
+                        color = TujiColor.Ink3,
+                    )
+                    question.availableRatings.forEach { rating ->
+                        RatingRow(
+                            rating = rating,
+                            // Pre-inverted rather than badged: the ink block is
+                            // already this app's "this is the one", so a 建議
+                            // caption over the label was a second, weaker way
+                            // of saying the same thing.
+                            filled = rating == question.suggested,
+                            onClick = { onRate(rating) },
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/**
+ * One level of the rating ladder.
+ *
+ * **Stacked full width, not four boxes side by side.** Laid out as a row the
+ * levels read as a slider and the hand drifts rightward — labels are all that
+ * fit, and 困難 beside 熟練 is just the worse-sounding one. Stacked, each level
+ * gets a line saying what it *means*, and picking becomes a judgement about
+ * yourself rather than a position on a scale.
+ *
+ * The 3dp leading edge is a ladder of its own: alert → 瞳黃 → the two teal
+ * steps, because teal means accumulation and the further along the confidence
+ * scale, the deeper it goes.
+ */
+@Composable
+private fun RatingRow(rating: SRSRating, filled: Boolean, onClick: () -> Unit) {
+    val ground = if (filled) TujiColor.Ink else TujiColor.Paper2
+    val ink = if (filled) TujiColor.Paper else TujiColor.Ink
+    val sub = if (filled) TujiColor.Paper.copy(alpha = 0.7f) else TujiColor.Ink3
+    val edge = when (rating) {
+        SRSRating.Again -> TujiColor.Alert
+        SRSRating.Hard -> TujiColor.Current
+        SRSRating.Good -> TujiColor.AccumulationSoft
+        SRSRating.Easy -> TujiColor.Accumulation
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            // `IntrinsicSize.Min` first: the leading edge below asks to fill
+            // the row's height, and in a row whose height is unbounded that
+            // means the whole screen — which is what it did, pushing the
+            // second rating off the bottom where nobody could see it.
+            .height(IntrinsicSize.Min)
+            .heightIn(min = 56.dp)
+            .background(ground)
+            .tujiClickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(TujiBorder.Bw3).fillMaxHeight().background(edge))
+        Column(
+            Modifier.padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(rating.label(), style = TujiType.h3, color = ink)
+            Text(rating.explanation(), style = TujiType.bodySm, color = sub)
+        }
+    }
+}
+
+@Composable
+private fun SRSRating.explanation(): String = stringResource(
+    when (this) {
+        SRSRating.Again -> R.string.rating_again_why
+        SRSRating.Hard -> R.string.rating_hard_why
+        SRSRating.Good -> R.string.rating_good_why
+        SRSRating.Easy -> R.string.rating_easy_why
+    }
+)
 
 @Composable
 private fun Headword(item: StudyQueueItem) {
@@ -436,6 +772,7 @@ private fun CompleteView(
 private fun ListenCard(
     question: ReviewQuestion,
     example: StudyExample,
+    height: androidx.compose.ui.unit.Dp,
     onReplay: (Float) -> Unit,
     onReveal: () -> Unit,
 ) {
@@ -445,10 +782,12 @@ private fun ListenCard(
     val legible = question.sentenceRevealed || question.phase == ReviewPhase.Review
     val maskedLabel = stringResource(R.string.study_listen_masked)
 
+    // The same height the picture gets on 選字, for the same reason: the two
+    // questions must not be tellable apart before either is asked.
     Box(
         Modifier
             .fillMaxWidth()
-            .aspectRatio(16f / 9f)
+            .height(height)
             .background(TujiColor.Paper2),
     ) {
         // Three states, not two. The blur is the design — it leaves the shape
@@ -604,11 +943,10 @@ private fun ImagePair(
                     .semantics { contentDescription = option.word }
                     .tujiClickable(enabled = !revealed) { onPick(option) },
             ) {
-                AsyncImage(
-                    model = option.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
+                WordPicture(
+                    url = option.imageUrl,
+                    kind = option.imageKind,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }

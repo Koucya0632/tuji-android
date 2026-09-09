@@ -1,6 +1,8 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.model.WordImageKind
+import app.tuji.android.core.design.WordPicture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,11 +141,11 @@ private fun WordTile(word: Word, onClick: () -> Unit) {
                 .background(TujiColor.Paper2),
             contentAlignment = Alignment.Center,
         ) {
-            AsyncImage(
-                model = word.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().padding(TujiSpace.S2),
+            WordPicture(
+                url = word.imageUrl,
+                kind = WordImageKind.of(word.category),
+                inset = TujiSpace.S2,
+                modifier = Modifier.fillMaxSize(),
             )
         }
         Text(

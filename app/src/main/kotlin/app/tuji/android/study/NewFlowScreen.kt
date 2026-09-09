@@ -1,6 +1,8 @@
 package app.tuji.android.study
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.model.WordImageKind
+import app.tuji.android.core.design.WordPicture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -47,7 +48,6 @@ import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.study.SpellSubject
-import coil3.compose.AsyncImage
 
 /**
  * 學新字 — one interleaved session of 認識 → 選字 → 拼字.
@@ -84,6 +84,12 @@ fun NewFlowScreen(vm: NewFlowViewModel, onClose: () -> Unit) {
 
             is NewFlowViewModel.State.Studying -> Column {
                 StudyHeader(
+                    label = stringResource(R.string.study_new_label),
+                    count = stringResource(
+                        R.string.study_new_count,
+                        s.ladder.clearedWords,
+                        s.total,
+                    ),
                     progress = s.ladder.progress,
                     unsynced = s.unsynced,
                     // Ask first — see ReviewScreen.
@@ -349,11 +355,10 @@ private fun Hero(item: StudyQueueItem) {
             .background(TujiColor.Paper2),
         contentAlignment = Alignment.Center,
     ) {
-        AsyncImage(
-            model = item.word.imageUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
+        WordPicture(
+            url = item.word.imageUrl,
+            kind = WordImageKind.of(item.word.category),
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
