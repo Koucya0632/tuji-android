@@ -21,6 +21,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.tuji.android.core.design.TujiPrompt
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -55,6 +59,7 @@ import coil3.compose.AsyncImage
 @Composable
 fun NewFlowScreen(vm: NewFlowViewModel, onClose: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
+    var leaving by remember { mutableStateOf(false) }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
     Box(
@@ -81,10 +86,8 @@ fun NewFlowScreen(vm: NewFlowViewModel, onClose: () -> Unit) {
                 StudyHeader(
                     progress = s.ladder.progress,
                     unsynced = s.unsynced,
-                    onClose = {
-                        vm.leave()
-                        onClose()
-                    },
+                    // Ask first — see ReviewScreen.
+                    onClose = { leaving = true },
                 )
                 StageBody(
                     stage = s.stage,
@@ -92,6 +95,21 @@ fun NewFlowScreen(vm: NewFlowViewModel, onClose: () -> Unit) {
                     bottomPadding = insets.calculateBottomPadding(),
                 )
             }
+        }
+
+        if (leaving) {
+            TujiPrompt(
+                title = stringResource(R.string.new_leave_title),
+                message = stringResource(R.string.new_leave_message),
+                confirm = stringResource(R.string.study_leave_confirm),
+                cancel = stringResource(R.string.new_leave_cancel),
+                onConfirm = {
+                    leaving = false
+                    vm.leave()
+                    onClose()
+                },
+                onCancel = { leaving = false },
+            )
         }
     }
 }

@@ -16,7 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiBorder
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -34,16 +38,23 @@ internal fun StudyHeader(progress: Double, unsynced: Int, onClose: () -> Unit) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
+                .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S1),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                stringResource(R.string.study_leave),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink2,
-                modifier = Modifier.tujiClickable(onClick = onClose).padding(TujiSpace.S1),
-            )
+            // ✕ rather than the word 先離開: this is the one control on a study
+            // screen that is not about the question, and a word beside a
+            // picture of a thing competes with it for the same reading.
+            val label = stringResource(R.string.study_close_label)
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .semantics { contentDescription = label }
+                    .tujiClickable(onClick = onClose),
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Close(tint = TujiColor.Ink)
+            }
             if (unsynced > 0) {
                 // Said out loud rather than swallowed: these answers are on
                 // disk and will replay, and a silent count is how iOS's

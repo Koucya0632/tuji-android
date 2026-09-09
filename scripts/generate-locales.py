@@ -36,7 +36,12 @@ def android_escape(text: str) -> str:
 
 def main() -> int:
     merged = json.load(open(sys.argv[1]))
-    order = [e.get("name") for e in ET.parse(RES / "values/strings.xml").getroot().findall("string")]
+    # Order comes from the **source** file, not from `values/`: zh-Hant is what
+    # the strings are written in, and English is one of the outputs.
+    order = [
+        e.get("name")
+        for e in ET.parse(RES / "values-zh-rTW/strings.xml").getroot().findall("string")
+    ]
 
     for lang, folder in OUT.items():
         rows = []

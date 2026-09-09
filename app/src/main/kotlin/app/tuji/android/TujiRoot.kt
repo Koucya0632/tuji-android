@@ -37,6 +37,9 @@ import app.tuji.android.core.model.UiLanguage
 import java.util.Locale
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import app.tuji.android.atlas.AtlasSearchScreen
@@ -271,16 +274,21 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
             .fillMaxSize()
             .background(TujiColor.Paper),
     ) {
-        TopBar(
-            nav = nav,
-            identity = identity,
-            wordTitle = { id -> catalog.words.firstOrNull { it.id == id }?.word },
-            onBack = { nav = nav.pop() },
-            topPadding = insets.calculateTopPadding(),
-            onAccount = {
-                if (identity == null) app.auth.exitGuestMode() else scope.launch { app.auth.signOut() }
-            },
-        )
+        // Only when there is somewhere to go back to. At a tab root iOS draws
+        // no bar at all — the row that used to live here held the app's own
+        // name, told to someone already inside the app, and the identity and
+        // 登出 it carried are both on 我的. Deleting it is worth ~56dp at the
+        // top of every tab.
+        if (nav.canGoBack) {
+            TopBar(
+                nav = nav,
+                wordTitle = { id -> catalog.words.firstOrNull { it.id == id }?.word },
+                onBack = { nav = nav.pop() },
+                topPadding = insets.calculateTopPadding(),
+            )
+        } else {
+            Spacer(Modifier.height(insets.calculateTopPadding()))
+        }
 
         Box(Modifier.weight(1f)) {
             when (val route = nav.current) {
@@ -289,6 +297,16 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     identity = identity,
                     onReview = { nav = nav.push(AppRoute.Review) },
                     onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
+                    onSearch = { nav = nav.select(AppRoute.Search) },
+                    onCreateAccount = { app.auth.exitGuestMode() },
+                    shelves = catalog.shelves,
+                    uiLang = uiLang,
+                    onOpenShelf = { id ->
+                        val shelf = catalog.shelves.first { it.category.id == id }
+                        nav = nav.select(AppRoute.Atlas)
+                            .push(AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
+                    },
+                    onOpenAtlas = { nav = nav.select(AppRoute.Atlas) },
                     onSpike = { showSpike = true },
                 )
 
@@ -418,10 +436,8 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
 @Composable
 private fun TopBar(
     nav: NavStack,
-    identity: String?,
     wordTitle: (String) -> String?,
     onBack: () -> Unit,
-    onAccount: () -> Unit,
     topPadding: androidx.compose.ui.unit.Dp,
 ) {
     Row(
@@ -429,28 +445,13 @@ private fun TopBar(
             .fillMaxWidth()
             .padding(top = topPadding)
             .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (nav.canGoBack) {
-            Text(
-                "← " + title(nav.current, wordTitle),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink2,
-                modifier = Modifier.tujiClickable(onClick = onBack).padding(TujiSpace.S1),
-            )
-        } else {
-            Text(
-                identity ?: stringResource(R.string.guest_mode),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-            )
-        }
         Text(
-            stringResource(if (identity == null) R.string.sign_in_or_up else R.string.sign_out),
+            "← " + title(nav.current, wordTitle),
             style = TujiType.bodySmStrong,
             color = TujiColor.Ink2,
-            modifier = Modifier.tujiClickable(onClick = onAccount).padding(TujiSpace.S1),
+            modifier = Modifier.tujiClickable(onClick = onBack).padding(TujiSpace.S1),
         )
     }
 }
@@ -517,14 +518,27 @@ private fun TodayColumn(
     identity: String?,
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
+    onSearch: () -> Unit,
+    onCreateAccount: () -> Unit,
+    shelves: List<CategoryShelf.Shelf>,
+    uiLang: String,
+    onOpenShelf: (String) -> Unit,
+    onOpenAtlas: () -> Unit,
     onSpike: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
             name = identity,
+            bottomPadding = 0.dp,
             onReview = onReview,
             onLearnNew = onLearnNew,
+            onSearch = onSearch,
+            onCreateAccount = onCreateAccount,
+            shelves = shelves,
+            uiLang = uiLang,
+            onOpenShelf = onOpenShelf,
+            onOpenAtlas = onOpenAtlas,
         )
         if (BuildConfig.DEBUG) {
             // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts

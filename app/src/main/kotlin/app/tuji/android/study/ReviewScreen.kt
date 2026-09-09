@@ -19,6 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.tuji.android.core.design.TujiPrompt
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -77,6 +81,7 @@ fun ReviewScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    var leaving by remember { mutableStateOf(false) }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
     Box(
@@ -103,13 +108,10 @@ fun ReviewScreen(
                     StudyHeader(
                         progress = s.session.progress,
                         unsynced = s.unsynced,
-                        onClose = {
-                            // Drop the pending beat first: leaving during the
-                            // pause must not raise a sheet over the screen the
-                            // user just went to.
-                            vm.leave()
-                            onClose()
-                        },
+                        // Ask, do not leave. The ✕ sits a thumb's width from
+                        // the answer buttons, and one mis-tap would otherwise
+                        // end a session the user was halfway through.
+                        onClose = { leaving = true },
                     )
                     QuestionBody(
                         state = s,
@@ -132,6 +134,23 @@ fun ReviewScreen(
                     )
                 }
             }
+        }
+
+        if (leaving) {
+            TujiPrompt(
+                title = stringResource(R.string.study_leave_title),
+                message = stringResource(R.string.study_leave_message),
+                confirm = stringResource(R.string.study_leave_confirm),
+                cancel = stringResource(R.string.study_leave_cancel),
+                onConfirm = {
+                    // Drop the pending beat first, or it fires after teardown
+                    // and raises a sheet over the screen the user went to.
+                    leaving = false
+                    vm.leave()
+                    onClose()
+                },
+                onCancel = { leaving = false },
+            )
         }
     }
 }

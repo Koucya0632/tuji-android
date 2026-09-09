@@ -29,7 +29,10 @@ enum class MascotPose(
     val groundLine: Float,
 ) {
     Peek(R.drawable.mascot_peek, topInset = 0.10f, groundLine = 0.99f),
-    Wave(R.drawable.mascot_wave, topInset = 0.05f, groundLine = 0.96f);
+    Wave(R.drawable.mascot_wave, topInset = 0.05f, groundLine = 0.96f),
+
+    /** 今日目標達成. The one pose that only appears when something went right. */
+    Cheer(R.drawable.mascot_cheer, topInset = 0.06f, groundLine = 0.95f);
 
     /** Drawn height, after trimming the transparent margins. */
     val visibleHeightRatio: Float get() = groundLine - topInset
