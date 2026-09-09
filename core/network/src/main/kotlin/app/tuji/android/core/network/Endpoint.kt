@@ -72,6 +72,23 @@ interface Endpoint {
         )
     }
 
+    /**
+     * The streak, the 42-cell heatmap and the per-theme seen/total rows.
+     *
+     * `PrivateServerCached` rather than fresh, unlike [UsersMastery]: these
+     * numbers move on their own — the streak turns over at midnight and the
+     * heatmap gains a day — so the server's own short cache is the right place
+     * to answer from, and the client re-asks on appearance rather than holding
+     * a copy that ages silently.
+     */
+    data class UsersProgress(val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/progress",
+            query = listOf("learning" to learning.wire),
+            policy = EndpointPolicy.PrivateServerCached,
+        )
+    }
+
     // MARK: 物見（wire 上叫 public/community）
 
     /**

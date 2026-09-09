@@ -2,6 +2,7 @@ package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.MasteryListResponse
+import app.tuji.android.core.model.ProgressResponse
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
@@ -30,6 +31,11 @@ interface MasteryReading {
     suspend fun mastery(learning: LearningDirection): MasteryListResponse
 }
 
+/** The streak, the heatmap and the per-theme rows. */
+interface ProgressReading {
+    suspend fun progress(learning: LearningDirection): ProgressResponse
+}
+
 /** Fetching a session's cards, as a role. */
 interface StudyQueueReading {
     suspend fun queue(
@@ -43,10 +49,13 @@ interface StudyQueueReading {
 }
 
 class StudyRepository(private val api: TujiApiClient) :
-    AnswerSubmission, StudyQueueReading, StudyStatsReading, MasteryReading {
+    AnswerSubmission, StudyQueueReading, StudyStatsReading, MasteryReading, ProgressReading {
 
     override suspend fun mastery(learning: LearningDirection): MasteryListResponse =
         api.get(Endpoint.UsersMastery(learning))
+
+    override suspend fun progress(learning: LearningDirection): ProgressResponse =
+        api.get(Endpoint.UsersProgress(learning))
 
     override suspend fun stats(learning: LearningDirection): StudyStatsResponse =
         api.get(Endpoint.StudyStats(learning = learning))
