@@ -5,10 +5,10 @@ import app.tuji.android.BuildConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyMode
-import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
@@ -45,6 +45,8 @@ class ReviewViewModel(
     private val writer: DurableAnswerWriter,
     private val direction: LearningDirection,
     private val uiLang: String,
+    /** The saved 發音口音, for [SpokenVoice]. */
+    private val accent: String = "us",
     /** The catalogue, for topping up MCQ options on cards the server did not fill. */
     private val pool: () -> List<Word>,
     /**
@@ -471,13 +473,9 @@ class ReviewViewModel(
         audio.stop()
     }
 
-    /**
-     * Which recording to ask for. English has two accents on the server and the
-     * 發音口音 setting that picks between them has no Android home yet, so this
-     * takes the same default iOS does when nothing is saved.
-     */
+    /** Which recording to ask for — the rule, not a second copy of it. */
     private val voice: String
-        get() = if (direction.targetLanguage == TargetLanguage.JA) "ja-JP" else "en-US"
+        get() = SpokenVoice.key(direction, accent)
 
     private companion object {
         const val TAG = "TujiStudy"
