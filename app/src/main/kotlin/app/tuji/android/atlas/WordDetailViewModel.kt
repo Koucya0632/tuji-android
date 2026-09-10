@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
-import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.network.CatalogReading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -21,6 +21,8 @@ class WordDetailViewModel(
     private val audio: ClipPlaying,
     private val direction: LearningDirection,
     private val uiLang: String,
+    /** The saved 發音口音, for [SpokenVoice]. */
+    private val accent: String = "us",
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
@@ -53,12 +55,12 @@ class WordDetailViewModel(
      *
      * The locale is the one being learned, not the device's: this is how the
      * *word* sounds, and a Japanese entry read in English is not a pronunciation
-     * at all. English falls back to en-US the way iOS does when 發音口音 has not
-     * been set — that setting has no Android home yet.
+     * at all. Which of the two English recordings comes back is 設定 → 發音口音,
+     * through [SpokenVoice].
      */
     fun play() {
         val loaded = _state.value as? State.Loaded ?: return
-        val url = loaded.word.audioUrls?.get(voice(loaded.word.targetLanguage)) ?: return
+        val url = clipFor(loaded.word) ?: return
         clip?.cancel()
         clip = work.launch {
             _state.value = loaded.copy(playing = true)
@@ -68,11 +70,10 @@ class WordDetailViewModel(
     }
 
     /** Whether there is anything to play, so the button can say so. */
-    fun canPlay(word: WordDetail): Boolean =
-        word.audioUrls?.get(voice(word.targetLanguage)) != null
+    fun canPlay(word: WordDetail): Boolean = clipFor(word) != null
 
-    private fun voice(language: TargetLanguage?): String =
-        if ((language ?: direction.targetLanguage) == TargetLanguage.JA) "ja-JP" else "en-US"
+    private fun clipFor(word: WordDetail): String? =
+        SpokenVoice.clip(word.audioUrls, direction, accent, word.targetLanguage)
 
     fun stop() {
         clip?.cancel()

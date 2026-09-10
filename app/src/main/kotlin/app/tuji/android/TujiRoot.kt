@@ -307,6 +307,7 @@ private fun SignedInScreens(
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
+                    accent = settings.accent,
                     pool = { app.catalog.words },
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
                     audio = app.clipPlayer,
@@ -595,6 +596,7 @@ private fun SignedInScreens(
                             audio = app.clipPlayer,
                             direction = direction,
                             uiLang = uiLang,
+                            accent = settings.accent,
                         ).also { it.load(route.wordId) }
                     }
                     WordDetailScreen(
