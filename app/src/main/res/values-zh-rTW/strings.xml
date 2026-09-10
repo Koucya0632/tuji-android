@@ -104,6 +104,8 @@
     <string name="atlas_search_hint">找一個詞</string>
     <string name="atlas_search_empty">沒有找到符合的詞</string>
     <string name="atlas_search_prompt">輸入中文、日文或讀音都可以</string>
+    <string name="atlas_search_searching">搜尋中…</string>
+    <string name="atlas_search_offline">這台裝置上沒有相符的詞，也連不上伺服器</string>
     <string name="atlas_loading">載入圖鑑中…</string>
     <string name="atlas_failed">拿不到圖鑑，請稍後再試</string>
     <string name="atlas_back">返回</string>

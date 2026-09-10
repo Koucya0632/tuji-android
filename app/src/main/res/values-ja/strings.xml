@@ -104,6 +104,8 @@
     <string name="atlas_search_hint">単語を探す</string>
     <string name="atlas_search_empty">一致する単語がありません</string>
     <string name="atlas_search_prompt">中国語・日本語・読みのどれでも検索できます</string>
+    <string name="atlas_search_searching">検索中…</string>
+    <string name="atlas_search_offline">この端末には該当がなく、サーバーにも接続できません</string>
     <string name="atlas_loading">図鑑を読み込んでいます…</string>
     <string name="atlas_failed">図鑑を読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="atlas_back">戻る</string>

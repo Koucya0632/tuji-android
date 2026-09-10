@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import app.tuji.android.atlas.AtlasSearchScreen
+import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.atlas.AtlasCardsScreen
 import app.tuji.android.atlas.AtlasThemeScreen
 import app.tuji.android.atlas.AtlasThemesScreen
@@ -532,7 +533,20 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Search -> AtlasSearchScreen(
-                    words = catalog.words,
+                    // Keyed on both, because both are in the request's URL —
+                    // and a model held across a change of either would answer
+                    // the next query with the previous deck's scope.
+                    vm = remember(direction, uiLang) {
+                        SearchViewModel(
+                            remote = app.catalogReading,
+                            // A lambda, not `catalog.words`: the catalogue can
+                            // still be loading when this screen opens, and a
+                            // list captured here would stay empty.
+                            local = { app.catalog.words },
+                            lang = uiLang,
+                            direction = direction,
+                        )
+                    },
                     bottomPadding = 0.dp,
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )

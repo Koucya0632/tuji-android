@@ -2,6 +2,7 @@ package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.CategoriesResponse
+import app.tuji.android.core.model.SearchResponse
 import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.WordsListResponse
 
@@ -26,7 +27,19 @@ interface CatalogReading {
     suspend fun categories(lang: String): CategoriesResponse
 }
 
-class CatalogRepository(private val api: TujiApiClient) : CatalogReading {
+/**
+ * Asking the server about a query, as a role of its own.
+ *
+ * Separate from [CatalogReading] because the caller is different in kind: 搜尋
+ * needs this and nothing else, while every screen that reads the catalogue
+ * needs the other three and never this. A test standing in for the search
+ * screen should not have to answer `categories()`.
+ */
+interface WordSearching {
+    suspend fun search(query: String, lang: String, learning: LearningDirection): SearchResponse
+}
+
+class CatalogRepository(private val api: TujiApiClient) : CatalogReading, WordSearching {
     override suspend fun words(lang: String, learning: LearningDirection): WordsListResponse =
         api.get(Endpoint.Words(lang = lang, learning = learning))
 
@@ -35,4 +48,10 @@ class CatalogRepository(private val api: TujiApiClient) : CatalogReading {
 
     override suspend fun categories(lang: String): CategoriesResponse =
         api.get(Endpoint.Categories(lang = lang))
+
+    override suspend fun search(
+        query: String,
+        lang: String,
+        learning: LearningDirection,
+    ): SearchResponse = api.get(Endpoint.Search(q = query, lang = lang, learning = learning))
 }

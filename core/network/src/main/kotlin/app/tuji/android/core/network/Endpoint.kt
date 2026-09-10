@@ -29,6 +29,25 @@ interface Endpoint {
         )
     }
 
+    /**
+     * 搜尋, for the matches a local list cannot see: 別名 and full definitions
+     * live in tables the client never downloads.
+     *
+     * **`learning` is identity, not a hint.** The response is cached by URL, and
+     * leaving the direction out gave both directions one entry — iOS could
+     * switch 學習語言, repeat a search, and be served the other language's rows
+     * out of its own cache. The server makes the same argument from its side:
+     * with the parameter present it need not read the caller's settings, and
+     * the edge is allowed to cache at all.
+     */
+    data class Search(val q: String, val lang: String, val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/search",
+            query = listOf("q" to q, "lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
     data class Word(val id: String, val lang: String, val learning: LearningDirection) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/words/$id",

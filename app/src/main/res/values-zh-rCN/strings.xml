@@ -104,6 +104,8 @@
     <string name="atlas_search_hint">找一个词</string>
     <string name="atlas_search_empty">没有找到符合的词</string>
     <string name="atlas_search_prompt">输入中文、日文或读音都可以</string>
+    <string name="atlas_search_searching">搜索中…</string>
+    <string name="atlas_search_offline">这台设备上没有相符的词，也连不上服务器</string>
     <string name="atlas_loading">载入图鉴中…</string>
     <string name="atlas_failed">拿不到图鉴，请稍后再试</string>
     <string name="atlas_back">返回</string>
