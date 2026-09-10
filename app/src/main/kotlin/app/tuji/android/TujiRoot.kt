@@ -60,6 +60,7 @@ import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
 import app.tuji.android.community.CommunityViewModel
 import app.tuji.android.community.PublicItemScreen
+import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.design.TujiColor
@@ -217,9 +218,23 @@ private fun SignedInScreens(
         app.masteryStore.load(direction)
         app.progressStore.retune()
         app.progressStore.load(direction)
+        // 已收進 is deck-scoped like the catalogue; 書籤 is not, and `retune`
+        // knows the difference.
+        app.cardsSourceStore.retune()
+        app.cardsSourceStore.load(uiLang, direction)
     }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
     val scores by app.masteryStore.scores.collectAsStateWithLifecycle()
+    val personal by app.cardsSourceStore.personal.collectAsStateWithLifecycle()
+
+    // 收藏 happens in 物見 and lands on a shelf 圖鑑 draws. A tick rather than a
+    // call from inside the view model, for the same reason `refreshTick` is one:
+    // the effect that reloads has to be the thing the composition owns.
+    var savedTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(savedTick) {
+        if (savedTick == 0) return@LaunchedEffect
+        app.cardsSourceStore.load(uiLang, direction, force = true)
+    }
     val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
 
     // Bumped as a study flow closes. A signal here rather than a call at the
@@ -247,6 +262,7 @@ private fun SignedInScreens(
             blocks = app.atlas,
             direction = direction,
             uiLang = uiLang,
+            onSaved = { savedTick++ },
         ).also { it.load() }
     }
     val communityFeed by community.feed.collectAsStateWithLifecycle()
@@ -404,11 +420,21 @@ private fun SignedInScreens(
 
                 AppRoute.Atlas -> AtlasCardsScreen(
                     words = catalog.words,
+                    personal = personal,
                     scores = scores,
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
                     onOpenThemes = { nav = nav.push(AppRoute.Themes) },
-                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                    // A 已收進 tile belongs to somebody else, and its page has
+                    // an author, a 取消收藏 and a 檢舉 that the dictionary's
+                    // entry has none of. The id says which.
+                    onOpen = { id ->
+                        nav = nav.push(
+                            CardsSourceRules.savedSlug(id)
+                                ?.let { AppRoute.PublicItem(it) }
+                                ?: AppRoute.Word(id),
+                        )
+                    },
                 )
 
                 AppRoute.Settings -> SettingsScreen(
@@ -575,6 +601,8 @@ private fun SignedInScreens(
                         vm = vm,
                         bottomPadding = 0.dp,
                         resolve = { id -> catalog.words.firstOrNull { it.id == id } },
+                        bookmarked = route.wordId in personal.bookmarked,
+                        onBookmark = { app.cardsSourceStore.toggle(route.wordId) },
                         scores = scores,
                         onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
                     )

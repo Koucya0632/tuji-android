@@ -53,7 +53,9 @@ class TujiApplication : Application() {
             // them reach `auth` to get there. Reading them at sign-out — the
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
-            accountScopedStores = { listOf(settingsStore, masteryStore, progressStore) },
+            accountScopedStores = {
+                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore)
+            },
         )
     }
 
@@ -85,6 +87,22 @@ class TujiApplication : Application() {
     /** The streak, the heatmap and the per-theme rows, for 我的 and 主題. */
     val progressStore: app.tuji.android.account.ProgressStore by lazy {
         app.tuji.android.account.ProgressStore(study)
+    }
+
+    /**
+     * 書籤 and 已收進 — the two shelves in 圖鑑 that are not the dictionary.
+     *
+     * Its own scope for the same reason [settingsStore] has one: a bookmark is
+     * tapped and the screen is left in the same second, and a scope that dies
+     * with the composition would drop the write.
+     */
+    val cardsSourceStore: app.tuji.android.atlas.CardsSourceStore by lazy {
+        app.tuji.android.atlas.CardsSourceStore(
+            remote = study,
+            scope = kotlinx.coroutines.CoroutineScope(
+                kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
+            ),
+        )
     }
 
     /**

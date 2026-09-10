@@ -1,6 +1,8 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import app.tuji.android.core.study.ThemeStatus
 import app.tuji.android.core.study.MasteryLevel
 import app.tuji.android.core.design.MasteryBadge
@@ -28,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -42,6 +45,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.catalog.CardsListPaging
+import app.tuji.android.core.catalog.CardsSource
+import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
@@ -67,18 +72,26 @@ import coil3.compose.AsyncImage
 @Composable
 fun AtlasCardsScreen(
     words: List<Word>,
+    personal: CardsSourceStore.Personal,
     scores: MasteryStore.Scores,
     loading: Boolean,
     bottomPadding: Dp,
     onOpenThemes: () -> Unit,
     onOpen: (String) -> Unit,
 ) {
+    var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
+    val shown = remember(source, words, personal) {
+        CardsSourceRules.words(source, words, personal.taken, personal.bookmarked)
+    }
+
+    // The dictionary failing to load is the tab failing to load; the other two
+    // shelves being empty is an answer, and it has its own sentence.
     if (words.isEmpty()) {
         Centered(stringResource(if (loading) R.string.atlas_loading else R.string.atlas_failed))
         return
     }
-    var visibleCount by rememberSaveable { mutableIntStateOf(CardsListPaging.PAGE_SIZE) }
-    val page = remember(words, visibleCount) { CardsListPaging.page(words, visibleCount) }
+    var visibleCount by rememberSaveable(source) { mutableIntStateOf(CardsListPaging.PAGE_SIZE) }
+    val page = remember(shown, visibleCount) { CardsListPaging.page(shown, visibleCount) }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -93,6 +106,10 @@ fun AtlasCardsScreen(
         // Count on the left, one action on the right. 主題 sits here rather
         // than in a bar because it is about *these* words — and it keeps the
         // tab root free of a top bar, which is how every other root reads.
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            SourceRow(selected = source, onSelect = { source = it })
+        }
+
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 Modifier.fillMaxWidth().padding(bottom = TujiSpace.S1),
@@ -112,6 +129,26 @@ fun AtlasCardsScreen(
                     modifier = Modifier
                         .tujiClickable(onClick = onOpenThemes)
                         .padding(vertical = TujiSpace.S1),
+                )
+            }
+        }
+
+        // An empty shelf is an answer, and it goes *inside* the grid so the
+        // chips stay on screen: a sentence that replaces the whole page would
+        // take away the only way back to a shelf that has something on it.
+        if (page.words.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    stringResource(
+                        when (source) {
+                            CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty
+                            else -> R.string.atlas_taken_empty
+                        },
+                    ),
+                    style = TujiType.bodySm,
+                    color = TujiColor.Ink3,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = TujiSpace.S6),
                 )
             }
         }
@@ -137,6 +174,44 @@ fun AtlasCardsScreen(
                         .padding(vertical = TujiSpace.S3),
                 )
             }
+        }
+    }
+}
+
+/**
+ * The source chips.
+ *
+ * One is always lit and tapping the lit one does nothing — see [CardsSource]
+ * for why there is no 全部. Selected is ink on paper reversed, which is the
+ * same "this one" the tab bar uses; unselected is the 紙2 ground every other
+ * available-but-not-chosen control in the app sits on.
+ */
+@Composable
+private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(bottom = TujiSpace.S2),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+    ) {
+        CardsSource.entries.forEach { source ->
+            val lit = source == selected
+            Text(
+                stringResource(
+                    when (source) {
+                        CardsSource.Official -> R.string.atlas_source_official
+                        CardsSource.Bookmarked -> R.string.atlas_source_bookmarked
+                        CardsSource.Taken -> R.string.atlas_source_taken
+                    },
+                ),
+                style = TujiType.bodySmStrong,
+                color = if (lit) TujiColor.Paper else TujiColor.Ink2,
+                modifier = Modifier
+                    .background(if (lit) TujiColor.Ink else TujiColor.Paper2)
+                    .tujiClickable { if (!lit) onSelect(source) }
+                    .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
+            )
         }
     }
 }

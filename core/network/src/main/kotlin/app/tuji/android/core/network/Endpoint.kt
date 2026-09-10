@@ -140,6 +140,29 @@ interface Endpoint {
         )
     }
 
+    /**
+     * 書籤 — read, and written on the same path with a different verb.
+     *
+     * Not scoped by learning direction, deliberately, because the server's list
+     * is not: marking a word in 中文→日文 and finding the mark gone after a
+     * switch would read as the app forgetting.
+     */
+    data object UsersFavorites : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/favorites",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 已收進 — 物見 items this account saved, shaped as catalogue words. */
+    data class UsersSavedWords(val lang: String, val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/saved-words",
+            query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** 刪除帳號. Sent as a POST — that is the verb the server route has. */
     data object DeleteAccount : Endpoint {
         override val descriptor get() = EndpointDescriptor(

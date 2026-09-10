@@ -93,9 +93,11 @@ class CommunityViewModelTest {
         blocked: List<String> = emptyList(),
         blocksFail: Boolean = false,
         direction: LearningDirection = LearningDirection.ZH_JA,
+        onSaved: () -> Unit = {},
     ) = CommunityViewModel(
         atlas = reader,
         saver = saver,
+        onSaved = onSaved,
         reporter = reporter,
         blocks = object : BlockListing {
             override suspend fun blockedHandles() =
@@ -171,6 +173,33 @@ class CommunityViewModelTest {
         vm.save(); advanceUntilIdle()
         assertEquals(1, saver.calls)
         assertTrue((vm.item.value as CommunityViewModel.ItemState.Loaded).saved)
+    }
+
+    /**
+     * 收藏 lands on a shelf another tab draws. Without this call, the word is
+     * saved and 圖鑑's 已收進 goes on showing the shelf as it was.
+     */
+    @Test fun `a save tells whoever draws the other shelf`() = runTest(dispatcher) {
+        var told = 0
+        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
+        val vm = vm(reader = Reader(detail = detail), onSaved = { told++ })
+        vm.openItem("a"); advanceUntilIdle()
+        vm.save(); advanceUntilIdle()
+        assertEquals(1, told)
+    }
+
+    /** Nothing changed, so nothing to reload. */
+    @Test fun `a failed save tells nobody`() = runTest(dispatcher) {
+        var told = 0
+        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
+        val vm = vm(
+            reader = Reader(detail = detail),
+            saver = Saver(fail = true),
+            onSaved = { told++ },
+        )
+        vm.openItem("a"); advanceUntilIdle()
+        vm.save(); advanceUntilIdle()
+        assertEquals(0, told)
     }
 
     @Test fun `a failed save does not claim to have saved`() = runTest(dispatcher) {
