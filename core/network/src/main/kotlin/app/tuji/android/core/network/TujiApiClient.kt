@@ -95,7 +95,17 @@ class TujiApiClient(
             url(baseUrl.trimEnd('/') + descriptor.path)
             descriptor.query.forEach { (name, value) -> url.parameters.append(name, value) }
             accept(ContentType.Application.Json)
-            timeout { requestTimeoutMillis = policy.timeoutMillis }
+            // **Both**, not just the request timeout. Ktor counts them
+            // separately: `requestTimeoutMillis` bounds the whole call, while
+            // `socketTimeoutMillis` bounds the gap *between packets* — and a
+            // slow endpoint's whole point is that nothing arrives while the
+            // server thinks. With only the first one set, the AI calls died on
+            // the engine's default socket timeout long before their 60 seconds,
+            // and said so in a Ktor sentence with the URL in it.
+            timeout {
+                requestTimeoutMillis = policy.timeoutMillis
+                socketTimeoutMillis = policy.timeoutMillis
+            }
             // A shared on-disk cache is shared across accounts on the device, so
             // anything that can vary by caller must never be served from it.
             if (!policy.access.mayBeCachedAcrossCallers ||

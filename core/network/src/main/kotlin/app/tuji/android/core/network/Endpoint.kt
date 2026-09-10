@@ -154,6 +154,32 @@ interface Endpoint {
         )
     }
 
+    /** 我做的 — this account's own 自製圖鑑 cards, shaped as catalogue words. */
+    data class UsersCustomWords(val lang: String, val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/custom-words",
+            query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
+     * One 自製圖鑑 card in full, in the same shape as `/api/words/{id}`.
+     *
+     * **Slow on purpose.** This route is where a card that was never finished
+     * gets finished: it re-runs the AI enrichment inline when the row is thin,
+     * and the server allows itself 60 seconds for it. A normal timeout here
+     * turns 「第一次打開一張剛拍的卡」 into a failure the user is told to retry,
+     * which is the one case that cannot succeed faster the second time.
+     */
+    data class AtlasItemDetail(val itemId: String, val lang: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/detail",
+            query = listOf("lang" to lang),
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
     /** 已收進 — 物見 items this account saved, shaped as catalogue words. */
     data class UsersSavedWords(val lang: String, val learning: LearningDirection) : Endpoint {
         override val descriptor get() = EndpointDescriptor(

@@ -109,6 +109,8 @@
     <string name="atlas_source_official">官方</string>
     <string name="atlas_source_bookmarked">书签</string>
     <string name="atlas_source_taken">已收进</string>
+    <string name="atlas_source_mine">我做的</string>
+    <string name="atlas_mine_empty">还没有自制的卡。拍一张照片就能做一张。</string>
     <string name="atlas_bookmarked_empty">还没有书签。在单词页点星号就能留下记号。</string>
     <string name="atlas_taken_empty">还没有收进任何词。别人的图鉴在物见。</string>
     <string name="word_bookmark">书签</string>

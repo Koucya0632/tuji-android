@@ -109,6 +109,8 @@
     <string name="atlas_source_official">公式</string>
     <string name="atlas_source_bookmarked">ブックマーク</string>
     <string name="atlas_source_taken">取り込み済み</string>
+    <string name="atlas_source_mine">自作</string>
+    <string name="atlas_mine_empty">自作のカードはまだありません。写真を撮ると作れます。</string>
     <string name="atlas_bookmarked_empty">ブックマークはまだありません。単語ページの星を押すと残せます。</string>
     <string name="atlas_taken_empty">まだ何も取り込んでいません。ほかの人の図鑑は物見にあります。</string>
     <string name="word_bookmark">ブックマーク</string>
