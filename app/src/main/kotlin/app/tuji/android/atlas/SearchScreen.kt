@@ -25,9 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
-import app.tuji.android.core.catalog.WordSearch
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiTextField
@@ -36,25 +36,32 @@ import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Word
 
 /**
- * 搜尋 over the catalogue already in memory.
+ * 搜尋 — the rows already in memory, and then the ones only the server can see.
  *
- * No debounce and no request: [WordSearch] filters 557 rows, which is fast
- * enough that a keystroke and its result are the same frame — and it keeps
- * working with no network, which the study flows next door already assume.
+ * The local half answers in the same frame as the keystroke and keeps working
+ * on a plane; the request that follows is a supplement, and [SearchViewModel]
+ * owns the rules about when it is worth showing. This file draws them.
+ *
+ * **The field's text is this screen's, the results are the model's.** They are
+ * not the same state: what has been typed changes on every keystroke, while
+ * what is on screen answers the last query that produced anything.
  */
 @Composable
 fun AtlasSearchScreen(
-    words: List<Word>,
+    vm: SearchViewModel,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onOpen: (String) -> Unit,
 ) {
-    var query by remember { mutableStateOf("") }
-    val results = remember(query, words) { WordSearch.matches(query, words) }
+    var typed by remember { mutableStateOf("") }
+    val results by vm.results.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize()) {
         TujiTextField(
-            value = query,
-            onValueChange = { query = it },
+            value = typed,
+            onValueChange = {
+                typed = it
+                vm.query(it)
+            },
             placeholder = stringResource(R.string.atlas_search_hint),
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,19 +69,23 @@ fun AtlasSearchScreen(
         )
 
         when {
-            query.isBlank() -> Centered(stringResource(R.string.atlas_search_prompt))
-            results.isEmpty() -> Centered(stringResource(R.string.atlas_search_empty))
-            else -> LazyColumn(
+            typed.isBlank() -> Centered(stringResource(R.string.atlas_search_prompt))
+            results.words.isNotEmpty() -> LazyColumn(
                 contentPadding = PaddingValues(
                     start = TujiSpace.S4, end = TujiSpace.S4,
                     bottom = bottomPadding + TujiSpace.S6,
                 ),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
             ) {
-                items(results, key = { it.id }) { word ->
+                items(results.words, key = { it.id }) { word ->
                     ResultRow(word = word, onClick = { onOpen(word.id) })
                 }
             }
+            // 「沒有相符的詞」 while a request that may still find one is in
+            // flight is a wrong answer that arrives before the right one.
+            results.searching -> Centered(stringResource(R.string.atlas_search_searching))
+            results.failed -> Centered(stringResource(R.string.atlas_search_offline))
+            else -> Centered(stringResource(R.string.atlas_search_empty))
         }
     }
 }

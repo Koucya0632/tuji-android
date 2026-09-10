@@ -40,6 +40,23 @@ data class WordsListResponse(
 )
 
 /**
+ * What `/api/search` sends back.
+ *
+ * The rows are the same [Word] the catalogue is made of — the route resolves
+ * ids and then hands them to the very same builder `/api/words` uses — so there
+ * is no second word type to keep in step, and a search result opens the detail
+ * screen with nothing to convert.
+ *
+ * `results` defaults to empty because a query that matched nothing is a normal
+ * answer, not a missing field.
+ */
+@Serializable
+data class SearchResponse(
+    val results: List<Word> = emptyList(),
+    val query: String = "",
+)
+
+/**
  * A run of the headword and the kana that read it.
  *
  * A **range**, not a character: 熟字訓 have no per-character reading — 時計 is
