@@ -20,6 +20,9 @@ sealed interface AppRoute {
     data object Search : Tab
     data object Me : Tab
 
+    /** 設定, reached from the gear on 我的. */
+    data object Settings : AppRoute
+
     /** The index of every theme, reached from 圖鑑's count row. */
     data object Themes : AppRoute
 

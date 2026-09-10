@@ -42,6 +42,15 @@ class OnboardingStore(context: Context) : StudyHints {
      * it is the same kind of fact as [introDone]: something the app has already
      * shown this person once.
      */
+    /**
+     * Whether this device's locally-stored direction has ever been reconciled
+     * with the server's. See [app.tuji.android.core.study.SettingsHandover] for
+     * why one bit decides which of the two sources wins.
+     */
+    var settingsHandedOver: Boolean
+        get() = prefs.getBoolean(KEY_HANDOVER, false)
+        set(value) = prefs.edit().putBoolean(KEY_HANDOVER, value).apply()
+
     override var reviewHintTaught: Boolean
         get() = prefs.getBoolean(KEY_REVIEW_HINT, false)
         set(value) = prefs.edit().putBoolean(KEY_REVIEW_HINT, value).apply()
@@ -53,5 +62,6 @@ class OnboardingStore(context: Context) : StudyHints {
         const val KEY_DIRECTION = "tuji.learning.direction"
         const val KEY_INTRO = "tuji.onboarding.introDone"
         const val KEY_REVIEW_HINT = "tuji.study.reviewHintTaught"
+        const val KEY_HANDOVER = "tuji.settings.handedOver"
     }
 }

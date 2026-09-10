@@ -49,9 +49,11 @@ class TujiApplication : Application() {
             supabase = supabase,
             google = GoogleCredentialBridge(BuildConfig.TUJI_GOOGLE_WEB_CLIENT_ID),
             scope = appScope,
-            // Empty until something account-scoped exists. The seam is here so
-            // the store that needs it does not have to discover sign-out.
-            accountScopedStores = { emptyList() },
+            // A lambda, not a list: these stores are built lazily and two of
+            // them reach `auth` to get there. Reading them at sign-out — the
+            // only moment this is called — is what keeps that from being a
+            // cycle at construction.
+            accountScopedStores = { listOf(settingsStore, masteryStore, progressStore) },
         )
     }
 
@@ -83,6 +85,24 @@ class TujiApplication : Application() {
     /** The streak, the heatmap and the per-theme rows, for 我的 and 主題. */
     val progressStore: app.tuji.android.account.ProgressStore by lazy {
         app.tuji.android.account.ProgressStore(study)
+    }
+
+    /**
+     * The account's settings.
+     *
+     * Given the **application** scope, not a composition's: the save is
+     * debounced by 400ms, and a scope that dies with the screen would drop the
+     * last change of anyone who taps and immediately leaves — which is most
+     * people, most of the time.
+     */
+    val settingsStore: app.tuji.android.settings.SettingsStore by lazy {
+        app.tuji.android.settings.SettingsStore(
+            remote = study,
+            local = onboarding,
+            scope = kotlinx.coroutines.CoroutineScope(
+                kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
+            ),
+        )
     }
 
     /** Which language, and whether the intro has been seen. See the class doc

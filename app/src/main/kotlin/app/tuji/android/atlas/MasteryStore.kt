@@ -1,6 +1,7 @@
 package app.tuji.android.atlas
 
 import android.util.Log
+import app.tuji.android.core.auth.AccountScopedStore
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.network.MasteryReading
 import kotlinx.coroutines.CancellationException
@@ -33,7 +34,7 @@ import kotlinx.coroutines.sync.withLock
  * would silently demote every word on screen to 未學 — a wrong answer that
  * looks exactly like a true one.
  */
-class MasteryStore(private val progress: MasteryReading) {
+class MasteryStore(private val progress: MasteryReading) : AccountScopedStore {
 
     data class Scores(
         val byId: Map<String, Int> = emptyMap(),
@@ -90,6 +91,13 @@ class MasteryStore(private val progress: MasteryReading) {
     fun retune() {
         _scores.value = Scores()
     }
+
+    /**
+     * Sign-out. The same clearing as [retune], for a different reason: these
+     * scores belong to the account that just left, and the next one's badges
+     * must not start as theirs.
+     */
+    override fun reset() = retune()
 
     private companion object {
         const val TAG = "TujiMastery"

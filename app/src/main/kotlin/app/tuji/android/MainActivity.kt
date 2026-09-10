@@ -23,9 +23,11 @@ class MainActivity : ComponentActivity() {
         app.supabase.handleDeeplinks(intent)
 
         setContent {
-            // M0 draws the Japanese catalogue, so the JP face is the one under
-            // test. The real switch is 設定 → 語言, which arrives with M3.
-            TujiTheme(face = TujiFace.JP) {
+            // The face for everything before the account is known: the
+            // splash and the sign-in screens, which follow the device. Once
+            // signed in, the shell re-themes to the account's own language —
+            // see `ProvideAppLanguage` — and this outer theme stops deciding.
+            TujiTheme(face = TujiFace.forUiLanguage(rememberDeviceLanguage().wire)) {
                 TujiRoot(app)
             }
         }
