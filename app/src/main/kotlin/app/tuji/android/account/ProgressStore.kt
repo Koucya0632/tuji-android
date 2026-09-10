@@ -1,6 +1,7 @@
 package app.tuji.android.account
 
 import android.util.Log
+import app.tuji.android.core.auth.AccountScopedStore
 import app.tuji.android.core.model.CategoryProgress
 import app.tuji.android.core.model.HeatmapCell
 import app.tuji.android.core.model.LearningDirection
@@ -26,7 +27,7 @@ import kotlinx.coroutines.sync.withLock
  * **A failed load keeps what it had.** Zeroing the streak because one request
  * timed out tells a user on a 40-day run that they broke it.
  */
-class ProgressStore(private val progress: ProgressReading) {
+class ProgressStore(private val progress: ProgressReading) : AccountScopedStore {
 
     data class Snapshot(
         val streak: StudyStreak? = null,
@@ -74,6 +75,13 @@ class ProgressStore(private val progress: ProgressReading) {
     fun retune() {
         _snapshot.value = Snapshot()
     }
+
+    /**
+     * Sign-out. The same clearing as [retune], for a different reason: a
+     * streak is the strongest personal claim this app makes, and showing the
+     * previous account's to whoever signs in next is the worst version of it.
+     */
+    override fun reset() = retune()
 
     private companion object {
         const val TAG = "TujiProgress"

@@ -1,5 +1,7 @@
 package app.tuji.android.core.model
 
+import java.util.Locale
+
 /**
  * Which of the four interface languages this device is in.
  *
@@ -23,6 +25,23 @@ enum class UiLanguage(val wire: String) {
     Ja("ja");
 
     val isChinese: Boolean get() = this == ZhHant || this == ZhHans
+
+    /**
+     * The locale whose resource qualifier holds this language's strings.
+     *
+     * **Region, not script**, because that is how the folders are spelled:
+     * `values-zh-rTW` and `values-zh-rCN`. Handing Android `zh-Hant` finds
+     * neither and lands on `values/` — English — which is the one outcome a
+     * Chinese reader must never get. `en` has no folder of its own on purpose:
+     * it resolves to `values/`, which is where the English strings live.
+     */
+    val locale: Locale
+        get() = when (this) {
+            ZhHant -> Locale.forLanguageTag("zh-TW")
+            ZhHans -> Locale.forLanguageTag("zh-CN")
+            Ja -> Locale.forLanguageTag("ja")
+            En -> Locale.forLanguageTag("en")
+        }
 
     companion object {
         /**

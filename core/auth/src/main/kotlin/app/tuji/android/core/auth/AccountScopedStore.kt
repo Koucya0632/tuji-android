@@ -13,10 +13,17 @@ package app.tuji.android.core.auth
  * Conform, add yourself to the roster the app hands to [AuthService], and
  * sign-out takes care of itself.
  *
- * The roster is **empty today** and that is correct: nothing account-scoped
- * exists yet. It is here now rather than later because the stores that will
- * need it — the study outbox, the atlas capture queue, the block list — all
- * arrive in milestones where sign-out is not the thing being edited.
+ * Three stores are enrolled: the settings, the mastery map and the progress
+ * snapshot. All three are application-lifetime — they have to be, because they
+ * outlive the screens that read them — and all three hold one account's data,
+ * which is the combination that makes a stale one visible: the previous
+ * account's streak, their badges, their deck.
+ *
+ * The seam was written before any of them existed, which is why enrolling costs
+ * one line each. The study outbox is deliberately **not** here: it tags each
+ * parked answer with the account that made it (`ActiveAccount`), so it survives
+ * sign-out on purpose — dropping it would throw away ratings the user cannot
+ * re-enter.
  */
 interface AccountScopedStore {
     /** Drop everything belonging to the signed-out account. */

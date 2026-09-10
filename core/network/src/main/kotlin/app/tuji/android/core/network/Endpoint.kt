@@ -89,6 +89,46 @@ interface Endpoint {
         )
     }
 
+    /** The account's settings. Read on launch, written on every change. */
+    data object UserSettingsRead : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/settings",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
+     * The same path as [UserSettingsRead]; the verb is the caller's, which is
+     * how every other write in this file is spelled.
+     */
+    data object UserSettingsWrite : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/settings",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
+     * 清除學習進度 — mastery and answer history, keeping bookmarks, settings and
+     * 自製圖鑑. `DELETE`, and the copy on the screen has to name what survives:
+     * a user who reads "clear progress" and loses their photographs will not
+     * come back.
+     */
+    data object ClearProgress : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/progress",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 刪除帳號. Sent as a POST — that is the verb the server route has. */
+    data object DeleteAccount : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/delete-account",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     // MARK: 物見（wire 上叫 public/community）
 
     /**

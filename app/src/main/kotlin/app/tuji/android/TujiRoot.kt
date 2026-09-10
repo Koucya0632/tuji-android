@@ -28,14 +28,15 @@ import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
+import app.tuji.android.core.design.TujiFace
+import app.tuji.android.core.design.TujiTheme
 import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.core.os.ConfigurationCompat
+import app.tuji.android.settings.SettingsBusy
+import app.tuji.android.settings.SettingsScreen
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.study.MasteryDistribution
 import app.tuji.android.core.model.UiLanguage
-import java.util.Locale
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState
@@ -148,25 +149,56 @@ private fun SplashScreen() {
 }
 
 /**
- * The signed-in app: three tabs, one back stack, and the study flows on top.
+ * The signed-in app's one language decision, wrapped around everything that
+ * draws. Split from [SignedInScreens] because the screens below it return early
+ * — a study flow owns the whole window — and a provider cannot wrap a body that
+ * returns out from under it.
+ */
+@Composable
+private fun SignedInShell(app: TujiApplication, identity: String?) {
+    val settings by app.settingsStore.current.collectAsStateWithLifecycle()
+    val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
+
+    // What the app opened in before 設定 existed, and still the answer for the
+    // frames before the account's has arrived.
+    val deviceLanguage = rememberDeviceLanguage()
+    LaunchedEffect(deviceLanguage) { app.settingsStore.load(deviceLanguage) }
+
+    // The account's choice wins once it has arrived. Until then the device's
+    // answer stands, so the first frame is not Chinese on a Japanese phone.
+    val uiLanguage = if (settingsLoaded) settings.language else deviceLanguage
+
+    // One language for both halves of the screen. It picks the `lang` the
+    // *server* writes glosses and definitions in, and — through the provider —
+    // the strings this app draws around them. Letting the two disagree is how
+    // a fully Japanese interface ends up wrapped around Chinese content.
+    ProvideAppLanguage(uiLanguage) {
+        // And the face that draws them. `forUiLanguage` has existed since M0
+        // with nobody to call it, because until 設定 there was no language to
+        // give it: 中文 in Japanese glyph forms is not tofu, it is just subtly
+        // the wrong 直 and 骨 on every screen.
+        TujiTheme(face = TujiFace.forUiLanguage(uiLanguage.wire)) {
+            SignedInScreens(app, identity, settings, uiLanguage)
+        }
+    }
+}
+
+/**
+ * The signed-in app: the tabs, one back stack, and the study flows on top.
  *
  * The stack is [NavStack] and nothing else — the hardware back button and 返回
  * pop the same list, so the two can never disagree about where "back" is.
  */
 @Composable
-private fun SignedInShell(app: TujiApplication, identity: String?) {
+private fun SignedInScreens(
+    app: TujiApplication,
+    identity: String?,
+    settings: app.tuji.android.core.model.UserSettings,
+    uiLanguage: UiLanguage,
+) {
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
-    val direction = app.onboarding.learningDirection ?: LearningDirection.ZH_EN
-    // From the device, not a constant. The app's own strings come from
-    // Android's resource resolution, but the *server* writes glosses and
-    // definitions in whatever `lang` asks for — and hard-coding it is how a
-    // fully Japanese interface ends up wrapped around Chinese content.
-    val configuration = LocalConfiguration.current
-    val uiLanguage = remember(configuration) {
-        val locale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
-        UiLanguage.of(locale.language, locale.script, locale.country)
-    }
+    val direction = settings.direction
     val uiLang = uiLanguage.wire
 
     // Ahead of every screen that reads it: 圖鑑 draws it, 搜尋 filters it, and
@@ -199,6 +231,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     // returned immediately. The refresh never ran once. A key that only ever
     // moves forward, and nothing inside the effect touching it, is the shape
     // that cannot do that.
+    var settingsBusy by remember { mutableStateOf(SettingsBusy()) }
     var refreshTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(refreshTick) {
         if (refreshTick == 0) return@LaunchedEffect
@@ -377,6 +410,40 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )
 
+                AppRoute.Settings -> SettingsScreen(
+                    settings = settings,
+                    categories = catalog.categories,
+                    uiLang = uiLang,
+                    busy = settingsBusy,
+                    bottomPadding = 0.dp,
+                    onChange = { change -> app.settingsStore.update(change) },
+                    onClearProgress = {
+                        scope.launch {
+                            settingsBusy = settingsBusy.copy(clearing = true)
+                            runCatching { app.study.clearProgress() }
+                            settingsBusy = settingsBusy.copy(clearing = false)
+                            // Everything this screen just erased is drawn
+                            // somewhere else, and none of those stores can
+                            // know it happened.
+                            app.masteryStore.load(direction, force = true)
+                            app.progressStore.load(direction)
+                            today.refresh()
+                            nav = nav.pop()
+                        }
+                    },
+                    onDeleteAccount = {
+                        scope.launch {
+                            settingsBusy = settingsBusy.copy(deleting = true)
+                            runCatching { app.study.deleteAccount() }
+                            settingsBusy = settingsBusy.copy(deleting = false)
+                            // Signing out is what takes the user off this
+                            // screen; the account it belonged to is gone.
+                            app.auth.signOut()
+                        }
+                    },
+                    onSignOut = { scope.launch { app.auth.signOut() } },
+                )
+
                 AppRoute.Themes -> AtlasThemesScreen(
                     shelves = catalog.shelves,
                     words = catalog.words,
@@ -461,7 +528,7 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
                     categories = catalog.categories,
                     bottomPadding = 0.dp,
                     onOpenPaywall = { /* M4：商店設好之前不會走到這裡 */ },
-                    onSignOut = { scope.launch { app.auth.signOut() } },
+                    onOpenSettings = { nav = nav.push(AppRoute.Settings) },
                 )
 
                 AppRoute.Search -> AtlasSearchScreen(
@@ -548,6 +615,7 @@ private fun title(route: AppRoute, wordTitle: (String) -> String?): String = whe
     is AppRoute.Author -> stringResource(R.string.nav_community)
     is AppRoute.Collection -> stringResource(R.string.community_collections)
     AppRoute.Themes -> stringResource(R.string.atlas_themes_title)
+    AppRoute.Settings -> stringResource(R.string.settings_title)
     AppRoute.Capture -> stringResource(R.string.capture_title)
     else -> stringResource(R.string.atlas_back)
 }

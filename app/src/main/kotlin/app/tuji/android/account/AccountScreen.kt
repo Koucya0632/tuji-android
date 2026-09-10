@@ -1,6 +1,14 @@
 package app.tuji.android.account
 
 import androidx.compose.foundation.background
+import app.tuji.android.core.design.tujiClickable
+import app.tuji.android.core.design.TujiGlyph
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import app.tuji.android.core.study.MasteryDistribution
 import app.tuji.android.core.study.CategoryStat
 import app.tuji.android.core.model.StudyStats
@@ -48,7 +56,7 @@ fun AccountScreen(
     categories: List<Category>,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onOpenPaywall: () -> Unit,
-    onSignOut: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     Column(
         Modifier
@@ -58,6 +66,20 @@ fun AccountScreen(
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
     ) {
         Spacer(Modifier.height(TujiSpace.S3))
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f))
+            val label = stringResource(R.string.settings_title)
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .semantics { contentDescription = label }
+                    .tujiClickable(onClick = onOpenSettings),
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Gear(tint = TujiColor.Ink)
+            }
+        }
 
         state.me?.let { me ->
             Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
@@ -96,35 +118,7 @@ fun AccountScreen(
         )
         Spacer(Modifier.height(TujiSpace.S2))
 
-        Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-            Text(
-                stringResource(R.string.me_settings),
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-            )
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = TujiSpace.S2),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    stringResource(R.string.me_language),
-                    style = TujiType.body,
-                    color = TujiColor.Ink,
-                )
-                Text(
-                    direction.wire,
-                    style = TujiType.monoLabel,
-                    color = TujiColor.Ink3,
-                )
-            }
-        }
 
-        TujiButton(
-            text = stringResource(R.string.me_sign_out),
-            style = TujiButtonStyle.Secondary,
-            onClick = onSignOut,
-            modifier = Modifier.fillMaxWidth(),
-        )
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }

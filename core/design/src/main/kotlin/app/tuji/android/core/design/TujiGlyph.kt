@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -104,4 +105,38 @@ object TujiGlyph {
             drawCircle(tint, radius = w * 0.15f, center = Rect(Offset.Zero, this.size).center)
         }
     }
+
+    /**
+     * 設定.
+     *
+     * Eight teeth on a ring, drawn rather than shipped as an asset — the same
+     * 2dp round-cap stroke every other mark here uses, so it does not arrive
+     * looking like it came from another app's icon set.
+     */
+    @Composable
+    fun Gear(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            val centre = Rect(Offset.Zero, this.size).center
+            val ring = w * 0.30f
+            drawCircle(tint, radius = ring, center = centre, style = Stroke(width = stroke))
+            // Teeth as spokes from the ring outward. A ring plus spokes reads
+            // as a gear at 20dp where a toothed silhouette turns to mush.
+            repeat(TEETH) { i ->
+                val angle = (2.0 * Math.PI / TEETH) * i
+                val dx = kotlin.math.cos(angle).toFloat()
+                val dy = kotlin.math.sin(angle).toFloat()
+                drawLine(
+                    color = tint,
+                    start = Offset(centre.x + dx * ring, centre.y + dy * ring),
+                    end = Offset(centre.x + dx * w * 0.44f, centre.y + dy * w * 0.44f),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
+
+    private const val TEETH = 8
 }

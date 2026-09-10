@@ -48,4 +48,26 @@ class UiLanguageTest {
     @Test fun `both Chinese variants say so`() {
         assertEquals(2, UiLanguage.entries.count { it.isChinese })
     }
+
+    // The resource folders are `values-zh-rTW` / `values-zh-rCN`, so the
+    // locale has to carry a region. A script-tagged `zh-Hant` matches neither
+    // folder and resolves to `values/` — English for a Chinese reader.
+    @Test fun `the resource locale is spelled the way the folders are`() {
+        assertEquals("zh-TW", UiLanguage.ZhHant.locale.toLanguageTag())
+        assertEquals("zh-CN", UiLanguage.ZhHans.locale.toLanguageTag())
+        assertEquals("ja", UiLanguage.Ja.locale.toLanguageTag())
+        assertEquals("en", UiLanguage.En.locale.toLanguageTag())
+    }
+
+    // Round-trips: whatever a device reports, the language it resolves to must
+    // resolve back to a locale that reports the same language.
+    @Test fun `every language's own locale resolves back to itself`() {
+        UiLanguage.entries.forEach { language ->
+            val locale = language.locale
+            assertEquals(
+                language,
+                UiLanguage.of(locale.language, locale.script, locale.country),
+            )
+        }
+    }
 }
