@@ -593,6 +593,7 @@ private fun SignedInScreens(
                     val vm = remember(route.wordId) {
                         WordDetailViewModel(
                             catalog = app.catalogReading,
+                            atlas = app.atlas,
                             audio = app.clipPlayer,
                             direction = direction,
                             uiLang = uiLang,
@@ -604,7 +605,10 @@ private fun SignedInScreens(
                         bottomPadding = 0.dp,
                         resolve = { id -> catalog.words.firstOrNull { it.id == id } },
                         bookmarked = route.wordId in personal.bookmarked,
-                        onBookmark = { app.cardsSourceStore.toggle(route.wordId) },
+                        // 書籤 filters the *catalogue* by marked id, so a mark
+                        // on a card the catalogue never had would go nowhere.
+                        onBookmark = if (CardsSourceRules.isCustom(route.wordId)) null
+                        else ({ app.cardsSourceStore.toggle(route.wordId) }),
                         scores = scores,
                         onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
                     )

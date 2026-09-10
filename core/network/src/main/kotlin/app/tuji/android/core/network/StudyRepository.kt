@@ -55,6 +55,16 @@ interface PersonalWordsAccess {
 
     /** 已收進 — saved 物見 items, already shaped as words. */
     suspend fun savedWords(lang: String, learning: LearningDirection): WordsListResponse
+
+    /**
+     * 我做的 — this account's own cards.
+     *
+     * A sibling of [savedWords] rather than one call returning both: those two
+     * are the creation and the consumption halves of 圖鑑, they live in separate
+     * tables, and the quota that stops saving other people's photos from eating
+     * your own capture slots depends on them being counted apart.
+     */
+    suspend fun customWords(lang: String, learning: LearningDirection): WordsListResponse
 }
 
 /** The account's settings, both ways. */
@@ -125,6 +135,11 @@ class StudyRepository(private val api: TujiApiClient) :
         lang: String,
         learning: LearningDirection,
     ): WordsListResponse = api.get(Endpoint.UsersSavedWords(lang = lang, learning = learning))
+
+    override suspend fun customWords(
+        lang: String,
+        learning: LearningDirection,
+    ): WordsListResponse = api.get(Endpoint.UsersCustomWords(lang = lang, learning = learning))
 
     override suspend fun clearProgress() {
         api.delete<Unit>(Endpoint.ClearProgress)

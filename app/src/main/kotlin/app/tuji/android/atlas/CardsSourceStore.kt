@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The two shelves in 圖鑑 that are not the dictionary: 書籤 and 已收進.
+ * The three shelves in 圖鑑 that are not the dictionary: 書籤, 我做的 and 已收進.
  *
  * Held once for the process rather than per screen, because two screens read
  * the same answer: the grid draws the shelves, and 單字詳情 draws the star for
@@ -33,6 +33,7 @@ class CardsSourceStore(
     data class Personal(
         /** Ids, spanning both decks — see `CardsSourceRules.words`. */
         val bookmarked: Set<String> = emptySet(),
+        val mine: List<Word> = emptyList(),
         val taken: List<Word> = emptyList(),
         /** True once a load has *succeeded*, so a failure does not look loaded. */
         val loaded: Boolean = false,
@@ -60,19 +61,33 @@ class CardsSourceStore(
                 Log.w(TAG, "bookmarks load failed — keeping the last set", failure)
                 return
             }
+            val own = try {
+                remote.customWords(lang, learning).words
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "custom words load failed — keeping the last shelf", failure)
+                _personal.value = _personal.value.copy(bookmarked = marks)
+                return
+            }
             val saved = try {
                 remote.savedWords(lang, learning).words
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
-                // Half an answer is still an answer: the marks arrived, and
-                // 書籤 can be drawn from them while 已收進 stays as it was.
+                // Part of an answer is still an answer: what arrived is drawn,
+                // and the shelf that did not stays as it was.
                 Log.w(TAG, "saved words load failed — keeping the last shelf", failure)
-                _personal.value = _personal.value.copy(bookmarked = marks)
+                _personal.value = _personal.value.copy(bookmarked = marks, mine = own)
                 return
             }
-            Log.i(TAG, "loaded ${marks.size} bookmarks and ${saved.size} saved words")
-            _personal.value = Personal(bookmarked = marks, taken = saved, loaded = true)
+            Log.i(TAG, "loaded ${marks.size} bookmarks, ${own.size} own and ${saved.size} saved")
+            _personal.value = Personal(
+                bookmarked = marks,
+                mine = own,
+                taken = saved,
+                loaded = true,
+            )
         }
     }
 
@@ -110,15 +125,20 @@ class CardsSourceStore(
     /**
      * Drop what belonged to the old deck.
      *
-     * 已收進 only: 書籤 spans both decks — the same account marks a word once,
-     * whichever language it was learning at the time — so clearing it on a
-     * direction change would make every mark look lost until the next load.
+     * 我做的 and 已收進 only: 書籤 spans both decks — the same account marks a
+     * word once, whichever language it was learning at the time — so clearing
+     * it on a direction change would make every mark look lost until the next
+     * load.
      */
     fun retune() {
-        _personal.value = _personal.value.copy(taken = emptyList(), loaded = false)
+        _personal.value = _personal.value.copy(
+            mine = emptyList(),
+            taken = emptyList(),
+            loaded = false,
+        )
     }
 
-    /** Sign-out. Both shelves belong to the account that just left. */
+    /** Sign-out. Every shelf here belongs to the account that just left. */
     override fun reset() {
         _personal.value = Personal()
     }

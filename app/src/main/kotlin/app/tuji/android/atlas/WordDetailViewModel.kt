@@ -7,6 +7,8 @@ import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.study.SpokenVoice
+import app.tuji.android.core.catalog.CardsSourceRules
+import app.tuji.android.core.network.AtlasItemReading
 import app.tuji.android.core.network.CatalogReading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -15,9 +17,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** One catalogue entry, and its pronunciation. */
+/**
+ * One entry, and its pronunciation.
+ *
+ * Two sources, one screen: the dictionary answers a bare id, and 自製圖鑑
+ * answers an `atlas:`-prefixed one. The payloads are the **same shape** — the
+ * server's own route says so — which is why a card the user photographed opens
+ * the page they already know instead of a second one built to look like it.
+ */
 class WordDetailViewModel(
     private val catalog: CatalogReading,
+    private val atlas: AtlasItemReading,
     private val audio: ClipPlaying,
     private val direction: LearningDirection,
     private val uiLang: String,
@@ -28,7 +38,20 @@ class WordDetailViewModel(
 
     sealed interface State {
         data object Loading : State
-        data class Failed(val message: String) : State
+        /**
+         * Carries **nothing**.
+         *
+         * It used to carry the exception's message, and the screen printed it:
+         * a custom card whose load timed out put
+         * 「Transport failure: Socket timeout has expired [url=https://…]」
+         * on screen, in English, with the server's address in it. That is a
+         * sentence for a log. This project already wrote the rule down for the
+         * sign-in screen — `AuthFailure` is an enum so that showing a server's
+         * words to a user is *structurally* impossible — and this is the same
+         * rule, one screen over. The message still goes to the log, where it
+         * was always meant to go.
+         */
+        data object Failed : State
         data class Loaded(val word: WordDetail, val playing: Boolean = false) : State
     }
 
@@ -40,12 +63,19 @@ class WordDetailViewModel(
 
     fun load(id: String) {
         _state.value = State.Loading
+        val custom = CardsSourceRules.customItemId(id)
         work.launch {
-            runCatching { catalog.word(id, uiLang, direction) }
+            // The custom route can take its time — it finishes a card that was
+            // never finished, inline. That is why its endpoint is the slow one
+            // and why nothing here races it.
+            runCatching {
+                if (custom != null) atlas.itemDetail(custom, uiLang)
+                else catalog.word(id, uiLang, direction)
+            }
                 .onSuccess { _state.value = State.Loaded(it) }
                 .onFailure {
                     Log.e(TAG, "word detail load failed: $id", it)
-                    _state.value = State.Failed(it.message ?: "load failed")
+                    _state.value = State.Failed
                 }
         }
     }

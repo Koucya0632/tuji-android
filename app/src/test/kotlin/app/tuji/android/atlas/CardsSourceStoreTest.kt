@@ -23,8 +23,10 @@ class CardsSourceStoreTest {
 
     private open class Server(
         val marks: List<String> = emptyList(),
+        val own: List<Word> = emptyList(),
         val saved: List<Word> = emptyList(),
         val failMarks: Boolean = false,
+        val failOwn: Boolean = false,
         val failSaved: Boolean = false,
         val failWrite: Boolean = false,
     ) : PersonalWordsAccess {
@@ -51,6 +53,14 @@ class CardsSourceStoreTest {
             if (failSaved) throw IOException("offline")
             return WordsListResponse(words = saved)
         }
+
+        override suspend fun customWords(
+            lang: String,
+            learning: LearningDirection,
+        ): WordsListResponse {
+            if (failOwn) throw IOException("offline")
+            return WordsListResponse(words = own)
+        }
     }
 
     private fun store(server: Server, scope: TestScope) =
@@ -59,15 +69,38 @@ class CardsSourceStoreTest {
     private suspend fun CardsSourceStore.fill() =
         load(lang = "zh-Hant", learning = LearningDirection.ZH_JA)
 
-    @Test fun `both shelves arrive together`() = runTest(StandardTestDispatcher()) {
-        val s = store(Server(marks = listOf("a"), saved = listOf(word("saved:x"))), this)
+    @Test fun `every shelf arrives together`() = runTest(StandardTestDispatcher()) {
+        val s = store(
+            Server(
+                marks = listOf("a"),
+                own = listOf(word("atlas:mine")),
+                saved = listOf(word("saved:x")),
+            ),
+            this,
+        )
 
         s.fill()
 
         assertEquals(setOf("a"), s.personal.value.bookmarked)
+        assertEquals(listOf("atlas:mine"), s.personal.value.mine.map { it.id })
         assertEquals(listOf("saved:x"), s.personal.value.taken.map { it.id })
         assertTrue(s.personal.value.loaded)
     }
+
+    /** Part of an answer is still an answer. */
+    @Test fun `the shelves that arrived are kept when a later one fails`() =
+        runTest(StandardTestDispatcher()) {
+            val s = store(
+                Server(marks = listOf("a"), own = listOf(word("atlas:mine")), failSaved = true),
+                this,
+            )
+
+            s.fill()
+
+            assertEquals(setOf("a"), s.personal.value.bookmarked)
+            assertEquals(listOf("atlas:mine"), s.personal.value.mine.map { it.id })
+            assertFalse(s.personal.value.loaded)
+        }
 
     /** Loaded once. A tab swap must not re-fetch two lists that cannot have moved. */
     @Test fun `a second load without force does nothing`() = runTest(StandardTestDispatcher()) {
@@ -166,16 +199,25 @@ class CardsSourceStoreTest {
      * 已收進 belongs to one deck; a mark belongs to the account. Clearing the
      * marks on a direction change would make every one of them look lost.
      */
-    @Test fun `retune drops the saved shelf and keeps the marks`() = runTest(StandardTestDispatcher()) {
-        val s = store(Server(marks = listOf("a"), saved = listOf(word("saved:x"))), this)
-        s.fill()
+    @Test fun `retune drops the deck-scoped shelves and keeps the marks`() =
+        runTest(StandardTestDispatcher()) {
+            val s = store(
+                Server(
+                    marks = listOf("a"),
+                    own = listOf(word("atlas:mine")),
+                    saved = listOf(word("saved:x")),
+                ),
+                this,
+            )
+            s.fill()
 
-        s.retune()
+            s.retune()
 
-        assertEquals(setOf("a"), s.personal.value.bookmarked)
-        assertEquals(emptyList<Word>(), s.personal.value.taken)
-        assertFalse(s.personal.value.loaded)
-    }
+            assertEquals(setOf("a"), s.personal.value.bookmarked)
+            assertEquals(emptyList<Word>(), s.personal.value.mine)
+            assertEquals(emptyList<Word>(), s.personal.value.taken)
+            assertFalse(s.personal.value.loaded)
+        }
 
     @Test fun `sign-out drops both`() = runTest(StandardTestDispatcher()) {
         val s = store(Server(marks = listOf("a"), saved = listOf(word("saved:x"))), this)

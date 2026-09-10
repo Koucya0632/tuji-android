@@ -109,6 +109,8 @@
     <string name="atlas_source_official">Official</string>
     <string name="atlas_source_bookmarked">Bookmarks</string>
     <string name="atlas_source_taken">Taken in</string>
+    <string name="atlas_source_mine">Mine</string>
+    <string name="atlas_mine_empty">No cards of your own yet. Photograph something to make one.</string>
     <string name="atlas_bookmarked_empty">No bookmarks yet. Tap the star on a word to leave one.</string>
     <string name="atlas_taken_empty">Nothing taken in yet. 物見 is where other people’s words are.</string>
     <string name="word_bookmark">Bookmark</string>

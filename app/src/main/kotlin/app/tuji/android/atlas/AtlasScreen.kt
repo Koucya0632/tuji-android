@@ -81,7 +81,7 @@ fun AtlasCardsScreen(
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     val shown = remember(source, words, personal) {
-        CardsSourceRules.words(source, words, personal.taken, personal.bookmarked)
+        CardsSourceRules.words(source, words, personal.mine, personal.taken, personal.bookmarked)
     }
 
     // The dictionary failing to load is the tab failing to load; the other two
@@ -142,6 +142,7 @@ fun AtlasCardsScreen(
                     stringResource(
                         when (source) {
                             CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty
+                            CardsSource.Mine -> R.string.atlas_mine_empty
                             else -> R.string.atlas_taken_empty
                         },
                     ),
@@ -202,6 +203,7 @@ private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
                     when (source) {
                         CardsSource.Official -> R.string.atlas_source_official
                         CardsSource.Bookmarked -> R.string.atlas_source_bookmarked
+                        CardsSource.Mine -> R.string.atlas_source_mine
                         CardsSource.Taken -> R.string.atlas_source_taken
                     },
                 ),

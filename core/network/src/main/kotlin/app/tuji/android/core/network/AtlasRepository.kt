@@ -25,6 +25,7 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import app.tuji.android.core.model.Entitlement
 import app.tuji.android.core.model.UserMe
+import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.UserMeResponse
 import kotlinx.serialization.Serializable
 
@@ -93,6 +94,19 @@ interface AtlasAuthoring {
 }
 
 /** Reading the account's tier, limits and usage. */
+/**
+ * One 自製圖鑑 card in full.
+ *
+ * Its own role, and the payload is the **same [WordDetail]** the dictionary
+ * sends: the server says so in the route's own comment, and it is why 單字詳情
+ * can draw a card the user photographed without a second screen or a second
+ * model. The only thing the caller has to know is that the id it holds is
+ * prefixed — `atlas:<uuid>` — and this takes the bare one.
+ */
+interface AtlasItemReading {
+    suspend fun itemDetail(itemId: String, lang: String): WordDetail
+}
+
 interface EntitlementReading {
     suspend fun entitlement(): Entitlement
 }
@@ -124,7 +138,10 @@ private data class Empty(val ok: Boolean? = null)
 
 class AtlasRepository(private val api: TujiApiClient) :
     AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
-    EntitlementReading, AccountReading, AtlasAuthoring {
+    EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading {
+
+    override suspend fun itemDetail(itemId: String, lang: String): WordDetail =
+        api.get(Endpoint.AtlasItemDetail(itemId = itemId, lang = lang))
 
     override suspend fun uploadImage(
         bytes: ByteArray,

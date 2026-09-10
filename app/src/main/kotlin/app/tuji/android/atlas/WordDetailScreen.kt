@@ -59,7 +59,15 @@ fun WordDetailScreen(
     /** Whether this word carries a 書籤 — held by `CardsSourceStore`, because
      *  the grid draws the same answer and two copies would disagree. */
     bookmarked: Boolean,
-    onBookmark: () -> Unit,
+    /**
+     * Null draws no star.
+     *
+     * 書籤 is a mark on a **dictionary** entry: the shelf filters the catalogue
+     * by the marked ids, so a mark on a card the catalogue has never heard of
+     * would save, sync, and then never appear anywhere. A control that works
+     * and shows nothing is worse than no control.
+     */
+    onBookmark: (() -> Unit)?,
     scores: MasteryStore.Scores,
     onOpenRelated: (String) -> Unit,
 ) {
@@ -67,8 +75,7 @@ fun WordDetailScreen(
 
     when (val s = state) {
         is WordDetailViewModel.State.Loading -> Centered(stringResource(R.string.atlas_loading))
-        is WordDetailViewModel.State.Failed ->
-            Centered(s.message.ifBlank { stringResource(R.string.atlas_failed) })
+        is WordDetailViewModel.State.Failed -> Centered(stringResource(R.string.atlas_failed))
 
         is WordDetailViewModel.State.Loaded -> Column(
             Modifier
@@ -189,7 +196,7 @@ private fun Headline(
     canPlay: Boolean,
     bookmarked: Boolean,
     onPlay: () -> Unit,
-    onBookmark: () -> Unit,
+    onBookmark: (() -> Unit)?,
 ) {
     Row(
         Modifier.fillMaxWidth(),
@@ -221,16 +228,18 @@ private fun Headline(
         // for review. That is the whole difference between 書籤 and 學習主題,
         // and it is why this sits beside the word rather than in the study
         // controls.
-        val mark = stringResource(R.string.word_bookmark)
-        Box(
-            Modifier
-                .size(48.dp)
-                .background(TujiColor.Paper2)
-                .semantics { contentDescription = mark }
-                .tujiClickable(onClick = onBookmark),
-            contentAlignment = Alignment.Center,
-        ) {
-            TujiGlyph.Star(filled = bookmarked, tint = TujiColor.Ink)
+        if (onBookmark != null) {
+            val mark = stringResource(R.string.word_bookmark)
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .background(TujiColor.Paper2)
+                    .semantics { contentDescription = mark }
+                    .tujiClickable(onClick = onBookmark),
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Star(filled = bookmarked, tint = TujiColor.Ink)
+            }
         }
     }
 }

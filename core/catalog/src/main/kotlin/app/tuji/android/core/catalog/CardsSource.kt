@@ -16,11 +16,8 @@ import app.tuji.android.core.model.Word
  * question nobody asked: the dictionary and the words you saved are different
  * kinds of thing, not two halves of a list.
  *
- * **我做的 is missing on purpose.** 自製圖鑑 rows carry `atlas:` ids, and the
- * screen behind them — the item's own page, where it can be re-enriched or
- * withdrawn — does not exist on Android yet. A tile that does nothing when
- * tapped is worse than a tile that is not there, so the chip arrives with the
- * screen rather than before it.
+ * The order is where a word comes *from*, outward: the dictionary, then your
+ * mark on it, then what you made, then what you took from someone else.
  */
 enum class CardsSource {
     /** The published dictionary. What the tab is for, so it opens here. */
@@ -29,6 +26,9 @@ enum class CardsSource {
     /** 書籤 — dictionary words marked to look at again. Passive: marking one
      *  changes nothing about what is scheduled for review. */
     Bookmarked,
+
+    /** 我做的 — 自製圖鑑, words this account photographed. */
+    Mine,
 
     /** 已收進 — words taken in from someone else's 圖鑑. */
     Taken,
@@ -47,9 +47,15 @@ object CardsSourceRules {
      *  author, a 取消收藏 and a 檢舉 that a dictionary entry has none of. */
     const val SAVED_PREFIX = "saved:"
 
+    /** `atlas:` is your own card. It opens 單字詳情 like a dictionary entry —
+     *  the server sends it in the same shape — but through a different route,
+     *  because the dictionary has never heard of this id. */
+    const val CUSTOM_PREFIX = "atlas:"
+
     /**
      * @param official the catalogue for the current deck.
-     * @param taken 已收進, already in word shape and already deck-scoped.
+     * @param mine 我做的, already in word shape and already deck-scoped.
+     * @param taken 已收進, likewise.
      * @param bookmarked the ids the account has marked — **across both decks**,
      *   because a bookmark is not re-made when the learner switches to
      *   中文→英文. So an id here can name a word this catalogue does not
@@ -60,6 +66,7 @@ object CardsSourceRules {
     fun words(
         source: CardsSource,
         official: List<Word>,
+        mine: List<Word>,
         taken: List<Word>,
         bookmarked: Set<String>,
     ): List<Word> = when (source) {
@@ -67,6 +74,7 @@ object CardsSourceRules {
         // Catalogue order, not the order the marks were made in: the grid is
         // the same grid, with rows taken out.
         CardsSource.Bookmarked -> official.filter { it.id in bookmarked }
+        CardsSource.Mine -> mine
         CardsSource.Taken -> taken
     }
 
@@ -74,6 +82,20 @@ object CardsSourceRules {
     fun isSaved(wordId: String): Boolean = wordId.startsWith(SAVED_PREFIX)
 
     /** The 物見 slug inside a `saved:` id, or null for anything else. */
-    fun savedSlug(wordId: String): String? =
-        wordId.removePrefix(SAVED_PREFIX).takeIf { it != wordId && it.isNotEmpty() }
+    fun savedSlug(wordId: String): String? = after(SAVED_PREFIX, wordId)
+
+    /** Whether [wordId] is one of this account's own 自製圖鑑 cards. */
+    fun isCustom(wordId: String): Boolean = wordId.startsWith(CUSTOM_PREFIX)
+
+    /**
+     * The bare item id inside an `atlas:` id, or null for anything else.
+     *
+     * The server's route takes the **unprefixed** uuid and answers 404 to
+     * anything that is not one, so handing it the id the client holds is a
+     * not-found for a card the user is looking straight at.
+     */
+    fun customItemId(wordId: String): String? = after(CUSTOM_PREFIX, wordId)
+
+    private fun after(prefix: String, wordId: String): String? =
+        wordId.removePrefix(prefix).takeIf { it != wordId && it.isNotEmpty() }
 }
