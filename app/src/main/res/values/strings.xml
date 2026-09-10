@@ -106,6 +106,12 @@
     <string name="atlas_search_prompt">Chinese, Japanese or the reading all work</string>
     <string name="atlas_search_searching">Searching…</string>
     <string name="atlas_search_offline">No match on this device, and the server could not be reached</string>
+    <string name="atlas_source_official">Official</string>
+    <string name="atlas_source_bookmarked">Bookmarks</string>
+    <string name="atlas_source_taken">Taken in</string>
+    <string name="atlas_bookmarked_empty">No bookmarks yet. Tap the star on a word to leave one.</string>
+    <string name="atlas_taken_empty">Nothing taken in yet. 物見 is where other people’s words are.</string>
+    <string name="word_bookmark">Bookmark</string>
     <string name="atlas_loading">Loading the atlas…</string>
     <string name="atlas_failed">Couldn’t load the atlas. Please try again later.</string>
     <string name="atlas_back">Back</string>

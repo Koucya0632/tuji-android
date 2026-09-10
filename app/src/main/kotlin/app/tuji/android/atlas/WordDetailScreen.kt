@@ -56,6 +56,10 @@ fun WordDetailScreen(
      * catalogue is right there, so the row is resolved rather than fetched.
      */
     resolve: (String) -> app.tuji.android.core.model.Word?,
+    /** Whether this word carries a 書籤 — held by `CardsSourceStore`, because
+     *  the grid draws the same answer and two copies would disagree. */
+    bookmarked: Boolean,
+    onBookmark: () -> Unit,
     scores: MasteryStore.Scores,
     onOpenRelated: (String) -> Unit,
 ) {
@@ -90,7 +94,14 @@ fun WordDetailScreen(
                 )
             }
 
-            Headline(word = word, playing = s.playing, canPlay = vm.canPlay(word), onPlay = vm::play)
+            Headline(
+                word = word,
+                playing = s.playing,
+                canPlay = vm.canPlay(word),
+                bookmarked = bookmarked,
+                onPlay = vm::play,
+                onBookmark = onBookmark,
+            )
 
             word.chinese?.let {
                 Text(it, style = TujiType.h3, color = TujiColor.Ink2)
@@ -176,7 +187,9 @@ private fun Headline(
     word: WordDetail,
     playing: Boolean,
     canPlay: Boolean,
+    bookmarked: Boolean,
     onPlay: () -> Unit,
+    onBookmark: () -> Unit,
 ) {
     Row(
         Modifier.fillMaxWidth(),
@@ -203,6 +216,21 @@ private fun Headline(
             ) {
                 TujiGlyph.Speaker(tint = TujiColor.Ink)
             }
+        }
+        // The mark is **passive**: it changes nothing about what is scheduled
+        // for review. That is the whole difference between 書籤 and 學習主題,
+        // and it is why this sits beside the word rather than in the study
+        // controls.
+        val mark = stringResource(R.string.word_bookmark)
+        Box(
+            Modifier
+                .size(48.dp)
+                .background(TujiColor.Paper2)
+                .semantics { contentDescription = mark }
+                .tujiClickable(onClick = onBookmark),
+            contentAlignment = Alignment.Center,
+        ) {
+            TujiGlyph.Star(filled = bookmarked, tint = TujiColor.Ink)
         }
     }
 }

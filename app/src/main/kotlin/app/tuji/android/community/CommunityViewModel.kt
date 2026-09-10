@@ -38,6 +38,15 @@ class CommunityViewModel(
     private val blocks: BlockListing,
     private val direction: LearningDirection,
     private val uiLang: String,
+    /**
+     * Called after a save actually lands.
+     *
+     * 收藏 writes to a shelf **another tab draws** — 圖鑑's 已收進 — and nothing
+     * over there can know it happened. Without this, someone saves a word, taps
+     * 圖鑑, and finds the shelf they just added to unchanged; the same shape as
+     * finishing a session and seeing the tiers you had before you started.
+     */
+    private val onSaved: () -> Unit = {},
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
@@ -144,6 +153,7 @@ class CommunityViewModel(
             (_item.value as? ItemState.Loaded)?.let {
                 _item.value = it.copy(saving = false, saved = ok)
             }
+            if (ok) onSaved()
         }
     }
 

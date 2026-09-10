@@ -106,6 +106,12 @@
     <string name="atlas_search_prompt">中国語・日本語・読みのどれでも検索できます</string>
     <string name="atlas_search_searching">検索中…</string>
     <string name="atlas_search_offline">この端末には該当がなく、サーバーにも接続できません</string>
+    <string name="atlas_source_official">公式</string>
+    <string name="atlas_source_bookmarked">ブックマーク</string>
+    <string name="atlas_source_taken">取り込み済み</string>
+    <string name="atlas_bookmarked_empty">ブックマークはまだありません。単語ページの星を押すと残せます。</string>
+    <string name="atlas_taken_empty">まだ何も取り込んでいません。ほかの人の図鑑は物見にあります。</string>
+    <string name="word_bookmark">ブックマーク</string>
     <string name="atlas_loading">図鑑を読み込んでいます…</string>
     <string name="atlas_failed">図鑑を読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="atlas_back">戻る</string>

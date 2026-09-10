@@ -50,6 +50,20 @@ data class WordsListResponse(
  * `results` defaults to empty because a query that matched nothing is a normal
  * answer, not a missing field.
  */
+/**
+ * 書籤, as ids.
+ *
+ * Ids and not words: a bookmark is a mark *on* a dictionary entry, and the
+ * entry itself is already on this device. Sending the rows would be a second
+ * copy of words the client is holding, free to drift from them.
+ *
+ * The list spans both decks — a bookmark is not re-made when you switch to
+ * 中文→英文 — so a reader has to expect ids its current catalogue does not
+ * contain. See `CardsSourceRules`.
+ */
+@Serializable
+data class FavoritesResponse(val favorites: List<String> = emptyList())
+
 @Serializable
 data class SearchResponse(
     val results: List<Word> = emptyList(),

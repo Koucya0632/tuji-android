@@ -1,11 +1,13 @@
 package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.FavoritesResponse
 import app.tuji.android.core.model.MasteryListResponse
 import app.tuji.android.core.model.ProgressResponse
 import app.tuji.android.core.model.UserSettings
 import app.tuji.android.core.model.UserSettingsResponse
 import app.tuji.android.core.model.StudyAnswerPayload
+import app.tuji.android.core.model.WordsListResponse
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueResponse
@@ -36,6 +38,23 @@ interface MasteryReading {
 /** The streak, the heatmap and the per-theme rows. */
 interface ProgressReading {
     suspend fun progress(learning: LearningDirection): ProgressResponse
+}
+
+/**
+ * The two things 圖鑑 shows that are not the dictionary.
+ *
+ * One role rather than two, because they are one question — "what did *this
+ * account* add to 圖鑑" — and the screen that asks needs both or neither.
+ */
+interface PersonalWordsAccess {
+    /** 書籤, as word ids. */
+    suspend fun favorites(): FavoritesResponse
+
+    /** Mark or unmark one word. Returns nothing worth reading. */
+    suspend fun setFavorite(wordId: String, favorite: Boolean)
+
+    /** 已收進 — saved 物見 items, already shaped as words. */
+    suspend fun savedWords(lang: String, learning: LearningDirection): WordsListResponse
 }
 
 /** The account's settings, both ways. */
@@ -78,6 +97,7 @@ class StudyRepository(private val api: TujiApiClient) :
     MasteryReading,
     ProgressReading,
     SettingsAccess,
+    PersonalWordsAccess,
     AccountErasure {
 
     override suspend fun mastery(learning: LearningDirection): MasteryListResponse =
@@ -91,6 +111,20 @@ class StudyRepository(private val api: TujiApiClient) :
 
     override suspend fun saveSettings(settings: UserSettings): UserSettings =
         api.post<UserSettingsResponse>(Endpoint.UserSettingsWrite, settings).settings
+
+    override suspend fun favorites(): FavoritesResponse = api.get(Endpoint.UsersFavorites)
+
+    override suspend fun setFavorite(wordId: String, favorite: Boolean) {
+        api.post<Unit>(
+            Endpoint.UsersFavorites,
+            FavoriteWrite(wordId = wordId, favorite = favorite),
+        )
+    }
+
+    override suspend fun savedWords(
+        lang: String,
+        learning: LearningDirection,
+    ): WordsListResponse = api.get(Endpoint.UsersSavedWords(lang = lang, learning = learning))
 
     override suspend fun clearProgress() {
         api.delete<Unit>(Endpoint.ClearProgress)
@@ -124,3 +158,10 @@ class StudyRepository(private val api: TujiApiClient) :
         )
     )
 }
+
+/**
+ * The favourites POST body. Both fields are required by the route — sending
+ * only the id would be read as a malformed request, not as "toggle it".
+ */
+@kotlinx.serialization.Serializable
+private data class FavoriteWrite(val wordId: String, val favorite: Boolean)

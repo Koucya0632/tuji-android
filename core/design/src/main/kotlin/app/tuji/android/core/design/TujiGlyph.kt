@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -138,5 +139,46 @@ object TujiGlyph {
         }
     }
 
+    /**
+     * 書籤.
+     *
+     * A five-pointed star drawn from its own geometry rather than shipped as an
+     * asset, so it takes the same 2dp round-cap stroke as every other mark here
+     * and the filled state is the *same shape* filled — not a second icon that
+     * has to be kept in step with the first.
+     */
+    @Composable
+    fun Star(
+        size: Dp = 20.dp,
+        filled: Boolean = false,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+    ) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val centre = Rect(Offset.Zero, this.size).center
+            val outer = w * 0.44f
+            // The classic ratio. Anything nearer 0.5 reads as a pentagon.
+            val inner = outer * 0.382f
+            val path = Path()
+            repeat(POINTS * 2) { i ->
+                val radius = if (i % 2 == 0) outer else inner
+                // Start at the top: a star resting on a point is upside down.
+                val angle = -Math.PI / 2 + (Math.PI / POINTS) * i
+                val x = centre.x + (kotlin.math.cos(angle) * radius).toFloat()
+                val y = centre.y + (kotlin.math.sin(angle) * radius).toFloat()
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            path.close()
+            if (filled) {
+                drawPath(path, tint)
+            } else {
+                drawPath(path, tint, style = Stroke(width = w * 0.09f, join = StrokeJoin.Round))
+            }
+        }
+    }
+
     private const val TEETH = 8
+
+    private const val POINTS = 5
 }
