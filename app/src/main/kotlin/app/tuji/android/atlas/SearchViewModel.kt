@@ -48,6 +48,11 @@ class SearchViewModel(
     private val direction: LearningDirection,
     private val debounceMillis: Long = DEBOUNCE_MS,
     private val scope: CoroutineScope? = null,
+    /**
+     * A query the server has answered with something to show — the only kind
+     * worth offering again under 最近搜尋.
+     */
+    private val onFound: (String) -> Unit = {},
 ) : ViewModel() {
 
     data class Results(
@@ -66,7 +71,12 @@ class SearchViewModel(
 
     private var pending: Job? = null
 
-    fun query(text: String) {
+    fun query(text: String) = start(text, debounceMillis)
+
+    /** A query picked rather than typed — 最近搜尋 — with nothing to wait for. */
+    fun queryNow(text: String) = start(text, 0L)
+
+    private fun start(text: String, wait: Long) {
         pending?.cancel()
         val trimmed = text.trim()
         if (trimmed.isEmpty()) {
@@ -78,7 +88,7 @@ class SearchViewModel(
         val hits = WordSearch.matches(trimmed, local())
         _results.value = Results(query = trimmed, words = hits, searching = true)
         pending = work.launch {
-            delay(debounceMillis)
+            if (wait > 0) delay(wait)
             supplement(trimmed)
         }
     }
@@ -106,11 +116,9 @@ class SearchViewModel(
         // Re-matching locally rather than reusing `current.words`: the
         // catalogue may have finished loading during the debounce, and the
         // rows it added belong above the server's.
-        _results.value = current.copy(
-            words = SearchMerge.merge(WordSearch.matches(query, local()), response.results),
-            searching = false,
-            failed = false,
-        )
+        val merged = SearchMerge.merge(WordSearch.matches(query, local()), response.results)
+        _results.value = current.copy(words = merged, searching = false, failed = false)
+        if (merged.isNotEmpty()) onFound(query)
     }
 
     private companion object {

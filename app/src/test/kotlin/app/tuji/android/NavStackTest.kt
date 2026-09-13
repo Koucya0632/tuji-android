@@ -47,8 +47,8 @@ class NavStackTest {
     }
 
     @Test fun `switching tabs does not lose the one you came from`() {
-        val nav = NavStack().select(AppRoute.Atlas).select(AppRoute.Search)
-        assertEquals(AppRoute.Search, nav.current)
+        val nav = NavStack().select(AppRoute.Atlas).select(AppRoute.Community)
+        assertEquals(AppRoute.Community, nav.current)
         assertEquals(AppRoute.Atlas, nav.pop().current)
     }
 
@@ -74,8 +74,44 @@ class NavStackTest {
     }
 
     @Test fun `going back to a tab you never opened lands on it fresh`() {
-        val nav = NavStack().select(AppRoute.Search)
-        assertEquals(AppRoute.Search, nav.current)
+        val nav = NavStack().select(AppRoute.Me)
+        assertEquals(AppRoute.Me, nav.current)
         assertTrue(nav.canGoBack)
+    }
+
+    @Test fun `搜尋 is pushed on the tab it was opened from, not a tab of its own`() {
+        val nav = NavStack().select(AppRoute.Atlas).push(AppRoute.Search)
+        assertEquals(AppRoute.Atlas, nav.tab)
+        assertEquals(AppRoute.Atlas, nav.pop().current)
+    }
+
+    @Test fun `every tab root has the bar`() {
+        TabShell.tabs.forEach { tab ->
+            assertTrue("$tab", TabShell.tabBarVisible(NavStack().select(tab)))
+        }
+    }
+
+    @Test fun `a focused screen hides the bar whichever tab it was opened from`() {
+        listOf(AppRoute.Review, AppRoute.LearnNew, AppRoute.Search, AppRoute.Capture, word).forEach { route ->
+            assertFalse("$route from 今天", TabShell.tabBarVisible(NavStack().push(route)))
+            assertFalse("$route from 圖鑑", TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(route)))
+        }
+    }
+
+    @Test fun `今天 and 圖鑑 keep the bar through a push`() {
+        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes)))
+        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes).push(shelf)))
+        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.PublicItem("saved-abc"))))
+    }
+
+    @Test fun `物見 and 我 hand the window to whatever they open`() {
+        assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Community).push(AppRoute.Collection("c"))))
+        assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Community).push(AppRoute.Author("TJ1"))))
+        assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Me).push(AppRoute.Settings)))
+    }
+
+    @Test fun `拍照 sits in the middle of the four tabs`() {
+        val at = TabShell.tabs.indexOf(TabShell.captureFollows)
+        assertEquals(TabShell.tabs.size / 2 - 1, at)
     }
 }

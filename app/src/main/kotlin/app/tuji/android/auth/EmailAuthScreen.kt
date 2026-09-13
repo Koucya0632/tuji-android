@@ -236,7 +236,7 @@ fun EmailAuthScreen(
             Text(
                 stringResource(
                     if (mode == EmailRoute.SignUp) R.string.auth_sign_in
-                    else R.string.auth_create_account
+                    else R.string.auth_sign_up
                 ),
                 style = type.bodySmStrong,
                 color = TujiColor.Ink2,

@@ -84,6 +84,11 @@ class TujiApplication : Application() {
         app.tuji.android.atlas.MasteryStore(study)
     }
 
+    /** 最近搜尋 — this device's, never the account's. */
+    val recentSearches: app.tuji.android.atlas.RecentSearchStore by lazy {
+        app.tuji.android.atlas.RecentSearchStore(this)
+    }
+
     /** The streak, the heatmap and the per-theme rows, for 我的 and 主題. */
     val progressStore: app.tuji.android.account.ProgressStore by lazy {
         app.tuji.android.account.ProgressStore(study)

@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
@@ -66,6 +67,8 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiNavBar
+import app.tuji.android.core.design.TujiNavLeading
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -291,8 +294,39 @@ private fun SignedInScreens(
     }
     val todayInputs by today.inputs.collectAsStateWithLifecycle()
 
+    // Held above the routes rather than inside 搜尋's branch, so opening a
+    // result and coming back finds the results still there — as it does on
+    // iOS, where the search screen stays on the stack under the word. Keyed on
+    // both, because both are in the request's URL, and a model held across a
+    // change of either would answer the next query with the previous deck's
+    // scope.
+    val search = remember(direction, uiLang) {
+        SearchViewModel(
+            remote = app.catalogReading,
+            // A lambda, not `catalog.words`: the catalogue can still be loading
+            // when this screen opens, and a list captured here would stay empty.
+            local = { app.catalog.words },
+            lang = uiLang,
+            direction = direction,
+            onFound = app.recentSearches::push,
+        )
+    }
+
     var nav by remember { mutableStateOf(NavStack()) }
     var showSpike by remember { mutableStateOf(false) }
+
+    // One saved-state slot per stack entry. Only the current entry is ever
+    // composed, so without this every `rememberSaveable` below a route — which
+    // source chip 圖鑑 was on, what 搜尋 had typed — was thrown away the moment
+    // a word was pushed over it, and back came to a fresh screen. A slot is
+    // dropped once its entry leaves the stack, so a *new* 搜尋 opens empty.
+    val routeState = rememberSaveableStateHolder()
+    val liveKeys = nav.entries.mapIndexed { index, route -> "$index:$route" }
+    var heldKeys by remember { mutableStateOf(emptySet<String>()) }
+    LaunchedEffect(liveKeys) {
+        (heldKeys - liveKeys.toSet()).forEach(routeState::removeState)
+        heldKeys = liveKeys.toSet()
+    }
 
     BackHandler(enabled = nav.canGoBack || showSpike) {
         if (showSpike) showSpike = false else nav = nav.pop()
@@ -382,38 +416,35 @@ private fun SignedInScreens(
             .fillMaxSize()
             .background(TujiColor.Paper),
     ) {
-        // Never at a tab root, and never over a bleeding hero.
+        Spacer(Modifier.height(insets.calculateTopPadding()))
+
+        // A pushed screen's way back is an arrow on the page margin, and its
+        // name — where it has one — is the page's own large title below it.
+        // The 「← 標題」 text link this replaces said the name twice, once in
+        // the link and once in the title under it.
         //
-        // A tab root had one because switching tabs *pushes* — so 圖鑑 opened
-        // with 「← 圖鑑」 above it, offering to go back to a tab the bar below
-        // already reaches in one tap. iOS gives each tab its own stack and
-        // draws nothing at its root; Android's system back still walks out the
-        // way the user came in, which is the convention that actually matters
-        // here. The row was also the app telling its own name to somebody
-        // already inside it.
-        //
-        // 主題頁 opts out for a different reason: its hero bleeds to the top
-        // edge, and a row above it would mean the page no longer opens with
-        // the picture. It draws its own back, floating.
-        if (nav.canGoBack && nav.current !is AppRoute.Tab && nav.current !is AppRoute.Shelf) {
-            TopBar(
-                nav = nav,
-                wordTitle = { id -> catalog.words.firstOrNull { it.id == id }?.word },
-                onBack = { nav = nav.pop() },
-                topPadding = insets.calculateTopPadding(),
+        // Not at a tab root, where the bar below already reaches every tab in
+        // one tap. Not over 主題頁's hero, which bleeds and floats its own
+        // arrow, and not on 搜尋, whose field carries its own 取消.
+        if (nav.canGoBack && hasBackBar(nav.current)) {
+            TujiNavBar(
+                onLeading = { nav = nav.pop() },
+                leading = if (nav.current == AppRoute.Capture) TujiNavLeading.Close else TujiNavLeading.Back,
+                leadingLabel = stringResource(
+                    if (nav.current == AppRoute.Capture) R.string.nav_close else R.string.atlas_back,
+                ),
             )
-        } else {
-            Spacer(Modifier.height(insets.calculateTopPadding()))
         }
 
         Box(Modifier.weight(1f)) {
+            routeState.SaveableStateProvider(liveKeys.last()) {
             when (val route = nav.current) {
                 AppRoute.Today -> TodayColumn(
                     inputs = todayInputs,
                     identity = identity,
                     onReview = { nav = nav.push(AppRoute.Review) },
                     onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
-                    onSearch = { nav = nav.select(AppRoute.Search) },
+                    onSearch = { nav = nav.push(AppRoute.Search) },
                     onCreateAccount = { app.auth.exitGuestMode() },
                     shelves = catalog.shelves,
                     uiLang = uiLang,
@@ -428,6 +459,7 @@ private fun SignedInScreens(
 
                 AppRoute.Atlas -> AtlasCardsScreen(
                     words = catalog.words,
+                    onSearch = { nav = nav.push(AppRoute.Search) },
                     personal = personal,
                     scores = scores,
                     loading = !catalog.loaded,
@@ -567,21 +599,11 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Search -> AtlasSearchScreen(
-                    // Keyed on both, because both are in the request's URL —
-                    // and a model held across a change of either would answer
-                    // the next query with the previous deck's scope.
-                    vm = remember(direction, uiLang) {
-                        SearchViewModel(
-                            remote = app.catalogReading,
-                            // A lambda, not `catalog.words`: the catalogue can
-                            // still be loading when this screen opens, and a
-                            // list captured here would stay empty.
-                            local = { app.catalog.words },
-                            lang = uiLang,
-                            direction = direction,
-                        )
-                    },
-                    bottomPadding = 0.dp,
+                    vm = search,
+                    direction = direction,
+                    showChinese = settings.showZh,
+                    recents = app.recentSearches,
+                    onCancel = { nav = nav.pop() },
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )
 
@@ -623,95 +645,27 @@ private fun SignedInScreens(
 
                 else -> Unit
             }
-        }
-
-        TabBar(
-            selected = nav.tab,
-            bottomPadding = insets.calculateBottomPadding(),
-            onSelect = { nav = nav.select(it) },
-        )
-    }
-}
-
-/**
- * 返回 and the account line.
- *
- * The title is the stack's, so a shelf says which shelf: a screen of 64 nouns
- * with no header is indistinguishable from a different screen of 64 nouns.
- */
-@Composable
-private fun TopBar(
-    nav: NavStack,
-    wordTitle: (String) -> String?,
-    onBack: () -> Unit,
-    topPadding: androidx.compose.ui.unit.Dp,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(top = topPadding)
-            .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "← " + title(nav.current, wordTitle),
-            style = TujiType.bodySmStrong,
-            color = TujiColor.Ink2,
-            modifier = Modifier.tujiClickable(onClick = onBack).padding(TujiSpace.S1),
-        )
-    }
-}
-
-/** The current screen's own name, so 64 nouns are distinguishable from 64 others. */
-@Composable
-private fun title(route: AppRoute, wordTitle: (String) -> String?): String = when (route) {
-    is AppRoute.Word -> wordTitle(route.wordId) ?: stringResource(R.string.atlas_title)
-    is AppRoute.PublicItem -> stringResource(R.string.nav_community)
-    is AppRoute.Author -> stringResource(R.string.nav_community)
-    is AppRoute.Collection -> stringResource(R.string.community_collections)
-    AppRoute.Themes -> stringResource(R.string.atlas_themes_title)
-    AppRoute.Settings -> stringResource(R.string.settings_title)
-    AppRoute.Capture -> stringResource(R.string.capture_title)
-    else -> stringResource(R.string.atlas_back)
-}
-
-@Composable
-private fun TabBar(
-    selected: AppRoute.Tab?,
-    bottomPadding: androidx.compose.ui.unit.Dp,
-    onSelect: (AppRoute.Tab) -> Unit,
-) {
-    Column {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(TujiColor.Rule))
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = bottomPadding),
-        ) {
-            listOf(
-                AppRoute.Today to R.string.nav_today,
-                AppRoute.Atlas to R.string.nav_atlas,
-                AppRoute.Community to R.string.nav_community,
-                AppRoute.Search to R.string.nav_search,
-                AppRoute.Me to R.string.nav_me,
-            ).forEach { (tab, label) ->
-                val active = selected == tab
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .tujiClickable { onSelect(tab) }
-                        .padding(vertical = TujiSpace.S3),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        stringResource(label),
-                        style = if (active) TujiType.bodySmStrong else TujiType.bodySm,
-                        color = if (active) TujiColor.Ink else TujiColor.Ink3,
-                    )
-                }
             }
         }
+
+        if (TabShell.tabBarVisible(nav)) {
+            TujiTabBar(
+                selected = nav.tab,
+                bottomInset = insets.calculateBottomPadding(),
+                onSelect = { nav = nav.select(it) },
+                onCapture = { nav = nav.push(AppRoute.Capture) },
+            )
+        } else {
+            Spacer(Modifier.height(insets.calculateBottomPadding()))
+        }
     }
+}
+
+/** Whether the shell draws a back bar over [route]. */
+private fun hasBackBar(route: AppRoute): Boolean = when (route) {
+    is AppRoute.Word, is AppRoute.PublicItem, is AppRoute.Author, is AppRoute.Collection,
+    AppRoute.Themes, AppRoute.Settings, AppRoute.Capture -> true
+    else -> false
 }
 
 /** 今日, plus the debug-only door to the font spike. */

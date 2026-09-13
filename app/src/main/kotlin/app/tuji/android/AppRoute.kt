@@ -11,14 +11,22 @@ package app.tuji.android
  */
 sealed interface AppRoute {
 
-    /** The three tabs. Popping to one of these clears the stack above it. */
+    /** The four tabs. Popping to one of these clears the stack above it. */
     sealed interface Tab : AppRoute
 
     data object Today : Tab
     data object Atlas : Tab
     data object Community : Tab
-    data object Search : Tab
     data object Me : Tab
+
+    /**
+     * 搜尋, opened from the magnifier on 今天 and 圖鑑.
+     *
+     * Not a tab, as on iOS: it is something you do from where you are, and a
+     * fifth slot for it pushed 我 off the thumb's reach and gave the bar a
+     * text-only place to stand that none of the other four needed.
+     */
+    data object Search : AppRoute
 
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
@@ -84,4 +92,48 @@ data class NavStack(val entries: List<AppRoute> = listOf(AppRoute.Today)) {
         val at = entries.indexOfLast { it == tab }
         return if (at >= 0) copy(entries = entries.take(at + 1)) else push(tab)
     }
+}
+
+/**
+ * The tab shell's decisions, as pure functions over the stack.
+ *
+ * iOS keeps these in `TabShellDecisions` for the same reason: which screens
+ * get the bar is a policy, and a policy written inline in a 700-line
+ * composable is one nobody can test.
+ */
+object TabShell {
+
+    /** The bar's order. 時間 → 內容 → 他人 → 自己. */
+    val tabs: List<AppRoute.Tab> = listOf(AppRoute.Today, AppRoute.Atlas, AppRoute.Community, AppRoute.Me)
+
+    /** 拍照 sits after this tab, which puts it in the middle of the bar. */
+    val captureFollows: AppRoute.Tab = AppRoute.Atlas
+
+    /**
+     * Whether the tab bar is drawn.
+     *
+     * - A **focused** screen owns the window: the two study flows, a word's
+     *   page, 搜尋 and 拍照. A session that can be left by tapping a tab is a
+     *   session that gets left by accident.
+     * - Anything opened from **物見 or 我** owns it too: both tabs are hubs of
+     *   entry points, and a screen opened from one is a window you are handed.
+     * - 今天 and 圖鑑 keep the bar through a push, because a theme is a place
+     *   you come back from.
+     */
+    fun tabBarVisible(nav: NavStack): Boolean {
+        val current = nav.current
+        if (current in focused || current is AppRoute.Word) return false
+        if (current is AppRoute.Tab) return true
+        return when (nav.tab) {
+            AppRoute.Community, AppRoute.Me -> false
+            else -> true
+        }
+    }
+
+    private val focused: Set<AppRoute> = setOf(
+        AppRoute.Review,
+        AppRoute.LearnNew,
+        AppRoute.Search,
+        AppRoute.Capture,
+    )
 }

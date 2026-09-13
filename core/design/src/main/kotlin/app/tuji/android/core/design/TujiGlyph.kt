@@ -178,7 +178,132 @@ object TujiGlyph {
         }
     }
 
+    /**
+     * 今天. A filled disc with eight short rays — the tab bar's one daylight
+     * mark, so it is solid like the three beside it.
+     */
+    @Composable
+    fun Sun(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val centre = Rect(Offset.Zero, this.size).center
+            drawCircle(tint, radius = w * 0.21f, center = centre)
+            repeat(RAYS) { i ->
+                val angle = (2.0 * Math.PI / RAYS) * i
+                val dx = kotlin.math.cos(angle).toFloat()
+                val dy = kotlin.math.sin(angle).toFloat()
+                drawLine(
+                    color = tint,
+                    start = Offset(centre.x + dx * w * 0.33f, centre.y + dy * w * 0.33f),
+                    end = Offset(centre.x + dx * w * 0.46f, centre.y + dy * w * 0.46f),
+                    strokeWidth = w * 0.10f,
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
+
+    /**
+     * 圖鑑. Three spines standing on one shelf line, the last leaning — the
+     * lean is what makes three rectangles read as books rather than a chart.
+     */
+    @Composable
+    fun Books(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val base = h * 0.90f
+            drawRect(tint, topLeft = Offset(w * 0.06f, h * 0.10f), size = Size(w * 0.20f, base - h * 0.10f))
+            drawRect(tint, topLeft = Offset(w * 0.30f, h * 0.22f), size = Size(w * 0.16f, base - h * 0.22f))
+            // The leaning one: a parallelogram whose foot stays on the shelf.
+            val lean = Path().apply {
+                moveTo(w * 0.52f, base)
+                lineTo(w * 0.70f, base)
+                lineTo(w * 0.96f, h * 0.20f)
+                lineTo(w * 0.78f, h * 0.14f)
+                close()
+            }
+            drawPath(lean, tint)
+        }
+    }
+
+    /** 物見. Two barrels joined at the bridge — things seen, not people. */
+    @Composable
+    fun Binoculars(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            // The eyepieces, then the bridge, then the two lenses over them.
+            drawRect(tint, topLeft = Offset(w * 0.20f, h * 0.18f), size = Size(w * 0.18f, h * 0.30f))
+            drawRect(tint, topLeft = Offset(w * 0.62f, h * 0.18f), size = Size(w * 0.18f, h * 0.30f))
+            drawRect(tint, topLeft = Offset(w * 0.36f, h * 0.40f), size = Size(w * 0.28f, h * 0.16f))
+            drawCircle(tint, radius = w * 0.215f, center = Offset(w * 0.27f, h * 0.64f))
+            drawCircle(tint, radius = w * 0.215f, center = Offset(w * 0.73f, h * 0.64f))
+        }
+    }
+
+    /** 我. A head and shoulders, both filled. */
+    @Composable
+    fun Person(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            drawCircle(tint, radius = w * 0.21f, center = Offset(w * 0.5f, h * 0.29f))
+            val shoulders = Path().apply {
+                moveTo(w * 0.10f, h * 0.94f)
+                cubicTo(w * 0.10f, h * 0.62f, w * 0.30f, h * 0.55f, w * 0.5f, h * 0.55f)
+                cubicTo(w * 0.70f, h * 0.55f, w * 0.90f, h * 0.62f, w * 0.90f, h * 0.94f)
+                close()
+            }
+            drawPath(shoulders, tint)
+        }
+    }
+
+    /** 搜尋. A lens and its handle. */
+    @Composable
+    fun Search(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.11f
+            val centre = Offset(w * 0.42f, w * 0.42f)
+            val radius = w * 0.29f
+            drawCircle(tint, radius = radius, center = centre, style = Stroke(width = stroke))
+            val reach = radius * 0.7071f + stroke * 0.3f
+            drawLine(
+                color = tint,
+                start = Offset(centre.x + reach, centre.y + reach),
+                end = Offset(w * 0.90f, w * 0.90f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+
+    /** 返回. A shaft with an open head — not a chevron, which is iOS's own. */
+    @Composable
+    fun ArrowLeft(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.11f
+            val y = h * 0.5f
+            drawLine(tint, Offset(w * 0.12f, y), Offset(w * 0.88f, y), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.46f, h * 0.16f)
+                lineTo(w * 0.12f, y)
+                lineTo(w * 0.46f, h * 0.84f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5
+
+    private const val RAYS = 8
 }
