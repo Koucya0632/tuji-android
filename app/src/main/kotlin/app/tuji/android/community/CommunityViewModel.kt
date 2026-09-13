@@ -125,9 +125,13 @@ class CommunityViewModel(
         }
     }
 
-    /** The account's own public page, for the row above the shelves. */
-    fun loadMe(uid: String) {
-        if (_me.value?.handle == uid) return
+    /**
+     * The account's own public page, for the row above the shelves.
+     *
+     * @param force after 編輯個人資料, when the row already on screen is the old one.
+     */
+    fun loadMe(uid: String, force: Boolean = false) {
+        if (!force && _me.value?.handle == uid) return
         work.launch {
             runCatching { atlas.author(uid).author }
                 .onSuccess { _me.value = it }
@@ -159,8 +163,13 @@ class CommunityViewModel(
         }
     }
 
-    /** 解除封鎖 — optimistic the same way, restored if the server refuses. */
-    fun unblock(handle: String) {
+    /**
+     * 解除封鎖 — optimistic the same way, restored if the server refuses.
+     *
+     * @param onDone runs once the server has answered either way, for a list
+     *   that holds its other rows until this one settles.
+     */
+    fun unblock(handle: String, onDone: () -> Unit = {}) {
         val wasBlocked = blockList.hides(handle)
         _blocked.value = blockList.removing(handle)
         refilter()
@@ -173,6 +182,7 @@ class CommunityViewModel(
                         refilter()
                     }
                 }
+            onDone()
         }
     }
 

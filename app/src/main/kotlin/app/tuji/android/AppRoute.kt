@@ -31,6 +31,12 @@ sealed interface AppRoute {
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
+    /** 編輯個人資料, reached from 設定. */
+    data object EditProfile : AppRoute
+
+    /** 已封鎖的人, reached from 設定 — the one place a block is undone without finding the person. */
+    data object BlockedAuthors : AppRoute
+
     /** 學習主題, reached from 設定 and from 今日's theme strip. */
     data object StudyThemes : AppRoute
 

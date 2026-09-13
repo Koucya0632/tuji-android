@@ -2,6 +2,7 @@ package app.tuji.android.core.network
 
 import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.community.ReportTarget
+import app.tuji.android.core.model.AtlasAuthor
 import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasCollectionsResponse
@@ -140,6 +141,19 @@ interface AccountReading {
     suspend fun me(): UserMe?
 }
 
+/**
+ * 編輯個人資料 — everything on it is public, so the server moderates each field
+ * and answers with the identity other people will now see.
+ */
+interface ProfileEditing {
+    /**
+     * @param nickname blank clears it, and the public name falls back to the UID.
+     * @param resetAvatar back to the black cat. Ignored when [image] is given.
+     * @param image a square JPEG, already cropped and downscaled.
+     */
+    suspend fun editProfile(nickname: String, bio: String, resetAvatar: Boolean, image: ByteArray?): AtlasAuthor
+}
+
 /** The 封鎖 list. Stored on the server so it follows the account. */
 interface BlockListing {
     suspend fun blockedHandles(): List<String>
@@ -165,8 +179,11 @@ private data class Empty(val ok: Boolean? = null)
 @Serializable
 private data class BlockBody(val handle: String)
 
+@Serializable
+private data class ProfileUpdateResponse(val author: AtlasAuthor)
+
 class AtlasRepository(private val api: TujiApiClient) :
-    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
+    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing,
     EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading,
     CollectionBookmarking, CollectionLearning {
 
@@ -228,6 +245,34 @@ class AtlasRepository(private val api: TujiApiClient) :
     override suspend fun entitlement(): Entitlement = api.get(Endpoint.Entitlement)
 
     override suspend fun me(): UserMe? = api.get<UserMeResponse>(Endpoint.Me).user
+
+    override suspend fun editProfile(
+        nickname: String,
+        bio: String,
+        resetAvatar: Boolean,
+        image: ByteArray?,
+    ): AtlasAuthor = api.post<ProfileUpdateResponse>(
+        Endpoint.UsersProfile,
+        MultiPartFormDataContent(
+            formData {
+                // Always both text fields: the route treats a missing one as a
+                // malformed request, not as "unchanged".
+                append("nickname", nickname)
+                append("bio", bio)
+                if (image != null) {
+                    append(
+                        "image", image,
+                        Headers.build {
+                            append(HttpHeaders.ContentType, "image/jpeg")
+                            append(HttpHeaders.ContentDisposition, "filename=\"avatar.jpg\"")
+                        },
+                    )
+                } else if (resetAvatar) {
+                    append("avatar", "face")
+                }
+            },
+        ),
+    ).author
 
 
     override suspend fun feed(limit: Int): AtlasPublicFeed =

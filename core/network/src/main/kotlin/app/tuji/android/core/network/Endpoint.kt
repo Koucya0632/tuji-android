@@ -376,6 +376,18 @@ interface Endpoint {
         )
     }
 
+    /**
+     * 編輯個人資料: 暱稱, 簽名 and 頭像 in one multipart write. Slow on purpose —
+     * a new photo is processed and put through image moderation inside the
+     * same request.
+     */
+    data object UsersProfile : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/profile",
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
     /** Who the signed-in user is. */
     data object Me : Endpoint {
         override val descriptor get() = EndpointDescriptor(

@@ -242,6 +242,22 @@ object TujiGlyph {
         }
     }
 
+    /** 更換頭像. A camera body with a lens cut out of it and a bump on top, filled. */
+    @Composable
+    fun Camera(size: Dp = 14.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val body = Path().apply {
+                fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+                addRect(androidx.compose.ui.geometry.Rect(w * 0.06f, h * 0.30f, w * 0.94f, h * 0.86f))
+                addRect(androidx.compose.ui.geometry.Rect(w * 0.34f, h * 0.16f, w * 0.66f, h * 0.30f))
+                addOval(androidx.compose.ui.geometry.Rect(Offset(w * 0.5f, h * 0.57f), w * 0.17f))
+            }
+            drawPath(body, tint)
+        }
+    }
+
     /** 我. A head and shoulders, both filled. */
     @Composable
     fun Person(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

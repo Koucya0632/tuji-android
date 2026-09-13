@@ -62,6 +62,9 @@ fun SettingsScreen(
     onDeleteAccount: () -> Unit,
     onSignOut: () -> Unit,
     onOpenStudyThemes: () -> Unit,
+    /** Null for a guest, who has no public profile and nobody to have blocked. */
+    onEditProfile: (() -> Unit)?,
+    onOpenBlocked: (() -> Unit)?,
 ) {
     var picker by remember { mutableStateOf<Picker?>(null) }
     var confirm by remember { mutableStateOf<Confirm?>(null) }
@@ -123,6 +126,16 @@ fun SettingsScreen(
         }
 
         TujiSection(title = stringResource(R.string.settings_group_account)) {
+            if (onEditProfile != null) {
+                TujiSettingRow(label = stringResource(R.string.profile_title), onClick = onEditProfile)
+                TujiRowDivider()
+            }
+            // A block has to be undoable somewhere that does not require
+            // finding the person again — which is what blocking them made hard.
+            if (onOpenBlocked != null) {
+                TujiSettingRow(label = stringResource(R.string.blocked_title), onClick = onOpenBlocked)
+                TujiRowDivider()
+            }
             TujiSettingRow(
                 label = stringResource(R.string.me_sign_out),
                 showsArrow = false,
