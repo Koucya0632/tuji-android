@@ -67,13 +67,52 @@ class SearchViewModelTest {
         server: Server = Server(),
         catalogue: () -> List<Word> = { this.catalogue },
         scope: TestScope,
+        onFound: (String) -> Unit = {},
     ) = SearchViewModel(
         remote = server,
         local = catalogue,
         lang = "zh-Hant",
         direction = LearningDirection.ZH_JA,
         scope = scope,
+        onFound = onFound,
     )
+
+    @Test fun `a query that found something is offered again, one that found nothing is not`() =
+        runTest(StandardTestDispatcher()) {
+            val found = mutableListOf<String>()
+            val vm = model(scope = this, onFound = { found += it })
+
+            vm.query("箸")
+            advanceUntilIdle()
+            vm.query("nothing-like-this")
+            advanceUntilIdle()
+
+            assertEquals(listOf("箸"), found)
+        }
+
+    @Test fun `a failed request is not a found query even when local rows are showing`() =
+        runTest(StandardTestDispatcher()) {
+            val found = mutableListOf<String>()
+            val vm = model(server = Server(fail = true), scope = this, onFound = { found += it })
+
+            vm.query("箸")
+            advanceUntilIdle()
+
+            assertTrue(vm.results.value.words.isNotEmpty())
+            assertTrue(found.isEmpty())
+        }
+
+    @Test fun `a picked recent query does not wait out the debounce`() =
+        runTest(StandardTestDispatcher()) {
+            val server = Server()
+            val vm = model(server = server, scope = this)
+
+            vm.queryNow("傘")
+            advanceTimeBy(1)
+
+            assertEquals(1, server.calls)
+            advanceUntilIdle()
+        }
 
     /** The point of the local half: results without waiting for anything. */
     @Test fun `local rows are on screen before the request goes out`() =

@@ -28,6 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.tuji.android.R
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import app.tuji.android.core.design.TujiGlyph
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -206,12 +211,19 @@ private fun Greeting(
                 color = TujiColor.Ink3,
             )
             Spacer(Modifier.weight(1f))
-            Text(
-                stringResource(R.string.today_search),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink2,
-                modifier = Modifier.tujiClickable(onClick = onSearch).padding(TujiSpace.S1),
-            )
+            val searchLabel = stringResource(R.string.search_open)
+            Box(
+                Modifier
+                    .clip(CircleShape)
+                    .background(TujiColor.Paper)
+                    .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f), CircleShape)
+                    .tujiClickable(onClick = onSearch)
+                    .semantics { contentDescription = searchLabel }
+                    .padding(TujiSpace.S2),
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
+            }
         }
 
         // One string with the name inside it, so the whole greeting wraps as

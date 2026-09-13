@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -38,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +53,7 @@ import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordTile
@@ -78,6 +83,7 @@ fun AtlasCardsScreen(
     bottomPadding: Dp,
     onOpenThemes: () -> Unit,
     onOpen: (String) -> Unit,
+    onSearch: () -> Unit = {},
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     val shown = remember(source, words, personal) {
@@ -106,6 +112,26 @@ fun AtlasCardsScreen(
         // Count on the left, one action on the right. 主題 sits here rather
         // than in a bar because it is about *these* words — and it keeps the
         // tab root free of a top bar, which is how every other root reads.
+        // Actions only, as on iOS. A title here would say 「圖鑑」 directly above
+        // the tab that says it, lit, at the moment you are looking at it.
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            val label = stringResource(R.string.search_open)
+            // 24dp of row with a 48dp target overflowing it: the glyph sits
+            // where iOS's does, and the thumb still gets the whole square.
+            Row(Modifier.fillMaxWidth().height(24.dp), horizontalArrangement = Arrangement.End) {
+                Box(
+                    Modifier
+                        .offset(x = 14.dp)
+                        .requiredSize(48.dp)
+                        .tujiClickable(onClick = onSearch)
+                        .semantics { contentDescription = label },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TujiGlyph.Search(size = 18.dp, tint = TujiColor.Ink2)
+                }
+            }
+        }
+
         item(span = { GridItemSpan(maxLineSpan) }) {
             SourceRow(selected = source, onSelect = { source = it })
         }
@@ -246,12 +272,21 @@ fun AtlasThemesScreen(
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(
             start = TujiSpace.S4, end = TujiSpace.S4,
-            top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S6,
+            top = 0.dp, bottom = bottomPadding + TujiSpace.S6,
         ),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         modifier = Modifier.fillMaxSize(),
     ) {
+        // The page's own name, under the back arrow rather than beside it.
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Text(
+                stringResource(R.string.atlas_themes_title),
+                style = TujiType.h2,
+                color = TujiColor.Ink,
+                modifier = Modifier.padding(bottom = TujiSpace.S2),
+            )
+        }
         items(shelves, key = { it.category.id }) { shelf ->
             val status = remember(shelf.category.id, words, scores) {
                 ThemeStatus.of(
