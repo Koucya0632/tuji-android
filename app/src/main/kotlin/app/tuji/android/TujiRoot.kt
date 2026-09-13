@@ -515,6 +515,7 @@ private fun SignedInScreens(
 
                 AppRoute.Atlas -> AtlasCardsScreen(
                     words = catalog.words,
+                    isGuest = isGuest,
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     personal = personal,
                     scores = scores,

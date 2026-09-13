@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.tuji.android.R
 import app.tuji.android.core.catalog.CardsListPaging
 import app.tuji.android.core.catalog.CardsSource
@@ -55,6 +56,7 @@ import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordTile
@@ -85,6 +87,7 @@ fun AtlasCardsScreen(
     onOpenThemes: () -> Unit,
     onOpen: (String) -> Unit,
     onSearch: () -> Unit = {},
+    isGuest: Boolean = false,
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     val shown = remember(source, words, personal) {
@@ -134,7 +137,7 @@ fun AtlasCardsScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            SourceRow(selected = source, onSelect = { source = it })
+            SourceRow(selected = source, isGuest = isGuest, onSelect = { source = it })
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -148,15 +151,21 @@ fun AtlasCardsScreen(
                     color = TujiColor.Ink3,
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    stringResource(R.string.atlas_themes_link),
-                    style = TujiType.label,
-                    color = TujiColor.Ink,
-                    textDecoration = TextDecoration.Underline,
-                    modifier = Modifier
-                        .tujiClickable(onClick = onOpenThemes)
-                        .padding(vertical = TujiSpace.S1),
-                )
+                // 主題 only on 官方: a theme describes a dictionary word, and
+                // the ones you photographed or took in have no theme to browse
+                // by. iOS puts 管理 → on 我做的; that arrives with 圖鑑管理 (P5),
+                // and until then the row there carries nothing.
+                if (source == CardsSource.Official) {
+                    Text(
+                        stringResource(R.string.atlas_themes_link),
+                        style = TujiType.label,
+                        color = TujiColor.Ink,
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier
+                            .tujiClickable(onClick = onOpenThemes)
+                            .padding(vertical = TujiSpace.S1),
+                    )
+                }
             }
         }
 
@@ -216,7 +225,7 @@ fun AtlasCardsScreen(
  * available-but-not-chosen control in the app sits on.
  */
 @Composable
-private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
+private fun SourceRow(selected: CardsSource, isGuest: Boolean, onSelect: (CardsSource) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -224,7 +233,7 @@ private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
             .padding(bottom = TujiSpace.S2),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
     ) {
-        CardsSource.entries.forEach { source ->
+        CardsSource.available(isGuest).forEach { source ->
             val lit = source == selected
             Text(
                 stringResource(
@@ -374,11 +383,22 @@ fun AtlasThemeScreen(
                     ) {
                         Text(
                             stringResource(R.string.atlas_words_header),
-                            style = TujiType.label,
-                            color = TujiColor.Current,
+                            // 棕 and tracked, as iOS sets its section headers:
+                            // 瞳黃 on paper was the one label on the page that
+                            // failed contrast, and it is not a selection.
+                            style = TujiType.label.copy(letterSpacing = 2.sp),
+                            color = TujiColor.BrandSecondary,
                             modifier = Modifier.weight(1f),
                         )
                         Text("${words.size}", style = TujiType.label, color = TujiColor.Ink3)
+                    }
+                }
+
+                if (words.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(Modifier.fillMaxWidth().padding(vertical = TujiSpace.S5), contentAlignment = Alignment.Center) {
+                            MascotEmptyState(title = stringResource(R.string.atlas_theme_empty), compact = true)
+                        }
                     }
                 }
 
@@ -393,20 +413,12 @@ fun AtlasThemeScreen(
         }
 
         // Floating over the hero rather than taking a row above it, so the page
-        // still opens with the picture. Paper on ink, because ink is what it
-        // sits on for the first screenful.
-        Text(
-            "←",
-            style = TujiType.h3,
-            color = TujiColor.Paper,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = topPadding)
-                .padding(TujiSpace.S2)
-                .size(44.dp)
-                .tujiClickable(onClick = onBack)
-                .padding(TujiSpace.S2),
+        // still opens with the picture — the same arrow, on the same margin, as
+        // every other pushed screen's bar (`TujiNavBar`).
+        TujiNavBar(
+            onLeading = onBack,
+            leadingLabel = stringResource(R.string.atlas_back),
+            modifier = Modifier.align(Alignment.TopStart).padding(top = topPadding),
         )
     }
 }
