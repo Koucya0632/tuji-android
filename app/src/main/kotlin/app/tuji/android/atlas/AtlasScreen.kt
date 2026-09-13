@@ -338,7 +338,6 @@ fun AtlasThemeScreen(
     words: List<Word>,
     scores: MasteryStore.Scores,
     uiLang: String,
-    topPadding: Dp,
     bottomPadding: Dp,
     onBack: () -> Unit,
     onOpen: (String) -> Unit,
@@ -418,7 +417,9 @@ fun AtlasThemeScreen(
         TujiNavBar(
             onLeading = onBack,
             leadingLabel = stringResource(R.string.atlas_back),
-            modifier = Modifier.align(Alignment.TopStart).padding(top = topPadding),
+            // No status-bar padding of its own: the shell already starts every
+            // screen below it, and adding it again sank the arrow into the photo.
+            modifier = Modifier.align(Alignment.TopStart),
         )
     }
 }

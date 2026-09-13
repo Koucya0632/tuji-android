@@ -663,7 +663,6 @@ private fun SignedInScreens(
                     words = CategoryShelf.words(route.categoryId, studyWords),
                     scores = scores,
                     uiLang = uiLang,
-                    topPadding = insets.calculateTopPadding(),
                     bottomPadding = 0.dp,
                     onBack = { nav = nav.pop() },
                     onOpen = openCard,
@@ -683,6 +682,10 @@ private fun SignedInScreens(
                     WordDetailScreen(
                         vm = vm,
                         bottomPadding = 0.dp,
+                        session = direction.targetLanguage,
+                        uiLang = uiLang,
+                        showChinese = settings.showZh,
+                        onBack = { nav = nav.pop() },
                         resolve = { id -> catalog.words.firstOrNull { it.id == id } },
                         bookmarked = route.wordId in personal.bookmarked,
                         // 書籤 filters the *catalogue* by marked id, so a mark
@@ -714,7 +717,9 @@ private fun SignedInScreens(
 
 /** Whether the shell draws a back bar over [route]. */
 private fun hasBackBar(route: AppRoute): Boolean = when (route) {
-    is AppRoute.Word, is AppRoute.PublicItem, is AppRoute.Author, is AppRoute.Collection,
+    // Not 單字詳情: its picture is the first thing on the page, with 返回 and
+    // 書籤 floating over it.
+    is AppRoute.PublicItem, is AppRoute.Author, is AppRoute.Collection,
     AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture -> true
     else -> false
 }

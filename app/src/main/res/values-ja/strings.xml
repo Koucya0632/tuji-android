@@ -134,6 +134,7 @@
     <string name="atlas_themes_title">テーマ</string>
     <string name="atlas_show_more">もっと見る</string>
     <string name="atlas_words_header">単語</string>
+    <string name="atlas_theme_empty">このテーマにはまだ単語がありません</string>
     <string name="atlas_theme_label">テーマ分類</string>
     <string name="mastery_not_learned">未学習</string>
     <string name="mastery_know">わかった</string>
@@ -222,9 +223,14 @@
     <string name="accent_uk">イギリス式</string>
     <string name="about_body">Tuji は写真で単語を教えます。リストではなく「もの」として。忘れたものはまた出てきて、見たものは残ります。</string>
     <string name="word_play">発音を再生</string>
-    <string name="word_definition">意味</string>
-    <string name="word_examples">例文</string>
     <string name="word_related">関連する単語</string>
+    <string name="word_details_title">単語データ · DETAILS</string>
+    <string name="word_examples_title">例文 · EXAMPLE</string>
+    <string name="word_tab_definition">訳語</string>
+    <string name="word_tab_forms">語形</string>
+    <string name="word_tab_origin">ソース</string>
+    <string name="word_tab_collocations">コロケーション</string>
+    <string name="word_not_found">この単語が見つかりません</string>
     <string name="nav_today">今日</string>
     <string name="nav_atlas">図鑑</string>
     <string name="nav_community">物見</string>
