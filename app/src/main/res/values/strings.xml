@@ -80,9 +80,10 @@
     <string name="new_done_title">All learned</string>
     <string name="new_done_count">Learned %1$d words</string>
     <string name="new_start">Learn 5 new words</string>
-    <string name="today_greeting_morning">Good morning, %1$s</string>
-    <string name="today_greeting_afternoon">Good afternoon, %1$s</string>
-    <string name="today_greeting_evening">Good evening, %1$s</string>
+    <string name="today_greeting_morning">Good morning, %1$s.</string>
+    <string name="today_greeting_afternoon">Good afternoon, %1$s.</string>
+    <string name="today_greeting_evening">Good evening, %1$s.</string>
+    <string name="today_guest_name">Explorer</string>
     <string name="today_sub_guest">Guest mode · Browse the atlas and bookmark words to revisit</string>
     <string name="today_sub_unknown">What would you like to learn today?</string>
     <string name="today_sub_review_due">%1$d words to review today</string>
@@ -98,7 +99,6 @@
     <string name="today_goal_progress">%1$d / %2$d</string>
     <string name="today_goal_reached_badge">Achieved</string>
     <string name="today_seen">%1$d / %2$d learned</string>
-    <string name="debug_font_spike">Font spike (debug)</string>
     <string name="atlas_title">Atlas</string>
     <string name="atlas_count">%1$d words</string>
     <string name="atlas_search_hint">Find a word</string>
@@ -223,8 +223,9 @@
     <string name="community_reason_copyright">Copyright</string>
     <string name="community_reason_wrong">Incorrect content</string>
     <string name="community_reason_other">Other</string>
-    <string name="community_cancel">Cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="community_author_published">%1$d published</string>
+    <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">The publisher’s note</string>
     <string name="community_collection_saved">Collection saved</string>
     <string name="community_collection_learning">%1$d / %2$d already studying</string>

@@ -216,11 +216,16 @@ private fun Greeting(
 
         // One string with the name inside it, so the whole greeting wraps as
         // one line. The name is the only part in full ink.
+        //
+        // A guest has no name and is still greeted by one: 「晚安，」 followed by
+        // nothing reads as the name failing to load. The fallback is this
+        // screen's copy, as on iOS.
         Text(
             run {
-                val shown = name.orEmpty()
+                val shown = name?.takeIf { it.isNotBlank() }
+                    ?: stringResource(R.string.today_guest_name)
                 val whole = stringResource(greetingPrefix(), shown)
-                val at = if (shown.isEmpty()) -1 else whole.indexOf(shown)
+                val at = whole.indexOf(shown)
                 buildAnnotatedString {
                     if (at < 0) {
                         append(whole)

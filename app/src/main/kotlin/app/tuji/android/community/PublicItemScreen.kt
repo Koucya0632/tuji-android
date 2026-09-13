@@ -201,7 +201,7 @@ fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) {
                 )
             }
             TujiButton(
-                text = stringResource(R.string.community_cancel),
+                text = stringResource(R.string.cancel),
                 style = TujiButtonStyle.Secondary,
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
