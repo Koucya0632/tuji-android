@@ -134,6 +134,7 @@
     <string name="atlas_themes_title">主題</string>
     <string name="atlas_show_more">顯示更多</string>
     <string name="atlas_words_header">單字</string>
+    <string name="atlas_theme_empty">這個主題還沒有字</string>
     <string name="atlas_theme_label">主題分類</string>
     <string name="mastery_not_learned">未學</string>
     <string name="mastery_know">知道</string>
@@ -222,9 +223,14 @@
     <string name="accent_uk">英式</string>
     <string name="about_body">Tuji 圖記用圖片教單字——把字當成東西來認，而不是一張清單。忘記的會再問一次，看過的留得住。</string>
     <string name="word_play">播放發音</string>
-    <string name="word_definition">釋義</string>
-    <string name="word_examples">例句</string>
     <string name="word_related">相關的詞</string>
+    <string name="word_details_title">字詞資料 · DETAILS</string>
+    <string name="word_examples_title">例句 · EXAMPLE</string>
+    <string name="word_tab_definition">譯義</string>
+    <string name="word_tab_forms">詞形</string>
+    <string name="word_tab_origin">來源</string>
+    <string name="word_tab_collocations">搭配</string>
+    <string name="word_not_found">找不到這個字</string>
     <string name="nav_today">今天</string>
     <string name="nav_atlas">圖鑑</string>
     <string name="nav_community">物見</string>

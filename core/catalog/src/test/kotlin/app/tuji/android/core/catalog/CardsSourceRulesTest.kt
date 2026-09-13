@@ -101,16 +101,21 @@ class CardsSourceRulesTest {
         assertEquals(CardsSource.Official, CardsSource.entries.first())
     }
 
-    /** Outward from the dictionary: your mark, then yours, then someone else's. */
-    @Test fun `the chips are ordered by how far the words are from the dictionary`() {
+    /** iOS's order: the three sources, then the passive mark. */
+    @Test fun `the chips are the three sources and then 書籤`() {
         assertEquals(
             listOf(
                 CardsSource.Official,
-                CardsSource.Bookmarked,
                 CardsSource.Mine,
                 CardsSource.Taken,
+                CardsSource.Bookmarked,
             ),
             CardsSource.entries,
         )
+    }
+
+    @Test fun `a guest is offered only the chips that can hold something`() {
+        assertEquals(listOf(CardsSource.Official, CardsSource.Bookmarked), CardsSource.available(isGuest = true))
+        assertEquals(CardsSource.entries, CardsSource.available(isGuest = false))
     }
 }

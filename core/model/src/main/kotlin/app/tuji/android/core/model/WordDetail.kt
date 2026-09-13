@@ -28,6 +28,16 @@ data class WordDetail(
     /** 釋義 in the language being learned. */
     val targetDefinition: String? = null,
     val partOfSpeech: String? = null,
+    /** CEFR band for English entries; absent for Japanese. */
+    val cefrLevel: String? = null,
+    /** 詞形 — 單數/複數/過去式…, each a label and a value. */
+    val forms: List<WordForm> = emptyList(),
+    /** 來源. */
+    val etymology: String? = null,
+    /** 搭配, in the language being learned. */
+    val collocations: List<String> = emptyList(),
+    /** The zh-Hant gloss for each of [collocations], by position; often absent. */
+    val collocationsZh: List<String>? = null,
     val examples: List<WordExample> = emptyList(),
     /**
      * Catalogue ids this word points at. [relations] carries the same ids with
@@ -41,6 +51,10 @@ data class WordDetail(
 ) : Headworded {
     override val headwordPronunciation: String? get() = pronunciation
 }
+
+/** One inflected form: a grammar label (in zh-Hant, from the model) and the spelling. */
+@Serializable
+data class WordForm(val label: String, val value: String)
 
 /**
  * One authored example sentence.

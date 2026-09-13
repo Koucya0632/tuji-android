@@ -134,6 +134,7 @@
     <string name="atlas_themes_title">Topics</string>
     <string name="atlas_show_more">Show more</string>
     <string name="atlas_words_header">Word</string>
+    <string name="atlas_theme_empty">No words in this topic yet</string>
     <string name="atlas_theme_label">Topic categories</string>
     <string name="mastery_not_learned">Not learned</string>
     <string name="mastery_know">Got it</string>
@@ -222,9 +223,14 @@
     <string name="accent_uk">British</string>
     <string name="about_body">Tuji teaches words with pictures — as things you meet, not as a list. What you forget comes back; what you have seen sticks.</string>
     <string name="word_play">Play pronunciation</string>
-    <string name="word_definition">Definition</string>
-    <string name="word_examples">Examples</string>
     <string name="word_related">Related words</string>
+    <string name="word_details_title">Details</string>
+    <string name="word_examples_title">Examples</string>
+    <string name="word_tab_definition">Meaning</string>
+    <string name="word_tab_forms">Word forms</string>
+    <string name="word_tab_origin">Source</string>
+    <string name="word_tab_collocations">Collocations</string>
+    <string name="word_not_found">Word not found</string>
     <string name="nav_today">Today</string>
     <string name="nav_atlas">Atlas</string>
     <string name="nav_community">Sightings</string>
