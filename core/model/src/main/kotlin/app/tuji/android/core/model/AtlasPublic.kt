@@ -100,6 +100,8 @@ data class AtlasPublicCollection(
     val saveCount: Int = 0,
     val coverImageUrl: String? = null,
     val avatarImageUrl: String? = null,
+    /** The collection's identity colour, `#rrggbb`; see `CollectionIdentity`. */
+    val avatarColor: String? = null,
     val publishedAt: String? = null,
 )
 
@@ -128,6 +130,19 @@ data class AtlasCollectionAccess(
 
 @Serializable
 data class AtlasCollectionsResponse(val collections: List<AtlasPublicCollection> = emptyList())
+
+/** `/collections/{slug}/save` in all three verbs: where the bookmark stands now, and the new total. */
+@Serializable
+data class AtlasSaveState(val ok: Boolean = true, val saved: Boolean = false, val saveCount: Int = 0)
+
+/** `/collections/{slug}/learn`. */
+@Serializable
+data class AtlasCollectionLearnResult(
+    val ok: Boolean = true,
+    val addedCount: Int = 0,
+    val learningCount: Int = 0,
+    val totalCount: Int = 0,
+)
 
 /** One author's public shelf. */
 @Serializable

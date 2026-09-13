@@ -282,6 +282,23 @@ object TujiGlyph {
         }
     }
 
+    /** 鎖. A shackle over a solid body — what a collection keeps back until it is saved. */
+    @Composable
+    fun Lock(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val shackle = Path().apply {
+                moveTo(w * 0.30f, h * 0.48f)
+                lineTo(w * 0.30f, h * 0.32f)
+                cubicTo(w * 0.30f, h * 0.06f, w * 0.70f, h * 0.06f, w * 0.70f, h * 0.32f)
+                lineTo(w * 0.70f, h * 0.48f)
+            }
+            drawPath(shackle, tint, style = Stroke(width = w * 0.12f, cap = StrokeCap.Round))
+            drawRect(tint, topLeft = Offset(w * 0.16f, h * 0.46f), size = Size(w * 0.68f, h * 0.48f))
+        }
+    }
+
     /** 完成. A tick, stroked, for inside a small filled dot. */
     @Composable
     fun Check(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

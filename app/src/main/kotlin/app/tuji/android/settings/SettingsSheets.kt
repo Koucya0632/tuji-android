@@ -15,11 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,6 +26,7 @@ import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSettingRow
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
+import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
 
 /**
@@ -42,9 +38,7 @@ import app.tuji.android.core.design.tujiClickable
  * What survives is the part that matters — a scrim that dismisses, and content
  * that never grows past half the screen.
  *
- * **A window of its own**, for the reason `TujiPrompt` is one: drawn inside the
- * page it covered only the page, so the shell's back arrow above the scrim
- * stayed live and system back popped 設定 out from under an open sheet.
+ * **A window of its own** — see `TujiWindow`.
  */
 @Composable
 private fun Sheet(
@@ -53,15 +47,7 @@ private fun Sheet(
     footer: String? = null,
     content: @Composable () -> Unit,
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
-    ) {
-        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
-        SideEffect {
-            window?.setDimAmount(0f)
-            window?.setWindowAnimations(0)
-        }
+    TujiWindow(onDismiss = onDismiss) {
         Box(
             Modifier
                 .fillMaxSize()

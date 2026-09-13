@@ -62,6 +62,8 @@ import app.tuji.android.community.AuthorScreen
 import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
 import app.tuji.android.community.CommunityViewModel
+import app.tuji.android.community.CollectionDetailViewModel
+import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.community.PublicItemScreen
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
@@ -307,6 +309,7 @@ private fun SignedInScreens(
         CommunityViewModel(
             atlas = app.atlas,
             saver = app.atlas,
+            bookmarks = app.atlas,
             reporter = app.atlas,
             blocks = app.atlas,
             direction = direction,
@@ -314,10 +317,12 @@ private fun SignedInScreens(
             onSaved = { savedTick++ },
         ).also { it.load() }
     }
-    val communityFeed by community.feed.collectAsStateWithLifecycle()
+    val communityExplore by community.explore.collectAsStateWithLifecycle()
+    val communitySaved by community.saved.collectAsStateWithLifecycle()
+    val communityMe by community.me.collectAsStateWithLifecycle()
     val communityItem by community.item.collectAsStateWithLifecycle()
     val communityAuthor by community.author.collectAsStateWithLifecycle()
-    val communityCollection by community.collection.collectAsStateWithLifecycle()
+    val communityReported by community.reported.collectAsStateWithLifecycle()
 
     val account = remember {
         AccountViewModel(accounts = app.atlas, entitlements = app.atlas)
@@ -480,6 +485,10 @@ private fun SignedInScreens(
         // anyone who never opened that tab.
         if (nav.current == AppRoute.Community) account.refresh()
     }
+    // The row at the top of 物見 is this account's public page, and it needs
+    // the UID to find it — which arrives with 我的's account read.
+    val myUid = accountState.me?.username
+    LaunchedEffect(myUid) { if (!isGuest && myUid != null) community.loadMe(myUid) }
 
     Column(
         Modifier
@@ -602,15 +611,16 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Community -> CommunityScreen(
-                    feed = communityFeed,
-                    bottomPadding = 0.dp,
-                    slotsLeft = accountState.entitlement?.let {
-                        it.atlasSlotsLimit - it.usage.atlasSlots
-                    },
-                    onCapture = { nav = nav.push(AppRoute.Capture) },
-                    onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
+                    explore = communityExplore,
+                    saved = communitySaved,
+                    me = communityMe.takeIf { !isGuest },
+                    isGuest = isGuest,
+                    language = direction.targetLanguage,
+                    onShowSaved = community::loadSaved,
+                    onRetry = community::load,
+                    onSignIn = { app.auth.exitGuestMode() },
                     onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
-                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                    onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
                 )
 
                 is AppRoute.PublicItem -> {
@@ -625,13 +635,39 @@ private fun SignedInScreens(
                 }
 
                 is AppRoute.Collection -> {
-                    LaunchedEffect(route.slug) { community.openCollection(route.slug) }
+                    val vm = remember(route.slug, myUid, isGuest) {
+                        CollectionDetailViewModel(
+                            slug = route.slug,
+                            atlas = app.atlas,
+                            bookmarks = app.atlas,
+                            learning = app.atlas,
+                            viewerHandle = myUid,
+                            signedIn = !isGuest,
+                            blocked = { community.blockList },
+                            onBookmarkChanged = community::loadSaved,
+                            // Members went into the study queue: 已收進 and the
+                            // counts on 今日 and 我 are drawn from it.
+                            onLearned = {
+                                savedTick++
+                                refreshTick++
+                            },
+                        ).also { it.open() }
+                    }
+                    val collectionState by vm.state.collectAsStateWithLifecycle()
                     CollectionScreen(
-                        detail = communityCollection,
-                        bottomPadding = 0.dp,
+                        state = collectionState,
+                        isGuest = isGuest,
+                        reported = communityReported == ReportTarget.Collection(route.slug),
+                        onBack = { nav = nav.pop() },
+                        onRetry = vm::open,
+                        onSignIn = { app.auth.exitGuestMode() },
+                        onSave = vm::save,
+                        onUnsave = vm::unsave,
+                        onLearn = vm::learnRemaining,
+                        onDismissError = vm::dismissError,
                         onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
                         onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
-                        onReport = { target, reason -> community.report(target, reason) },
+                        onReport = { reason -> community.report(ReportTarget.Collection(route.slug), reason) },
                     )
                 }
 
@@ -739,7 +775,8 @@ private fun SignedInScreens(
 private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Not 單字詳情: its picture is the first thing on the page, with 返回 and
     // 書籤 floating over it.
-    is AppRoute.PublicItem, is AppRoute.Author, is AppRoute.Collection,
+    // Nor a 合集, whose cover bleeds and floats its own arrow.
+    is AppRoute.PublicItem, is AppRoute.Author,
     AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture -> true
     else -> false
 }
