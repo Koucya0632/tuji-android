@@ -1,187 +1,177 @@
 package app.tuji.android.community
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
+import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiSegmented
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.core.model.AtlasPublicCollection
-import app.tuji.android.core.model.AtlasPublicItem
-import coil3.compose.AsyncImage
+import app.tuji.android.core.model.AtlasAuthor
+import app.tuji.android.core.model.TargetLanguage
+
+/** 探索 or 已收藏. */
+enum class CommunityShelf { Explore, Saved }
 
 /**
- * 物見 — what other people published, and the way in to publishing your own.
+ * 物見 — other people's collections, and the version of you they see.
  *
- * M3 shipped this screen with **no camera entry at all**, because publishing did
- * not exist yet and a greyed 拍照 button promises what a build cannot do. M5
- * added the flow, so the entry is here now — gated on the account's remaining
- * 自製圖鑑 slots rather than always drawn, for the same reason.
+ * iOS's `AtlasPublicFeedView`: a row that opens this account's own public page,
+ * then 探索／已收藏 over lists of 合集. No 拍照 button here — the camera is in
+ * the middle of the tab bar now, one tap from every tab — and no loose list of
+ * single words: a word is reached through its collection or its author.
  */
 @Composable
 fun CommunityScreen(
-    feed: CommunityViewModel.Feed,
-    bottomPadding: androidx.compose.ui.unit.Dp,
-    /** Remaining 自製圖鑑 slots, or null while the entitlement has not landed. */
-    slotsLeft: Int? = null,
-    onCapture: (() -> Unit)? = null,
-    onOpenItem: (String) -> Unit,
+    explore: CommunityViewModel.Shelf,
+    saved: CommunityViewModel.Shelf,
+    me: AtlasAuthor?,
+    isGuest: Boolean,
+    language: TargetLanguage,
+    onShowSaved: () -> Unit,
+    onRetry: () -> Unit,
+    onSignIn: () -> Unit,
     onOpenCollection: (String) -> Unit,
-    onOpenAuthor: (String) -> Unit,
+    onOpenMyPage: (String) -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
-        // Outside the feed's state, deliberately. Making your own card has
-        // nothing to do with whether other people's are readable — and putting
-        // it inside the success branch meant a failed feed also took away the
-        // camera, which is the one thing on this screen that still works
-        // offline right up to the upload.
-        if (onCapture != null && slotsLeft != null && slotsLeft > 0) {
-            TujiButton(
-                text = stringResource(R.string.capture_entry),
-                onClick = onCapture,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-            )
+    var shelf by rememberSaveable { mutableStateOf(CommunityShelf.Explore) }
+    // Asked for the first time 已收藏 is opened, and again on each return to
+    // it: a collection saved in a detail screen belongs on it by then.
+    LaunchedEffect(shelf, isGuest) {
+        if (shelf == CommunityShelf.Saved && !isGuest) onShowSaved()
+    }
+
+    Column(Modifier.fillMaxSize().padding(top = TujiSpace.S3)) {
+        // Guests have no public page, and a row that fails to load is simply
+        // not there — the list below must not pay for it.
+        me?.let { author ->
+            MyPageRow(author) { onOpenMyPage(author.handle) }
+            RowRule()
+            Spacer(Modifier.height(TujiSpace.S3))
         }
+        TujiSegmented(
+            options = listOf(
+                CommunityShelf.Explore to stringResource(R.string.community_shelf_explore),
+                CommunityShelf.Saved to stringResource(R.string.community_shelf_saved),
+            ),
+            selected = shelf,
+            onSelect = { shelf = it },
+        )
+        Spacer(Modifier.height(TujiSpace.S3))
 
-        when {
-        feed.loading -> Centered(stringResource(R.string.community_loading))
-        feed.failed -> Centered(stringResource(R.string.community_failed))
-        feed.items.isEmpty() && feed.collections.isEmpty() ->
-            Centered(stringResource(R.string.community_empty))
-
-        else -> LazyColumn(
-            contentPadding = PaddingValues(bottom = bottomPadding + TujiSpace.S6),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            if (feed.collections.isNotEmpty()) {
-                item {
-                    SectionTitle(stringResource(R.string.community_collections))
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = TujiSpace.S4),
-                        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        Box(Modifier.weight(1f)) {
+            when (shelf) {
+                CommunityShelf.Explore -> ShelfList(
+                    state = explore,
+                    empty = stringResource(R.string.community_explore_empty),
+                    onRetry = onRetry,
+                    onOpenCollection = onOpenCollection,
+                )
+                CommunityShelf.Saved -> if (isGuest) {
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
+                        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        items(feed.collections, key = { it.id }) {
-                            CollectionCard(it) { onOpenCollection(it.slug) }
-                        }
+                        Text(stringResource(R.string.community_saved_guest), style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center)
+                        TujiButton(text = stringResource(R.string.auth_sign_in), onClick = onSignIn)
                     }
+                } else {
+                    ShelfList(
+                        state = saved,
+                        empty = stringResource(
+                            if (language == TargetLanguage.JA) R.string.community_saved_empty_ja else R.string.community_saved_empty_en,
+                        ),
+                        onRetry = onShowSaved,
+                        onOpenCollection = onOpenCollection,
+                    )
                 }
             }
-            item { SectionTitle(stringResource(R.string.community_items)) }
-            items(feed.items, key = { it.id }) { entry ->
-                ItemRow(
-                    entry = entry,
-                    onClick = { onOpenItem(entry.slug) },
-                    onAuthor = { entry.author?.handle?.let(onOpenAuthor) },
-                )
-            }
-        }
         }
     }
 }
 
+/**
+ * This account as other people see it: the two numbers its public page shows,
+ * in the words that page uses. It sits beside other people's work because
+ * that is the shelf it is on.
+ */
 @Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = TujiType.label,
-        color = TujiColor.Ink3,
-        modifier = Modifier.padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-    )
-}
-
-@Composable
-private fun CollectionCard(collection: AtlasPublicCollection, onClick: () -> Unit) {
-    Column(
-        Modifier
-            .width(180.dp)
-            .background(TujiColor.Paper2)
-            .tujiClickable(onClick = onClick),
-    ) {
-        Box(Modifier.fillMaxWidth().aspectRatio(3f / 2f).background(TujiColor.Paper3)) {
-            collection.coverImageUrl?.let {
-                AsyncImage(
-                    model = it,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-        }
-        Column(Modifier.padding(TujiSpace.S2)) {
-            Text(
-                collection.title,
-                style = TujiType.bodyStrong,
-                color = TujiColor.Ink,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                stringResource(R.string.community_count, collection.itemCount),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ItemRow(entry: AtlasPublicItem, onClick: () -> Unit, onAuthor: () -> Unit) {
+private fun MyPageRow(author: AtlasAuthor, onOpen: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = TujiSpace.S4)
-            .background(TujiColor.Paper2)
-            .tujiClickable(onClick = onClick)
-            .padding(TujiSpace.S2),
+            .height(72.dp)
+            .tujiClickable(onClick = onOpen)
+            .padding(horizontal = TujiSpace.S4),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(64.dp).background(TujiColor.Paper3)) {
-            AsyncImage(
-                model = entry.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
+        ProfileAvatar(avatar = author.avatar, size = 40.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(author.name, style = TujiType.h3, color = TujiColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                "${stringResource(R.string.community_stat_published)} ${author.publishedCount ?: 0} · " +
+                    "${stringResource(R.string.community_stat_saves)} ${author.saveCount ?: 0}",
+                style = TujiType.label,
+                color = TujiColor.Ink3,
+                maxLines = 1,
             )
         }
-        Column(Modifier.weight(1f)) {
-            Text(entry.lemma, style = TujiType.bodyStrong, color = TujiColor.Ink, maxLines = 1)
-            entry.displayZhHant?.let {
-                Text(it, style = TujiType.bodySm, color = TujiColor.Ink3, maxLines = 1)
-            }
-            entry.author?.let { author ->
-                Text(
-                    author.name,
-                    style = TujiType.monoLabel,
-                    color = TujiColor.Accumulation,
-                    modifier = Modifier.tujiClickable(onClick = onAuthor).padding(top = 2.dp),
-                )
+        TujiGlyph.ArrowLeft(size = 16.dp, tint = TujiColor.Ink3, modifier = Modifier.padding(start = TujiSpace.S2).rotate(180f))
+    }
+}
+
+@Composable
+private fun ShelfList(
+    state: CommunityViewModel.Shelf,
+    empty: String,
+    onRetry: () -> Unit,
+    onOpenCollection: (String) -> Unit,
+) {
+    when {
+        state.loading -> Centered(stringResource(R.string.community_loading))
+        state.failed -> Column(
+            Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(stringResource(R.string.community_failed), style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center)
+            TujiButton(text = stringResource(R.string.retry), onClick = onRetry)
+        }
+        state.collections.isEmpty() -> Centered(empty)
+        else -> LazyColumn(contentPadding = PaddingValues(top = TujiSpace.S1, bottom = TujiSpace.S5)) {
+            itemsIndexed(state.collections, key = { _, c -> c.id }) { index, collection ->
+                if (index > 0) RowRule()
+                CollectionRow(collection, onOpen = { onOpenCollection(collection.slug) })
             }
         }
     }
@@ -189,7 +179,7 @@ private fun ItemRow(entry: AtlasPublicItem, onClick: () -> Unit, onAuthor: () ->
 
 @Composable
 internal fun Centered(text: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text, style = TujiType.body, color = TujiColor.Ink3)
+    Box(Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4), contentAlignment = Alignment.Center) {
+        Text(text, style = TujiType.body, color = TujiColor.Ink3, textAlign = TextAlign.Center)
     }
 }

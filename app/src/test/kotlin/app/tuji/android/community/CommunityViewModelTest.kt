@@ -13,6 +13,8 @@ import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.network.AtlasReading
 import app.tuji.android.core.network.AtlasSaving
 import app.tuji.android.core.network.BlockListing
+import app.tuji.android.core.network.CollectionBookmarking
+import app.tuji.android.core.model.AtlasSaveState
 import app.tuji.android.core.network.ReportSubmitting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,6 +81,17 @@ class CommunityViewModelTest {
         }
     }
 
+    private class SavedShelf(val cols: List<AtlasPublicCollection> = emptyList()) : CollectionBookmarking {
+        var langAsked: String? = null
+        override suspend fun savedCollections(lang: String): List<AtlasPublicCollection> {
+            langAsked = lang
+            return cols
+        }
+        override suspend fun collectionSaveState(slug: String) = AtlasSaveState()
+        override suspend fun saveCollection(slug: String) = AtlasSaveState(saved = true)
+        override suspend fun unsaveCollection(slug: String) = AtlasSaveState()
+    }
+
     private class Reporter : ReportSubmitting {
         val sent = mutableListOf<Triple<ReportTarget, ReportReason, String?>>()
         override suspend fun report(target: ReportTarget, reason: ReportReason, detail: String?) {
@@ -89,6 +102,7 @@ class CommunityViewModelTest {
     private fun vm(
         reader: AtlasReading = Reader(feedItems, feedCols),
         saver: AtlasSaving = Saver(),
+        bookmarks: CollectionBookmarking = SavedShelf(),
         reporter: ReportSubmitting = Reporter(),
         blocked: List<String> = emptyList(),
         blocksFail: Boolean = false,
@@ -97,6 +111,7 @@ class CommunityViewModelTest {
     ) = CommunityViewModel(
         atlas = reader,
         saver = saver,
+        bookmarks = bookmarks,
         onSaved = onSaved,
         reporter = reporter,
         blocks = object : BlockListing {
@@ -108,37 +123,37 @@ class CommunityViewModelTest {
         scope = TestScope(dispatcher),
     )
 
-    @Test fun `the feed arrives`() = runTest(dispatcher) {
+    @Test fun `探索 lists the published collections`() = runTest(dispatcher) {
         val vm = vm(); vm.load(); advanceUntilIdle()
-        assertEquals(listOf("a", "b", "c"), vm.feed.value.items.map { it.slug })
-        assertFalse(vm.feed.value.loading)
+        assertEquals(listOf("c1", "c2"), vm.explore.value.collections.map { it.slug })
+        assertFalse(vm.explore.value.loading)
     }
 
-    @Test fun `a blocked author is gone from both lists`() = runTest(dispatcher) {
+    @Test fun `a blocked author's collections are gone`() = runTest(dispatcher) {
         val vm = vm(blocked = listOf("TJ1")); vm.load(); advanceUntilIdle()
-        assertEquals(listOf("b"), vm.feed.value.items.map { it.slug })
-        assertEquals(listOf("c2"), vm.feed.value.collections.map { it.slug })
+        assertEquals(listOf("c2"), vm.explore.value.collections.map { it.slug })
     }
 
     @Test fun `a failed block list shows everything rather than nothing`() = runTest(dispatcher) {
         // Fail open. One small request must not take 物見 away from everyone.
         val vm = vm(blocksFail = true); vm.load(); advanceUntilIdle()
-        assertEquals(3, vm.feed.value.items.size)
-        assertFalse(vm.feed.value.failed)
+        assertEquals(2, vm.explore.value.collections.size)
+        assertFalse(vm.explore.value.failed)
     }
 
-    @Test fun `a failed feed says so`() = runTest(dispatcher) {
-        val vm = vm(reader = Reader(failFeed = true)); vm.load(); advanceUntilIdle()
-        assertTrue(vm.feed.value.failed)
-        assertFalse(vm.feed.value.loading)
+    @Test fun `a failed shelf says so`() = runTest(dispatcher) {
+        val vm = vm(reader = Reader(failCollections = true)); vm.load(); advanceUntilIdle()
+        assertTrue(vm.explore.value.failed)
+        assertFalse(vm.explore.value.loading)
     }
 
-    @Test fun `failed collections do not fail the screen`() = runTest(dispatcher) {
-        val vm = vm(reader = Reader(feedItems, failCollections = true))
+    @Test fun `已收藏 is asked in the same language and filtered by the same block list`() = runTest(dispatcher) {
+        val bookmarks = SavedShelf(feedCols)
+        val vm = vm(bookmarks = bookmarks, blocked = listOf("TJ2"), direction = LearningDirection.ZH_EN)
         vm.load(); advanceUntilIdle()
-        assertEquals(3, vm.feed.value.items.size)
-        assertTrue(vm.feed.value.collections.isEmpty())
-        assertFalse("the feed still works without them", vm.feed.value.failed)
+        vm.loadSaved(); advanceUntilIdle()
+        assertEquals("en", bookmarks.langAsked)
+        assertEquals(listOf("c1"), vm.saved.value.collections.map { it.slug })
     }
 
     @Test fun `the collections feed is scoped to the direction`() = runTest(dispatcher) {
@@ -234,20 +249,6 @@ class CommunityViewModelTest {
         assertEquals("spam", reporter.sent[0].second.wire)
         assertEquals("廣告", reporter.sent[0].third)
         assertEquals(ReportTarget.Author("TJ9"), vm.reported.value)
-    }
-
-    @Test fun `a collection's items are filtered by the same block list`() = runTest(dispatcher) {
-        val detail = AtlasCollectionDetail(
-            collection = collection("c1", "TJ2"),
-            items = feedItems,
-        )
-        val vm = vm(
-            reader = Reader(feedItems, feedCols, collectionDetail = detail),
-            blocked = listOf("TJ1"),
-        )
-        vm.load(); advanceUntilIdle()
-        vm.openCollection("c1"); advanceUntilIdle()
-        assertEquals(listOf("b"), vm.collection.value!!.items.map { it.slug })
     }
 
     @Test fun `a missing item is a failure, not an empty screen`() = runTest(dispatcher) {

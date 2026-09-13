@@ -6,16 +6,16 @@ import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.community.BlockList
 import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.community.ReportTarget
+import app.tuji.android.core.model.AtlasAuthor
 import app.tuji.android.core.model.AtlasAuthorPage
-import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasPublicCollection
 import app.tuji.android.core.model.AtlasPublicDetail
-import app.tuji.android.core.model.AtlasPublicItem
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.network.AtlasReading
 import app.tuji.android.core.network.AtlasSaving
 import app.tuji.android.core.network.BlockListing
+import app.tuji.android.core.network.CollectionBookmarking
 import app.tuji.android.core.network.ReportSubmitting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,14 +26,15 @@ import kotlinx.coroutines.launch
 /**
  * 物見 — reading other people's published words.
  *
- * **Consumption only.** M3 ships the half of 物見 that reads; publishing and
- * the camera are M5. That is not a temporary gap to be filled in with a
- * disabled button — a greyed 拍照 that never enables is worse than no entry at
- * all, because it promises something this build cannot do.
+ * The tab itself is two shelves of **合集**, as on iOS: 探索, everything
+ * published in the language being learned, and 已收藏, the ones this account
+ * bookmarked. Single words are reached through a collection or an author, not
+ * listed loose on the tab.
  */
 class CommunityViewModel(
     private val atlas: AtlasReading,
     private val saver: AtlasSaving,
+    private val bookmarks: CollectionBookmarking,
     private val reporter: ReportSubmitting,
     private val blocks: BlockListing,
     private val direction: LearningDirection,
@@ -50,15 +51,32 @@ class CommunityViewModel(
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
-    data class Feed(
-        val items: List<AtlasPublicItem> = emptyList(),
+    /** One shelf of 合集. */
+    data class Shelf(
         val collections: List<AtlasPublicCollection> = emptyList(),
         val loading: Boolean = true,
         val failed: Boolean = false,
     )
 
-    private val _feed = MutableStateFlow(Feed())
-    val feed: StateFlow<Feed> = _feed.asStateFlow()
+    private val _explore = MutableStateFlow(Shelf())
+
+    /** 探索 — published collections in the language being learned. */
+    val explore: StateFlow<Shelf> = _explore.asStateFlow()
+
+    private val _saved = MutableStateFlow(Shelf())
+
+    /** 已收藏 — this account's bookmarked collections, same language scope. */
+    val saved: StateFlow<Shelf> = _saved.asStateFlow()
+
+    private val _me = MutableStateFlow<AtlasAuthor?>(null)
+
+    /**
+     * The row at the top of the tab: this account as other people see it. Null
+     * while loading and after a failure alike — a network problem there must
+     * not cost the list under it, and an error where a name should be is worse
+     * than no row.
+     */
+    val me: StateFlow<AtlasAuthor?> = _me.asStateFlow()
 
     /**
      * Hidden authors.
@@ -74,6 +92,9 @@ class CommunityViewModel(
     private val lang: String
         get() = if (direction.targetLanguage == TargetLanguage.JA) "ja" else "en"
 
+    /** The block list the other 物見 screens filter by. */
+    val blockList: BlockList get() = blocked
+
     fun load() {
         work.launch {
             // The block list first, so nothing blocked is ever drawn and then
@@ -86,24 +107,34 @@ class CommunityViewModel(
                     Log.w(TAG, "block list unavailable — showing everything", it)
                     BlockList.none
                 }
-
-            val items = runCatching { atlas.feed().items }.getOrElse {
-                Log.e(TAG, "物見 feed failed", it)
-                _feed.value = Feed(loading = false, failed = true)
+            val cols = runCatching { atlas.collections(lang) }.getOrElse {
+                Log.e(TAG, "物見 collections failed", it)
+                _explore.value = Shelf(loading = false, failed = true)
                 return@launch
             }
-            // Collections are a smaller, separate failure: without them the
-            // feed still works, so they do not fail the screen.
-            val cols = runCatching { atlas.collections(lang) }.getOrElse {
-                Log.w(TAG, "collections failed", it)
-                emptyList()
-            }
+            _explore.value = Shelf(collections = blocked.filter(cols) { it.author }, loading = false)
+        }
+    }
 
-            _feed.value = Feed(
-                items = blocked.filter(items) { it.author },
-                collections = blocked.filter(cols) { it.author },
-                loading = false,
-            )
+    /** 已收藏. Only for a signed-in account; the screen shows guests a way to sign in instead. */
+    fun loadSaved() {
+        work.launch {
+            val cols = runCatching { bookmarks.savedCollections(lang) }.getOrElse {
+                Log.e(TAG, "saved collections failed", it)
+                _saved.value = _saved.value.copy(loading = false, failed = true)
+                return@launch
+            }
+            _saved.value = Shelf(collections = blocked.filter(cols) { it.author }, loading = false)
+        }
+    }
+
+    /** The account's own public page, for the row above the shelves. */
+    fun loadMe(uid: String) {
+        if (_me.value?.handle == uid) return
+        work.launch {
+            runCatching { atlas.author(uid).author }
+                .onSuccess { _me.value = it }
+                .onFailure { Log.w(TAG, "my page row failed", it) }
         }
     }
 
@@ -173,24 +204,6 @@ class CommunityViewModel(
                     )
                 }
                 .onFailure { Log.e(TAG, "author page failed: $handle", it) }
-        }
-    }
-
-    // 合集
-
-    private val _collection = MutableStateFlow<AtlasCollectionDetail?>(null)
-    val collection: StateFlow<AtlasCollectionDetail?> = _collection.asStateFlow()
-
-    fun openCollection(slug: String) {
-        _collection.value = null
-        work.launch {
-            runCatching { atlas.collection(slug) }
-                .onSuccess { detail ->
-                    _collection.value = detail.copy(
-                        items = blocked.filter(detail.items) { it.author },
-                    )
-                }
-                .onFailure { Log.e(TAG, "collection failed: $slug", it) }
         }
     }
 

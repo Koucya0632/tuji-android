@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.navigationBarsPadding
+import app.tuji.android.core.design.TujiWindow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -163,7 +165,7 @@ fun PublicItemScreen(
  * queue sorts on the reason, and a sentence nobody reads is not moderation.
  */
 @Composable
-fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) {
+fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss) {
     Box(
         Modifier
             .fillMaxSize()
@@ -175,6 +177,10 @@ fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) {
             Modifier
                 .fillMaxWidth()
                 .background(TujiColor.Paper)
+                // Swallows taps, so touching the sheet does not dismiss it
+                // through the scrim underneath.
+                .tujiClickable {}
+                .navigationBarsPadding()
                 .padding(TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {

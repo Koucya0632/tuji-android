@@ -44,4 +44,15 @@ class EndpointPolicyTest {
         assertFalse(EndpointAccess.Authenticated.mayBeCachedAcrossCallers)
         assertFalse(EndpointAccess.OptionalToken.mayBeCachedAcrossCallers)
     }
+
+    /**
+     * The collection route's `access` block describes the reader. Sent
+     * anonymously from a shared cache it described nobody, and a collection
+     * the user had saved opened locked.
+     */
+    @Test
+    fun `the collection detail is asked as the reader, not from a shared cache`() {
+        assertTrue(Endpoint.AtlasCollection("c").descriptor.policy.access == EndpointAccess.OptionalToken)
+        assertFalse(Endpoint.AtlasCollection("c").descriptor.policy.access.mayBeCachedAcrossCallers)
+    }
 }

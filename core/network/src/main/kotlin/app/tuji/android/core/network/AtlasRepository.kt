@@ -5,6 +5,8 @@ import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasCollectionsResponse
+import app.tuji.android.core.model.AtlasCollectionLearnResult
+import app.tuji.android.core.model.AtlasSaveState
 import app.tuji.android.core.model.AtlasPublicCollection
 import app.tuji.android.core.model.AtlasPublicDetail
 import app.tuji.android.core.model.AtlasPublicDetailResponse
@@ -36,6 +38,22 @@ interface AtlasReading {
     suspend fun author(handle: String): AtlasAuthorPage
     suspend fun collections(lang: String, limit: Int = 40): List<AtlasPublicCollection>
     suspend fun collection(slug: String): AtlasCollectionDetail
+}
+
+/**
+ * 收藏 a whole collection — which unlocks browsing it and counts toward the
+ * author, and puts **nothing** in the reader's 圖鑑. That is [CollectionLearning].
+ */
+interface CollectionBookmarking {
+    suspend fun savedCollections(lang: String): List<AtlasPublicCollection>
+    suspend fun collectionSaveState(slug: String): AtlasSaveState
+    suspend fun saveCollection(slug: String): AtlasSaveState
+    suspend fun unsaveCollection(slug: String): AtlasSaveState
+}
+
+/** 全部加入學習 — put a saved collection's remaining items into the study queue. */
+fun interface CollectionLearning {
+    suspend fun learnCollection(slug: String): AtlasCollectionLearnResult
 }
 
 /** Saving someone else's word into your own 圖鑑. */
@@ -138,7 +156,23 @@ private data class Empty(val ok: Boolean? = null)
 
 class AtlasRepository(private val api: TujiApiClient) :
     AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
-    EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading {
+    EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading,
+    CollectionBookmarking, CollectionLearning {
+
+    override suspend fun savedCollections(lang: String): List<AtlasPublicCollection> =
+        api.get<AtlasCollectionsResponse>(Endpoint.AtlasSavedCollections(lang = lang, limit = 100)).collections
+
+    override suspend fun collectionSaveState(slug: String): AtlasSaveState =
+        api.get(Endpoint.AtlasCollectionSave(slug))
+
+    override suspend fun saveCollection(slug: String): AtlasSaveState =
+        api.post(Endpoint.AtlasCollectionSave(slug), Empty())
+
+    override suspend fun unsaveCollection(slug: String): AtlasSaveState =
+        api.delete(Endpoint.AtlasCollectionSave(slug))
+
+    override suspend fun learnCollection(slug: String): AtlasCollectionLearnResult =
+        api.post(Endpoint.AtlasCollectionLearn(slug), Empty())
 
     override suspend fun itemDetail(itemId: String, lang: String): WordDetail =
         api.get(Endpoint.AtlasItemDetail(itemId = itemId, lang = lang))

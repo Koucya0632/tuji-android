@@ -242,10 +242,44 @@ interface Endpoint {
         )
     }
 
+    /**
+     * One collection, opened.
+     *
+     * **Fresh with optional auth, not public-cached.** The payload's `access`
+     * is about the reader — saved, unlocked, how much is already in their
+     * queue — and an anonymous cached request answered it for nobody: a user
+     * who had saved a collection opened it and found it locked. iOS's policy
+     * for the same route.
+     */
     data class AtlasCollection(val slug: String) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/atlas/public/collections/$slug",
-            policy = EndpointPolicy.PublicCached,
+            policy = EndpointPolicy.PublicFreshOptionalAuth,
+        )
+    }
+
+    /** The collections this account saved, scoped like the feed to one learning language. */
+    data class AtlasSavedCollections(val lang: String, val limit: Int) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections/saved",
+            query = listOf("lang" to lang, "limit" to limit.toString()),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 收藏 a collection: GET reads the state, POST saves, DELETE unsaves. */
+    data class AtlasCollectionSave(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections/$slug/save",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 全部加入學習 — every not-yet-studied item of a saved collection. */
+    data class AtlasCollectionLearn(val slug: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/collections/$slug/learn",
+            policy = EndpointPolicy.PrivateFresh,
         )
     }
 
