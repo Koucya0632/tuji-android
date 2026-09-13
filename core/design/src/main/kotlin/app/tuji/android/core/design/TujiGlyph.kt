@@ -297,6 +297,31 @@ object TujiGlyph {
         }
     }
 
+    /**
+     * 顯示／隱藏密碼. An outlined eye with a solid pupil; [crossed] draws the
+     * slash that means "hidden" — the state the button will switch *to* is the
+     * one the icon shows, as iOS's eye / eye.slash pair does.
+     */
+    @Composable
+    fun Eye(crossed: Boolean, size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.09f
+            val lens = Path().apply {
+                moveTo(w * 0.06f, h * 0.5f)
+                quadraticTo(w * 0.5f, h * 0.02f, w * 0.94f, h * 0.5f)
+                quadraticTo(w * 0.5f, h * 0.98f, w * 0.06f, h * 0.5f)
+                close()
+            }
+            drawPath(lens, tint, style = Stroke(width = stroke, join = StrokeJoin.Round))
+            drawCircle(tint, radius = w * 0.14f, center = Offset(w * 0.5f, h * 0.5f))
+            if (crossed) {
+                drawLine(tint, Offset(w * 0.14f, h * 0.12f), Offset(w * 0.86f, h * 0.88f), stroke, cap = StrokeCap.Round)
+            }
+        }
+    }
+
     /** 搜尋. A lens and its handle. */
     @Composable
     fun Search(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

@@ -35,12 +35,15 @@
     <string name="auth_password_min">至少 8 個字元</string>
     <string name="auth_password_short">還差 %1$d 個字元</string>
     <string name="auth_password_charset">密碼只能使用英文、數字或符號</string>
+    <string name="auth_password_show">顯示密碼</string>
+    <string name="auth_password_hide">隱藏密碼</string>
     <string name="auth_creating">建立中...</string>
     <string name="auth_signing_in">登入中...</string>
     <string name="auth_have_account">已有帳號？</string>
     <string name="auth_no_account">沒有帳號？</string>
     <string name="auth_confirmation_sent">確認信已寄出</string>
     <string name="auth_confirmation_detail">請開信箱點擊驗證連結，完成後再用這組 Email 和密碼登入。</string>
+    <string name="auth_go_sign_in">前往登入</string>
     <string name="auth_back">返回</string>
     <string name="auth_error_invalid_credentials">Email 或密碼錯誤</string>
     <string name="auth_error_email_taken">此 Email 已註冊，請改用登入</string>

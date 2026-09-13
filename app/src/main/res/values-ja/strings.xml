@@ -35,12 +35,15 @@
     <string name="auth_password_min">8文字以上</string>
     <string name="auth_password_short">あと%1$d文字</string>
     <string name="auth_password_charset">パスワードは英数字と記号のみ使用できます</string>
+    <string name="auth_password_show">パスワードを表示</string>
+    <string name="auth_password_hide">パスワードを隠す</string>
     <string name="auth_creating">作成中...</string>
     <string name="auth_signing_in">ログイン中...</string>
     <string name="auth_have_account">アカウントをお持ちですか？</string>
     <string name="auth_no_account">アカウントがない方は</string>
     <string name="auth_confirmation_sent">確認メールを送信しました</string>
     <string name="auth_confirmation_detail">メール内の確認リンクをタップしてから、このメールアドレスとパスワードでログインしてください。</string>
+    <string name="auth_go_sign_in">ログインへ</string>
     <string name="auth_back">戻る</string>
     <string name="auth_error_invalid_credentials">メールアドレスまたはパスワードが違います</string>
     <string name="auth_error_email_taken">このメールアドレスは登録済みです。ログインしてください</string>
