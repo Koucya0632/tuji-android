@@ -259,6 +259,29 @@ object TujiGlyph {
         }
     }
 
+    /**
+     * 連勝. A flame — a teardrop leaning its tip a little off centre, filled,
+     * so it reads at 12dp where an outlined one turns into a smudge.
+     */
+    @Composable
+    fun Flame(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val flame = Path().apply {
+                moveTo(w * 0.54f, h * 0.04f)
+                cubicTo(w * 0.60f, h * 0.24f, w * 0.86f, h * 0.38f, w * 0.86f, h * 0.62f)
+                cubicTo(w * 0.86f, h * 0.83f, w * 0.70f, h * 0.96f, w * 0.50f, h * 0.96f)
+                cubicTo(w * 0.30f, h * 0.96f, w * 0.14f, h * 0.83f, w * 0.14f, h * 0.63f)
+                cubicTo(w * 0.14f, h * 0.44f, w * 0.30f, h * 0.36f, w * 0.38f, h * 0.22f)
+                cubicTo(w * 0.42f, h * 0.30f, w * 0.44f, h * 0.36f, w * 0.48f, h * 0.40f)
+                cubicTo(w * 0.52f, h * 0.30f, w * 0.54f, h * 0.18f, w * 0.54f, h * 0.04f)
+                close()
+            }
+            drawPath(flame, tint)
+        }
+    }
+
     /** 搜尋. A lens and its handle. */
     @Composable
     fun Search(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

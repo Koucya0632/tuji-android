@@ -307,65 +307,6 @@ fun AtlasThemesScreen(
     }
 }
 
-@Composable
-private fun ThemeTile(
-    shelf: CategoryShelf.Shelf,
-    status: ThemeStatus,
-    uiLang: String,
-    onClick: () -> Unit,
-) {
-    // The edge carries the claim, so a finished theme is legible in a grid
-    // without reading any of them: 墨 for 全精通, 積累 for 完成, paper otherwise.
-    val edge = when (status) {
-        ThemeStatus.Mastered -> TujiColor.Ink
-        ThemeStatus.Completed -> TujiColor.Accumulation
-        ThemeStatus.None -> TujiColor.Paper3
-    }
-    Box {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .background(TujiColor.Paper)
-            .border(if (status == ThemeStatus.None) 1.dp else 2.dp, edge)
-            .tujiClickable(onClick = onClick)
-            .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S3),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        Text(
-            CategoryShelf.title(shelf.category, uiLang),
-            style = TujiType.bodySmStrong,
-            color = TujiColor.Ink,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            stringResource(R.string.atlas_count, shelf.count),
-            style = TujiType.label,
-            color = TujiColor.Ink3,
-        )
-    }
-    if (status != ThemeStatus.None) {
-        Text(
-            stringResource(
-                if (status == ThemeStatus.Mastered) {
-                    R.string.theme_mastered
-                } else {
-                    R.string.theme_completed
-                },
-            ),
-            style = TujiType.label,
-            color = if (status == ThemeStatus.Mastered) TujiColor.Current else TujiColor.Paper,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(5.dp)
-                .background(edge)
-                .padding(horizontal = TujiSpace.S1, vertical = 2.dp),
-        )
-    }
-    }
-}
-
 /** The five-segment scale, with its copy resolved. */
 @Composable
 private fun MasteryScale(score: Int?) {

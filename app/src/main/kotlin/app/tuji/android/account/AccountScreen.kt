@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import app.tuji.android.core.study.MasteryDistribution
 import app.tuji.android.core.study.CategoryStat
-import app.tuji.android.core.model.StudyStats
 import app.tuji.android.core.model.Category
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
@@ -29,33 +28,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import app.tuji.android.R
-import app.tuji.android.core.billing.PurchaseGate
-import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextOverflow
+import app.tuji.android.core.design.ProfileAvatar
+import app.tuji.android.core.design.TujiStatusEdgeLabel
+import app.tuji.android.core.model.UserMe
+import app.tuji.android.core.study.CompletionReadout
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.model.LearningDirection
 
 /**
- * 我的 — the account, the plan, and the settings that exist yet.
+ * 我的 — who you are (lightest), then what you have built up.
  *
- * Deliberately short. Everything on it is either a fact the server sent or a
- * control that works; a settings list with three rows that do nothing is how a
- * screen stops being read.
+ * iOS's order: an identity *row*, not a hero — a big centred name was the app
+ * telling you about yourself — and then the progress that is the point of the
+ * tab. The plan card that used to sit between them is gone with its
+ * developer's voice; 方案 is a label on the row, and the paywall it opens on
+ * iOS arrives with P5.
  */
 @Composable
 fun AccountScreen(
     state: AccountViewModel.State,
-    direction: LearningDirection,
-    /** The day's counts — the same numbers 今日 prints, from the same store. */
-    stats: StudyStats?,
+    isGuest: Boolean,
+    completion: CompletionReadout,
     progress: ProgressStore.Snapshot,
     spread: MasteryDistribution,
     masteryLoaded: Boolean,
     categories: List<Category>,
     bottomPadding: androidx.compose.ui.unit.Dp,
-    onOpenPaywall: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     Column(
@@ -81,27 +82,13 @@ fun AccountScreen(
             }
         }
 
-        state.me?.let { me ->
-            Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-                Text(me.displayName, style = TujiType.h2, color = TujiColor.Ink)
-                // The UID under the name: it is the id that reports, blocks and
-                // support requests actually carry, and a nickname can change.
-                me.username?.let {
-                    Text(it, style = TujiType.monoLabel, color = TujiColor.Ink3)
-                }
-                me.email?.let {
-                    Text(it, style = TujiType.bodySm, color = TujiColor.Ink3)
-                }
-            }
-        }
-
-        PlanCard(state = state, onOpenPaywall = onOpenPaywall)
+        IdentityRow(me = state.me, isGuest = isGuest, isPro = state.entitlement?.isPro == true)
 
         // 我的 is no longer a name and a plan — it *is* your progress. The
         // order is width (how far you have come) → depth (how well) → habit
         // (whether you keep showing up) → detail (where exactly).
         Spacer(Modifier.height(TujiSpace.S2))
-        CompletionCard(stats)
+        CompletionCard(completion)
         MasterySection(spread = spread, loaded = masteryLoaded)
         StreakRow(
             current = progress.streak?.current ?: 0,
@@ -116,106 +103,45 @@ fun AccountScreen(
                 )
             },
         )
-        Spacer(Modifier.height(TujiSpace.S2))
-
-
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
 
+/**
+ * Avatar, name, UID, plan. No email: it is the one fact here that is private,
+ * on the one tab a user hands their phone to someone else to show off.
+ */
 @Composable
-private fun PlanCard(state: AccountViewModel.State, onOpenPaywall: () -> Unit) {
-    val entitlement = state.entitlement
-    Column(
+private fun IdentityRow(me: UserMe?, isGuest: Boolean, isPro: Boolean) {
+    val name = if (isGuest) stringResource(R.string.me_guest_name) else me?.displayName ?: stringResource(R.string.me_guest_name)
+    // The UID, not the nickname: it is what reports, blocks and support
+    // requests carry. The email's local part only for an account whose UID has
+    // not mirrored yet.
+    val handle = when {
+        isGuest -> "guest"
+        else -> me?.username?.takeIf { it.isNotBlank() } ?: me?.email?.substringBefore('@')
+    }
+    val tier = if (isPro) "Pro" else "Free"
+    Row(
         Modifier
             .fillMaxWidth()
-            .background(TujiColor.Paper2)
-            .padding(TujiSpace.S3),
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            .clearAndSetSemantics { contentDescription = "$name, $tier" },
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            stringResource(
-                if (entitlement?.isPro == true) R.string.me_plan_pro else R.string.me_plan_free,
-            ),
-            style = TujiType.h3,
-            color = TujiColor.Ink,
-        )
-        entitlement?.subscriptionExpiresAt?.let {
-            Text(
-                stringResource(R.string.me_expires, it.take(10)),
-                style = TujiType.bodySm,
-                color = TujiColor.Ink3,
-            )
+        ProfileAvatar(avatar = if (isGuest) null else me?.avatar, size = 48.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(name, style = TujiType.h3, color = TujiColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            handle?.let {
+                Text(
+                    stringResource(R.string.community_author_uid, it),
+                    style = TujiType.monoLabel,
+                    color = TujiColor.Ink3,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        entitlement?.let {
-            Text(
-                stringResource(
-                    R.string.me_usage_slots,
-                    it.usage.atlasSlots, it.atlasSlotsLimit,
-                ),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-            )
-            Text(
-                stringResource(
-                    R.string.me_usage_saved,
-                    it.usage.savedItems, it.savedItemsLimit,
-                ),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-            )
-        }
-
-        // Only offered when there is something to sell *and* a way to sell it.
-        // The verdict is null until the entitlement lands, and nothing is
-        // claimed before then.
-        when (state.purchase) {
-            PurchaseGate.Verdict.Allowed ->
-                if (state.billingAvailable) {
-                    TujiButton(
-                        text = stringResource(R.string.paywall_cta),
-                        onClick = onOpenPaywall,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    // Said, not greyed. A disabled button invites a tap that
-                    // teaches nothing; a sentence says why and what changes it.
-                    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-                        Text(
-                            stringResource(R.string.paywall_unavailable),
-                            style = TujiType.bodySmStrong,
-                            color = TujiColor.Ink2,
-                        )
-                        Text(
-                            stringResource(R.string.paywall_unavailable_why),
-                            style = TujiType.bodySm,
-                            color = TujiColor.Ink3,
-                        )
-                    }
-                }
-
-            PurchaseGate.Verdict.AlreadySubscribed -> Text(
-                stringResource(R.string.paywall_already),
-                style = TujiType.bodySm,
-                color = TujiColor.Accumulation,
-            )
-
-            is PurchaseGate.Verdict.ManagedElsewhere -> Text(
-                elsewhereMessage((state.purchase as PurchaseGate.Verdict.ManagedElsewhere).source),
-                style = TujiType.bodySm,
-                color = TujiColor.Ink2,
-            )
-
-            null -> Unit
-        }
+        TujiStatusEdgeLabel(text = tier, edge = if (isPro) TujiColor.Accumulation else TujiColor.Ink3)
     }
 }
-
-/** Where to manage an existing subscription — see ADR-0001. */
-@Composable
-private fun elsewhereMessage(source: String): String =
-    if (source == PurchaseGate.APP_STORE) {
-        stringResource(R.string.paywall_elsewhere_appstore)
-    } else {
-        stringResource(R.string.paywall_elsewhere_other, source)
-    }

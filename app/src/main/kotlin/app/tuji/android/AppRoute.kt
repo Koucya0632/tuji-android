@@ -31,6 +31,9 @@ sealed interface AppRoute {
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
+    /** 學習主題, reached from 設定 and from 今日's theme strip. */
+    data object StudyThemes : AppRoute
+
     /** The index of every theme, reached from 圖鑑's count row. */
     data object Themes : AppRoute
 

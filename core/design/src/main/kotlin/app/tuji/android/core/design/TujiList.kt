@@ -188,3 +188,21 @@ fun TujiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
         if (checked) Text("✓", style = TujiType.bodySmStrong, color = TujiColor.Paper)
     }
 }
+
+/**
+ * A short state word on 紙2 with a 3dp colour edge on its leading side — iOS's
+ * `TujiStatusEdgeLabel`. The edge carries the meaning (積累 for Pro, 墨3 for
+ * Free), so the word itself can stay in quiet ink.
+ */
+@Composable
+fun TujiStatusEdgeLabel(text: String, edge: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    Row(modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(width = TujiBorder.Bw3, height = 24.dp).background(edge))
+        Box(
+            Modifier.height(24.dp).background(TujiColor.Paper2).padding(horizontal = TujiSpace.S2),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text, style = TujiType.label, color = TujiColor.Ink2, maxLines = 1)
+        }
+    }
+}
