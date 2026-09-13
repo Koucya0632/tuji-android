@@ -35,12 +35,15 @@
     <string name="auth_password_min">At least 8 characters</string>
     <string name="auth_password_short">%1$d more characters needed</string>
     <string name="auth_password_charset">Passwords may only use letters, numbers, or symbols</string>
+    <string name="auth_password_show">Show password</string>
+    <string name="auth_password_hide">Hide password</string>
     <string name="auth_creating">Creating...</string>
     <string name="auth_signing_in">Signing in...</string>
     <string name="auth_have_account">Already have an account?</string>
     <string name="auth_no_account">No account?</string>
     <string name="auth_confirmation_sent">Confirmation email sent</string>
     <string name="auth_confirmation_detail">Tap the verification link in your inbox, then sign in with this email and password.</string>
+    <string name="auth_go_sign_in">Go to sign in</string>
     <string name="auth_back">Back</string>
     <string name="auth_error_invalid_credentials">Incorrect email or password</string>
     <string name="auth_error_email_taken">This email is already registered — sign in instead</string>
