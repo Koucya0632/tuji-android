@@ -37,6 +37,19 @@ class SettingsRulesTest {
         assertEquals(listOf("a", "c"), out)
     }
 
+    @Test fun `a goal that is one of the choices lists the choices`() {
+        assertEquals(SettingsRules.DAILY_GOALS, SettingsRules.dailyGoalOptions(10))
+    }
+
+    /** A 12 set by the old stepper keeps a ticked row instead of opening a list with nothing ticked. */
+    @Test fun `a goal that is not one of the choices gets a row of its own`() {
+        assertEquals(listOf(5, 10, 12, 15, 20, 30, 50), SettingsRules.dailyGoalOptions(12))
+    }
+
+    @Test fun `a stored selection has no repeats and one order`() {
+        assertEquals(listOf("bathroom", "kitchen"), SettingsRules.selection(listOf("kitchen", "bathroom", "kitchen")))
+    }
+
     /** A Japanese recording has one accent; the control would change nothing. */
     @Test fun `accent only applies while learning English`() {
         assertTrue(SettingsRules.accentApplies("zh-en"))

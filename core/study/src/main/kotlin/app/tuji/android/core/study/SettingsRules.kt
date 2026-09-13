@@ -14,10 +14,29 @@ object SettingsRules {
     const val DAILY_GOAL_MIN = 1
     const val DAILY_GOAL_MAX = 100
 
-    /** The step the picker moves in. Small enough to tune, big enough to reach 100. */
-    const val DAILY_GOAL_STEP = 1
+    /** The picker's choices — iOS's `SettingsOptions.dailyGoals`. */
+    val DAILY_GOALS: List<Int> = listOf(5, 10, 15, 20, 30, 50)
 
     fun clampDailyGoal(value: Int): Int = value.coerceIn(DAILY_GOAL_MIN, DAILY_GOAL_MAX)
+
+    /**
+     * The picker's rows for an account whose goal is [current].
+     *
+     * The stepper this picker replaces could set any number, so an account can
+     * hold a 12 that none of the six choices is. Offering the six alone would
+     * open a list with nothing ticked, which reads as the setting being lost;
+     * the goal the account actually has gets a row of its own until it is
+     * changed.
+     */
+    fun dailyGoalOptions(current: Int): List<Int> =
+        if (current in DAILY_GOALS) DAILY_GOALS else (DAILY_GOALS + clampDailyGoal(current)).sorted()
+
+    /**
+     * A whole selection, as it is stored: no repeats, sorted — iOS writes
+     * `ids.sorted()`, and two clients storing one set in two orders show up as
+     * a settings change nobody made.
+     */
+    fun selection(ids: Collection<String>): List<String> = ids.distinct().sorted()
 
     /**
      * Toggle one theme in the selection.

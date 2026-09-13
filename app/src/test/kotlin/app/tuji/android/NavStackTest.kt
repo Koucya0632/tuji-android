@@ -104,6 +104,12 @@ class NavStackTest {
         assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.PublicItem("saved-abc"))))
     }
 
+    /** Opened from 今日's strip it keeps the bar; opened from 設定 under 我 it does not. */
+    @Test fun `學習主題 follows the tab it was opened from`() {
+        assertTrue(TabShell.tabBarVisible(NavStack().push(AppRoute.StudyThemes)))
+        assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Me).push(AppRoute.Settings).push(AppRoute.StudyThemes)))
+    }
+
     @Test fun `物見 and 我 hand the window to whatever they open`() {
         assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Community).push(AppRoute.Collection("c"))))
         assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Community).push(AppRoute.Author("TJ1"))))

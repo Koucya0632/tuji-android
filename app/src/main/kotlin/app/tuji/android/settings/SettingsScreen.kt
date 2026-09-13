@@ -38,7 +38,6 @@ import app.tuji.android.core.design.TujiSettingRow
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.core.model.Category
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.core.model.UserSettings
@@ -56,14 +55,13 @@ import app.tuji.android.core.study.SettingsRules
 @Composable
 fun SettingsScreen(
     settings: UserSettings,
-    categories: List<Category>,
-    uiLang: String,
     busy: SettingsBusy,
     bottomPadding: Dp,
     onChange: ((UserSettings) -> UserSettings) -> Unit,
     onClearProgress: () -> Unit,
     onDeleteAccount: () -> Unit,
     onSignOut: () -> Unit,
+    onOpenStudyThemes: () -> Unit,
 ) {
     var picker by remember { mutableStateOf<Picker?>(null) }
     var confirm by remember { mutableStateOf<Confirm?>(null) }
@@ -86,31 +84,15 @@ fun SettingsScreen(
             TujiSettingRow(
                 label = stringResource(R.string.settings_daily_goal),
                 subtitle = stringResource(R.string.settings_daily_goal_why),
-                showsArrow = false,
-                trailing = {
-                    // The number lives *inside* the trailing slot, not in
-                    // `value`: passing both draws the stepper and drops the
-                    // count, which left the row asking the user to adjust a
-                    // quantity it never showed them.
-                    Text(
-                        stringResource(R.string.settings_goal_value, settings.dailyGoal),
-                        style = TujiType.body,
-                        color = TujiColor.Ink2,
-                    )
-                    Stepper(
-                        value = settings.dailyGoal,
-                        onChange = { next ->
-                            onChange { it.copy(dailyGoal = SettingsRules.clampDailyGoal(next)) }
-                        },
-                    )
-                },
+                value = stringResource(R.string.settings_goal_value, settings.dailyGoal),
+                onClick = { picker = Picker.DailyGoal },
             )
             TujiRowDivider()
             TujiSettingRow(
                 label = stringResource(R.string.settings_themes),
                 subtitle = stringResource(R.string.settings_themes_why),
-                value = themesLabel(settings.studyCategories, categories, uiLang),
-                onClick = { picker = Picker.Themes },
+                value = themesLabel(settings.studyCategories),
+                onClick = onOpenStudyThemes,
             )
             TujiRowDivider()
             TujiSettingRow(
@@ -222,16 +204,21 @@ fun SettingsScreen(
             onDismiss = { picker = null },
         )
 
-        // Multi-select, so it stays open: picking themes is several taps, and a
-        // sheet that closed after each one would have to be reopened five times.
-        Picker.Themes -> ThemeSheet(
-            selected = settings.studyCategories,
-            categories = categories,
-            uiLang = uiLang,
-            onToggle = { id ->
-                onChange { it.copy(studyCategories = SettingsRules.toggleCategory(it.studyCategories, id)) }
+        // A list of choices rather than the −／＋ it replaces (iOS's picker): a
+        // stepper by one takes forty-five taps to go from 5 to 50, and the
+        // goal is a pace, not a number anyone tunes by one.
+        Picker.DailyGoal -> OptionSheet(
+            title = stringResource(R.string.settings_daily_goal),
+            options = SettingsRules.dailyGoalOptions(settings.dailyGoal).map {
+                it.toString() to stringResource(R.string.settings_goal_value, it)
+            },
+            selected = settings.dailyGoal.toString(),
+            onPick = { value ->
+                onChange { it.copy(dailyGoal = SettingsRules.clampDailyGoal(value.toInt())) }
+                picker = null
             },
             onDismiss = { picker = null },
+            footer = stringResource(R.string.settings_goal_footer),
         )
 
         Picker.About -> AboutSheet(onDismiss = { picker = null })
@@ -293,46 +280,9 @@ fun SettingsScreen(
 /** Whether one of the two irreversible calls is in flight. */
 data class SettingsBusy(val clearing: Boolean = false, val deleting: Boolean = false)
 
-private enum class Picker { Direction, Language, Accent, Themes, About }
+private enum class Picker { Direction, Language, Accent, DailyGoal, About }
 
 private enum class Confirm { SignOut, Clear, DeleteFirst, DeleteSecond }
-
-/**
- * −／＋ either side of nothing.
- *
- * A stepper rather than a sheet of preset numbers: the goal is a small integer
- * the user tunes by one or two, and a list of 5 / 10 / 20 / 50 answers a
- * different question than "a bit more than yesterday".
- */
-@Composable
-private fun Stepper(value: Int, onChange: (Int) -> Unit) {
-    Row {
-        StepButton("−", enabled = value > SettingsRules.DAILY_GOAL_MIN) {
-            onChange(value - SettingsRules.DAILY_GOAL_STEP)
-        }
-        Spacer(Modifier.size(TujiSpace.S2))
-        StepButton("＋", enabled = value < SettingsRules.DAILY_GOAL_MAX) {
-            onChange(value + SettingsRules.DAILY_GOAL_STEP)
-        }
-    }
-}
-
-@Composable
-private fun StepButton(glyph: String, enabled: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(36.dp)
-            .background(if (enabled) TujiColor.Paper2 else TujiColor.Paper3)
-            .tujiClickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            glyph,
-            style = TujiType.h3,
-            color = if (enabled) TujiColor.Ink else TujiColor.Ink3,
-        )
-    }
-}
 
 @Composable
 private fun directionLabel(direction: LearningDirection): String = stringResource(
@@ -362,11 +312,7 @@ private fun accentLabel(accent: String): String =
  * the app does not actually have.
  */
 @Composable
-private fun themesLabel(
-    selected: List<String>,
-    categories: List<Category>,
-    uiLang: String,
-): String = if (selected.isEmpty()) {
+private fun themesLabel(selected: List<String>): String = if (selected.isEmpty()) {
     stringResource(R.string.settings_themes_all)
 } else {
     stringResource(R.string.settings_themes_count, selected.size)

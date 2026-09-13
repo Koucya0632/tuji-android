@@ -56,6 +56,11 @@ import app.tuji.android.core.study.TodayHeroHint
 import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.study.TodayNewBlock
 import app.tuji.android.core.study.TodaySubtitle
+import android.text.format.DateFormat
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import app.tuji.android.atlas.ThemeTile
+import app.tuji.android.core.study.CompletionReadout
+import app.tuji.android.core.study.ThemeStatus
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -82,10 +87,16 @@ fun TodayScreen(
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
     onCreateAccount: () -> Unit,
+    /** 主題進度, answered the way 我 answers 完成度. */
+    completion: CompletionReadout? = null,
+    /** 目前連勝, or 0 before the progress readout lands. */
+    streak: Int = 0,
+    /** The strip: the picked themes for a signed-in user, a preview for a guest. */
     shelves: List<CategoryShelf.Shelf> = emptyList(),
+    themeStatus: (String) -> ThemeStatus = { ThemeStatus.None },
     uiLang: String = "zh-Hant",
     onOpenShelf: (String) -> Unit = {},
-    onOpenAtlas: () -> Unit = {},
+    onOpenStudyThemes: () -> Unit = {},
 ) {
     val decisions = TodayDecisions(inputs)
 
@@ -95,22 +106,26 @@ fun TodayScreen(
             decisions = decisions,
             stats = inputs.stats,
             name = name,
+            streak = streak,
             onSearch = onSearch,
             modifier = Modifier.padding(horizontal = TujiSpace.S4),
         )
         Hero(
             decisions = decisions,
             inputs = inputs,
+            completion = completion,
             onReview = onReview,
             onLearnNew = onLearnNew,
             onCreateAccount = onCreateAccount,
         )
-        if (shelves.isNotEmpty()) {
-            Themes(
+        when {
+            completion?.showsThemePrompt == true -> ThemePrompt(onOpenStudyThemes)
+            shelves.isNotEmpty() -> Themes(
                 shelves = shelves,
+                themeStatus = themeStatus,
                 uiLang = uiLang,
                 onOpenShelf = onOpenShelf,
-                onOpenAtlas = onOpenAtlas,
+                onOpenStudyThemes = onOpenStudyThemes,
             )
         }
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
@@ -124,16 +139,18 @@ fun TodayScreen(
  * stops; scrolling says "there is more" and hands the vertical space back to
  * the ink block above it.
  *
- * The link is named for **where it goes**. iOS's used to say 「全部 →」, which
- * promises the whole catalogue and delivered a settings multi-select; here it
- * does open the whole catalogue, so it says 圖鑑.
+ * The link is named for **where it goes**: the strip shows the themes you
+ * picked, so the action beside it changes that pick. iOS's once said 「全部 →」,
+ * promising the whole catalogue and delivering a multi-select; browsing every
+ * theme is 主題's job, on 圖鑑.
  */
 @Composable
 private fun Themes(
     shelves: List<CategoryShelf.Shelf>,
+    themeStatus: (String) -> ThemeStatus,
     uiLang: String,
     onOpenShelf: (String) -> Unit,
-    onOpenAtlas: () -> Unit,
+    onOpenStudyThemes: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         Row(
@@ -146,15 +163,12 @@ private fun Themes(
                 color = TujiColor.Ink3,
             )
             Spacer(Modifier.weight(1f))
-            // Still 「圖鑑 →」, not iOS's 「學習主題 →」: that label names the
-            // theme picker, and this link opens 圖鑑. The words change when
-            // the picker becomes a page this can push.
             Text(
                 stringResource(R.string.today_themes_all),
                 style = TujiType.label,
                 color = TujiColor.Ink,
                 textDecoration = TextDecoration.Underline,
-                modifier = Modifier.tujiClickable(onClick = onOpenAtlas),
+                modifier = Modifier.tujiClickable(onClick = onOpenStudyThemes),
             )
         }
         LazyRow(
@@ -162,36 +176,49 @@ private fun Themes(
             horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
             items(shelves, key = { it.category.id }) { shelf ->
-                ThemeTile(shelf = shelf, uiLang = uiLang) { onOpenShelf(shelf.category.id) }
+                ThemeTile(
+                    shelf = shelf,
+                    status = themeStatus(shelf.category.id),
+                    uiLang = uiLang,
+                    onClick = { onOpenShelf(shelf.category.id) },
+                    modifier = Modifier.width(160.dp),
+                )
             }
         }
     }
 }
 
+/**
+ * Signed in, settings loaded, nothing picked. Not an empty strip — the strip
+ * and 學新字 both draw from the pick, so the one useful thing here is making it.
+ */
 @Composable
-private fun ThemeTile(shelf: CategoryShelf.Shelf, uiLang: String, onClick: () -> Unit) {
+private fun ThemePrompt(onOpenStudyThemes: () -> Unit) {
     Column(
-        Modifier
-            .width(112.dp)
-            .background(TujiColor.Paper)
-            .border(TujiBorder.Bw1, TujiColor.Paper3)
-            .tujiClickable(onClick = onClick)
-            .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S3),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        Modifier.padding(horizontal = TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
     ) {
-        Text(
-            CategoryShelf.title(shelf.category, uiLang),
-            style = TujiType.bodySmStrong,
-            color = TujiColor.Ink,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            stringResource(R.string.today_theme_words, shelf.count),
-            style = TujiType.label,
-            color = TujiColor.Ink3,
-        )
+        Text(stringResource(R.string.today_themes), style = TujiType.label, color = TujiColor.Ink3)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(TujiColor.Paper)
+                .border(TujiBorder.Bw1, TujiColor.Rule)
+                .padding(TujiSpace.S4),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        ) {
+            Text(stringResource(R.string.today_theme_prompt_title), style = TujiType.bodySmStrong, color = TujiColor.Ink)
+            Text(stringResource(R.string.today_theme_prompt_body), style = TujiType.label, color = TujiColor.Ink3)
+            Text(
+                stringResource(R.string.today_theme_prompt_cta),
+                style = TujiType.bodySmStrong,
+                color = TujiColor.Ink,
+                modifier = Modifier
+                    .background(TujiColor.Current)
+                    .tujiClickable(onClick = onOpenStudyThemes)
+                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
+            )
+        }
     }
 }
 
@@ -200,6 +227,7 @@ private fun Greeting(
     decisions: TodayDecisions,
     stats: StudyStats?,
     name: String?,
+    streak: Int,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -227,6 +255,8 @@ private fun Greeting(
             ) {
                 TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
             }
+            Spacer(Modifier.width(TujiSpace.S3))
+            StreakChip(streak)
         }
 
         // One string with the name inside it, so the whole greeting wraps as
@@ -274,9 +304,35 @@ private fun dateLabel(): String {
     val locale = remember(configuration) {
         ConfigurationCompat.getLocales(configuration)[0] ?: Locale.ROOT
     }
+    // A skeleton, not a pattern: "EEE, MMM d" is an English word order, and
+    // written out it gave a Chinese phone 「週日，9月 13」. The skeleton lets
+    // the locale place the parts — 「9月13日 週日」, 「Sun, Sep 13」 — the way
+    // iOS's `setLocalizedDateFormatFromTemplate("EEEMMMd")` does.
+    val pattern = remember(locale) { DateFormat.getBestDateTimePattern(locale, "EEEMMMd") }
     return LocalDate.now()
-        .format(DateTimeFormatter.ofPattern("EEE, MMM d", locale))
+        .format(DateTimeFormatter.ofPattern(pattern, locale))
         .uppercase(locale)
+}
+
+/**
+ * 連勝, beside 搜尋 on the date line. The flame is 積累 once there is a run and
+ * 墨3 at zero — a lit flame over a 0 would be congratulating nothing.
+ */
+@Composable
+private fun StreakChip(days: Int) {
+    val label = stringResource(R.string.today_streak, days)
+    Row(
+        Modifier
+            .background(TujiColor.Paper)
+            .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f))
+            .clearAndSetSemantics { contentDescription = label }
+            .padding(horizontal = TujiSpace.S3, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TujiGlyph.Flame(size = 12.dp, tint = if (days > 0) TujiColor.Accumulation else TujiColor.Ink3)
+        Text("$days", style = TujiType.bodySmStrong, color = TujiColor.Ink)
+    }
 }
 
 @Composable
@@ -290,6 +346,7 @@ private fun greetingPrefix(): Int = when (LocalTime.now().hour) {
 private fun Hero(
     decisions: TodayDecisions,
     inputs: TodayInputs,
+    completion: CompletionReadout?,
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
     onCreateAccount: () -> Unit,
@@ -309,7 +366,7 @@ private fun Hero(
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
             ) {
                 if (!inputs.isGuest) DailyGoal(decisions, inputs)
-                ThemeProgress(inputs.stats)
+                ThemeProgress(completion)
             }
 
             if (inputs.isGuest) {
@@ -404,14 +461,16 @@ private fun DailyGoal(decisions: TodayDecisions, inputs: TodayInputs) {
 }
 
 @Composable
-private fun ThemeProgress(stats: StudyStats?) {
-    val seen = stats?.seen ?: 0
-    val total = stats?.total ?: 0
+private fun ThemeProgress(completion: CompletionReadout?) {
+    // Not the study stats' seen / total: those count the whole dictionary
+    // whatever was picked, and 我 prints this same number from the readout.
+    val seen = completion?.seen ?: 0
+    val total = completion?.total ?: 0
     HeroMeter(
         label = stringResource(R.string.today_theme_progress),
         trailing = "$seen / $total",
         trailingColor = TujiColor.Paper.copy(alpha = 0.7f),
-        progress = if (total > 0) seen.toDouble() / total else 0.0,
+        progress = completion?.ratio ?: 0.0,
         // The pale step, not the deep teal: on ink the deep one reaches 3.04:1
         // and the pale one 13.58:1, and they mean the same thing.
         fill = TujiColor.AccumulationSoft,

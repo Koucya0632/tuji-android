@@ -65,6 +65,10 @@ import app.tuji.android.community.CommunityViewModel
 import app.tuji.android.community.PublicItemScreen
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.catalog.StudyThemes
+import app.tuji.android.core.study.CompletionReadout
+import app.tuji.android.core.study.ThemeStatus
+import app.tuji.android.settings.StudyThemesScreen
 import app.tuji.android.core.study.TodayInputs
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiNavBar
@@ -246,6 +250,40 @@ private fun SignedInScreens(
         app.cardsSourceStore.load(uiLang, direction, force = true)
     }
     val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
+    val session by app.auth.session.collectAsStateWithLifecycle()
+    val isGuest = session.state is AuthState.Guest
+    val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
+
+    // Every word the 學習主題 selection can reach. 自定義 and 物見 are themes
+    // with nothing in the catalogue — their words are the user's own and
+    // taken-in cards — so a strip, a theme page or a 完成度 built from the
+    // catalogue alone leaves both out while showing them ticked in 設定.
+    val studyWords = remember(catalog.words, personal.mine, personal.taken) {
+        StudyThemes.words(catalog.words, personal.mine, personal.taken)
+    }
+    val studyShelves = remember(catalog.categories, studyWords) {
+        CategoryShelf.shelves(catalog.categories, studyWords)
+    }
+    // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
+    // numbers for one account read as a server bug for a week.
+    val completion = remember(isGuest, settingsLoaded, settings.studyCategories, progress.categories, studyWords) {
+        CompletionReadout(
+            CompletionReadout.Inputs.from(
+                isGuest = isGuest,
+                settingsLoaded = settingsLoaded,
+                studyCategories = settings.studyCategories,
+                progress = progress.categories,
+                words = studyWords,
+            ),
+        )
+    }
+    val themeStatus: (String) -> ThemeStatus = { id ->
+        ThemeStatus.of(
+            wordIds = CategoryShelf.words(id, studyWords).map { it.id },
+            masteryScore = scores::score,
+            seenAndTotal = progress.seenAndTotal(id),
+        )
+    }
 
     // Bumped as a study flow closes. A signal here rather than a call at the
     // close site, because the fetch has to outlive the composable that asked
@@ -314,6 +352,13 @@ private fun SignedInScreens(
 
     var nav by remember { mutableStateOf(NavStack()) }
     var showSpike by remember { mutableStateOf(false) }
+
+    // A 已收進 card belongs to somebody else, and its page has an author, a
+    // 取消收藏 and a 檢舉 that the dictionary's entry has none of. The id says
+    // which — for 圖鑑's grid and for a theme page alike.
+    val openCard: (String) -> Unit = { id ->
+        nav = nav.push(CardsSourceRules.savedSlug(id)?.let { AppRoute.PublicItem(it) } ?: AppRoute.Word(id))
+    }
 
     // One saved-state slot per stack entry. Only the current entry is ever
     // composed, so without this every `rememberSaveable` below a route — which
@@ -396,7 +441,12 @@ private fun SignedInScreens(
     // Every return to 今日, not only at launch: a session that just wrote three
     // ratings has changed every number on that screen.
     LaunchedEffect(nav.current) {
-        if (nav.current == AppRoute.Today) today.refresh()
+        if (nav.current == AppRoute.Today) {
+            today.refresh()
+            // 主題進度 and the streak chip read it now, and both move without
+            // the user doing anything here — a session elsewhere, or midnight.
+            app.progressStore.load(direction)
+        }
         if (nav.current == AppRoute.Me) {
             account.refresh()
             // Unlike a score, the streak and the heatmap move on their own —
@@ -446,14 +496,20 @@ private fun SignedInScreens(
                     onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     onCreateAccount = { app.auth.exitGuestMode() },
-                    shelves = catalog.shelves,
-                    uiLang = uiLang,
-                    onOpenShelf = { id ->
-                        val shelf = catalog.shelves.first { it.category.id == id }
-                        nav = nav.select(AppRoute.Atlas)
-                            .push(AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
+                    completion = completion,
+                    streak = progress.streak?.current ?: 0,
+                    shelves = remember(studyShelves, settings.studyCategories, isGuest) {
+                        StudyThemes.todayShelves(studyShelves, settings.studyCategories, isGuest)
                     },
-                    onOpenAtlas = { nav = nav.select(AppRoute.Atlas) },
+                    themeStatus = themeStatus,
+                    uiLang = uiLang,
+                    // Pushed on 今天, as on iOS: the theme is a place you come
+                    // back from to the strip you left, not a trip to 圖鑑.
+                    onOpenShelf = { id ->
+                        val shelf = studyShelves.first { it.category.id == id }
+                        nav = nav.push(AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
+                    },
+                    onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
                 )
 
@@ -465,22 +521,11 @@ private fun SignedInScreens(
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
                     onOpenThemes = { nav = nav.push(AppRoute.Themes) },
-                    // A 已收進 tile belongs to somebody else, and its page has
-                    // an author, a 取消收藏 and a 檢舉 that the dictionary's
-                    // entry has none of. The id says which.
-                    onOpen = { id ->
-                        nav = nav.push(
-                            CardsSourceRules.savedSlug(id)
-                                ?.let { AppRoute.PublicItem(it) }
-                                ?: AppRoute.Word(id),
-                        )
-                    },
+                    onOpen = openCard,
                 )
 
                 AppRoute.Settings -> SettingsScreen(
                     settings = settings,
-                    categories = catalog.categories,
-                    uiLang = uiLang,
                     busy = settingsBusy,
                     bottomPadding = 0.dp,
                     onChange = { change -> app.settingsStore.update(change) },
@@ -509,6 +554,14 @@ private fun SignedInScreens(
                         }
                     },
                     onSignOut = { scope.launch { app.auth.signOut() } },
+                    onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
+                )
+
+                AppRoute.StudyThemes -> StudyThemesScreen(
+                    selected = settings.studyCategories,
+                    categories = catalog.categories,
+                    uiLang = uiLang,
+                    onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
                 )
 
                 AppRoute.Themes -> AtlasThemesScreen(
@@ -584,17 +637,14 @@ private fun SignedInScreens(
 
                 AppRoute.Me -> AccountScreen(
                     state = accountState,
-                    direction = direction,
-                    // The same counts 今日 prints, from the same store: two
-                    // screens showing different 完成度 for one account is the
-                    // kind of bug that reads as a server problem for a week.
-                    stats = todayInputs.stats,
+                    isGuest = isGuest,
+                    // The same readout 今日's 主題進度 prints.
+                    completion = completion,
                     progress = progress,
                     spread = remember(scores) { MasteryDistribution.of(scores.byId) },
                     masteryLoaded = scores.loaded,
                     categories = catalog.categories,
                     bottomPadding = 0.dp,
-                    onOpenPaywall = { /* M4：商店設好之前不會走到這裡 */ },
                     onOpenSettings = { nav = nav.push(AppRoute.Settings) },
                 )
 
@@ -609,13 +659,13 @@ private fun SignedInScreens(
 
                 is AppRoute.Shelf -> AtlasThemeScreen(
                     category = catalog.categories.firstOrNull { it.id == route.categoryId },
-                    words = CategoryShelf.words(route.categoryId, catalog.words),
+                    words = CategoryShelf.words(route.categoryId, studyWords),
                     scores = scores,
                     uiLang = uiLang,
                     topPadding = insets.calculateTopPadding(),
                     bottomPadding = 0.dp,
                     onBack = { nav = nav.pop() },
-                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                    onOpen = openCard,
                 )
 
                 is AppRoute.Word -> {
@@ -664,7 +714,7 @@ private fun SignedInScreens(
 /** Whether the shell draws a back bar over [route]. */
 private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     is AppRoute.Word, is AppRoute.PublicItem, is AppRoute.Author, is AppRoute.Collection,
-    AppRoute.Themes, AppRoute.Settings, AppRoute.Capture -> true
+    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture -> true
     else -> false
 }
 
@@ -677,10 +727,13 @@ private fun TodayColumn(
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
     onCreateAccount: () -> Unit,
+    completion: CompletionReadout,
+    streak: Int,
     shelves: List<CategoryShelf.Shelf>,
+    themeStatus: (String) -> ThemeStatus,
     uiLang: String,
     onOpenShelf: (String) -> Unit,
-    onOpenAtlas: () -> Unit,
+    onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
 ) {
     // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts can re-run
@@ -701,10 +754,13 @@ private fun TodayColumn(
             onLearnNew = onLearnNew,
             onSearch = onSearch,
             onCreateAccount = onCreateAccount,
+            completion = completion,
+            streak = streak,
             shelves = shelves,
+            themeStatus = themeStatus,
             uiLang = uiLang,
             onOpenShelf = onOpenShelf,
-            onOpenAtlas = onOpenAtlas,
+            onOpenStudyThemes = onOpenStudyThemes,
         )
     }
 }

@@ -31,7 +31,8 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.ground
 import app.tuji.android.core.model.HeatmapCell
-import app.tuji.android.core.model.StudyStats
+import app.tuji.android.core.study.CompletionReadout
+import app.tuji.android.core.study.CompletionScope
 import app.tuji.android.core.study.CategoryStat
 import app.tuji.android.core.study.HeatmapBand
 import app.tuji.android.core.study.MasteryDistribution
@@ -49,10 +50,11 @@ import androidx.compose.ui.res.stringResource
  * second dark slab would leave the page with two of them and no hierarchy.
  */
 @Composable
-fun CompletionCard(stats: StudyStats?) {
-    val seen = stats?.seen ?: 0
-    val total = stats?.total ?: 0
-    val percent = if (total > 0) (seen * 100) / total else 0
+fun CompletionCard(completion: CompletionReadout) {
+    // Labelled for what it counts. Scoped to the picked themes it is not the
+    // same number as a whole-catalogue one, and a card that said 圖鑑完成度 over
+    // a selection's count would be the bug this readout exists to end.
+    val scoped = completion.scope != CompletionScope.WholeDictionary
     Column(
         Modifier
             .fillMaxWidth()
@@ -61,18 +63,22 @@ fun CompletionCard(stats: StudyStats?) {
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
     ) {
         Text(
-            stringResource(R.string.me_completion),
+            stringResource(if (scoped) R.string.me_completion_selected else R.string.me_completion),
             style = TujiType.label,
             color = TujiColor.Paper.copy(alpha = 0.6f),
         )
-        Text("$percent%", style = TujiType.display, color = TujiColor.AccumulationSoft)
+        Text("${completion.percent}%", style = TujiType.display, color = TujiColor.AccumulationSoft)
         Text(
-            stringResource(R.string.me_completion_detail, seen, total),
+            stringResource(
+                if (scoped) R.string.me_completion_selected_detail else R.string.me_completion_detail,
+                completion.seen,
+                completion.total,
+            ),
             style = TujiType.bodySm,
             color = TujiColor.Paper.copy(alpha = 0.7f),
         )
         TujiProgressBar(
-            progress = if (total > 0) seen.toDouble() / total else 0.0,
+            progress = completion.ratio,
             track = TujiColor.Paper.copy(alpha = 0.15f),
             // The pale step: on ink the deep teal reaches 3.04:1 and the pale
             // one 13.58:1, and they carry the same meaning.

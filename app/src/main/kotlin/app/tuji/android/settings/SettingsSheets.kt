@@ -13,22 +13,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
-import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiBorder
-import app.tuji.android.core.design.TujiCheckbox
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSettingRow
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.core.model.Category
 
 /**
  * The bottom sheet every picker on this screen uses.
@@ -38,37 +41,65 @@ import app.tuji.android.core.model.Category
  * Material's signature in a system whose every surface is a square on paper.
  * What survives is the part that matters — a scrim that dismisses, and content
  * that never grows past half the screen.
+ *
+ * **A window of its own**, for the reason `TujiPrompt` is one: drawn inside the
+ * page it covered only the page, so the shell's back arrow above the scrim
+ * stayed live and system back popped 設定 out from under an open sheet.
  */
 @Composable
-private fun Sheet(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TujiColor.Scrim)
-            .tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
+private fun Sheet(
+    title: String,
+    onDismiss: () -> Unit,
+    footer: String? = null,
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        Column(
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect {
+            window?.setDimAmount(0f)
+            window?.setWindowAnimations(0)
+        }
+        Box(
             Modifier
-                .fillMaxWidth()
-                .heightIn(max = 520.dp)
-                .background(TujiColor.Paper)
-                // The 3dp top edge is a selection indicator, which is the one
-                // thing that weight means in this system.
-                .padding(top = TujiBorder.Bw3)
-                // Swallows taps so a tap on the sheet itself does not dismiss
-                // it through the scrim underneath.
-                .tujiClickable {},
+                .fillMaxSize()
+                .background(TujiColor.Scrim)
+                .tujiClickable(onClick = onDismiss),
+            contentAlignment = Alignment.BottomCenter,
         ) {
-            Text(
-                title,
-                style = TujiType.h2,
-                color = TujiColor.Ink,
-                modifier = Modifier.padding(TujiSpace.S4),
-            )
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                content()
-                Spacer(Modifier.height(TujiSpace.S6))
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 520.dp)
+                    .background(TujiColor.Paper)
+                    // The 3dp top edge is a selection indicator, which is the one
+                    // thing that weight means in this system.
+                    .padding(top = TujiBorder.Bw3)
+                    // Swallows taps so a tap on the sheet itself does not dismiss
+                    // it through the scrim underneath.
+                    .tujiClickable {}
+                    .navigationBarsPadding(),
+            ) {
+                Text(
+                    title,
+                    style = TujiType.h2,
+                    color = TujiColor.Ink,
+                    modifier = Modifier.padding(TujiSpace.S4),
+                )
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    content()
+                    footer?.let {
+                        Text(
+                            it,
+                            style = TujiType.label,
+                            color = TujiColor.Ink3,
+                            modifier = Modifier.padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
+                        )
+                    }
+                    Spacer(Modifier.height(TujiSpace.S6))
+                }
             }
         }
     }
@@ -82,8 +113,9 @@ fun OptionSheet(
     selected: String,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,
+    footer: String? = null,
 ) {
-    Sheet(title = title, onDismiss = onDismiss) {
+    Sheet(title = title, onDismiss = onDismiss, footer = footer) {
         options.forEachIndexed { index, (value, label) ->
             if (index > 0) TujiRowDivider()
             TujiSettingRow(
@@ -96,39 +128,6 @@ fun OptionSheet(
                     if (value == selected) {
                         Text("✓", style = TujiType.h3, color = TujiColor.Ink)
                     }
-                },
-            )
-        }
-    }
-}
-
-/**
- * The themes to study. **Stays open** — picking themes is several taps, and a
- * sheet that closed after each one would have to be reopened five times.
- */
-@Composable
-fun ThemeSheet(
-    selected: List<String>,
-    categories: List<Category>,
-    uiLang: String,
-    onToggle: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    Sheet(title = stringResource(R.string.settings_themes), onDismiss = onDismiss) {
-        Text(
-            stringResource(R.string.settings_themes_all_hint),
-            style = TujiType.bodySm,
-            color = TujiColor.Ink3,
-            modifier = Modifier.padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
-        )
-        categories.forEachIndexed { index, category ->
-            if (index > 0) TujiRowDivider()
-            TujiSettingRow(
-                label = CategoryShelf.title(category, uiLang),
-                showsArrow = false,
-                onClick = { onToggle(category.id) },
-                trailing = {
-                    TujiCheckbox(category.id in selected) { onToggle(category.id) }
                 },
             )
         }
