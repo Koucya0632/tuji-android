@@ -48,6 +48,8 @@ data class WordDetail(
     val relations: List<WordRelation> = emptyList(),
     val tags: List<String> = emptyList(),
     val status: String? = null,
+    /** A 物見 publisher's own note. Only public items carry one. */
+    val note: String? = null,
 ) : Headworded {
     override val headwordPronunciation: String? get() = pronunciation
 }

@@ -46,8 +46,9 @@ data class AtlasPublicFeed(val items: List<AtlasPublicItem> = emptyList())
 /**
  * One published word in full.
  *
- * [learningWord] is the same shape a catalogue entry has, because that is what
- * saving it produces: a card in the saver's own 圖鑑 with its own SRS history.
+ * [learningWord] is the **same [WordDetail]** a dictionary entry or a 自製圖鑑
+ * card sends — the route builds it with the same function — so this page draws
+ * 字詞資料 with the word page's own sections rather than a second copy of them.
  */
 @Serializable
 data class AtlasPublicDetail(
@@ -59,33 +60,11 @@ data class AtlasPublicDetail(
     val imageUrl: String? = null,
     val author: AtlasAuthor? = null,
     val publishedAt: String? = null,
-    val learningWord: AtlasLearningWord? = null,
+    val learningWord: WordDetail? = null,
 )
 
 @Serializable
 data class AtlasPublicDetailResponse(val item: AtlasPublicDetail? = null)
-
-/** The card content of a 物見 word. A subset of what the route sends. */
-@Serializable
-data class AtlasLearningWord(
-    val id: String,
-    override val word: String,
-    val chinese: String? = null,
-    val imageUrl: String? = null,
-    val pronunciation: String? = null,
-    override val reading: String? = null,
-    override val targetLanguage: TargetLanguage? = null,
-    val chineseDefinition: String? = null,
-    val targetDefinition: String? = null,
-    val partOfSpeech: String? = null,
-    /** The publisher's own note. Absent on most items. */
-    val note: String? = null,
-    val tags: List<String> = emptyList(),
-) : Headworded {
-    override val headwordPronunciation: String? get() = pronunciation
-    /** 物見 words carry no `readingSegments`; the headword draws plain. */
-    override val readingSegments: List<FuriganaSegment>? get() = null
-}
 
 /** A named, published collection of 物見 items. */
 @Serializable

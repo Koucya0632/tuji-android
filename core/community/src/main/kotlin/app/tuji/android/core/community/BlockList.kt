@@ -43,6 +43,15 @@ value class BlockList(private val handles: Set<String>) {
 
     val size: Int get() = handles.size
 
+    /** The list with one more author on it — 封鎖, drawn before the server answers. */
+    fun adding(handle: String): BlockList {
+        val key = handle.trim().lowercase()
+        return if (key.isEmpty()) this else BlockList(handles + key)
+    }
+
+    /** The list without them — 解除封鎖, or a 封鎖 the server refused. */
+    fun removing(handle: String): BlockList = BlockList(handles - handle.trim().lowercase())
+
     companion object {
         /**
          * Nobody hidden.

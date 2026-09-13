@@ -56,9 +56,15 @@ fun interface CollectionLearning {
     suspend fun learnCollection(slug: String): AtlasCollectionLearnResult
 }
 
-/** Saving someone else's word into your own 圖鑑. */
+/**
+ * 加入學習 for one 物見 word: it goes into the reader's own 圖鑑 as a card with
+ * its own SRS history. All three verbs answer where it stands now and how many
+ * people are learning it, so the page never has to guess either.
+ */
 interface AtlasSaving {
-    suspend fun save(slug: String)
+    suspend fun saveState(slug: String): AtlasSaveState
+    suspend fun save(slug: String): AtlasSaveState
+    suspend fun unsave(slug: String): AtlasSaveState
 }
 
 /**
@@ -137,6 +143,8 @@ interface AccountReading {
 /** The 封鎖 list. Stored on the server so it follows the account. */
 interface BlockListing {
     suspend fun blockedHandles(): List<String>
+    suspend fun block(handle: String)
+    suspend fun unblock(handle: String)
 }
 
 @Serializable
@@ -153,6 +161,9 @@ private data class ReportBody(val reason: String, val detail: String? = null)
 
 @Serializable
 private data class Empty(val ok: Boolean? = null)
+
+@Serializable
+private data class BlockBody(val handle: String)
 
 class AtlasRepository(private val api: TujiApiClient) :
     AtlasReading, AtlasSaving, ReportSubmitting, BlockListing,
@@ -236,9 +247,14 @@ class AtlasRepository(private val api: TujiApiClient) :
     override suspend fun collection(slug: String): AtlasCollectionDetail =
         api.get(Endpoint.AtlasCollection(slug = slug))
 
-    override suspend fun save(slug: String) {
-        api.post<Empty>(Endpoint.AtlasSave(slug = slug), Empty())
-    }
+    override suspend fun saveState(slug: String): AtlasSaveState =
+        api.get(Endpoint.AtlasSave(slug = slug))
+
+    override suspend fun save(slug: String): AtlasSaveState =
+        api.post(Endpoint.AtlasSave(slug = slug), Empty())
+
+    override suspend fun unsave(slug: String): AtlasSaveState =
+        api.delete(Endpoint.AtlasSave(slug = slug))
 
     override suspend fun report(target: ReportTarget, reason: ReportReason, detail: String?) {
         val endpoint = when (target) {
@@ -251,4 +267,12 @@ class AtlasRepository(private val api: TujiApiClient) :
 
     override suspend fun blockedHandles(): List<String> =
         api.get<BlockedHandles>(Endpoint.Blocks).handles
+
+    override suspend fun block(handle: String) {
+        api.post<Empty>(Endpoint.Blocks, BlockBody(handle))
+    }
+
+    override suspend fun unblock(handle: String) {
+        api.delete<Empty>(Endpoint.Block(handle))
+    }
 }

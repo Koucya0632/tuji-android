@@ -160,25 +160,12 @@ fun WordDetailScreen(
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
 
-            Details(
+            WordDetailSections(
                 word = word,
                 uiLang = uiLang,
                 showChinese = showChinese,
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
-
-            val examples = word.examples
-                .filter { !it.target.isNullOrBlank() }
-                .take(WordDetailContent.MAX_EXAMPLES)
-            if (examples.isNotEmpty()) {
-                Column(
-                    Modifier.padding(horizontal = TujiSpace.S4),
-                    verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-                ) {
-                    SectionTitle(stringResource(R.string.word_examples_title))
-                    examples.forEach { ExampleCard(it, showChinese) }
-                }
-            }
 
             val related = word.relatedWords.mapNotNull(resolve)
             if (related.isNotEmpty()) {
@@ -268,7 +255,7 @@ private fun BarControl(label: String, onClick: () -> Unit, icon: @Composable () 
  * beside the block rather than inside it, so a long ruby word keeps the width.
  */
 @Composable
-private fun TitleRow(
+internal fun TitleRow(
     word: WordDetail,
     session: TargetLanguage,
     uiLang: String,
@@ -326,6 +313,30 @@ private fun TitleRow(
                 contentAlignment = Alignment.Center,
             ) {
                 TujiGlyph.Speaker(tint = TujiColor.Ink)
+            }
+        }
+    }
+}
+
+/**
+ * 字詞資料 and 例句 — iOS's `WordDetailSections`.
+ *
+ * Shared with 物見's word page, whose payload is the same [WordDetail]: a
+ * second copy of these cards is how two screens come to describe one word
+ * differently.
+ */
+@Composable
+internal fun WordDetailSections(word: WordDetail, uiLang: String, showChinese: Boolean, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S4)) {
+        Details(word = word, uiLang = uiLang, showChinese = showChinese)
+
+        val examples = word.examples
+            .filter { !it.target.isNullOrBlank() }
+            .take(WordDetailContent.MAX_EXAMPLES)
+        if (examples.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+                SectionTitle(stringResource(R.string.word_examples_title))
+                examples.forEach { ExampleCard(it, showChinese) }
             }
         }
     }

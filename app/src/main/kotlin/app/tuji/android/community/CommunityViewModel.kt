@@ -7,13 +7,10 @@ import app.tuji.android.core.community.BlockList
 import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.core.model.AtlasAuthor
-import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasPublicCollection
-import app.tuji.android.core.model.AtlasPublicDetail
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.network.AtlasReading
-import app.tuji.android.core.network.AtlasSaving
 import app.tuji.android.core.network.BlockListing
 import app.tuji.android.core.network.CollectionBookmarking
 import app.tuji.android.core.network.ReportSubmitting
@@ -30,24 +27,16 @@ import kotlinx.coroutines.launch
  * published in the language being learned, and 已收藏, the ones this account
  * bookmarked. Single words are reached through a collection or an author, not
  * listed loose on the tab.
+ *
+ * It also holds the 封鎖 list, because every 物見 screen reads the same one and
+ * a block made on a word's page has to empty the shelves here too.
  */
 class CommunityViewModel(
     private val atlas: AtlasReading,
-    private val saver: AtlasSaving,
     private val bookmarks: CollectionBookmarking,
     private val reporter: ReportSubmitting,
     private val blocks: BlockListing,
     private val direction: LearningDirection,
-    private val uiLang: String,
-    /**
-     * Called after a save actually lands.
-     *
-     * 收藏 writes to a shelf **another tab draws** — 圖鑑's 已收進 — and nothing
-     * over there can know it happened. Without this, someone saves a word, taps
-     * 圖鑑, and finds the shelf they just added to unchanged; the same shape as
-     * finishing a session and seeing the tiers you had before you started.
-     */
-    private val onSaved: () -> Unit = {},
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
@@ -78,13 +67,19 @@ class CommunityViewModel(
      */
     val me: StateFlow<AtlasAuthor?> = _me.asStateFlow()
 
+    private val _blocked = MutableStateFlow(BlockList.none)
+
     /**
      * Hidden authors.
      *
      * Held rather than re-fetched per screen: it is small, it changes rarely,
      * and every 物見 list has to apply the same one.
      */
-    private var blocked: BlockList = BlockList.none
+    val blocked: StateFlow<BlockList> = _blocked.asStateFlow()
+
+    /** The shelves as the server sent them, so a block or an unblock re-filters without a fetch. */
+    private var exploreRaw: List<AtlasPublicCollection> = emptyList()
+    private var savedRaw: List<AtlasPublicCollection> = emptyList()
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
 
@@ -93,14 +88,14 @@ class CommunityViewModel(
         get() = if (direction.targetLanguage == TargetLanguage.JA) "ja" else "en"
 
     /** The block list the other 物見 screens filter by. */
-    val blockList: BlockList get() = blocked
+    val blockList: BlockList get() = _blocked.value
 
     fun load() {
         work.launch {
             // The block list first, so nothing blocked is ever drawn and then
             // removed — a hidden author flashing on screen is the one thing
             // this feature exists to prevent.
-            blocked = runCatching { BlockList.of(blocks.blockedHandles()) }
+            _blocked.value = runCatching { BlockList.of(blocks.blockedHandles()) }
                 .getOrElse {
                     // Fail open: see BlockList.none. One failed request must not
                     // take 物見 away from everyone.
@@ -112,7 +107,8 @@ class CommunityViewModel(
                 _explore.value = Shelf(loading = false, failed = true)
                 return@launch
             }
-            _explore.value = Shelf(collections = blocked.filter(cols) { it.author }, loading = false)
+            exploreRaw = cols
+            _explore.value = Shelf(collections = blockList.filter(cols) { it.author }, loading = false)
         }
     }
 
@@ -124,7 +120,8 @@ class CommunityViewModel(
                 _saved.value = _saved.value.copy(loading = false, failed = true)
                 return@launch
             }
-            _saved.value = Shelf(collections = blocked.filter(cols) { it.author }, loading = false)
+            savedRaw = cols
+            _saved.value = Shelf(collections = blockList.filter(cols) { it.author }, loading = false)
         }
     }
 
@@ -138,73 +135,50 @@ class CommunityViewModel(
         }
     }
 
-    // One item
-
-    sealed interface ItemState {
-        data object Loading : ItemState
-        data object Failed : ItemState
-        data class Loaded(
-            val item: AtlasPublicDetail,
-            val saving: Boolean = false,
-            val saved: Boolean = false,
-        ) : ItemState
-    }
-
-    private val _item = MutableStateFlow<ItemState>(ItemState.Loading)
-    val item: StateFlow<ItemState> = _item.asStateFlow()
-
-    fun openItem(slug: String) {
-        _item.value = ItemState.Loading
-        work.launch {
-            runCatching { atlas.item(slug, uiLang) }
-                .onSuccess { d ->
-                    _item.value = if (d == null) ItemState.Failed else ItemState.Loaded(d)
-                }
-                .onFailure {
-                    Log.e(TAG, "物見 item failed: $slug", it)
-                    _item.value = ItemState.Failed
-                }
-        }
-    }
+    // 封鎖
 
     /**
-     * 收藏 — put someone else's word into your own 圖鑑.
+     * 封鎖 — optimistic: their collections leave the shelves at once, and only a
+     * server failure puts them back. Blocking is reversible, so an over-eager
+     * hide is cheap; a block that visibly does nothing is not.
      *
-     * The flag stays set on failure being *false*, not on optimism: a card the
-     * user believes they saved and did not is worse than a second tap.
+     * @param onBlocked runs once the server has it. The screen that asked is
+     *   showing work the reader just said they never want to see, so it leaves.
      */
-    fun save() {
-        val loaded = _item.value as? ItemState.Loaded ?: return
-        if (loaded.saving || loaded.saved) return
-        _item.value = loaded.copy(saving = true)
+    fun block(handle: String, onBlocked: () -> Unit = {}) {
+        _blocked.value = blockList.adding(handle)
+        refilter()
         work.launch {
-            val ok = runCatching { saver.save(loaded.item.slug) }
-                .onFailure { Log.e(TAG, "save failed: ${loaded.item.slug}", it) }
-                .isSuccess
-            (_item.value as? ItemState.Loaded)?.let {
-                _item.value = it.copy(saving = false, saved = ok)
-            }
-            if (ok) onSaved()
+            runCatching { blocks.block(handle) }
+                .onSuccess { onBlocked() }
+                .onFailure {
+                    Log.e(TAG, "block failed", it)
+                    _blocked.value = blockList.removing(handle)
+                    refilter()
+                }
         }
     }
 
-    // Author
-
-    private val _author = MutableStateFlow<AtlasAuthorPage?>(null)
-    val author: StateFlow<AtlasAuthorPage?> = _author.asStateFlow()
-
-    fun openAuthor(handle: String) {
-        _author.value = null
+    /** 解除封鎖 — optimistic the same way, restored if the server refuses. */
+    fun unblock(handle: String) {
+        val wasBlocked = blockList.hides(handle)
+        _blocked.value = blockList.removing(handle)
+        refilter()
         work.launch {
-            runCatching { atlas.author(handle) }
-                .onSuccess { page ->
-                    _author.value = page.copy(
-                        items = blocked.filter(page.items) { it.author },
-                        collections = blocked.filter(page.collections) { it.author },
-                    )
+            runCatching { blocks.unblock(handle) }
+                .onFailure {
+                    Log.e(TAG, "unblock failed", it)
+                    if (wasBlocked) {
+                        _blocked.value = blockList.adding(handle)
+                        refilter()
+                    }
                 }
-                .onFailure { Log.e(TAG, "author page failed: $handle", it) }
         }
+    }
+
+    private fun refilter() {
+        _explore.value = _explore.value.copy(collections = blockList.filter(exploreRaw) { it.author })
+        _saved.value = _saved.value.copy(collections = blockList.filter(savedRaw) { it.author })
     }
 
     // 檢舉
