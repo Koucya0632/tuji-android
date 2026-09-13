@@ -46,7 +46,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -88,8 +90,12 @@ fun AtlasSearchScreen(
     onCancel: () -> Unit,
     onOpen: (String) -> Unit,
 ) {
-    // Saveable, so coming back from a result finds the query still typed.
-    var typed by rememberSaveable { mutableStateOf("") }
+    // Saveable, so coming back from a result finds the query still typed. A
+    // TextFieldValue rather than a String so a picked recent query can put the
+    // cursor after itself; a String field keeps the old selection, which on an
+    // empty field is 0, and the next keystroke landed in front of the word.
+    var field by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    val typed = field.text
     val results by vm.results.collectAsStateWithLifecycle()
     val recent by recents.queries.collectAsStateWithLifecycle()
 
@@ -98,14 +104,15 @@ fun AtlasSearchScreen(
     // navigation bar is excluded because the shell already pads for it.
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.ime.exclude(WindowInsets.navigationBars))) {
         SearchBar(
-            value = typed,
+            value = field,
             placeholder = stringResource(
                 if (direction == LearningDirection.ZH_JA) R.string.search_placeholder_ja
                 else R.string.search_placeholder_en,
             ),
             onValueChange = {
-                typed = it
-                vm.query(it)
+                // A cursor move is not a new query.
+                if (it.text != field.text) vm.query(it.text)
+                field = it
             },
             onCancel = onCancel,
         )
@@ -125,7 +132,7 @@ fun AtlasSearchScreen(
             trimmed.isEmpty() -> RecentList(
                 queries = recent,
                 onPick = {
-                    typed = it
+                    field = TextFieldValue(it, selection = TextRange(it.length))
                     vm.queryNow(it)
                 },
                 onClear = recents::clear,
@@ -173,9 +180,9 @@ fun AtlasSearchScreen(
  */
 @Composable
 private fun SearchBar(
-    value: String,
+    value: TextFieldValue,
     placeholder: String,
-    onValueChange: (String) -> Unit,
+    onValueChange: (TextFieldValue) -> Unit,
     onCancel: () -> Unit,
 ) {
     val focus = remember { FocusRequester() }
@@ -214,14 +221,14 @@ private fun SearchBar(
                 modifier = Modifier.weight(1f).focusRequester(focus),
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
-                        if (value.isEmpty()) {
+                        if (value.text.isEmpty()) {
                             Text(placeholder, style = TujiType.body, color = TujiColor.Ink3, maxLines = 1)
                         }
                         inner()
                     }
                 },
             )
-            if (value.isNotEmpty()) {
+            if (value.text.isNotEmpty()) {
                 // A bare ✕, not a grey filled disc — that is the platform's own
                 // clear button, and it gives the field away as a system control.
                 val label = stringResource(R.string.search_clear)
@@ -229,7 +236,7 @@ private fun SearchBar(
                     Modifier
                         .size(44.dp)
                         .tujiClickable {
-                            onValueChange("")
+                            onValueChange(TextFieldValue())
                             focus.requestFocus()
                         }
                         .semantics { contentDescription = label },

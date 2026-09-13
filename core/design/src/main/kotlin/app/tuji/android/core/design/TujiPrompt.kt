@@ -1,6 +1,5 @@
 package app.tuji.android.core.design
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,10 +27,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 
 /** What a prompt is asking, which decides its cat and its top edge. */
 enum class TujiPromptStyle {
@@ -82,10 +86,37 @@ fun TujiPrompt(
     style: TujiPromptStyle = TujiPromptStyle.Confirmation,
     detail: String? = null,
 ) {
-    // Back is the cancel. Without this the shell's handler underneath would
-    // pop the screen out from under an open question.
-    BackHandler(onBack = onCancel)
+    // A window of its own, not a Box over the caller's content. Drawn inside
+    // the screen it covered only the screen: the shell's back arrow above it
+    // stayed live, and one tap there popped the page out from under an open
+    // question. The window also brings back (onDismissRequest) and a modal
+    // boundary for TalkBack with it.
+    Dialog(
+        onDismissRequest = onCancel,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        // The platform's dim and its window animation are both replaced by the
+        // scrim and the fade below, which follow the app's motion rules.
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect {
+            window?.setDimAmount(0f)
+            window?.setWindowAnimations(0)
+        }
+        PromptSurface(title, message, confirm, cancel, onConfirm, onCancel, style, detail)
+    }
+}
 
+@Composable
+private fun PromptSurface(
+    title: String,
+    message: String?,
+    confirm: String,
+    cancel: String?,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+    style: TujiPromptStyle,
+    detail: String?,
+) {
     val reduceMotion = rememberReduceMotion()
     val shown = remember { Animatable(if (reduceMotion) 1f else 0f) }
     LaunchedEffect(Unit) {
