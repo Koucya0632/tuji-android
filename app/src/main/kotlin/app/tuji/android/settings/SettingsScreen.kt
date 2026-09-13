@@ -246,7 +246,7 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_sign_out_title),
             message = stringResource(R.string.settings_sign_out_message),
             confirm = stringResource(R.string.me_sign_out),
-            cancel = stringResource(R.string.study_leave_cancel),
+            cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = null; onSignOut() },
             onCancel = { confirm = null },
         )
@@ -255,7 +255,7 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_clear_title),
             message = stringResource(R.string.settings_clear_footer),
             confirm = stringResource(R.string.settings_clear),
-            cancel = stringResource(R.string.study_leave_cancel),
+            cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = null; onClearProgress() },
             onCancel = { confirm = null },
         )
@@ -267,7 +267,7 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_delete_title),
             message = stringResource(R.string.settings_delete_message),
             confirm = stringResource(R.string.settings_delete_continue),
-            cancel = stringResource(R.string.study_leave_cancel),
+            cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = Confirm.DeleteSecond },
             onCancel = { confirm = null },
         )
@@ -276,7 +276,7 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_delete_last_title),
             message = stringResource(R.string.settings_delete_last_message),
             confirm = stringResource(R.string.settings_delete),
-            cancel = stringResource(R.string.study_leave_cancel),
+            cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = null; onDeleteAccount() },
             onCancel = { confirm = null },
         )

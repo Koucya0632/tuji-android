@@ -80,9 +80,10 @@
     <string name="new_done_title">学習が終わりました</string>
     <string name="new_done_count">%1$d 語を覚えました</string>
     <string name="new_start">新しい単語を5つ</string>
-    <string name="today_greeting_morning">%1$sさん、おはようございます</string>
-    <string name="today_greeting_afternoon">%1$sさん、こんにちは</string>
-    <string name="today_greeting_evening">%1$sさん、こんばんは</string>
+    <string name="today_greeting_morning">おはよう、%1$s。</string>
+    <string name="today_greeting_afternoon">こんにちは、%1$s。</string>
+    <string name="today_greeting_evening">こんばんは、%1$s。</string>
+    <string name="today_guest_name">探検家</string>
     <string name="today_sub_guest">ゲストモード · 図鑑を見て、また見たい単語にブックマークを</string>
     <string name="today_sub_unknown">今日は何を学びましょうか？</string>
     <string name="today_sub_review_due">今日は%1$d語の復習があります</string>
@@ -98,7 +99,6 @@
     <string name="today_goal_progress">%1$d / %2$d</string>
     <string name="today_goal_reached_badge">達成</string>
     <string name="today_seen">%1$d / %2$d 語</string>
-    <string name="debug_font_spike">フォント spike（debug）</string>
     <string name="atlas_title">図鑑</string>
     <string name="atlas_count">%1$d 語</string>
     <string name="atlas_search_hint">単語を探す</string>
@@ -223,8 +223,9 @@
     <string name="community_reason_copyright">著作権侵害</string>
     <string name="community_reason_wrong">内容が正しくない</string>
     <string name="community_reason_other">その他</string>
-    <string name="community_cancel">キャンセル</string>
+    <string name="cancel">キャンセル</string>
     <string name="community_author_published">%1$d 件公開</string>
+    <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">投稿者のメモ</string>
     <string name="community_collection_saved">このコレクションを保存しました</string>
     <string name="community_collection_learning">%1$d / %2$d 語を学習中</string>

@@ -80,9 +80,10 @@
     <string name="new_done_title">學完了</string>
     <string name="new_done_count">學會了 %1$d 個字</string>
     <string name="new_start">學 5 個新字</string>
-    <string name="today_greeting_morning">早安，%1$s</string>
-    <string name="today_greeting_afternoon">午安，%1$s</string>
-    <string name="today_greeting_evening">晚安，%1$s</string>
+    <string name="today_greeting_morning">早安，%1$s。</string>
+    <string name="today_greeting_afternoon">午安，%1$s。</string>
+    <string name="today_greeting_evening">晚安，%1$s。</string>
+    <string name="today_guest_name">探險者</string>
     <string name="today_sub_guest">訪客模式 · 先逛逛圖鑑，想再看的字加書籤</string>
     <string name="today_sub_unknown">今天想學點什麼呢？</string>
     <string name="today_sub_review_due">今天有 %1$d 個字要複習</string>
@@ -98,7 +99,6 @@
     <string name="today_goal_progress">%1$d / %2$d</string>
     <string name="today_goal_reached_badge">達成</string>
     <string name="today_seen">已學 %1$d / %2$d</string>
-    <string name="debug_font_spike">字型 spike（debug）</string>
     <string name="atlas_title">圖鑑</string>
     <string name="atlas_count">%1$d 個詞</string>
     <string name="atlas_search_hint">找一個詞</string>
@@ -223,8 +223,9 @@
     <string name="community_reason_copyright">侵犯版權</string>
     <string name="community_reason_wrong">內容有誤</string>
     <string name="community_reason_other">其他</string>
-    <string name="community_cancel">取消</string>
+    <string name="cancel">取消</string>
     <string name="community_author_published">發布 %1$d 個</string>
+    <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">發布者的筆記</string>
     <string name="community_collection_saved">已收藏這個合集</string>
     <string name="community_collection_learning">%1$d / %2$d 個已在學</string>

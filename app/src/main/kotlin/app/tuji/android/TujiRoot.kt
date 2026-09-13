@@ -39,10 +39,12 @@ import app.tuji.android.core.study.MasteryDistribution
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import app.tuji.android.atlas.AtlasSearchScreen
 import app.tuji.android.atlas.SearchViewModel
@@ -131,8 +133,13 @@ fun TujiRoot(app: TujiApplication) {
         is LaunchDestination.Setup -> SignedInShell(app, identity = null)
         is LaunchDestination.Main -> SignedInShell(
             app,
-            identity = (session.state as? AuthState.SignedIn)?.user?.let {
-                it.nickname ?: it.username ?: it.email
+            // iOS's order, blanks skipped, and the email's local part rather
+            // than the whole address: a greeting is not the place to print
+            // somebody's email on screen.
+            identity = (session.state as? AuthState.SignedIn)?.user?.let { user ->
+                user.nickname?.takeIf { it.isNotBlank() }
+                    ?: user.username?.takeIf { it.isNotBlank() }
+                    ?: user.email?.substringBefore('@')?.takeIf { it.isNotBlank() }
             },
         )
     }
@@ -722,7 +729,16 @@ private fun TodayColumn(
     onOpenAtlas: () -> Unit,
     onSpike: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts can re-run
+    // it, so the door stays in debug builds — as a long press on the page, not
+    // a line of text. A visible 「字型 spike（debug）」 under 今日 made every
+    // debug screenshot differ from iOS, and debug builds are what gets compared.
+    val spikeDoor = if (BuildConfig.DEBUG) {
+        Modifier.pointerInput(Unit) { detectTapGestures(onLongPress = { onSpike() }) }
+    } else {
+        Modifier
+    }
+    Column(Modifier.fillMaxSize().then(spikeDoor).verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
             name = identity,
@@ -736,15 +752,5 @@ private fun TodayColumn(
             onOpenShelf = onOpenShelf,
             onOpenAtlas = onOpenAtlas,
         )
-        if (BuildConfig.DEBUG) {
-            // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts
-            // can re-run it, so the door stays — off the release build.
-            Text(
-                stringResource(R.string.debug_font_spike),
-                style = TujiType.monoLabel,
-                color = TujiColor.Ink3,
-                modifier = Modifier.padding(TujiSpace.S4).tujiClickable(onClick = onSpike),
-            )
-        }
     }
 }

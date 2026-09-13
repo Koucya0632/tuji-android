@@ -68,7 +68,13 @@ fun AuthorScreen(
                     Text(author.name, style = TujiType.h2, color = TujiColor.Ink)
                     // The UID under the nickname: a nickname can change and be
                     // reused, and this is the id a report actually carries.
-                    Text(author.handle, style = TujiType.monoLabel, color = TujiColor.Ink3)
+                    // Labelled, as on iOS: an author with no nickname is titled
+                    // by the UID too, and two bare copies of it read as a bug.
+                    Text(
+                        stringResource(R.string.community_author_uid, author.handle),
+                        style = TujiType.monoLabel,
+                        color = TujiColor.Ink3,
+                    )
                     author.bio?.takeIf { it.isNotBlank() }?.let {
                         Text(it, style = TujiType.body, color = TujiColor.Ink2)
                     }
