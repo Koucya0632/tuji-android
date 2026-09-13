@@ -26,4 +26,13 @@ class StudyQuotasTest {
         assertEquals(0, StudyQuotas.computeNewLimit(goal = 10, due = 101))
         assertEquals(0, StudyQuotas.computeNewLimit(goal = 50, due = 500))
     }
+
+    /** The setting says 10; the session asked for a fixed 5 before this. */
+    @Test fun `the new-word queue follows the daily goal and the picked themes`() {
+        assertEquals(
+            StudyQuotas.NewQueue(limit = 10, categories = listOf("custom", "kitchen")),
+            StudyQuotas.newQueue(goal = 10, due = 3, categories = listOf("custom", "kitchen")),
+        )
+        assertEquals(7, StudyQuotas.newQueue(goal = 10, due = 21, categories = emptyList()).limit)
+    }
 }
