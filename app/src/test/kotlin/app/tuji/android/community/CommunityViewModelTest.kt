@@ -11,7 +11,6 @@ import app.tuji.android.core.model.AtlasPublicFeed
 import app.tuji.android.core.model.AtlasPublicItem
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.network.AtlasReading
-import app.tuji.android.core.network.AtlasSaving
 import app.tuji.android.core.network.BlockListing
 import app.tuji.android.core.network.CollectionBookmarking
 import app.tuji.android.core.model.AtlasSaveState
@@ -73,11 +72,20 @@ class CommunityViewModelTest {
         override suspend fun collection(slug: String) = collectionDetail
     }
 
-    private class Saver(val fail: Boolean = false) : AtlasSaving {
-        var calls = 0
-        override suspend fun save(slug: String) {
-            calls += 1
-            if (fail) throw IOException("nope")
+    private class Blocks(
+        val handles: List<String> = emptyList(),
+        val failList: Boolean = false,
+        val failWrites: Boolean = false,
+    ) : BlockListing {
+        val written = mutableListOf<String>()
+        override suspend fun blockedHandles() = if (failList) throw IOException("down") else handles
+        override suspend fun block(handle: String) {
+            if (failWrites) throw IOException("nope")
+            written += "block:$handle"
+        }
+        override suspend fun unblock(handle: String) {
+            if (failWrites) throw IOException("nope")
+            written += "unblock:$handle"
         }
     }
 
@@ -101,25 +109,18 @@ class CommunityViewModelTest {
 
     private fun vm(
         reader: AtlasReading = Reader(feedItems, feedCols),
-        saver: AtlasSaving = Saver(),
         bookmarks: CollectionBookmarking = SavedShelf(),
         reporter: ReportSubmitting = Reporter(),
         blocked: List<String> = emptyList(),
         blocksFail: Boolean = false,
+        blocks: BlockListing = Blocks(blocked, failList = blocksFail),
         direction: LearningDirection = LearningDirection.ZH_JA,
-        onSaved: () -> Unit = {},
     ) = CommunityViewModel(
         atlas = reader,
-        saver = saver,
         bookmarks = bookmarks,
-        onSaved = onSaved,
         reporter = reporter,
-        blocks = object : BlockListing {
-            override suspend fun blockedHandles() =
-                if (blocksFail) throw IOException("down") else blocked
-        },
+        blocks = blocks,
         direction = direction,
-        uiLang = "zh-Hant",
         scope = TestScope(dispatcher),
     )
 
@@ -168,75 +169,55 @@ class CommunityViewModelTest {
         assertEquals("en", en.langAsked)
     }
 
-    @Test fun `an author page is filtered by the same list`() = runTest(dispatcher) {
-        val page = AtlasAuthorPage(
-            author = AtlasAuthor(handle = "TJ2"),
-            items = feedItems,
-            collections = feedCols,
-        )
-        val vm = vm(reader = Reader(feedItems, feedCols, page = page), blocked = listOf("TJ1"))
+    /** Optimistic: a block that visibly does nothing is worse than an over-eager hide. */
+    @Test fun `blocking empties the shelves before the server answers`() = runTest(dispatcher) {
+        val blocks = Blocks()
+        val vm = vm(blocks = blocks, bookmarks = SavedShelf(feedCols))
         vm.load(); advanceUntilIdle()
-        vm.openAuthor("TJ2"); advanceUntilIdle()
-        assertEquals(listOf("b"), vm.author.value!!.items.map { it.slug })
-    }
+        vm.loadSaved(); advanceUntilIdle()
 
-    @Test fun `saving marks it saved`() = runTest(dispatcher) {
-        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
-        val saver = Saver()
-        val vm = vm(reader = Reader(detail = detail), saver = saver)
-        vm.openItem("a"); advanceUntilIdle()
-        vm.save(); advanceUntilIdle()
-        assertEquals(1, saver.calls)
-        assertTrue((vm.item.value as CommunityViewModel.ItemState.Loaded).saved)
-    }
+        var left = false
+        vm.block("tj1") { left = true }
+        assertEquals(listOf("c2"), vm.explore.value.collections.map { it.slug })
+        assertEquals(listOf("c2"), vm.saved.value.collections.map { it.slug })
+        assertTrue(vm.blocked.value.hides("TJ1"))
+        assertFalse("the screen leaves only once the server has it", left)
 
-    /**
-     * 收藏 lands on a shelf another tab draws. Without this call, the word is
-     * saved and 圖鑑's 已收進 goes on showing the shelf as it was.
-     */
-    @Test fun `a save tells whoever draws the other shelf`() = runTest(dispatcher) {
-        var told = 0
-        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
-        val vm = vm(reader = Reader(detail = detail), onSaved = { told++ })
-        vm.openItem("a"); advanceUntilIdle()
-        vm.save(); advanceUntilIdle()
-        assertEquals(1, told)
-    }
-
-    /** Nothing changed, so nothing to reload. */
-    @Test fun `a failed save tells nobody`() = runTest(dispatcher) {
-        var told = 0
-        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
-        val vm = vm(
-            reader = Reader(detail = detail),
-            saver = Saver(fail = true),
-            onSaved = { told++ },
-        )
-        vm.openItem("a"); advanceUntilIdle()
-        vm.save(); advanceUntilIdle()
-        assertEquals(0, told)
-    }
-
-    @Test fun `a failed save does not claim to have saved`() = runTest(dispatcher) {
-        // A card the user believes is in their 圖鑑 and is not is worse than
-        // asking them to tap again.
-        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
-        val vm = vm(reader = Reader(detail = detail), saver = Saver(fail = true))
-        vm.openItem("a"); advanceUntilIdle()
-        vm.save(); advanceUntilIdle()
-        val s = vm.item.value as CommunityViewModel.ItemState.Loaded
-        assertFalse(s.saved)
-        assertFalse(s.saving)
-    }
-
-    @Test fun `a second tap while saving does not send twice`() = runTest(dispatcher) {
-        val detail = AtlasPublicDetail(id = "a", slug = "a", lemma = "a")
-        val saver = Saver()
-        val vm = vm(reader = Reader(detail = detail), saver = saver)
-        vm.openItem("a"); advanceUntilIdle()
-        vm.save(); vm.save()
         advanceUntilIdle()
-        assertEquals(1, saver.calls)
+        assertEquals(listOf("block:tj1"), blocks.written)
+        assertTrue(left)
+    }
+
+    @Test fun `a refused block puts everything back and stays put`() = runTest(dispatcher) {
+        val vm = vm(blocks = Blocks(failWrites = true))
+        vm.load(); advanceUntilIdle()
+
+        var left = false
+        vm.block("TJ1") { left = true }
+        advanceUntilIdle()
+        assertFalse(vm.blocked.value.hides("TJ1"))
+        assertEquals(listOf("c1", "c2"), vm.explore.value.collections.map { it.slug })
+        assertFalse(left)
+    }
+
+    /** No refetch: the shelf as the server sent it is kept, so their collections come straight back. */
+    @Test fun `unblocking brings their collections back`() = runTest(dispatcher) {
+        val blocks = Blocks(handles = listOf("TJ1"))
+        val vm = vm(blocks = blocks)
+        vm.load(); advanceUntilIdle()
+        assertEquals(listOf("c2"), vm.explore.value.collections.map { it.slug })
+
+        vm.unblock("TJ1"); advanceUntilIdle()
+        assertEquals(listOf("c1", "c2"), vm.explore.value.collections.map { it.slug })
+        assertEquals(listOf("unblock:TJ1"), blocks.written)
+    }
+
+    @Test fun `a refused unblock keeps the author hidden`() = runTest(dispatcher) {
+        val vm = vm(blocks = Blocks(handles = listOf("TJ1"), failWrites = true))
+        vm.load(); advanceUntilIdle()
+        vm.unblock("TJ1"); advanceUntilIdle()
+        assertTrue(vm.blocked.value.hides("TJ1"))
+        assertEquals(listOf("c2"), vm.explore.value.collections.map { it.slug })
     }
 
     @Test fun `a report carries its target and reason`() = runTest(dispatcher) {
@@ -249,11 +230,5 @@ class CommunityViewModelTest {
         assertEquals("spam", reporter.sent[0].second.wire)
         assertEquals("廣告", reporter.sent[0].third)
         assertEquals(ReportTarget.Author("TJ9"), vm.reported.value)
-    }
-
-    @Test fun `a missing item is a failure, not an empty screen`() = runTest(dispatcher) {
-        val vm = vm(reader = Reader(detail = null))
-        vm.openItem("gone"); advanceUntilIdle()
-        assertTrue(vm.item.value is CommunityViewModel.ItemState.Failed)
     }
 }

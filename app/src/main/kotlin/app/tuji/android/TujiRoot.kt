@@ -65,6 +65,9 @@ import app.tuji.android.community.CommunityViewModel
 import app.tuji.android.community.CollectionDetailViewModel
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.community.PublicItemScreen
+import app.tuji.android.community.PublicItemViewModel
+import app.tuji.android.community.AuthorViewModel
+import app.tuji.android.core.community.ViewerRelationship
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.catalog.StudyThemes
@@ -308,20 +311,16 @@ private fun SignedInScreens(
     val community = remember(direction) {
         CommunityViewModel(
             atlas = app.atlas,
-            saver = app.atlas,
             bookmarks = app.atlas,
             reporter = app.atlas,
             blocks = app.atlas,
             direction = direction,
-            uiLang = uiLang,
-            onSaved = { savedTick++ },
         ).also { it.load() }
     }
     val communityExplore by community.explore.collectAsStateWithLifecycle()
     val communitySaved by community.saved.collectAsStateWithLifecycle()
     val communityMe by community.me.collectAsStateWithLifecycle()
-    val communityItem by community.item.collectAsStateWithLifecycle()
-    val communityAuthor by community.author.collectAsStateWithLifecycle()
+    val communityBlocked by community.blocked.collectAsStateWithLifecycle()
     val communityReported by community.reported.collectAsStateWithLifecycle()
 
     val account = remember {
@@ -624,13 +623,51 @@ private fun SignedInScreens(
                 )
 
                 is AppRoute.PublicItem -> {
-                    LaunchedEffect(route.slug) { community.openItem(route.slug) }
+                    val vm = remember(route.slug, isGuest) {
+                        PublicItemViewModel(
+                            slug = route.slug,
+                            atlas = app.atlas,
+                            saver = app.atlas,
+                            audio = app.clipPlayer,
+                            direction = direction,
+                            uiLang = uiLang,
+                            signedIn = !isGuest,
+                            accent = settings.accent,
+                            // The card went into, or out of, the reader's own
+                            // 圖鑑 and study queue — 已收進 and the counts on 今日
+                            // are drawn from those.
+                            onSaveChanged = {
+                                savedTick++
+                                refreshTick++
+                            },
+                        ).also { it.open() }
+                    }
+                    val itemState by vm.state.collectAsStateWithLifecycle()
+                    val authorHandle = itemState.item?.author?.handle
                     PublicItemScreen(
-                        state = communityItem,
-                        bottomPadding = 0.dp,
-                        onSave = community::save,
-                        onReport = { target, reason -> community.report(target, reason) },
+                        state = itemState,
+                        relationship = ViewerRelationship.of(authorHandle, viewerHandle = myUid, isGuest = isGuest),
+                        authorBlocked = communityBlocked.hides(authorHandle),
+                        reported = communityReported == ReportTarget.Item(route.slug),
+                        canPlay = vm.canPlay(),
+                        session = direction.targetLanguage,
+                        uiLang = uiLang,
+                        showChinese = settings.showZh,
+                        scores = scores,
+                        onRetry = vm::open,
+                        onSignIn = { app.auth.exitGuestMode() },
+                        onToggleSave = vm::toggleSave,
+                        onPlay = vm::play,
                         onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                        onReport = { reason -> community.report(ReportTarget.Item(route.slug), reason) },
+                        onBlock = {
+                            authorHandle?.let { handle ->
+                                // Only the screen that asked leaves, and only
+                                // if it is still the one on top.
+                                community.block(handle) { if (nav.current == route) nav = nav.pop() }
+                            }
+                        },
+                        onUnblock = { authorHandle?.let(community::unblock) },
                     )
                 }
 
@@ -672,12 +709,23 @@ private fun SignedInScreens(
                 }
 
                 is AppRoute.Author -> {
-                    LaunchedEffect(route.handle) { community.openAuthor(route.handle) }
+                    val vm = remember(route.handle) {
+                        AuthorViewModel(handle = route.handle, atlas = app.atlas).also { it.load() }
+                    }
+                    val authorState by vm.state.collectAsStateWithLifecycle()
                     AuthorScreen(
-                        page = communityAuthor,
-                        bottomPadding = 0.dp,
+                        state = authorState,
+                        relationship = ViewerRelationship.of(route.handle, viewerHandle = myUid, isGuest = isGuest)
+                            ?: ViewerRelationship.Theirs,
+                        blocked = communityBlocked.hides(route.handle),
+                        reported = communityReported == ReportTarget.Author(route.handle),
+                        onBack = { nav = nav.pop() },
+                        onRetry = vm::load,
+                        onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
                         onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
-                        onReport = { target, reason -> community.report(target, reason) },
+                        onReport = { reason -> community.report(ReportTarget.Author(route.handle), reason) },
+                        onBlock = { community.block(route.handle) { if (nav.current == route) nav = nav.pop() } },
+                        onUnblock = { community.unblock(route.handle) },
                     )
                 }
 
@@ -775,8 +823,9 @@ private fun SignedInScreens(
 private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Not 單字詳情: its picture is the first thing on the page, with 返回 and
     // 書籤 floating over it.
-    // Nor a 合集, whose cover bleeds and floats its own arrow.
-    is AppRoute.PublicItem, is AppRoute.Author,
+    // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
+    // whose bar carries 更多.
+    is AppRoute.PublicItem,
     AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture -> true
     else -> false
 }

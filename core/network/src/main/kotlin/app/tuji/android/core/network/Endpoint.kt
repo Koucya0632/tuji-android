@@ -392,6 +392,14 @@ interface Endpoint {
         )
     }
 
+    /** One entry on it, for 解除封鎖. */
+    data class Block(val handle: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/blocks/$handle",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     data class Categories(val lang: String) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/categories",
