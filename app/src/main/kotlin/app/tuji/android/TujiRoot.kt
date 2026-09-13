@@ -67,6 +67,7 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.catalog.StudyThemes
 import app.tuji.android.core.study.CompletionReadout
+import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.ThemeStatus
 import app.tuji.android.settings.StudyThemesScreen
 import app.tuji.android.core.study.TodayInputs
@@ -403,6 +404,9 @@ private fun SignedInScreens(
             }
             ReviewScreen(
                 vm = vm,
+                showChinese = settings.showZh,
+                bookmarked = { id -> id in personal.bookmarked },
+                onBookmark = app.cardsSourceStore::toggle,
                 onClose = {
                     // A session just moved the scores every badge in 圖鑑
                     // draws. Without this the user finishes twenty cards,
@@ -424,10 +428,26 @@ private fun SignedInScreens(
                     uiLang = uiLang,
                     pool = { app.catalog.words },
                     requestDrain = { AnswerDrainWorker.enqueue(app) },
-                ).also { it.load() }
+                    audio = app.clipPlayer,
+                    accent = settings.accent,
+                    online = { app.isOnline() },
+                ).also {
+                    // The goal from 設定, tapered by the backlog, from the
+                    // themes 設定 picked — the same numbers 今日 printed on
+                    // the button that opened this.
+                    it.load(
+                        StudyQuotas.newQueue(
+                            goal = settings.dailyGoal,
+                            due = todayInputs.stats?.due ?: 0,
+                            categories = settings.studyCategories,
+                        ),
+                    )
+                }
             }
             NewFlowScreen(
                 vm = vm,
+                showChinese = settings.showZh,
+                session = direction.targetLanguage,
                 onClose = {
                     refreshTick++
                     nav = nav.pop()

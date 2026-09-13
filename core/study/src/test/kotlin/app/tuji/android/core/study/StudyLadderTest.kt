@@ -155,4 +155,47 @@ class StudyLadderTest {
         assertEquals(SRSRating.Again, SRSRating.Hard.downgraded)
         assertEquals(SRSRating.Again, SRSRating.Again.downgraded)
     }
+
+    // stagePlan
+
+    private fun states(steps: List<NewStageStep>) = steps.map { it.kind to it.state }
+
+    @Test
+    fun `a fresh word shows 認識 active and the rest pending`() {
+        val a = item("a")
+        val ladder = StudyLadder(listOf(a))
+        assertEquals(
+            listOf(
+                NewTaskKind.Recognize to NewStageStep.State.Active,
+                NewTaskKind.Identify to NewStageStep.State.Pending,
+                NewTaskKind.SpellTiles to NewStageStep.State.Pending,
+            ),
+            states(ladder.stagePlan(a, recognized = false)),
+        )
+    }
+
+    /** 已認識 drops 選字; the dot stays, dimmed, so the ladder still reads as three stages. */
+    @Test
+    fun `the fast path marks 選字 skipped rather than removing it`() {
+        val a = item("a")
+        val ladder = StudyLadder(listOf(a)).skipIdentify(a).completeCurrent().ladder
+        assertEquals(
+            listOf(
+                NewTaskKind.Recognize to NewStageStep.State.Done,
+                NewTaskKind.Identify to NewStageStep.State.Skipped,
+                NewTaskKind.SpellTiles to NewStageStep.State.Active,
+            ),
+            states(ladder.stagePlan(a, recognized = true)),
+        )
+    }
+
+    /** A one-tile board is a free answer, so the word has no 拼字 and draws two dots. */
+    @Test
+    fun `a single-unit word has no 拼字 dot`() {
+        val one = item("x", term = "a")
+        assertEquals(
+            listOf(NewTaskKind.Recognize, NewTaskKind.Identify),
+            StudyLadder(listOf(one)).stagePlan(one, recognized = false).map { it.kind },
+        )
+    }
 }

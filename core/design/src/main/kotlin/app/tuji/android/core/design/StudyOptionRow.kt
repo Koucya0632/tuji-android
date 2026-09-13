@@ -87,7 +87,7 @@ fun StudyOptionRow(
         modifier
             .fillMaxWidth()
             .alpha(state.dimAlpha)
-            .defaultMinSize(minHeight = 60.dp)
+            .defaultMinSize(minHeight = 64.dp)
             .background(state.ground, shape)
             .then(
                 state.borderColor?.let { Modifier.border(TujiBorder.Bw3, it, shape) } ?: Modifier
@@ -104,6 +104,9 @@ fun StudyOptionRow(
         ) {
             Text(letter, style = TujiType.label, color = state.letterForeground)
         }
-        Text(label, style = TujiType.bodyStrong, color = state.foreground)
+        // h3, as iOS sets it: the option *is* the word being recalled, and at
+        // body size a 長い外来語 was the smallest thing on a card whose whole
+        // question is which of these four it is.
+        Text(label, style = TujiType.h3, color = state.foreground)
     }
 }

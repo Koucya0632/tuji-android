@@ -13,6 +13,18 @@ data class NewStudyTask(val item: StudyQueueItem, val kind: NewTaskKind) {
     val id: String get() = "${item.id}#${kind.wire}"
 }
 
+/** One of the three dots over a 學新字 card: which stage, and where the word stands on it. */
+data class NewStageStep(val kind: NewTaskKind, val state: State) {
+    enum class State {
+        Pending,
+        Active,
+        Done,
+
+        /** 選字 dropped by the 已認識 fast path — a dimmed check, not a hole. */
+        Skipped,
+    }
+}
+
 /** One step harsher — used when quiz mistakes contradict the self-rating. */
 val SRSRating.downgraded: SRSRating
     get() = when (this) {
@@ -71,6 +83,40 @@ data class StudyLadder private constructor(
 
     /** Whether this word still has a 拼字 stage on its ladder. */
     fun hasSpellStage(item: StudyQueueItem): Boolean = TileBoard.of(item).unitCount >= 2
+
+    /**
+     * The word's own ladder, for the dots over its card — iOS's
+     * `stagePlan(for:)`.
+     *
+     * The interleave hides that every word walks the same three stages; with
+     * other words' tasks in between, "選字 again?" reads as a repeat unless the
+     * card says where this word is. A word with a single-unit subject has no
+     * 拼字, so it draws two dots.
+     *
+     * @param recognized whether this word's 認識 has been answered — held by
+     *   the screen's model, not the ladder, because it is the rating waiting
+     *   to be written.
+     */
+    fun stagePlan(item: StudyQueueItem, recognized: Boolean): List<NewStageStep> {
+        val wordId = item.word.id
+        val active = current?.takeIf { it.item.word.id == wordId }?.kind
+        fun state(kind: NewTaskKind, done: Boolean) = when {
+            active == kind -> NewStageStep.State.Active
+            done -> NewStageStep.State.Done
+            else -> NewStageStep.State.Pending
+        }
+        return buildList {
+            add(NewStageStep(NewTaskKind.Recognize, state(NewTaskKind.Recognize, recognized)))
+            add(
+                NewStageStep(
+                    NewTaskKind.Identify,
+                    if (wordId in skippedIdentify) NewStageStep.State.Skipped
+                    else state(NewTaskKind.Identify, wordId in identifyCleared),
+                ),
+            )
+            if (hasSpellStage(item)) add(NewStageStep(NewTaskKind.SpellTiles, state(NewTaskKind.SpellTiles, done = false)))
+        }
+    }
 
     // Transitions
 

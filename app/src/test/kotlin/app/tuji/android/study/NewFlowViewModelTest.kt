@@ -15,7 +15,9 @@ import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.ActiveAccount
 import app.tuji.android.core.study.AnswerSubmitting
 import app.tuji.android.core.study.DurableAnswerWriter
+import app.tuji.android.core.study.NewStageStep
 import app.tuji.android.core.study.NewTaskKind
+import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.StudyAnswerOutbox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,6 +54,9 @@ class NewFlowViewModelTest {
 
     private val posted = mutableListOf<StudyAnswerPayload>()
 
+    /** What the last queue request asked for: (limit, new, categories). */
+    private var asked: Triple<Int, Int, List<String>>? = null
+
     private fun item(id: String, word: String, choices: List<String> = listOf("x1", "x2", "x3")) =
         StudyQueueItem(
             card = StudyCard(id = "card-$id"),
@@ -71,6 +76,7 @@ class NewFlowViewModelTest {
                 categories: List<String>, lang: String, learning: LearningDirection,
             ): StudyQueueResponse {
                 assertEquals("學新字 must ask for the new queue", StudyMode.New, mode)
+                asked = Triple(limit, new, categories)
                 return StudyQueueResponse(queue = queue)
             }
         }
@@ -98,6 +104,24 @@ class NewFlowViewModelTest {
             tapTile(s.tiles.indexOfFirst { it == unit && s.tiles.indexOf(it) !in s.picks }
                 .let { if (it >= 0) it else s.tiles.indices.first { i -> i !in s.picks } })
         }
+    }
+
+    /** Android asked for a fixed 5 with no themes, whatever 設定 said. */
+    @Test fun `the queue is asked for the size and themes it was given`() = runTest(dispatcher) {
+        val vm = vm(listOf(item("kettle", "kettle")))
+        vm.load(StudyQuotas.NewQueue(limit = 10, categories = listOf("kitchen"))); advanceUntilIdle()
+        assertEquals(Triple(10, 10, listOf("kitchen")), asked)
+    }
+
+    @Test fun `the dots follow the word through its stages`() = runTest(dispatcher) {
+        val vm = vm(listOf(item("kettle", "kettle")))
+        vm.load(); advanceUntilIdle()
+        assertEquals(NewStageStep.State.Active, vm.studying().steps.first { it.kind == NewTaskKind.Recognize }.state)
+
+        vm.rateRecognize(SRSRating.Hard); advanceUntilIdle()
+        val steps = vm.studying().steps.associate { it.kind to it.state }
+        assertEquals(NewStageStep.State.Done, steps[NewTaskKind.Recognize])
+        assertEquals(NewStageStep.State.Active, steps[NewTaskKind.Identify])
     }
 
     @Test fun `nothing is written at 認識 — the quiz still gets a vote`() = runTest(dispatcher) {

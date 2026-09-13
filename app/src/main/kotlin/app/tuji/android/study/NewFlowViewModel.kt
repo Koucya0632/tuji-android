@@ -3,6 +3,7 @@ package app.tuji.android.study
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyAnswerPayload
@@ -12,9 +13,12 @@ import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.LearnedRating
+import app.tuji.android.core.study.NewStageStep
 import app.tuji.android.core.study.NewTaskKind
 import app.tuji.android.core.study.SpellSubject
+import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.study.StudyLadder
+import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.TileBoard
 import app.tuji.android.core.study.studyChoices
@@ -42,6 +46,11 @@ class NewFlowViewModel(
     private val uiLang: String,
     private val pool: () -> List<Word>,
     private val requestDrain: () -> Unit = {},
+    /** Says the word. [SilentPlaying] draws no button, which is right for a build with no audio. */
+    private val audio: ClipPlaying = SilentPlaying,
+    /** The saved 發音口音. */
+    private val accent: String = "us",
+    private val online: () -> Boolean = { false },
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -59,6 +68,11 @@ class NewFlowViewModel(
              * denominator has to come from the queue that started it.
              */
             val total: Int,
+            /** The current word's 認識 → 選字 → 拼字 dots. */
+            val steps: List<NewStageStep> = emptyList(),
+            /** Whether the word on screen has a recording that can play now. */
+            val canPlayWord: Boolean = false,
+            val playingWord: Boolean = false,
         ) : State
 
         data class Done(val learned: Int, val unsynced: Int) : State
@@ -105,6 +119,7 @@ class NewFlowViewModel(
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
+    private var wordJob: Job? = null
     private var total = 0
     private var unsynced = 0
 
@@ -125,15 +140,20 @@ class NewFlowViewModel(
     private val identifyResponseMs = mutableMapOf<String, Int>()
     private var identifyShownAt: Pair<String, Long>? = null
 
-    fun load(limit: Int = 5) {
+    /**
+     * @param request what today's session asks for — see
+     *   [StudyQuotas.newQueue]. The default is the setting's default with no
+     *   theme filter, for callers that have neither to hand.
+     */
+    fun load(request: StudyQuotas.NewQueue = StudyQuotas.NewQueue(limit = 10, categories = emptyList())) {
         _state.value = State.Loading
         work.launch {
             val queue = runCatching {
                 queues.queue(
                     mode = StudyMode.New,
-                    limit = limit,
-                    new = limit,
-                    categories = emptyList(),
+                    limit = request.limit,
+                    new = request.limit,
+                    categories = request.categories,
                     lang = uiLang,
                     learning = direction,
                 ).queue
@@ -268,13 +288,30 @@ class NewFlowViewModel(
     }
 
     /**
+     * Say the word on screen. 認識 calls this as its card settles — hearing it
+     * is the cheapest teach signal there is — and every stage has the button.
+     */
+    fun playWord() {
+        val now = studying() ?: return
+        val url = wordClip(now.stage.item) ?: return
+        wordJob?.cancel()
+        wordJob = work.launch {
+            setPlayingWord(true)
+            audio.play(url)
+            setPlayingWord(false)
+        }
+    }
+
+    /**
      * Drops the pending beat. Leaving during the pause must not advance a
      * session the user walked out of, or post an answer after the screen is
-     * gone.
+     * gone — nor keep saying a word over the screen the user went to.
      */
     fun leave() {
         beat?.cancel()
         beat = null
+        wordJob?.cancel()
+        audio.stop()
     }
 
     override fun onCleared() {
@@ -321,7 +358,28 @@ class NewFlowViewModel(
                 tiles = TileBoard.scrambled(item, spellAttempts[item.word.id] ?: 0),
             )
         }
-        _state.value = State.Studying(ladder, stage, unsynced, total)
+        _state.value = State.Studying(
+            ladder = ladder,
+            stage = stage,
+            unsynced = unsynced,
+            total = total,
+            steps = ladder.stagePlan(item, recognized = item.card.id in pendingRatings),
+            canPlayWord = wordClip(item).let { it != null && audio.canPlay(it, online()) },
+        )
+    }
+
+    /**
+     * From the catalogue, as 複習 finds it: `/api/study/queue` carries no
+     * recordings, and a card the catalogue does not have (a 自製 `atlas:` card)
+     * has none, so its button is not drawn.
+     */
+    private fun wordClip(item: StudyQueueItem): String? =
+        pool().firstOrNull { it.id == item.word.id }?.audioUrls
+            ?.let { SpokenVoice.clip(it, direction, accent, item.word.targetLanguage) }
+
+    private fun setPlayingWord(value: Boolean) {
+        val now = studying() ?: return
+        _state.value = now.copy(playingWord = value)
     }
 
     /**

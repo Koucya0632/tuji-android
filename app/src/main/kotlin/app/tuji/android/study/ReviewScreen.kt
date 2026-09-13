@@ -29,6 +29,11 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import app.tuji.android.core.catalog.CardsSourceRules
+import app.tuji.android.core.study.SentenceHighlight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.delay
@@ -93,6 +98,12 @@ fun ReviewScreen(
     vm: ReviewViewModel,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Gates the 中文 line on the reveal sheet, as `showZh` does on iOS. */
+    showChinese: Boolean = true,
+    /** Whether a word carries a 書籤 — `CardsSourceStore`'s answer, shared with 圖鑑. */
+    bookmarked: (String) -> Boolean = { false },
+    /** Mark or unmark; null for a card the catalogue does not have, which draws no star. */
+    onBookmark: ((String) -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
@@ -153,6 +164,9 @@ fun ReviewScreen(
                         session = s.session,
                         mode = mode,
                         bottomPadding = insets.calculateBottomPadding(),
+                        showChinese = showChinese,
+                        bookmarked = bookmarked,
+                        onBookmark = onBookmark,
                         playing = s.playingWord,
                         canPlay = s.canPlayWord,
                         onPlay = vm::playWord,
@@ -530,6 +544,9 @@ private fun RevealSheet(
     session: ReviewSession,
     mode: ReviewRevealMode,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    showChinese: Boolean,
+    bookmarked: (String) -> Boolean,
+    onBookmark: ((String) -> Unit)?,
     playing: Boolean,
     canPlay: Boolean,
     onPlay: () -> Unit,
@@ -537,7 +554,11 @@ private fun RevealSheet(
     onContinue: () -> Unit,
 ) {
     val question = session.question ?: return
-    Box(Modifier.fillMaxSize().background(TujiColor.Scrim), contentAlignment = Alignment.BottomCenter) {
+    // No dimming, as on iOS, where the question stays live behind the sheet:
+    // the sentence 聽句 just marked is what the rating is about, and a scrim
+    // over it hid the one thing worth rereading. Nothing here consumes taps,
+    // so the replay buttons behind it still work.
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -554,32 +575,58 @@ private fun RevealSheet(
             // the same button, on the same seam, as the one on the picture.
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+                verticalAlignment = Alignment.Top,
             ) {
-                Column(Modifier.weight(1f)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
                     Headword(question.item)
-                    Text(
-                        question.item.word.chinese,
-                        style = TujiType.bodySm,
-                        color = TujiColor.Ink3,
-                    )
+                    if (showChinese) {
+                        Text(
+                            question.item.word.chinese,
+                            style = TujiType.bodySm,
+                            color = TujiColor.Ink2,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
                 }
-                if (canPlay) {
-                    val label = stringResource(R.string.word_play)
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .background(if (playing) TujiColor.Current else TujiColor.Paper2)
-                            .semantics { contentDescription = label }
-                            .tujiClickable(onClick = onPlay),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        TujiGlyph.Speaker(tint = TujiColor.Ink)
+                // 書籤 over 發音, stacked on the right — iOS's `WordSummaryRow`.
+                // The sheet is the moment a missed word is in front of you with
+                // its answer, which is the moment worth marking it.
+                Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                    val wordId = question.item.word.id
+                    // No star on a 自製 card: 書籤 filters the catalogue, which
+                    // has never heard of it, so the mark would go nowhere.
+                    if (onBookmark != null && !CardsSourceRules.isCustom(wordId)) {
+                        val mark = stringResource(R.string.word_bookmark)
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .background(TujiColor.Paper2)
+                                .semantics { contentDescription = mark }
+                                .tujiClickable { onBookmark(wordId) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TujiGlyph.Star(filled = bookmarked(wordId), tint = TujiColor.Ink)
+                        }
+                    }
+                    if (canPlay) {
+                        val label = stringResource(R.string.word_play)
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .background(if (playing) TujiColor.Current else TujiColor.Paper2)
+                                .semantics { contentDescription = label }
+                                .tujiClickable(onClick = onPlay),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TujiGlyph.Speaker(tint = TujiColor.Ink)
+                        }
                     }
                 }
             }
             Spacer(Modifier.height(TujiSpace.S2))
+            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
+            Spacer(Modifier.height(TujiSpace.S1))
 
             when (mode) {
                 ReviewRevealMode.ContinueOnly -> {
@@ -802,9 +849,9 @@ private fun ListenCard(
         val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         Text(
             when {
-                legible -> example.sentence
-                canBlur -> example.sentence
-                else -> maskedSentence(example.sentence)
+                legible -> highlighted(example.sentence, question.item.word.word)
+                canBlur -> AnnotatedString(example.sentence)
+                else -> AnnotatedString(maskedSentence(example.sentence))
             },
             style = TujiType.body,
             color = TujiColor.Ink,
@@ -887,6 +934,20 @@ private fun ListenCard(
                 modifier = Modifier.align(Alignment.TopEnd).padding(TujiSpace.S3),
             )
         }
+    }
+}
+
+/**
+ * The sentence with the word being asked about under a 螢光筆 — marked only
+ * once legible, since a highlight under the blur is a coloured smudge telling
+ * the reader which shape to guess at. A translucent 瞳黃 rather than a fill, so
+ * the text stays readable through it; no match, no mark (see [SentenceHighlight]).
+ */
+private fun highlighted(sentence: String, word: String): AnnotatedString {
+    val range = SentenceHighlight.range(word, sentence) ?: return AnnotatedString(sentence)
+    return buildAnnotatedString {
+        append(sentence)
+        addStyle(SpanStyle(background = TujiColor.BrandPrimary.copy(alpha = 0.45f)), range.first, range.last + 1)
     }
 }
 

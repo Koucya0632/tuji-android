@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.zIndex
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -205,5 +208,34 @@ fun TujiErrorState(
             )
         }
         Box(Modifier.padding(top = TujiSpace.S4)) { actions() }
+    }
+}
+
+/**
+ * The cat, saying one line — iOS's `MascotSpeechBubble`.
+ *
+ * No drawn tail: the pill tucks under the cat, which reads as "this one is
+ * talking" with one shape fewer. Kept for the few moments the cat is allowed
+ * to speak — the start of a lesson, a wrong answer — not as a narrator.
+ */
+@Composable
+fun MascotSpeechBubble(pose: MascotPose, text: String, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.Row(
+        modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(width = 56.dp, height = 64.dp).zIndex(1f), contentAlignment = Alignment.Center) {
+            MascotFigure(pose = pose, size = 64.dp)
+        }
+        Text(
+            text,
+            style = TujiType.body,
+            color = TujiColor.Ink,
+            modifier = Modifier
+                .offset(x = (-12).dp)
+                .background(TujiColor.Paper2, androidx.compose.foundation.shape.RoundedCornerShape(50))
+                .heightIn(min = 44.dp)
+                .padding(start = TujiSpace.S4, end = TujiSpace.S3, top = TujiSpace.S2, bottom = TujiSpace.S2),
+        )
     }
 }

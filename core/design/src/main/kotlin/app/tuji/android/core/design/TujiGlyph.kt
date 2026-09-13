@@ -282,6 +282,21 @@ object TujiGlyph {
         }
     }
 
+    /** 完成. A tick, stroked, for inside a small filled dot. */
+    @Composable
+    fun Check(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val tick = Path().apply {
+                moveTo(w * 0.14f, h * 0.54f)
+                lineTo(w * 0.40f, h * 0.80f)
+                lineTo(w * 0.88f, h * 0.24f)
+            }
+            drawPath(tick, tint, style = Stroke(width = w * 0.18f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+    }
+
     /** 搜尋. A lens and its handle. */
     @Composable
     fun Search(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
