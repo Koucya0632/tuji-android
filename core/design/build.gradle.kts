@@ -31,6 +31,8 @@ dependencies {
     api(libs.compose.ui.graphics)
     api(libs.compose.foundation)
     api(libs.compose.material3)
+    // BackHandler, so an open prompt answers system back itself.
+    implementation(libs.androidx.activity.compose)
     // Nuke on iOS. The signed-URL cache key it needs is a later problem
     // (see the plan): a private-bucket photo re-signs on every response,
     // so a whole-URL key misses forever on the user's own pictures.

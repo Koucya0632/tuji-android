@@ -1,5 +1,6 @@
 package app.tuji.android.study
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.design.WordPicture
@@ -60,6 +61,9 @@ import app.tuji.android.core.study.SpellSubject
 fun NewFlowScreen(vm: NewFlowViewModel, onClose: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
+    // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
+    // so a beat still in flight fired after the screen was gone.
+    BackHandler(enabled = state is NewFlowViewModel.State.Studying && !leaving) { leaving = true }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
     Box(

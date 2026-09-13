@@ -52,6 +52,7 @@ import app.tuji.android.core.catalog.CardsListPaging
 import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
@@ -164,19 +165,20 @@ fun AtlasCardsScreen(
         // take away the only way back to a shelf that has something on it.
         if (page.words.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    stringResource(
-                        when (source) {
-                            CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty
-                            CardsSource.Mine -> R.string.atlas_mine_empty
-                            else -> R.string.atlas_taken_empty
-                        },
-                    ),
-                    style = TujiType.bodySm,
-                    color = TujiColor.Ink3,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = TujiSpace.S6),
-                )
+                val (title, hint) = when (source) {
+                    CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty to R.string.atlas_bookmarked_empty_hint
+                    CardsSource.Mine -> R.string.atlas_mine_empty to R.string.atlas_mine_empty_hint
+                    else -> R.string.atlas_taken_empty to R.string.atlas_taken_empty_hint
+                }
+                // A fixed 320dp stage with the cat 35% down it, as iOS frames
+                // the same state: a lazy grid item has no height of its own to
+                // take a fraction of.
+                Box(
+                    Modifier.fillMaxWidth().height(320.dp).padding(top = 112.dp),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    MascotEmptyState(title = stringResource(title), message = stringResource(hint))
+                }
             }
         }
 

@@ -1,5 +1,6 @@
 package app.tuji.android.study
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import app.tuji.android.core.design.TujiMotion
 import app.tuji.android.core.design.rememberReduceMotion
@@ -95,6 +96,9 @@ fun ReviewScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
+    // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
+    // so a beat still in flight fired after the screen was gone.
+    BackHandler(enabled = state is ReviewViewModel.State.Studying && !leaving) { leaving = true }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
     Box(

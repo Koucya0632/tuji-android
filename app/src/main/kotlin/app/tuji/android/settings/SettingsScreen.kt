@@ -30,6 +30,8 @@ import app.tuji.android.R
 import app.tuji.android.core.design.TujiCheckbox
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiPrompt
+import app.tuji.android.core.design.TujiPromptStyle
+import app.tuji.android.core.design.TujiScreenTitle
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSection
 import app.tuji.android.core.design.TujiSettingRow
@@ -71,12 +73,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        Text(
-            stringResource(R.string.settings_title),
-            style = TujiType.h1,
-            color = TujiColor.Ink,
-            modifier = Modifier.padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-        )
+        TujiScreenTitle(stringResource(R.string.settings_title))
 
         TujiSection(title = stringResource(R.string.settings_group_study)) {
             TujiSettingRow(
@@ -252,9 +249,13 @@ fun SettingsScreen(
         )
 
         Confirm.Clear -> TujiPrompt(
+            style = TujiPromptStyle.Destructive,
             title = stringResource(R.string.settings_clear_title),
-            message = stringResource(R.string.settings_clear_footer),
-            confirm = stringResource(R.string.settings_clear),
+            message = stringResource(R.string.prompt_irreversible),
+            // The footer's wording rather than iOS's, which leaves out 自製圖鑑:
+            // what survives is the part of this question people read.
+            detail = stringResource(R.string.settings_clear_footer),
+            confirm = stringResource(R.string.settings_clear_confirm),
             cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = null; onClearProgress() },
             onCancel = { confirm = null },
@@ -264,8 +265,10 @@ fun SettingsScreen(
         // app that cannot be undone by any means, and a single tap-through is
         // how it happens by accident.
         Confirm.DeleteFirst -> TujiPrompt(
+            style = TujiPromptStyle.Destructive,
             title = stringResource(R.string.settings_delete_title),
-            message = stringResource(R.string.settings_delete_message),
+            message = stringResource(R.string.prompt_irreversible),
+            detail = stringResource(R.string.settings_delete_message),
             confirm = stringResource(R.string.settings_delete_continue),
             cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = Confirm.DeleteSecond },
@@ -273,9 +276,11 @@ fun SettingsScreen(
         )
 
         Confirm.DeleteSecond -> TujiPrompt(
+            style = TujiPromptStyle.Destructive,
             title = stringResource(R.string.settings_delete_last_title),
             message = stringResource(R.string.settings_delete_last_message),
-            confirm = stringResource(R.string.settings_delete),
+            detail = stringResource(R.string.settings_delete_last_detail),
+            confirm = stringResource(R.string.settings_delete_forever),
             cancel = stringResource(R.string.cancel),
             onConfirm = { confirm = null; onDeleteAccount() },
             onCancel = { confirm = null },
