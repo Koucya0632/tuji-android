@@ -146,6 +146,9 @@ private fun Themes(
                 color = TujiColor.Ink3,
             )
             Spacer(Modifier.weight(1f))
+            // Still 「圖鑑 →」, not iOS's 「學習主題 →」: that label names the
+            // theme picker, and this link opens 圖鑑. The words change when
+            // the picker becomes a page this can push.
             Text(
                 stringResource(R.string.today_themes_all),
                 style = TujiType.label,

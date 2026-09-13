@@ -294,7 +294,7 @@
     <string name="today_learn_new">New words</string>
     <string name="search_open">Search</string>
     <string name="today_themes">Topics</string>
-    <string name="today_themes_all">Study topics →</string>
+    <string name="today_themes_all">Atlas →</string>
     <string name="today_theme_words">%1$d words</string>
     <string name="study_leave_title">Leave this review?</string>
     <string name="study_leave_message">Answered progress is saved; unfinished words will appear again next time.</string>

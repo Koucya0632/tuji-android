@@ -294,7 +294,7 @@
     <string name="today_learn_new">新出単語</string>
     <string name="search_open">検索</string>
     <string name="today_themes">テーマ</string>
-    <string name="today_themes_all">学習テーマ →</string>
+    <string name="today_themes_all">図鑑 →</string>
     <string name="today_theme_words">%1$d語</string>
     <string name="study_leave_title">この復習を終了しますか？</string>
     <string name="study_leave_message">解答済みの進捗は保存され、未完了の単語は次回また出題されます。</string>

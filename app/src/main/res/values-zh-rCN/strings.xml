@@ -294,7 +294,7 @@
     <string name="today_learn_new">学新字</string>
     <string name="search_open">搜索</string>
     <string name="today_themes">主题</string>
-    <string name="today_themes_all">学习主题 →</string>
+    <string name="today_themes_all">图鉴 →</string>
     <string name="today_theme_words">%1$d 字</string>
     <string name="study_leave_title">要离开这次复习吗？</string>
     <string name="study_leave_message">已答的进度会保留，未完成的字下次还会出现。</string>
