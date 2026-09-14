@@ -15,6 +15,7 @@ import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.RefreshFailureCause
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
+import io.github.jan.supabase.exceptions.RestException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -263,13 +264,15 @@ class AuthService(
     override val isSignedIn: Boolean get() = state is AuthState.SignedIn
 
     /**
-     * Refreshing is a side effect of asking, which is what makes the client's
-     * one-shot 401 retry work: the retry re-reads the token and must get a
-     * different one, or it re-sends the rejected value and fails identically.
+     * Refreshes when the device believes the token is about to expire. The
+     * margin is why this is not just "if expired": a token that is valid for
+     * another two seconds when the request is built is expired by the time it
+     * is validated.
      *
-     * The margin is why this is not just "if expired": a token that is valid
-     * for another two seconds when the request is built is expired by the time
-     * it is validated.
+     * The device's belief is computed from its own clock when the token
+     * arrives — supabase-kt stores `expiresAt` as "now + expires_in", not the
+     * server's timestamp — so it is only as good as that clock. A 401 is the
+     * server correcting it, and goes through [refreshedAccessToken] instead.
      */
     @OptIn(ExperimentalTime::class)
     override suspend fun validAccessToken(): String {
@@ -282,32 +285,48 @@ class AuthService(
         return supabase.auth.currentSessionOrNull()?.accessToken ?: throw ApiError.NotAuthenticated
     }
 
-    private val recovery = Mutex()
+    private val replacing = Mutex()
 
     /**
      * Signed in on the strength of the stored session while the client, after
      * an offline refresh, holds none — and retries only every ten seconds. The
      * reload on reconnecting asks sooner than that, so the refresh is made here
      * from the stored token. Importing the result also ends the client's own
-     * retry loop. One at a time: that reload asks from several stores at once,
-     * and they should share one refresh, not race the same token.
+     * retry loop.
      */
-    private suspend fun recoverStoredSession(): String {
+    private suspend fun recoverStoredSession(): String = refreshedAccessToken(rejected = null)
+
+    /**
+     * One at a time, and at most one refresh per refused token — see
+     * [TokenReplacement]. A reload or a reconnect asks from several stores at
+     * once, and their 401s arrive together.
+     */
+    override suspend fun refreshedAccessToken(rejected: String?): String {
         if (state !is AuthState.SignedIn) throw ApiError.NotAuthenticated
-        return recovery.withLock {
-            supabase.auth.currentSessionOrNull()?.let { return@withLock it.accessToken }
-            val stored = runCatching { supabase.auth.sessionManager.loadSessionOrNull() }.getOrNull()
+        return replacing.withLock {
+            val current = supabase.auth.currentSessionOrNull()
+            val held = current?.accessToken
+            if (held != null && TokenReplacement.decide(held, rejected) == TokenReplacement.UseCurrent) {
+                return@withLock held
+            }
+            val refreshToken = current?.refreshToken
+                ?: runCatching { supabase.auth.sessionManager.loadSessionOrNull() }.getOrNull()?.refreshToken
                 ?: throw ApiError.NotAuthenticated
             val fresh = try {
-                supabase.auth.refreshSession(stored.refreshToken)
+                supabase.auth.refreshSession(refreshToken)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: RestException) {
+                // The server answered and refused the refresh token itself:
+                // revoked, or the account is gone. Not a network problem, and
+                // not one a retry fixes.
+                Log.w(TAG, "refresh refused: ${e.message}")
+                throw ApiError.NotAuthenticated
             } catch (e: Throwable) {
-                // Still offline, or the token was revoked. Either way the
-                // client's own loop is still running and settles the account.
-                // One line, not a trace: offline, every request at launch
-                // lands here once.
-                Log.w(TAG, "stored session refresh failed: ${e.message}")
+                // Still offline. The client's own loop keeps trying and settles
+                // the account. One line, not a trace: offline, every request
+                // at launch lands here once.
+                Log.w(TAG, "refresh failed: ${e.message}")
                 throw ApiError.Transport(e)
             }
             supabase.auth.importSession(fresh)
