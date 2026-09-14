@@ -40,6 +40,8 @@ data class AtlasImageSummary(
     val status: String? = null,
     val imageUrl: String? = null,
     val thumbUrl: String? = null,
+    val createdAt: String? = null,
+    val deletedAt: String? = null,
 )
 
 /** How far the recognition job got. */
@@ -125,14 +127,45 @@ data class AtlasItem(
     val id: String,
     val imageId: String? = null,
     val targetLanguage: TargetLanguage? = null,
-    val lemma: String,
+    val lemma: String = "",
     val displayZhHant: String? = null,
     val primaryLabel: String? = null,
     val fineLabel: String? = null,
     val partOfSpeech: String? = null,
+    val category: String? = null,
     val imageUrl: String? = null,
     val status: String? = null,
+    /** Where it sits in public review: `draft`, `pending_auto`, `approved`, `withdrawn`… */
+    val reviewStatus: String? = null,
+    val deletedAt: String? = null,
 )
+
+/**
+ * `/api/atlas/sync` — every photo this account took and every card made from
+ * one. 圖鑑管理 reads it whole: a photo with no card yet is still something the
+ * user may want to delete.
+ */
+@Serializable
+data class AtlasSyncResponse(
+    val serverTime: String? = null,
+    val images: List<AtlasImageSummary> = emptyList(),
+    val items: List<AtlasItem> = emptyList(),
+)
+
+/** One row of `/api/users/top-words` — 我's 需要加強. */
+@Serializable
+data class TopWord(
+    val id: String,
+    val word: String,
+    val chinese: String? = null,
+    val imageUrl: String? = null,
+    /** Postgres `float8`; drawn rounded. */
+    @Serializable(with = LenientDoubleSerializer::class) val mastery: Double = 0.0,
+    val reviewCount: Int = 0,
+)
+
+@Serializable
+data class TopWordsResponse(val words: List<TopWord> = emptyList())
 
 @Serializable
 data class AtlasCard(val id: String, val cardType: String? = null)

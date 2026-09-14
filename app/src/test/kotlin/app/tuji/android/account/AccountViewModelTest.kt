@@ -2,6 +2,7 @@ package app.tuji.android.account
 
 import app.tuji.android.core.billing.PurchaseGate
 import app.tuji.android.core.model.Entitlement
+import app.tuji.android.core.model.TopWord
 import app.tuji.android.core.model.UserMe
 import app.tuji.android.core.network.AccountReading
 import app.tuji.android.core.network.EntitlementReading
@@ -108,5 +109,29 @@ class AccountViewModelTest {
         fail = true
         vm.refresh(); advanceUntilIdle()
         assertEquals("Redtea", vm.state.value.me!!.displayName)
+    }
+
+    /**
+     * 需要加強 is a nudge. A failed read keeps what was there rather than
+     * emptying the section, and a refresh of the account must not wipe it.
+     */
+    @Test fun `weak words survive a failed read and an account refresh`() = runTest(dispatcher) {
+        var fail = false
+        val vm = AccountViewModel(
+            accounts = object : AccountReading { override suspend fun me() = me },
+            entitlements = object : EntitlementReading { override suspend fun entitlement() = Entitlement() },
+            weakWords = { limit ->
+                if (fail) throw IOException("HTTP 500")
+                List(limit) { TopWord(id = "w$it", word = "w$it", mastery = 12.6) }
+            },
+            scope = TestScope(dispatcher),
+        )
+        vm.loadWeakWords(); advanceUntilIdle()
+        assertEquals(3, vm.state.value.weak.size)
+
+        fail = true
+        vm.loadWeakWords(); advanceUntilIdle()
+        vm.refresh(); advanceUntilIdle()
+        assertEquals(listOf("w0", "w1", "w2"), vm.state.value.weak.map { it.id })
     }
 }

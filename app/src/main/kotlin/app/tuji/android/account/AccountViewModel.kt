@@ -8,6 +8,8 @@ import app.tuji.android.core.model.Entitlement
 import app.tuji.android.core.model.UserMe
 import app.tuji.android.core.network.AccountReading
 import app.tuji.android.core.network.EntitlementReading
+import app.tuji.android.core.network.WeakWordsReading
+import app.tuji.android.core.model.TopWord
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,8 @@ import kotlinx.coroutines.launch
 class AccountViewModel(
     private val accounts: AccountReading,
     private val entitlements: EntitlementReading,
+    /** 需要加強. Null reads nothing — a guest has no review history to be weak at. */
+    private val weakWords: WeakWordsReading? = null,
     /**
      * Whether this build can actually take money.
      *
@@ -45,6 +49,8 @@ class AccountViewModel(
         val loading: Boolean = true,
         /** See the constructor parameter of the same name. */
         val billingAvailable: Boolean = false,
+        /** The reviewed words with the lowest mastery — iOS's 需要加強, three of them. */
+        val weak: List<TopWord> = emptyList(),
     ) {
         /**
          * What the paywall may do. Null until the entitlement lands — a verdict
@@ -77,12 +83,25 @@ class AccountViewModel(
                     Log.w(TAG, "entitlement failed", it)
                     _state.value.entitlement
                 }
-            _state.value = State(
+            _state.value = _state.value.copy(
                 me = me,
                 entitlement = ent,
                 loading = false,
                 billingAvailable = billingAvailable,
             )
+        }
+    }
+
+    /**
+     * 需要加強. A failure keeps the last list: it is a nudge, and a section
+     * that blinks out on a timeout says the words got better.
+     */
+    fun loadWeakWords() {
+        val reader = weakWords ?: return
+        work.launch {
+            runCatching { reader.weakWords(limit = 3) }
+                .onSuccess { _state.value = _state.value.copy(weak = it) }
+                .onFailure { Log.w(TAG, "weak words failed", it) }
         }
     }
 

@@ -388,6 +388,40 @@ interface Endpoint {
         )
     }
 
+    /** Every photo and card this account made, for 圖鑑管理. */
+    data class AtlasSync(val limit: Int = 500) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/sync",
+            query = listOf("limit" to "$limit"),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** One photo, for deleting it — its card and study history go with it. */
+    data class AtlasImage(val imageId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/images/$imageId",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 取消公開: off 物見, card and savers' progress kept. */
+    data class AtlasItemWithdraw(val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/withdraw",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** 我's 需要加強: the reviewed words with the lowest mastery. */
+    data class UsersTopWords(val type: String, val limit: Int) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/top-words",
+            query = listOf("type" to type, "limit" to "$limit"),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** Who the signed-in user is. */
     data object Me : Endpoint {
         override val descriptor get() = EndpointDescriptor(

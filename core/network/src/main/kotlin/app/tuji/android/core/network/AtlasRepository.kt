@@ -3,6 +3,9 @@ package app.tuji.android.core.network
 import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.core.model.AtlasAuthor
+import app.tuji.android.core.model.AtlasSyncResponse
+import app.tuji.android.core.model.TopWord
+import app.tuji.android.core.model.TopWordsResponse
 import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasCollectionsResponse
@@ -154,6 +157,20 @@ interface ProfileEditing {
     suspend fun editProfile(nickname: String, bio: String, resetAvatar: Boolean, image: ByteArray?): AtlasAuthor
 }
 
+/** 圖鑑管理: the account's own photos and cards, and the two ways to take one back. */
+interface AtlasShelfManaging {
+    suspend fun sync(): AtlasSyncResponse
+    /** The photo, its card, and that card's study history. */
+    suspend fun deleteImage(imageId: String)
+    /** Off 物見; the card and everyone's progress on it stay. */
+    suspend fun withdrawItem(itemId: String)
+}
+
+/** 我's 需要加強. */
+fun interface WeakWordsReading {
+    suspend fun weakWords(limit: Int): List<TopWord>
+}
+
 /** The 封鎖 list. Stored on the server so it follows the account. */
 interface BlockListing {
     suspend fun blockedHandles(): List<String>
@@ -183,7 +200,7 @@ private data class BlockBody(val handle: String)
 private data class ProfileUpdateResponse(val author: AtlasAuthor)
 
 class AtlasRepository(private val api: TujiApiClient) :
-    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing,
+    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing, AtlasShelfManaging, WeakWordsReading,
     EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading,
     CollectionBookmarking, CollectionLearning {
 
@@ -245,6 +262,19 @@ class AtlasRepository(private val api: TujiApiClient) :
     override suspend fun entitlement(): Entitlement = api.get(Endpoint.Entitlement)
 
     override suspend fun me(): UserMe? = api.get<UserMeResponse>(Endpoint.Me).user
+
+    override suspend fun sync(): AtlasSyncResponse = api.get(Endpoint.AtlasSync())
+
+    override suspend fun deleteImage(imageId: String) {
+        api.delete<Empty>(Endpoint.AtlasImage(imageId))
+    }
+
+    override suspend fun withdrawItem(itemId: String) {
+        api.post<Empty>(Endpoint.AtlasItemWithdraw(itemId), Empty())
+    }
+
+    override suspend fun weakWords(limit: Int): List<TopWord> =
+        api.get<TopWordsResponse>(Endpoint.UsersTopWords(type = "weak", limit = limit)).words
 
     override suspend fun editProfile(
         nickname: String,
