@@ -65,6 +65,9 @@ import app.tuji.android.community.CommunityViewModel
 import app.tuji.android.community.CollectionDetailViewModel
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.community.PublicItemScreen
+import app.tuji.android.profile.BlockedAuthorsScreen
+import app.tuji.android.profile.EditProfileScreen
+import app.tuji.android.profile.EditProfileViewModel
 import app.tuji.android.community.PublicItemViewModel
 import app.tuji.android.community.AuthorViewModel
 import app.tuji.android.core.community.ViewerRelationship
@@ -584,7 +587,52 @@ private fun SignedInScreens(
                     },
                     onSignOut = { scope.launch { app.auth.signOut() } },
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
+                    onEditProfile = if (isGuest) null else ({ nav = nav.push(AppRoute.EditProfile) }),
+                    onOpenBlocked = if (isGuest) null else ({ nav = nav.push(AppRoute.BlockedAuthors) }),
                 )
+
+                AppRoute.EditProfile -> {
+                    val vm = remember {
+                        EditProfileViewModel(
+                            accounts = app.atlas,
+                            profiles = app.atlas,
+                            onSaved = { author ->
+                                // The name and face other people see changed:
+                                // the session's greeting, 我's row and 物見's
+                                // own-page row all draw it.
+                                app.auth.applyProfile(
+                                    nickname = author.displayName?.takeIf { it != author.handle },
+                                    avatar = author.avatar,
+                                )
+                                account.refresh()
+                                community.loadMe(author.handle, force = true)
+                                if (nav.current == AppRoute.EditProfile) nav = nav.pop()
+                            },
+                        ).also { it.load() }
+                    }
+                    val profileState by vm.state.collectAsStateWithLifecycle()
+                    EditProfileScreen(
+                        state = profileState,
+                        onBack = { nav = nav.pop() },
+                        onSave = vm::save,
+                        onNickname = vm::setNickname,
+                        onBio = vm::setBio,
+                        onImage = vm::stageImage,
+                        onUseDefaultAvatar = vm::useDefaultAvatar,
+                    )
+                }
+
+                AppRoute.BlockedAuthors -> {
+                    var working by remember { mutableStateOf<String?>(null) }
+                    BlockedAuthorsScreen(
+                        handles = communityBlocked.sorted,
+                        working = working,
+                        onUnblock = { handle ->
+                            working = handle
+                            community.unblock(handle) { working = null }
+                        },
+                    )
+                }
 
                 AppRoute.StudyThemes -> StudyThemesScreen(
                     selected = settings.studyCategories,
@@ -826,7 +874,7 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
     // whose bar carries 更多.
     is AppRoute.PublicItem,
-    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture -> true
+    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors -> true
     else -> false
 }
 

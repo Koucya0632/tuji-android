@@ -43,6 +43,9 @@ value class BlockList(private val handles: Set<String>) {
 
     val size: Int get() = handles.size
 
+    /** Every hidden UID, lowercased, in a stable order — for 已封鎖的人. */
+    val sorted: List<String> get() = handles.sorted()
+
     /** The list with one more author on it — 封鎖, drawn before the server answers. */
     fun adding(handle: String): BlockList {
         val key = handle.trim().lowercase()
