@@ -53,6 +53,8 @@ fun StudyThemesScreen(
     categories: List<Category>,
     uiLang: String,
     onChange: (List<String>) -> Unit,
+    readiness: SettingsReadiness,
+    onRetryLoad: () -> Unit,
 ) {
     val picked = selected.toSet()
     LazyVerticalGrid(
@@ -69,6 +71,15 @@ fun StudyThemesScreen(
                 color = TujiColor.Ink3,
                 modifier = Modifier.padding(bottom = TujiSpace.S2),
             )
+        }
+
+        // The grid computes each new selection from the one on screen, so a
+        // grid drawn from the seed would turn 「add one」 into 「replace them all」.
+        if (readiness != SettingsReadiness.Ready) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                SettingsReadinessLine(readiness, onRetryLoad, Modifier.padding(vertical = TujiSpace.S2), inset = 0.dp)
+            }
+            return@LazyVerticalGrid
         }
 
         if (categories.isEmpty()) {

@@ -178,6 +178,8 @@
     <string name="me_more">多</string>
     <string name="me_breakdown">明細</string>
     <string name="settings_title">設定</string>
+    <string name="settings_loading">載入設定中…</string>
+    <string name="settings_load_failed">無法載入你的設定，暫時不能修改</string>
     <string name="settings_group_study">學習</string>
     <string name="settings_group_display">顯示</string>
     <string name="settings_group_account">帳號</string>

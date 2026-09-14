@@ -6,6 +6,7 @@ import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.core.model.UserSettings
 import app.tuji.android.core.network.SettingsAccess
 import app.tuji.android.core.study.SettingsHandover
+import app.tuji.android.core.study.SettingsWrite
 import app.tuji.android.onboarding.OnboardingStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,10 @@ import kotlinx.coroutines.launch
  * **A failed save keeps the local value.** The alternative — reverting — makes
  * a control silently spring back with no explanation, and the next successful
  * write will carry the change anyway.
+ *
+ * **Nothing is written before the account's settings arrive.** See
+ * [SettingsWrite]: the save sends the whole object, and until [loaded] the
+ * whole object is this device's seed.
  */
 class SettingsStore(
     private val remote: SettingsAccess,
@@ -39,6 +44,8 @@ class SettingsStore(
      */
     private val local: OnboardingStore,
     private val scope: CoroutineScope,
+    /** Whether an account is signed in — a guest's settings are this device's alone. */
+    private val signedIn: () -> Boolean,
 ) : AccountScopedStore {
     // Not the bare defaults: the direction the user picked during onboarding is
     // already on disk, and opening on `zh-en` would study the wrong deck for as
@@ -56,6 +63,13 @@ class SettingsStore(
     private val _loaded = MutableStateFlow(false)
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
 
+    /**
+     * The last read failed and nothing has arrived since, so a screen can offer
+     * 重試 rather than a loading line that never ends.
+     */
+    private val _loadFailed = MutableStateFlow(false)
+    val loadFailed: StateFlow<Boolean> = _loadFailed.asStateFlow()
+
     private var save: Job? = null
 
     /**
@@ -64,12 +78,14 @@ class SettingsStore(
      *   screen, not to a store.
      */
     suspend fun load(deviceLanguage: UiLanguage) {
+        _loadFailed.value = false
         val fetched = try {
             remote.settings()
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
             Log.w(TAG, "settings load failed — keeping what we had", failure)
+            if (!_loaded.value) _loadFailed.value = true
             return
         }
         Log.i(TAG, "loaded settings: ${fetched.learningDirection} / ${fetched.uiLang}")
@@ -119,10 +135,16 @@ class SettingsStore(
      * and quietly reset everything the user did not just touch.
      */
     fun update(change: (UserSettings) -> UserSettings) {
+        val write = SettingsWrite.decide(signedIn = signedIn(), loaded = _loaded.value)
+        if (write == SettingsWrite.Refuse) {
+            Log.w(TAG, "change refused — the account's settings have not arrived")
+            return
+        }
         val next = change(_current.value)
         if (next == _current.value) return
         _current.value = next
         local.learningDirection = next.direction
+        if (write == SettingsWrite.ApplyLocally) return
         save?.cancel()
         save = scope.launch {
             delay(DEBOUNCE_MS)
@@ -153,6 +175,7 @@ class SettingsStore(
         save = null
         _current.value = seed()
         _loaded.value = false
+        _loadFailed.value = false
     }
 
     private companion object {

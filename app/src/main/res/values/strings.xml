@@ -178,6 +178,8 @@
     <string name="me_more">More</string>
     <string name="me_breakdown">Breakdown</string>
     <string name="settings_title">Settings</string>
+    <string name="settings_loading">Loading your settings…</string>
+    <string name="settings_load_failed">Couldn\'t load your settings, so they can\'t be changed yet</string>
     <string name="settings_group_study">Study</string>
     <string name="settings_group_display">Display</string>
     <string name="settings_group_account">Account</string>
