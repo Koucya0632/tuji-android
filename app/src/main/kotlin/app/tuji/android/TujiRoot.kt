@@ -66,6 +66,9 @@ import app.tuji.android.community.CollectionDetailViewModel
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.community.PublicItemScreen
 import app.tuji.android.profile.BlockedAuthorsScreen
+import app.tuji.android.manage.AtlasManageScreen
+import app.tuji.android.manage.AtlasManageViewModel
+import app.tuji.android.manage.ManageCardScreen
 import app.tuji.android.profile.EditProfileScreen
 import app.tuji.android.profile.EditProfileViewModel
 import app.tuji.android.community.PublicItemViewModel
@@ -324,10 +327,26 @@ private fun SignedInScreens(
     val communitySaved by community.saved.collectAsStateWithLifecycle()
     val communityMe by community.me.collectAsStateWithLifecycle()
     val communityBlocked by community.blocked.collectAsStateWithLifecycle()
+
+    // 圖鑑管理's shelf, above both screens that draw it, so a card deleted on
+    // its own page is already gone from the list behind.
+    val manage = remember(direction) {
+        AtlasManageViewModel(
+            shelf = app.atlas,
+            language = direction.targetLanguage,
+            // A card went, or came off 物見: 我做的, the study queue and the
+            // counts on 今日 all include it.
+            onChanged = {
+                savedTick++
+                refreshTick++
+            },
+        )
+    }
+    val manageState by manage.state.collectAsStateWithLifecycle()
     val communityReported by community.reported.collectAsStateWithLifecycle()
 
     val account = remember {
-        AccountViewModel(accounts = app.atlas, entitlements = app.atlas)
+        AccountViewModel(accounts = app.atlas, entitlements = app.atlas, weakWords = app.atlas)
     }
     val accountState by account.state.collectAsStateWithLifecycle()
 
@@ -476,6 +495,7 @@ private fun SignedInScreens(
         }
         if (nav.current == AppRoute.Me) {
             account.refresh()
+            if (!isGuest) account.loadWeakWords()
             // Unlike a score, the streak and the heatmap move on their own —
             // 「目前連勝 5 天」 left over from yesterday is a claim about today
             // that nobody made. So this one asks again on arrival rather than
@@ -554,6 +574,28 @@ private fun SignedInScreens(
                     bottomPadding = 0.dp,
                     onOpenThemes = { nav = nav.push(AppRoute.Themes) },
                     onOpen = openCard,
+                    onOpenManage = if (isGuest) null else ({ nav = nav.push(AppRoute.AtlasManage) }),
+                )
+
+                AppRoute.AtlasManage -> {
+                    LaunchedEffect(Unit) { manage.load() }
+                    AtlasManageScreen(
+                        state = manageState,
+                        onBack = { nav = nav.pop() },
+                        onRetry = manage::load,
+                        onSelecting = manage::setSelecting,
+                        onToggle = manage::toggle,
+                        onOpen = { nav = nav.push(AppRoute.ManageCard(it)) },
+                        onDelete = { ids -> manage.delete(ids) },
+                    )
+                }
+
+                is AppRoute.ManageCard -> ManageCardScreen(
+                    row = manageState.row(route.imageId),
+                    withdrawing = manageState.withdrawing,
+                    actionFailed = manageState.actionFailed,
+                    onDelete = { manage.delete(setOf(route.imageId)) { if (nav.current == route) nav = nav.pop() } },
+                    onWithdraw = manage::withdraw,
                 )
 
                 AppRoute.Settings -> SettingsScreen(
@@ -799,6 +841,8 @@ private fun SignedInScreens(
                     categories = catalog.categories,
                     bottomPadding = 0.dp,
                     onOpenSettings = { nav = nav.push(AppRoute.Settings) },
+                    showChinese = settings.showZh,
+                    onOpenWord = openCard,
                 )
 
                 AppRoute.Search -> AtlasSearchScreen(
@@ -874,7 +918,8 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
     // whose bar carries 更多.
     is AppRoute.PublicItem,
-    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors -> true
+    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors,
+    is AppRoute.ManageCard -> true
     else -> false
 }
 

@@ -88,6 +88,8 @@ fun AtlasCardsScreen(
     onOpen: (String) -> Unit,
     onSearch: () -> Unit = {},
     isGuest: Boolean = false,
+    /** 管理 → on 我做的. Null for a guest, who has made nothing. */
+    onOpenManage: (() -> Unit)? = null,
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     val shown = remember(source, words, personal) {
@@ -153,8 +155,18 @@ fun AtlasCardsScreen(
                 )
                 // 主題 only on 官方: a theme describes a dictionary word, and
                 // the ones you photographed or took in have no theme to browse
-                // by. iOS puts 管理 → on 我做的; that arrives with 圖鑑管理 (P5),
-                // and until then the row there carries nothing.
+                // by. 我做的 carries 管理 → instead, as on iOS.
+                if (source == CardsSource.Mine && onOpenManage != null) {
+                    Text(
+                        stringResource(R.string.atlas_manage_link),
+                        style = TujiType.label,
+                        color = TujiColor.Ink,
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier
+                            .tujiClickable(onClick = onOpenManage)
+                            .padding(vertical = TujiSpace.S1),
+                    )
+                }
                 if (source == CardsSource.Official) {
                     Text(
                         stringResource(R.string.atlas_themes_link),

@@ -69,6 +69,9 @@ enum class TujiPromptStyle {
  * @param cancel the quiet way out, drawn as text under the action. Null for a
  *   prompt that only reports (a failure, a success), which still closes on
  *   back and on a tap outside through [onCancel].
+ * @param alternative a second, lesser answer that does part of what was asked
+ *   — 改為取消公開 beside a delete that would reach other people's accounts.
+ *   Drawn between the action and the way out, in the quiet style.
  */
 @Composable
 fun TujiPrompt(
@@ -80,10 +83,12 @@ fun TujiPrompt(
     onCancel: () -> Unit,
     style: TujiPromptStyle = TujiPromptStyle.Confirmation,
     detail: String? = null,
+    alternative: String? = null,
+    onAlternative: () -> Unit = {},
 ) {
     // A window of its own, not a Box over the caller's content — see TujiWindow.
     TujiWindow(onDismiss = onCancel) {
-        PromptSurface(title, message, confirm, cancel, onConfirm, onCancel, style, detail)
+        PromptSurface(title, message, confirm, cancel, onConfirm, onCancel, style, detail, alternative, onAlternative)
     }
 }
 
@@ -97,6 +102,8 @@ private fun PromptSurface(
     onCancel: () -> Unit,
     style: TujiPromptStyle,
     detail: String?,
+    alternative: String?,
+    onAlternative: () -> Unit,
 ) {
     val reduceMotion = rememberReduceMotion()
     val shown = remember { Animatable(if (reduceMotion) 1f else 0f) }
@@ -178,6 +185,7 @@ private fun PromptSurface(
                     verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
                 ) {
                     PromptAction(confirm, destructive = style == TujiPromptStyle.Destructive, onClick = onConfirm)
+                    alternative?.let { PromptAction(it, destructive = false, quiet = true, onClick = onAlternative) }
                     cancel?.let { PromptTextAction(it, onCancel) }
                 }
             }
@@ -191,13 +199,15 @@ private fun PromptSurface(
  * the tap rather than before it.
  */
 @Composable
-private fun PromptAction(text: String, destructive: Boolean, onClick: () -> Unit) {
+private fun PromptAction(text: String, destructive: Boolean, onClick: () -> Unit, quiet: Boolean = false) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val haptics = LocalHapticFeedback.current
     val ground = when {
         destructive && pressed -> TujiColor.Alert
         destructive -> TujiColor.Paper2
+        quiet && pressed -> TujiColor.Paper3
+        quiet -> TujiColor.Paper2
         pressed -> TujiColor.CurrentDeep
         else -> TujiColor.Current
     }

@@ -37,6 +37,14 @@ import app.tuji.android.core.study.CompletionReadout
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
+import app.tuji.android.core.design.TujiBorder
+import app.tuji.android.core.model.TopWord
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import kotlin.math.roundToInt
 
 /**
  * 我的 — who you are (lightest), then what you have built up.
@@ -58,6 +66,8 @@ fun AccountScreen(
     categories: List<Category>,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onOpenSettings: () -> Unit,
+    showChinese: Boolean = true,
+    onOpenWord: (String) -> Unit = {},
 ) {
     Column(
         Modifier
@@ -103,6 +113,11 @@ fun AccountScreen(
                 )
             },
         )
+        // Where you are weakest comes last: it is the one section here that
+        // asks for something, and it reads as a next step after the record.
+        if (!isGuest && state.weak.isNotEmpty()) {
+            WeakWords(state.weak, showChinese, onOpenWord)
+        }
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
@@ -143,5 +158,41 @@ private fun IdentityRow(me: UserMe?, isGuest: Boolean, isPro: Boolean) {
             }
         }
         TujiStatusEdgeLabel(text = tier, edge = if (isPro) TujiColor.Accumulation else TujiColor.Ink3)
+    }
+}
+
+/** 需要加強 — iOS's weak-word rows: picture, word, its gloss, and the mastery number in 警示紅. */
+@Composable
+private fun WeakWords(words: List<TopWord>, showChinese: Boolean, onOpen: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = TujiSpace.S3), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+        Text(
+            stringResource(R.string.me_weak_title),
+            style = TujiType.label.copy(letterSpacing = 2.sp),
+            color = TujiColor.Alert,
+        )
+        Column(Modifier.fillMaxWidth().background(TujiColor.Paper).border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.2f))) {
+            words.forEachIndexed { index, word ->
+                if (index > 0) Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule.copy(alpha = 0.15f)))
+                Row(
+                    Modifier.fillMaxWidth().tujiClickable { onOpen(word.id) }.padding(TujiSpace.S3),
+                    horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(44.dp).background(TujiColor.AccumulationSoft)) {
+                        AsyncImage(model = word.imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(word.word, style = TujiType.bodySmStrong, color = TujiColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (showChinese) {
+                            word.chinese?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = TujiType.label, color = TujiColor.Ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                    Text("${word.mastery.roundToInt()}", style = TujiType.bodySmStrong, color = TujiColor.Alert)
+                    TujiGlyph.ArrowLeft(size = 12.dp, tint = TujiColor.Ink3, modifier = Modifier.rotate(180f))
+                }
+            }
+        }
     }
 }

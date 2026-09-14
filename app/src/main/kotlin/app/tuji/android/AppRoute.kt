@@ -37,6 +37,12 @@ sealed interface AppRoute {
     /** 已封鎖的人, reached from 設定 — the one place a block is undone without finding the person. */
     data object BlockedAuthors : AppRoute
 
+    /** 圖鑑管理, reached from 圖鑑's 我做的. */
+    data object AtlasManage : AppRoute
+
+    /** One of the account's own photos in 圖鑑管理. */
+    data class ManageCard(val imageId: String) : AppRoute
+
     /** 學習主題, reached from 設定 and from 今日's theme strip. */
     data object StudyThemes : AppRoute
 
