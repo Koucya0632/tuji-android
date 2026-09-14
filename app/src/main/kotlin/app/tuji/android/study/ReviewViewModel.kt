@@ -12,6 +12,7 @@ import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
+import app.tuji.android.core.model.Milestone
 import app.tuji.android.core.study.ImageChoiceOption
 import app.tuji.android.core.study.ImageChoicePair
 import app.tuji.android.core.study.ListeningQuestion
@@ -106,6 +107,15 @@ class ReviewViewModel(
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state.asStateFlow()
+
+    private val _milestone = MutableStateFlow<Milestone?>(null)
+
+    /**
+     * A streak milestone an answer crossed. The server attaches it only to the
+     * answer that crosses, and writes are not awaited, so it can arrive after
+     * the session is done — the finished screen reads it as it comes.
+     */
+    val milestone: StateFlow<Milestone?> = _milestone.asStateFlow()
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
@@ -244,7 +254,9 @@ class ReviewViewModel(
     private fun send(write: PendingWrite?) {
         val pending = write ?: return
         work.launch {
-            if (writer.submitAnswer(pending.payload) is StudyWriteOutcome.Parked) {
+            val outcome = writer.submitAnswer(pending.payload)
+            (outcome as? StudyWriteOutcome.Synced)?.response?.milestone?.let { _milestone.value = it }
+            if (outcome is StudyWriteOutcome.Parked) {
                 unsynced += 1
                 requestDrain()
                 (_state.value as? State.Studying)

@@ -99,6 +99,7 @@ fun NewFlowScreen(
     onClose: () -> Unit,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val milestone by vm.milestone.collectAsStateWithLifecycle()
     var started by rememberSaveable { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
     // System back asks too, as ✕ does — once there is something to lose.
@@ -120,7 +121,10 @@ fun NewFlowScreen(
             is NewFlowViewModel.State.Failed ->
                 Centered(s.message.ifBlank { stringResource(R.string.study_failed) })
 
-            is NewFlowViewModel.State.Done -> NewDoneView(
+            // A streak milestone wins over the summary, as on 複習.
+            is NewFlowViewModel.State.Done -> milestone?.let {
+                MilestoneView(streak = it.streak, topPadding = 0.dp, bottomPadding = insets.calculateBottomPadding(), onFinish = onClose)
+            } ?: NewDoneView(
                 learned = s.learned,
                 unsynced = s.unsynced,
                 bottomPadding = insets.calculateBottomPadding(),

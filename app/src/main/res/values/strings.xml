@@ -411,6 +411,14 @@
     <string name="collections_delete_private">This collection will be permanently deleted. The original atlas cards are unaffected.</string>
     <string name="collections_picker_title">Add items</string>
     <string name="collections_picker_empty">Nothing to add yet. Finish recognition and confirmation, then add it directly.</string>
+    <string name="offline_banner">No internet connection</string>
+    <string name="milestone_title">%1$d-day streak!</string>
+    <string name="milestone_label">Day streak</string>
+    <string name="milestone_month">You didn\'t miss a day this month</string>
+    <string name="milestone_hundred">100-day streak — it\'s a habit now</string>
+    <string name="milestone_year">A full year without missing a day</string>
+    <string name="milestone_keep_going">Keep going — the next milestone is ahead</string>
+    <string name="milestone_continue">Continue</string>
     <string name="community_report_title">What’s the problem?</string>
     <string name="community_reason_spam">Spam</string>
     <string name="community_reason_inappropriate">Inappropriate</string>

@@ -106,6 +106,7 @@ fun ReviewScreen(
     onBookmark: ((String) -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val milestone by vm.milestone.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
     // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
     // so a beat still in flight fired after the screen was gone.
@@ -122,7 +123,15 @@ fun ReviewScreen(
             is ReviewViewModel.State.Failed ->
                 Centered(stringResource(R.string.study_failed), TujiColor.Alert)
 
-            is ReviewViewModel.State.Done -> CompleteView(
+            // A streak milestone wins over the summary: a few times a year.
+            is ReviewViewModel.State.Done -> milestone?.let {
+                MilestoneView(
+                    streak = it.streak,
+                    topPadding = insets.calculateTopPadding(),
+                    bottomPadding = insets.calculateBottomPadding(),
+                    onFinish = onClose,
+                )
+            } ?: CompleteView(
                 session = s.session,
                 unsynced = s.unsynced,
                 topPadding = insets.calculateTopPadding(),

@@ -4,6 +4,7 @@ import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyAnswerResponse
+import app.tuji.android.core.model.Milestone
 import app.tuji.android.core.model.StudyCard
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueItem
@@ -69,6 +70,9 @@ class NewFlowViewModelTest {
             choices = choices,
         )
 
+    /** What the server attaches to the next answer. */
+    private var respondWith = StudyAnswerResponse(ok = true)
+
     private fun vm(queue: List<StudyQueueItem>): NewFlowViewModel {
         val queues = object : StudyQueueReading {
             override suspend fun queue(
@@ -81,7 +85,7 @@ class NewFlowViewModelTest {
             }
         }
         val outbox = StudyAnswerOutbox(File(temp.root, "o.json"), ActiveAccount { "u1" })
-        val submit = AnswerSubmitting { posted += it; StudyAnswerResponse(ok = true) }
+        val submit = AnswerSubmitting { posted += it; respondWith }
         return NewFlowViewModel(
             queues = queues,
             writer = DurableAnswerWriter(submit, outbox, backoff = {}),
@@ -143,6 +147,18 @@ class NewFlowViewModelTest {
         val ladder = vm.studying().ladder
         assertTrue("the fast path removes it", ladder.tasks.none { it.kind == NewTaskKind.Identify })
         assertTrue("but the tiles still gate the write", ladder.tasks.any { it.kind == NewTaskKind.SpellTiles })
+    }
+
+    /** The server marks the answer that crosses a streak threshold; the finished screen is drawn from it. */
+    @Test fun `a milestone on an answer is kept for the finished screen`() = runTest(dispatcher) {
+        respondWith = StudyAnswerResponse(ok = true, milestone = Milestone(streak = 30))
+        val vm = vm(listOf(item("kettle", "kettle")))
+        vm.load(); advanceUntilIdle()
+        assertEquals(null, vm.milestone.value)
+        vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
+        vm.solveTiles(); advanceUntilIdle()
+        assertTrue(vm.state.value is NewFlowViewModel.State.Done)
+        assertEquals(30, vm.milestone.value?.streak)
     }
 
     @Test fun `a clean run posts the self-rating once, when the word is done`() =

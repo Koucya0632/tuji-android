@@ -1,6 +1,9 @@
 package app.tuji.android
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.Arrangement
+import app.tuji.android.core.design.TujiGlyph
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -142,6 +145,8 @@ fun TujiRoot(app: TujiApplication) {
         catalogReady = true,
     )
 
+    val online by app.connectivity.online.collectAsStateWithLifecycle()
+    Box(Modifier.fillMaxSize()) {
     when (destination) {
         is LaunchDestination.Splash -> SplashScreen()
         is LaunchDestination.LearningDirection -> LearningDirectionScreen(
@@ -166,6 +171,12 @@ fun TujiRoot(app: TujiApplication) {
                     ?: user.email?.substringBefore('@')?.takeIf { it.isNotBlank() }
             },
         )
+    }
+    // Over every screen but the splash, which says nothing that needs the
+    // network yet. Requests explain their own failures; this says why.
+    if (destination != LaunchDestination.Splash && online == false) {
+        OfflineBanner(Modifier.align(Alignment.TopCenter))
+    }
     }
 }
 
@@ -196,6 +207,32 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     // frames before the account's has arrived.
     val deviceLanguage = rememberDeviceLanguage()
     LaunchedEffect(deviceLanguage) { app.settingsStore.load(deviceLanguage) }
+
+    // A launch with no connection leaves the account's settings, the
+    // catalogue and the personal shelves unread, and nothing asked again: 圖鑑
+    // sat on 載入圖鑑中… for good once the network came back. Only a return
+    // from offline asks — at launch the effects above already are — and only
+    // for what never arrived.
+    val online by app.connectivity.online.collectAsStateWithLifecycle()
+    var wasOffline by remember { mutableStateOf(false) }
+    LaunchedEffect(online) {
+        when (online) {
+            false -> wasOffline = true
+            true -> if (wasOffline) {
+                wasOffline = false
+                if (!app.settingsStore.loaded.value) app.settingsStore.load(deviceLanguage)
+                val direction = app.settingsStore.current.value.direction
+                if (!app.catalog.contents.value.loaded) app.catalog.load(direction)
+                if (!app.cardsSourceStore.personal.value.loaded) {
+                    val lang = if (app.settingsStore.loaded.value) app.settingsStore.current.value.language else deviceLanguage
+                    app.cardsSourceStore.load(lang.wire, direction)
+                }
+                app.masteryStore.load(direction)
+                app.progressStore.load(direction)
+            }
+            null -> Unit
+        }
+    }
 
     // The account's choice wins once it has arrived. Until then the device's
     // answer stands, so the first frame is not Chinese on a Japanese phone.
@@ -778,6 +815,7 @@ private fun SignedInScreens(
                             uiLang = uiLang,
                             signedIn = !isGuest,
                             accent = settings.accent,
+                            speech = app.speech,
                             // The card went into, or out of, the reader's own
                             // 圖鑑 and study queue — 已收進 and the counts on 今日
                             // are drawn from those.
@@ -928,6 +966,7 @@ private fun SignedInScreens(
                             direction = direction,
                             uiLang = uiLang,
                             accent = settings.accent,
+                            speech = app.speech,
                         ).also { it.load(route.wordId) }
                     }
                     WordDetailScreen(
@@ -1022,5 +1061,22 @@ private fun TodayColumn(
             onOpenShelf = onOpenShelf,
             onOpenStudyThemes = onOpenStudyThemes,
         )
+    }
+}
+
+/** iOS's `OfflineBanner`: an alert-red pill under the status bar while the device is offline. */
+@Composable
+private fun OfflineBanner(modifier: Modifier = Modifier) {
+    Row(
+        modifier
+            .statusBarsPadding()
+            .padding(top = TujiSpace.S2)
+            .background(TujiColor.Alert)
+            .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TujiGlyph.WifiOff(size = 16.dp, tint = TujiColor.Paper)
+        Text(stringResource(R.string.offline_banner), style = TujiType.bodySmStrong, color = TujiColor.Paper)
     }
 }
