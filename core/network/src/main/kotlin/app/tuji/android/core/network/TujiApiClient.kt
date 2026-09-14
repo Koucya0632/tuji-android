@@ -125,20 +125,19 @@ class TujiApiClient(
             }
         }
 
-        when {
-            policy.access.requiresToken ->
-                template.header(HttpHeaders.Authorization, "Bearer ${tokens.validAccessToken()}")
-
+        val sent: String? = when {
+            policy.access.requiresToken -> tokens.validAccessToken()
             policy.access.attachesTokenWhenAvailable && tokens.isSignedIn ->
                 runCatching { tokens.validAccessToken() }.getOrNull()
-                    ?.let { template.header(HttpHeaders.Authorization, "Bearer $it") }
+            else -> null
         }
+        sent?.let { template.header(HttpHeaders.Authorization, "Bearer $it") }
 
         val first = execute(template)
         if (first.status.value == 401 && policy.access.mayRetryUnauthorized) {
-            // Same request, fresh Authorization. Asking for a token refreshes
-            // the session as a side effect, so re-reading it is enough.
-            val fresh = tokens.validAccessToken()
+            // Same request, fresh Authorization — fresh because the server said
+            // so, not because the device's clock agrees. See refreshedAccessToken.
+            val fresh = tokens.refreshedAccessToken(rejected = sent)
             val retry = HttpRequestBuilder().takeFrom(template).apply {
                 headers.remove(HttpHeaders.Authorization)
                 header(HttpHeaders.Authorization, "Bearer $fresh")

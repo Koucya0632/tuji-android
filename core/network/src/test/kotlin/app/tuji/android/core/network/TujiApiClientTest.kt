@@ -32,16 +32,28 @@ class TujiApiClientTest {
 
     private val jsonHeaders = headersOf(HttpHeaders.ContentType, "application/json")
 
+    /**
+     * Behaves like the real session: asking again returns the same token. The
+     * fake this replaces handed out the next token on every ask, which is how
+     * the 401 retry passed here while re-sending the refused token on devices.
+     */
     private class FakeTokens(
         private val tokens: MutableList<String>,
         override val isSignedIn: Boolean = true,
     ) : AccessTokenProvider {
         var asked = 0
             private set
+        val refused = mutableListOf<String?>()
 
         override suspend fun validAccessToken(): String {
             asked++
-            return if (tokens.size > 1) tokens.removeAt(0) else tokens.first()
+            return tokens.first()
+        }
+
+        override suspend fun refreshedAccessToken(rejected: String?): String {
+            refused += rejected
+            if (tokens.size > 1) tokens.removeAt(0)
+            return tokens.first()
         }
     }
 
@@ -94,7 +106,11 @@ class TujiApiClientTest {
         api.get<Map<String, String>>(Endpoint.SmokeWhoami)
 
         assertEquals(listOf("Bearer stale", "Bearer fresh"), sent)
-        assertEquals(2, tokens.asked)
+        // The replacement is asked for by naming the refused token — not by
+        // asking for "a valid token" again, which the device would answer with
+        // the same one while its clock says it has not expired.
+        assertEquals(listOf<String?>("stale"), tokens.refused)
+        assertEquals(1, tokens.asked)
     }
 
     @Test
@@ -197,6 +213,23 @@ class TujiApiClientTest {
         api.get<Map<String, Boolean>>(OptionalAuthProbe)
 
         assertNull(authorization)
+    }
+
+    @Test
+    fun `an optional-auth 401 is retried with a replacement for the token it carried`() = runTest {
+        val sent = mutableListOf<String?>()
+        val engine = MockEngine { request ->
+            sent += request.headers[HttpHeaders.Authorization]
+            if (sent.size == 1) respondError(HttpStatusCode.Unauthorized)
+            else respond("""{"ok":true}""", HttpStatusCode.OK, jsonHeaders)
+        }
+        val tokens = FakeTokens(mutableListOf("stale", "fresh"))
+        val api = TujiApiClient("https://example.test", tokens, engine)
+
+        api.get<Map<String, Boolean>>(OptionalAuthProbe)
+
+        assertEquals(listOf("Bearer stale", "Bearer fresh"), sent)
+        assertEquals(listOf<String?>("stale"), tokens.refused)
     }
 
     @Test
