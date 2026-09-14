@@ -125,6 +125,8 @@ class TujiApplication : Application() {
             scope = kotlinx.coroutines.CoroutineScope(
                 kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
             ),
+            // Read at each change, not captured: the store outlives sign-in.
+            signedIn = { auth.session.value.state is app.tuji.android.core.auth.AuthState.SignedIn },
         )
     }
 

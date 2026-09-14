@@ -37,6 +37,7 @@ import app.tuji.android.core.design.TujiTheme
 import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
 import app.tuji.android.settings.SettingsBusy
+import app.tuji.android.settings.SettingsReadiness
 import app.tuji.android.settings.SettingsScreen
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.study.MasteryDistribution
@@ -271,6 +272,7 @@ private fun SignedInScreens(
     val scope = rememberCoroutineScope()
     val insets = WindowInsets.systemBars.asPaddingValues()
     val direction = settings.direction
+    val deviceLanguage = rememberDeviceLanguage()
     val uiLang = uiLanguage.wire
 
     // Ahead of every screen that reads it: 圖鑑 draws it, 搜尋 filters it, and
@@ -309,6 +311,8 @@ private fun SignedInScreens(
     val session by app.auth.session.collectAsStateWithLifecycle()
     val isGuest = session.state is AuthState.Guest
     val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
+    val settingsLoadFailed by app.settingsStore.loadFailed.collectAsStateWithLifecycle()
+    val settingsReadiness = SettingsReadiness.of(isGuest, settingsLoaded, settingsLoadFailed)
 
     // Every word the 學習主題 selection can reach. 自定義 and 物見 are themes
     // with nothing in the catalogue — their words are the user's own and
@@ -544,6 +548,12 @@ private fun SignedInScreens(
     // nothing until the user left it and came back.
     val reconnects by app.connectivity.reconnects.collectAsStateWithLifecycle()
     LaunchedEffect(nav.current, reconnects) {
+        // 設定 and 學習主題 stay inert until the account's settings are here.
+        // A launch whose read failed asks nowhere else, so arriving asks again.
+        val editsSettings = nav.current == AppRoute.Settings || nav.current == AppRoute.StudyThemes
+        if (editsSettings && !isGuest && !app.settingsStore.loaded.value) {
+            app.settingsStore.load(deviceLanguage)
+        }
         if (nav.current == AppRoute.Today) {
             today.refresh()
             // 主題進度 and the streak chip read it now, and both move without
@@ -696,6 +706,8 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Settings -> SettingsScreen(
+                    readiness = settingsReadiness,
+                    onRetryLoad = { scope.launch { app.settingsStore.load(deviceLanguage) } },
                     settings = settings,
                     busy = settingsBusy,
                     bottomPadding = 0.dp,
@@ -774,6 +786,8 @@ private fun SignedInScreens(
                 }
 
                 AppRoute.StudyThemes -> StudyThemesScreen(
+                    readiness = settingsReadiness,
+                    onRetryLoad = { scope.launch { app.settingsStore.load(deviceLanguage) } },
                     selected = settings.studyCategories,
                     categories = catalog.categories,
                     uiLang = uiLang,

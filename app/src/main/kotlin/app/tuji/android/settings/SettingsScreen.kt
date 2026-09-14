@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -65,7 +66,13 @@ fun SettingsScreen(
     /** Null for a guest, who has no public profile and nobody to have blocked. */
     onEditProfile: (() -> Unit)?,
     onOpenBlocked: (() -> Unit)?,
+    readiness: SettingsReadiness,
+    onRetryLoad: () -> Unit,
 ) {
+    // 學習 and 顯示 are the account's settings; 帳號 and below are not, and stay
+    // usable while those load — signing out must never wait on a read.
+    val ready = readiness == SettingsReadiness.Ready
+    val inert = Modifier.alpha(if (ready) 1f else 0.45f)
     var picker by remember { mutableStateOf<Picker?>(null) }
     var confirm by remember { mutableStateOf<Confirm?>(null) }
 
@@ -77,32 +84,44 @@ fun SettingsScreen(
         TujiScreenTitle(stringResource(R.string.settings_title))
 
         TujiSection(title = stringResource(R.string.settings_group_study)) {
+            SettingsReadinessLine(readiness, onRetryLoad)
+            // Values are hidden, not just dimmed, until they are the account's:
+            // 「未選主題」 on a seed is a claim that the themes are gone.
             TujiSettingRow(
                 label = stringResource(R.string.settings_direction),
+                modifier = inert,
+                showsArrow = ready,
                 subtitle = stringResource(R.string.settings_direction_why),
-                value = directionLabel(settings.direction),
-                onClick = { picker = Picker.Direction },
+                value = if (ready) directionLabel(settings.direction) else null,
+                onClick = if (ready) ({ picker = Picker.Direction }) else null,
             )
             TujiRowDivider()
             TujiSettingRow(
                 label = stringResource(R.string.settings_daily_goal),
+                modifier = inert,
+                showsArrow = ready,
                 subtitle = stringResource(R.string.settings_daily_goal_why),
-                value = stringResource(R.string.settings_goal_value, settings.dailyGoal),
-                onClick = { picker = Picker.DailyGoal },
+                value = if (ready) stringResource(R.string.settings_goal_value, settings.dailyGoal) else null,
+                onClick = if (ready) ({ picker = Picker.DailyGoal }) else null,
             )
             TujiRowDivider()
             TujiSettingRow(
                 label = stringResource(R.string.settings_themes),
+                modifier = inert,
+                showsArrow = ready,
                 subtitle = stringResource(R.string.settings_themes_why),
-                value = themesLabel(settings.studyCategories),
-                onClick = onOpenStudyThemes,
+                value = if (ready) themesLabel(settings.studyCategories) else null,
+                onClick = if (ready) onOpenStudyThemes else null,
             )
             TujiRowDivider()
             TujiSettingRow(
                 label = stringResource(R.string.settings_show_zh),
+                modifier = inert,
                 showsArrow = false,
-                trailing = {
-                    TujiCheckbox(settings.showZh) { on -> onChange { it.copy(showZh = on) } }
+                trailing = if (ready) {
+                    { TujiCheckbox(settings.showZh) { on -> onChange { it.copy(showZh = on) } } }
+                } else {
+                    null
                 },
             )
         }
@@ -110,8 +129,10 @@ fun SettingsScreen(
         TujiSection(title = stringResource(R.string.settings_group_display)) {
             TujiSettingRow(
                 label = stringResource(R.string.settings_language),
-                value = languageLabel(settings.language),
-                onClick = { picker = Picker.Language },
+                modifier = inert,
+                showsArrow = ready,
+                value = if (ready) languageLabel(settings.language) else null,
+                onClick = if (ready) ({ picker = Picker.Language }) else null,
             )
             // Only while learning English: a Japanese recording has one accent,
             // and a control that changes nothing is worse than no control.
@@ -119,8 +140,10 @@ fun SettingsScreen(
                 TujiRowDivider()
                 TujiSettingRow(
                     label = stringResource(R.string.settings_accent),
-                    value = accentLabel(settings.accent),
-                    onClick = { picker = Picker.Accent },
+                    modifier = inert,
+                    showsArrow = ready,
+                    value = if (ready) accentLabel(settings.accent) else null,
+                    onClick = if (ready) ({ picker = Picker.Accent }) else null,
                 )
             }
         }

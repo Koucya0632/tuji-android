@@ -178,6 +178,8 @@
     <string name="me_more">多</string>
     <string name="me_breakdown">明細</string>
     <string name="settings_title">設定</string>
+    <string name="settings_loading">設定を読み込み中…</string>
+    <string name="settings_load_failed">設定を読み込めないため、まだ変更できません</string>
     <string name="settings_group_study">学習</string>
     <string name="settings_group_display">表示</string>
     <string name="settings_group_account">アカウント</string>
