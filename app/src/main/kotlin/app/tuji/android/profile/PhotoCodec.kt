@@ -44,14 +44,19 @@ object PhotoCodec {
         }
     }
 
-    suspend fun profileJpeg(bitmap: Bitmap, square: CropSquare): ByteArray = withContext(Dispatchers.Default) {
+    suspend fun profileJpeg(bitmap: Bitmap, square: CropSquare): ByteArray = squareJpeg(bitmap, square, PROFILE_SIDE, PROFILE_QUALITY)
+
+    /** iOS's `ImageIntakeEncoding.collection`: the public shelf tile draws it larger than an avatar. */
+    suspend fun collectionJpeg(bitmap: Bitmap, square: CropSquare): ByteArray = squareJpeg(bitmap, square, 1600, 82)
+
+    private suspend fun squareJpeg(bitmap: Bitmap, square: CropSquare, maxSide: Int, quality: Int): ByteArray = withContext(Dispatchers.Default) {
         val left = square.left.roundToInt().coerceIn(0, bitmap.width - 1)
         val top = square.top.roundToInt().coerceIn(0, bitmap.height - 1)
         val side = square.side.roundToInt().coerceAtMost(minOf(bitmap.width - left, bitmap.height - top)).coerceAtLeast(1)
         val cropped = Bitmap.createBitmap(bitmap, left, top, side, side)
-        val out = if (side > PROFILE_SIDE) Bitmap.createScaledBitmap(cropped, PROFILE_SIDE, PROFILE_SIDE, true) else cropped
+        val out = if (side > maxSide) Bitmap.createScaledBitmap(cropped, maxSide, maxSide, true) else cropped
         ByteArrayOutputStream().use { stream ->
-            out.compress(Bitmap.CompressFormat.JPEG, PROFILE_QUALITY, stream)
+            out.compress(Bitmap.CompressFormat.JPEG, quality, stream)
             stream.toByteArray()
         }
     }

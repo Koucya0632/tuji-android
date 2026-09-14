@@ -93,7 +93,7 @@ fun EditProfileScreen(
             HeroAvatar(state, enabled = !state.saving && !state.loading, onClick = { picking = true })
 
             Field(label = stringResource(R.string.profile_nickname)) {
-                Input(
+                FormInput(
                     value = draft.nickname,
                     onValueChange = onNickname,
                     placeholder = stringResource(R.string.profile_nickname_placeholder),
@@ -106,7 +106,7 @@ fun EditProfileScreen(
             }
 
             Field(label = stringResource(R.string.profile_bio)) {
-                Input(
+                FormInput(
                     value = draft.bio,
                     onValueChange = onBio,
                     placeholder = stringResource(R.string.profile_bio_placeholder),
@@ -209,7 +209,7 @@ private fun Hint(text: String, modifier: Modifier = Modifier) {
 
 /** Paper ground and a rule, red while the value is over its limit — iOS's form field. */
 @Composable
-private fun Input(
+internal fun FormInput(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,

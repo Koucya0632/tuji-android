@@ -68,6 +68,11 @@ import app.tuji.android.community.PublicItemScreen
 import app.tuji.android.profile.BlockedAuthorsScreen
 import app.tuji.android.manage.AtlasManageScreen
 import app.tuji.android.manage.AtlasManageViewModel
+import app.tuji.android.manage.CollectionEditScreen
+import app.tuji.android.manage.CollectionEditViewModel
+import app.tuji.android.manage.MyCollectionsViewModel
+import app.tuji.android.core.community.DeleteWarning
+import app.tuji.android.core.model.AtlasMyCollection
 import app.tuji.android.manage.ManageCardScreen
 import app.tuji.android.profile.EditProfileScreen
 import app.tuji.android.profile.EditProfileViewModel
@@ -343,6 +348,16 @@ private fun SignedInScreens(
         )
     }
     val manageState by manage.state.collectAsStateWithLifecycle()
+    val myCollections = remember(direction) {
+        MyCollectionsViewModel(
+            authoring = app.atlas,
+            language = direction.targetLanguage,
+            // A public collection came or went: 物見's shelves and the
+            // author's own row count it.
+            onChanged = { community.load() },
+        )
+    }
+    val myCollectionsState by myCollections.state.collectAsStateWithLifecycle()
     val communityReported by community.reported.collectAsStateWithLifecycle()
 
     val account = remember {
@@ -587,6 +602,46 @@ private fun SignedInScreens(
                         onToggle = manage::toggle,
                         onOpen = { nav = nav.push(AppRoute.ManageCard(it)) },
                         onDelete = { ids -> manage.delete(ids) },
+                        collections = myCollectionsState,
+                        onLoadCollections = myCollections::load,
+                        onCreateCollection = { title, description, onCreated -> myCollections.create(title, description) { onCreated() } },
+                        onDismissCreateError = myCollections::dismissCreateError,
+                        onOpenCollection = { nav = nav.push(AppRoute.CollectionEdit(it)) },
+                    )
+                }
+
+                is AppRoute.CollectionEdit -> {
+                    val vm = remember(route.collectionId) {
+                        CollectionEditViewModel(
+                            collectionId = route.collectionId,
+                            authoring = app.atlas,
+                            onChanged = {
+                                myCollections.load()
+                                community.load()
+                            },
+                        ).also { it.load() }
+                    }
+                    val editState by vm.state.collectAsStateWithLifecycle()
+                    CollectionEditScreen(
+                        state = editState,
+                        deleteWarning = DeleteWarning.of(editState.review),
+                        deleting = myCollectionsState.deleting,
+                        onBack = { nav = nav.pop() },
+                        onRetry = vm::load,
+                        onTitle = vm::setTitle,
+                        onDescription = vm::setDescription,
+                        onSaveMeta = vm::saveMeta,
+                        onAvatar = vm::uploadAvatar,
+                        onOpenPicker = vm::loadCandidates,
+                        onAdd = vm::addMember,
+                        onRemove = vm::removeMember,
+                        onSubmit = vm::submit,
+                        onWithdraw = vm::withdraw,
+                        onDelete = {
+                            myCollections.delete(
+                                AtlasMyCollection(id = route.collectionId, reviewStatus = editState.collection?.reviewStatus),
+                            ) { if (nav.current == route) nav = nav.pop() }
+                        },
                     )
                 }
 

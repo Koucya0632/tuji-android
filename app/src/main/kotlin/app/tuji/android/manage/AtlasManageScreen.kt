@@ -18,6 +18,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +39,10 @@ import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
+import app.tuji.android.core.design.TujiNavIcon
+import app.tuji.android.core.design.TujiSegmented
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPromptStyle
 import app.tuji.android.core.design.TujiRowDivider
@@ -50,9 +55,9 @@ import app.tuji.android.core.model.TargetLanguage
 import coil3.compose.AsyncImage
 
 /**
- * 圖鑑管理 — iOS's `AtlasManageView`, 卡片 half: every photo this account made
- * a card from, in the language being learned, with a way to open, select and
- * delete them. Making cards is the camera's job; nothing here creates one.
+ * 圖鑑管理 — iOS's `AtlasManageView`: 圖鑑卡片, every photo this account made a
+ * card from, in the language being learned, to open, select and delete; and
+ * 合集, the collections made from them. Making cards is the camera's job.
  */
 @Composable
 fun AtlasManageScreen(
@@ -63,15 +68,34 @@ fun AtlasManageScreen(
     onToggle: (String) -> Unit,
     onOpen: (String) -> Unit,
     onDelete: (Set<String>) -> Unit,
+    collections: MyCollectionsViewModel.State,
+    onLoadCollections: () -> Unit,
+    onCreateCollection: (title: String, description: String, onCreated: () -> Unit) -> Unit,
+    onDismissCreateError: () -> Unit,
+    onOpenCollection: (String) -> Unit,
 ) {
     var askDelete by remember { mutableStateOf(false) }
+    var section by rememberSaveable { mutableStateOf(ManageSection.Cards) }
+    var creating by remember { mutableStateOf(false) }
     val rows = state.rows
+    // Asked on the first visit to 合集, not before: most people open this
+    // page for a card, and the collections are one more request.
+    LaunchedEffect(section) {
+        if (section == ManageSection.Collections) onLoadCollections()
+        if (section != ManageSection.Cards) onSelecting(false)
+    }
 
     Column(Modifier.fillMaxSize().background(TujiColor.Paper)) {
         TujiNavBar(
             onLeading = onBack,
             leadingLabel = stringResource(R.string.atlas_back),
-            trailing = if (rows.isNotEmpty()) {
+            trailing = if (section == ManageSection.Collections) {
+                {
+                    TujiNavIcon(label = stringResource(R.string.collections_create), onClick = { creating = true }) {
+                        TujiGlyph.Plus(size = 16.dp, tint = TujiColor.Ink)
+                    }
+                }
+            } else if (rows.isNotEmpty()) {
                 {
                     Text(
                         stringResource(if (state.selecting) R.string.manage_done else R.string.manage_select),
@@ -84,8 +108,19 @@ fun AtlasManageScreen(
                 null
             },
         )
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            TujiScreenTitle(stringResource(R.string.manage_title))
+        TujiScreenTitle(stringResource(R.string.manage_title))
+        TujiSegmented(
+            options = listOf(
+                ManageSection.Cards to stringResource(R.string.manage_section_cards),
+                ManageSection.Collections to stringResource(R.string.manage_section_collections),
+            ),
+            selected = section,
+            onSelect = { section = it },
+            modifier = Modifier.padding(vertical = TujiSpace.S3),
+        )
+        if (section == ManageSection.Collections) {
+            MyCollectionsPane(collections, onRetry = onLoadCollections, onOpen = onOpenCollection, modifier = Modifier.weight(1f))
+        } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             TujiSection(title = stringResource(R.string.manage_cards_section)) {
                 if (state.actionFailed) {
                     Text(
@@ -151,6 +186,13 @@ fun AtlasManageScreen(
         }
     }
 
+    if (creating) {
+        CreateCollectionSheet(
+            state = collections,
+            onCreate = { title, description -> onCreateCollection(title, description) { creating = false } },
+            onDismiss = { creating = false; onDismissCreateError() },
+        )
+    }
     if (askDelete) {
         val batch = state.selected
         TujiPrompt(
@@ -196,6 +238,9 @@ private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, onClic
         }
     }
 }
+
+/** 圖鑑卡片 or 合集. */
+enum class ManageSection { Cards, Collections }
 
 /** Not an empty state: "nothing here" and "your cards are on the other side" are different sentences. */
 @Composable

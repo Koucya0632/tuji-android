@@ -388,6 +388,67 @@ interface Endpoint {
         )
     }
 
+    /** The account's own 合集: GET lists them, POST creates one. */
+    data object OwnCollections : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** One own 合集: GET to edit, PATCH its words, DELETE it. */
+    data class OwnCollection(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** The collection's avatar: an upload and an image check in one request. */
+    data class OwnCollectionAvatar(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id/avatar",
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
+    data class OwnCollectionItems(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id/items",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    data class OwnCollectionItem(val id: String, val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id/items/$itemId",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    data class OwnCollectionPublish(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id/publish",
+            policy = EndpointPolicy.PrivateFreshSlow,
+        )
+    }
+
+    data class OwnCollectionWithdraw(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/$id/withdraw",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** The account's confirmed cards in one language, for 加入項目. */
+    data class OwnCollectionCandidates(val lang: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/collections/candidates",
+            query = listOf("lang" to lang),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** Every photo and card this account made, for 圖鑑管理. */
     data class AtlasSync(val limit: Int = 500) : Endpoint {
         override val descriptor get() = EndpointDescriptor(

@@ -4,6 +4,13 @@ import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.core.model.AtlasAuthor
 import app.tuji.android.core.model.AtlasSyncResponse
+import app.tuji.android.core.model.AtlasCollectionAvatarResponse
+import app.tuji.android.core.model.AtlasCollectionCandidatesResponse
+import app.tuji.android.core.model.AtlasCollectionEditResponse
+import app.tuji.android.core.model.AtlasCollectionMember
+import app.tuji.android.core.model.AtlasMyCollection
+import app.tuji.android.core.model.AtlasMyCollectionResponse
+import app.tuji.android.core.model.AtlasMyCollectionsResponse
 import app.tuji.android.core.model.TopWord
 import app.tuji.android.core.model.TopWordsResponse
 import app.tuji.android.core.model.AtlasAuthorPage
@@ -166,6 +173,21 @@ interface AtlasShelfManaging {
     suspend fun withdrawItem(itemId: String)
 }
 
+/** 我的合集: making one, filling it, and putting it up for review. */
+interface CollectionAuthoring {
+    suspend fun myCollections(): List<AtlasMyCollection>
+    suspend fun createCollection(title: String, description: String?, language: TargetLanguage): AtlasMyCollection
+    suspend fun deleteCollection(id: String)
+    suspend fun collectionForEdit(id: String): AtlasCollectionEditResponse
+    suspend fun updateCollection(id: String, title: String, description: String?, coverPublicItemId: String?)
+    suspend fun uploadCollectionAvatar(id: String, jpeg: ByteArray): AtlasCollectionAvatarResponse
+    suspend fun addCollectionItem(id: String, itemId: String)
+    suspend fun removeCollectionItem(id: String, itemId: String)
+    suspend fun publishCollection(id: String): AtlasPublishResult
+    suspend fun withdrawCollection(id: String)
+    suspend fun collectionCandidates(language: TargetLanguage): List<AtlasCollectionMember>
+}
+
 /** 我's 需要加強. */
 fun interface WeakWordsReading {
     suspend fun weakWords(limit: Int): List<TopWord>
@@ -199,8 +221,21 @@ private data class BlockBody(val handle: String)
 @Serializable
 private data class ProfileUpdateResponse(val author: AtlasAuthor)
 
+@Serializable
+private data class CollectionCreateBody(val title: String, val description: String?, val targetLanguage: String)
+
+/**
+ * A null is left out on the wire (`explicitNulls = false`), which the route
+ * reads as "unchanged" — the same as iOS's encoder, which skips nil.
+ */
+@Serializable
+private data class CollectionUpdateBody(val title: String, val description: String?, val coverPublicItemId: String?)
+
+@Serializable
+private data class CollectionAddBody(val sourceItemId: String)
+
 class AtlasRepository(private val api: TujiApiClient) :
-    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing, AtlasShelfManaging, WeakWordsReading,
+    AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing, AtlasShelfManaging, WeakWordsReading, CollectionAuthoring,
     EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading,
     CollectionBookmarking, CollectionLearning {
 
@@ -264,6 +299,61 @@ class AtlasRepository(private val api: TujiApiClient) :
     override suspend fun me(): UserMe? = api.get<UserMeResponse>(Endpoint.Me).user
 
     override suspend fun sync(): AtlasSyncResponse = api.get(Endpoint.AtlasSync())
+
+    override suspend fun myCollections(): List<AtlasMyCollection> =
+        api.get<AtlasMyCollectionsResponse>(Endpoint.OwnCollections).collections
+
+    override suspend fun createCollection(title: String, description: String?, language: TargetLanguage): AtlasMyCollection =
+        api.post<AtlasMyCollectionResponse>(
+            Endpoint.OwnCollections,
+            CollectionCreateBody(title = title, description = description, targetLanguage = if (language == TargetLanguage.JA) "ja" else "en"),
+        ).collection
+
+    override suspend fun deleteCollection(id: String) {
+        api.delete<Empty>(Endpoint.OwnCollection(id))
+    }
+
+    override suspend fun collectionForEdit(id: String): AtlasCollectionEditResponse =
+        api.get(Endpoint.OwnCollection(id))
+
+    override suspend fun updateCollection(id: String, title: String, description: String?, coverPublicItemId: String?) {
+        api.patch<Empty>(Endpoint.OwnCollection(id), CollectionUpdateBody(title, description, coverPublicItemId))
+    }
+
+    override suspend fun uploadCollectionAvatar(id: String, jpeg: ByteArray): AtlasCollectionAvatarResponse = api.post(
+        Endpoint.OwnCollectionAvatar(id),
+        MultiPartFormDataContent(
+            formData {
+                append(
+                    "image", jpeg,
+                    Headers.build {
+                        append(HttpHeaders.ContentType, "image/jpeg")
+                        append(HttpHeaders.ContentDisposition, "filename=\"collection-avatar.jpg\"")
+                    },
+                )
+            },
+        ),
+    )
+
+    override suspend fun addCollectionItem(id: String, itemId: String) {
+        api.post<Empty>(Endpoint.OwnCollectionItems(id), CollectionAddBody(sourceItemId = itemId))
+    }
+
+    override suspend fun removeCollectionItem(id: String, itemId: String) {
+        api.delete<Empty>(Endpoint.OwnCollectionItem(id, itemId))
+    }
+
+    override suspend fun publishCollection(id: String): AtlasPublishResult =
+        api.post(Endpoint.OwnCollectionPublish(id), Empty())
+
+    override suspend fun withdrawCollection(id: String) {
+        api.post<Empty>(Endpoint.OwnCollectionWithdraw(id), Empty())
+    }
+
+    override suspend fun collectionCandidates(language: TargetLanguage): List<AtlasCollectionMember> =
+        api.get<AtlasCollectionCandidatesResponse>(
+            Endpoint.OwnCollectionCandidates(if (language == TargetLanguage.JA) "ja" else "en"),
+        ).items
 
     override suspend fun deleteImage(imageId: String) {
         api.delete<Empty>(Endpoint.AtlasImage(imageId))
