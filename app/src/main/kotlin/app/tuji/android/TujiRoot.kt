@@ -50,6 +50,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.draw.shadow
 import app.tuji.android.atlas.AtlasSearchScreen
 import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.atlas.AtlasCardsScreen
@@ -147,36 +150,36 @@ fun TujiRoot(app: TujiApplication) {
 
     val online by app.connectivity.online.collectAsStateWithLifecycle()
     Box(Modifier.fillMaxSize()) {
-    when (destination) {
-        is LaunchDestination.Splash -> SplashScreen()
-        is LaunchDestination.LearningDirection -> LearningDirectionScreen(
-            onPick = {
-                app.onboarding.learningDirection = it
-                direction = it
-            },
-        )
-        // The 3-page marketing intro is not ported. Treating it as seen sends a
-        // signed-out user to Welcome, which is where they were going anyway.
-        is LaunchDestination.Onboarding -> WelcomeScreen(app.auth)
-        is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
-        is LaunchDestination.Setup -> SignedInShell(app, identity = null)
-        is LaunchDestination.Main -> SignedInShell(
-            app,
-            // iOS's order, blanks skipped, and the email's local part rather
-            // than the whole address: a greeting is not the place to print
-            // somebody's email on screen.
-            identity = (session.state as? AuthState.SignedIn)?.user?.let { user ->
-                user.nickname?.takeIf { it.isNotBlank() }
-                    ?: user.username?.takeIf { it.isNotBlank() }
-                    ?: user.email?.substringBefore('@')?.takeIf { it.isNotBlank() }
-            },
-        )
-    }
-    // Over every screen but the splash, which says nothing that needs the
-    // network yet. Requests explain their own failures; this says why.
-    if (destination != LaunchDestination.Splash && online == false) {
-        OfflineBanner(Modifier.align(Alignment.TopCenter))
-    }
+        when (destination) {
+            is LaunchDestination.Splash -> SplashScreen()
+            is LaunchDestination.LearningDirection -> LearningDirectionScreen(
+                onPick = {
+                    app.onboarding.learningDirection = it
+                    direction = it
+                },
+            )
+            // The 3-page marketing intro is not ported. Treating it as seen sends a
+            // signed-out user to Welcome, which is where they were going anyway.
+            is LaunchDestination.Onboarding -> WelcomeScreen(app.auth)
+            is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
+            is LaunchDestination.Setup -> SignedInShell(app, identity = null)
+            is LaunchDestination.Main -> SignedInShell(
+                app,
+                // iOS's order, blanks skipped, and the email's local part rather
+                // than the whole address: a greeting is not the place to print
+                // somebody's email on screen.
+                identity = (session.state as? AuthState.SignedIn)?.user?.let { user ->
+                    user.nickname?.takeIf { it.isNotBlank() }
+                        ?: user.username?.takeIf { it.isNotBlank() }
+                        ?: user.email?.substringBefore('@')?.takeIf { it.isNotBlank() }
+                },
+            )
+        }
+        // Over every screen but the splash, which says nothing that needs the
+        // network yet. Requests explain their own failures; this says why.
+        if (destination != LaunchDestination.Splash && online == false) {
+            OfflineBanner(Modifier.align(Alignment.TopCenter))
+        }
     }
 }
 
@@ -208,30 +211,29 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
     val deviceLanguage = rememberDeviceLanguage()
     LaunchedEffect(deviceLanguage) { app.settingsStore.load(deviceLanguage) }
 
+    // The system voice answers "ready" a moment after it is started, and a word
+    // page decides whether to draw its pronunciation button as it opens. Started
+    // lazily by that page, the first one opened would not get the button.
+    LaunchedEffect(Unit) { app.speech }
+
     // A launch with no connection leaves the account's settings, the
     // catalogue and the personal shelves unread, and nothing asked again: 圖鑑
     // sat on 載入圖鑑中… for good once the network came back. Only a return
     // from offline asks — at launch the effects above already are — and only
-    // for what never arrived.
-    val online by app.connectivity.online.collectAsStateWithLifecycle()
-    var wasOffline by remember { mutableStateOf(false) }
-    LaunchedEffect(online) {
-        when (online) {
-            false -> wasOffline = true
-            true -> if (wasOffline) {
-                wasOffline = false
-                if (!app.settingsStore.loaded.value) app.settingsStore.load(deviceLanguage)
-                val direction = app.settingsStore.current.value.direction
-                if (!app.catalog.contents.value.loaded) app.catalog.load(direction)
-                if (!app.cardsSourceStore.personal.value.loaded) {
-                    val lang = if (app.settingsStore.loaded.value) app.settingsStore.current.value.language else deviceLanguage
-                    app.cardsSourceStore.load(lang.wire, direction)
-                }
-                app.masteryStore.load(direction)
-                app.progressStore.load(direction)
-            }
-            null -> Unit
+    // for what never arrived. The screen on show asks for its own; see the
+    // per-tab effect in SignedInScreens.
+    val reconnects by app.connectivity.reconnects.collectAsStateWithLifecycle()
+    val reconnectsAtLaunch = remember { app.connectivity.reconnects.value }
+    LaunchedEffect(reconnects) {
+        if (reconnects == reconnectsAtLaunch) return@LaunchedEffect
+        if (!app.settingsStore.loaded.value) app.settingsStore.load(deviceLanguage)
+        val direction = app.settingsStore.current.value.direction
+        if (!app.catalog.contents.value.loaded) app.catalog.load(direction)
+        if (!app.cardsSourceStore.personal.value.loaded) {
+            val lang = if (app.settingsStore.loaded.value) app.settingsStore.current.value.language else deviceLanguage
+            app.cardsSourceStore.load(lang.wire, direction)
         }
+        app.masteryStore.load(direction)
     }
 
     // The account's choice wins once it has arrived. Until then the device's
@@ -537,8 +539,11 @@ private fun SignedInScreens(
     }
 
     // Every return to 今日, not only at launch: a session that just wrote three
-    // ratings has changed every number on that screen.
-    LaunchedEffect(nav.current) {
+    // ratings has changed every number on that screen. And every return of the
+    // network: a tab opened offline read nothing, and without this showed
+    // nothing until the user left it and came back.
+    val reconnects by app.connectivity.reconnects.collectAsStateWithLifecycle()
+    LaunchedEffect(nav.current, reconnects) {
         if (nav.current == AppRoute.Today) {
             today.refresh()
             // 主題進度 and the streak chip read it now, and both move without
@@ -1071,6 +1076,7 @@ private fun OfflineBanner(modifier: Modifier = Modifier) {
         modifier
             .statusBarsPadding()
             .padding(top = TujiSpace.S2)
+            .shadow(6.dp, RectangleShape, ambientColor = Color.Black.copy(alpha = 0.15f), spotColor = Color.Black.copy(alpha = 0.15f))
             .background(TujiColor.Alert)
             .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),

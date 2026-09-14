@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The offline banner and the reload when the network comes back. A
+         library already merges this in; declared here so the feature does not
+         depend on which libraries happen to be linked. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- 自製圖鑑 拍照. Requested at the moment the user opens the camera, not
          at launch: a permission asked for before the feature is visible is a

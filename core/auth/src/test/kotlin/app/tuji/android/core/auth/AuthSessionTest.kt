@@ -54,6 +54,30 @@ class AuthSessionTest {
         assertEquals(AuthState.SignedOut, s.state)
     }
 
+    @Test
+    fun `a retried refresh settles a launch still on the splash`() {
+        // Offline, with a token past 80% of its life but not expired: the
+        // client retries every ten seconds and never leaves Initializing.
+        val s = AuthSession().refreshRetrying(cached = alice)
+        assertEquals(AuthState.SignedIn(alice), s.state)
+    }
+
+    @Test
+    fun `a retried refresh with nothing cached keeps waiting`() {
+        assertEquals(AuthState.Checking, AuthSession().refreshRetrying(cached = null).state)
+    }
+
+    @Test
+    fun `a retried refresh changes nothing once past the splash`() {
+        // The client emits the same event for a mid-session refresh that fails.
+        // It must not sign a guest in, or swap the account on screen.
+        val guest = signedOut.enterGuest()
+        assertSame(guest, guest.refreshRetrying(cached = alice))
+        assertSame(signedOut, signedOut.refreshRetrying(cached = alice))
+        val bobIn = AuthSession().signedIn(bob)
+        assertSame(bobIn, bobIn.refreshRetrying(cached = alice))
+    }
+
     // Guest mode — the silent no-ops.
 
     @Test

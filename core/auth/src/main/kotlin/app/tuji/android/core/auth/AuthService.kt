@@ -5,7 +5,9 @@ import android.util.Log
 import app.tuji.android.core.network.AccessTokenProvider
 import app.tuji.android.core.network.ApiError
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.event.AuthEvent
 import io.github.jan.supabase.auth.providers.Apple
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -13,11 +15,15 @@ import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.RefreshFailureCause
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.ExperimentalTime
@@ -53,9 +59,43 @@ class AuthService(
         scope.launch {
             supabase.auth.sessionStatus.collect { status -> apply(status) }
         }
+        // An offline launch whose token is past 80% of its life but not yet
+        // expired gets no status at all: the client retries every ten seconds
+        // and stays Initializing, so the app sat on the splash until the
+        // network came back. The retry is announced only as an event.
+        scope.launch { settleStalledLaunch() }
     }
 
-    private fun apply(status: SessionStatus) {
+    /**
+     * `events` is marked experimental; it is also the only place the client
+     * says it is retrying. If it changes shape, this is the one call to fix.
+     */
+    @OptIn(SupabaseExperimental::class)
+    private suspend fun settleStalledLaunch() {
+        supabase.auth.events.collect { event ->
+            // The same event fires every ten seconds for a session that is
+            // already on screen and merely offline; only a waiting launch
+            // needs the stored session decrypted.
+            if (event is AuthEvent.RefreshFailure && state is AuthState.Checking) {
+                val cached = storedUser()
+                _session.update { it.refreshRetrying(cached) }
+            }
+        }
+    }
+
+    /**
+     * The account on this device, whatever the client is doing with it.
+     *
+     * `currentSessionOrNull` is not that: it answers only while the status is
+     * Authenticated, and a refresh that failed offline is exactly the moment
+     * it is not. Asking it here made the offline rule in [AuthSession] find no
+     * cached user every time, and an offline launch showed Welcome.
+     */
+    private suspend fun storedUser(): SessionUser? =
+        (supabase.auth.currentSessionOrNull() ?: runCatching { supabase.auth.sessionManager.loadSessionOrNull() }.getOrNull())
+            ?.user?.toSessionUser()
+
+    private suspend fun apply(status: SessionStatus) {
         _session.value = when (status) {
             is SessionStatus.Initializing -> _session.value
             is SessionStatus.Authenticated -> {
@@ -82,7 +122,7 @@ class AuthService(
                     is RefreshFailureCause.InternalServerError -> SessionRefreshFailure.Unreachable
                     else -> SessionRefreshFailure.Unreachable
                 }
-                val cached = supabase.auth.currentSessionOrNull()?.user?.toSessionUser()
+                val cached = storedUser()
                 _session.value.failedRefresh(cause, cached)
             }
         }
@@ -233,13 +273,46 @@ class AuthService(
      */
     @OptIn(ExperimentalTime::class)
     override suspend fun validAccessToken(): String {
-        val current = supabase.auth.currentSessionOrNull() ?: throw ApiError.NotAuthenticated
+        val current = supabase.auth.currentSessionOrNull() ?: return recoverStoredSession()
         val expiresInMillis = current.expiresAt.toEpochMilliseconds() - System.currentTimeMillis()
         if (expiresInMillis > REFRESH_MARGIN_MILLIS) return current.accessToken
 
         runCatching { supabase.auth.refreshCurrentSession() }
             .onFailure { Log.e(TAG, "token refresh failed", it) }
         return supabase.auth.currentSessionOrNull()?.accessToken ?: throw ApiError.NotAuthenticated
+    }
+
+    private val recovery = Mutex()
+
+    /**
+     * Signed in on the strength of the stored session while the client, after
+     * an offline refresh, holds none — and retries only every ten seconds. The
+     * reload on reconnecting asks sooner than that, so the refresh is made here
+     * from the stored token. Importing the result also ends the client's own
+     * retry loop. One at a time: that reload asks from several stores at once,
+     * and they should share one refresh, not race the same token.
+     */
+    private suspend fun recoverStoredSession(): String {
+        if (state !is AuthState.SignedIn) throw ApiError.NotAuthenticated
+        return recovery.withLock {
+            supabase.auth.currentSessionOrNull()?.let { return@withLock it.accessToken }
+            val stored = runCatching { supabase.auth.sessionManager.loadSessionOrNull() }.getOrNull()
+                ?: throw ApiError.NotAuthenticated
+            val fresh = try {
+                supabase.auth.refreshSession(stored.refreshToken)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                // Still offline, or the token was revoked. Either way the
+                // client's own loop is still running and settles the account.
+                // One line, not a trace: offline, every request at launch
+                // lands here once.
+                Log.w(TAG, "stored session refresh failed: ${e.message}")
+                throw ApiError.Transport(e)
+            }
+            supabase.auth.importSession(fresh)
+            fresh.accessToken
+        }
     }
 
     private companion object {

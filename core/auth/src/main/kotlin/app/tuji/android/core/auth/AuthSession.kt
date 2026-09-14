@@ -54,6 +54,16 @@ data class AuthSession(
             copy(state = AuthState.SignedOut)
         }
 
+    /**
+     * A refresh that could not be made and is being retried, before the token
+     * has actually expired. The client reports no status for that — the launch
+     * stays [AuthState.Checking], on the splash, for as long as the phone is
+     * offline. Only a launch still waiting is settled by it: to anyone already
+     * past the splash, a retry changes nothing.
+     */
+    fun refreshRetrying(cached: SessionUser?): AuthSession =
+        if (state is AuthState.Checking && cached != null) copy(state = AuthState.SignedIn(cached)) else this
+
     // Guest
 
     /** No-op unless signed out. Stated here because the type cannot say it. */
