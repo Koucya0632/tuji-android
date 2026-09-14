@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.Milestone
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyMode
@@ -116,6 +117,11 @@ class NewFlowViewModel(
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state.asStateFlow()
+
+    private val _milestone = MutableStateFlow<Milestone?>(null)
+
+    /** A streak milestone an answer crossed; see `ReviewViewModel.milestone`. */
+    val milestone: StateFlow<Milestone?> = _milestone.asStateFlow()
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
     private var beat: Job? = null
@@ -397,7 +403,9 @@ class NewFlowViewModel(
             activity = LearnedRating.ACTIVITY,
         )
         work.launch {
-            if (writer.submitAnswer(payload) is StudyWriteOutcome.Parked) {
+            val outcome = writer.submitAnswer(payload)
+            (outcome as? StudyWriteOutcome.Synced)?.response?.milestone?.let { _milestone.value = it }
+            if (outcome is StudyWriteOutcome.Parked) {
                 unsynced += 1
                 requestDrain()
                 (_state.value as? State.Studying)?.let { _state.value = it.copy(unsynced = unsynced) }

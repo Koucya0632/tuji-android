@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.network.AtlasItemReading
@@ -33,6 +34,8 @@ class WordDetailViewModel(
     private val uiLang: String,
     /** The saved 發音口音, for [SpokenVoice]. */
     private val accent: String = "us",
+    /** The system voice, for a word with no recording — iOS's fallback. */
+    private val speech: WordSpeaking? = null,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
@@ -90,17 +93,22 @@ class WordDetailViewModel(
      */
     fun play() {
         val loaded = _state.value as? State.Loaded ?: return
-        val url = clipFor(loaded.word) ?: return
+        val word = loaded.word
+        val url = clipFor(word)
+        val language = word.targetLanguage ?: direction.targetLanguage
+        if (url == null && speech?.canSpeak(language) != true) return
         clip?.cancel()
         clip = work.launch {
             _state.value = loaded.copy(playing = true)
-            audio.play(url)
+            // The recording when there is one; the system voice only in its place.
+            if (url != null) audio.play(url) else speech?.speak(word.word, language, accent)
             (_state.value as? State.Loaded)?.let { _state.value = it.copy(playing = false) }
         }
     }
 
     /** Whether there is anything to play, so the button can say so. */
-    fun canPlay(word: WordDetail): Boolean = clipFor(word) != null
+    fun canPlay(word: WordDetail): Boolean =
+        clipFor(word) != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage) == true
 
     private fun clipFor(word: WordDetail): String? =
         SpokenVoice.clip(word.audioUrls, direction, accent, word.targetLanguage)
@@ -109,6 +117,7 @@ class WordDetailViewModel(
         clip?.cancel()
         clip = null
         audio.stop()
+        speech?.stop()
     }
 
     override fun onCleared() {

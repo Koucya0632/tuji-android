@@ -411,6 +411,14 @@
     <string name="collections_delete_private">このコレクションは完全に削除されます。元の図鑑カードには影響しません。</string>
     <string name="collections_picker_title">項目を追加</string>
     <string name="collections_picker_empty">追加できる項目がありません。認識と確認が完了すると直接追加できます。</string>
+    <string name="offline_banner">インターネットに接続されていません</string>
+    <string name="milestone_title">%1$d日連続！</string>
+    <string name="milestone_label">連続学習日数</string>
+    <string name="milestone_month">今月は皆勤です</string>
+    <string name="milestone_hundred">100日連続、もう習慣です</string>
+    <string name="milestone_year">丸1年、1日も欠かさず</string>
+    <string name="milestone_keep_going">この調子！次のマイルストーンはすぐそこ</string>
+    <string name="milestone_continue">続ける</string>
     <string name="community_report_title">どのような問題ですか？</string>
     <string name="community_reason_spam">スパム</string>
     <string name="community_reason_inappropriate">不適切な内容</string>

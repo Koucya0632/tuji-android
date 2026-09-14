@@ -411,6 +411,14 @@
     <string name="collections_delete_private">这个合集会被永久删除，原始图鉴卡片不受影响。</string>
     <string name="collections_picker_title">加入项目</string>
     <string name="collections_picker_empty">没有可加入的项目。完成识别与确认后，就能直接加入合集。</string>
+    <string name="offline_banner">目前没有网路连线</string>
+    <string name="milestone_title">连胜 %1$d 天！</string>
+    <string name="milestone_label">连续学习天数</string>
+    <string name="milestone_month">这个月你没有缺席</string>
+    <string name="milestone_hundred">百日连胜，已经是习惯了</string>
+    <string name="milestone_year">整整一年，没缺席一天</string>
+    <string name="milestone_keep_going">保持下去，下一个里程碑在前面</string>
+    <string name="milestone_continue">继续</string>
     <string name="community_report_title">要举报什么问题？</string>
     <string name="community_reason_spam">垃圾内容</string>
     <string name="community_reason_inappropriate">不当内容</string>

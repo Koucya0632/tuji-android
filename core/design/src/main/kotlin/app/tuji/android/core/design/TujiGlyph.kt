@@ -342,6 +342,29 @@ object TujiGlyph {
         }
     }
 
+    /** 離線. Three arcs of a Wi-Fi mark, crossed out. */
+    @Composable
+    fun WifiOff(size: Dp = 16.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.1f
+            val centre = Offset(w * 0.5f, w * 0.86f)
+            listOf(0.72f, 0.48f, 0.24f).forEach { r ->
+                drawArc(
+                    color = tint,
+                    startAngle = 225f,
+                    sweepAngle = 90f,
+                    useCenter = false,
+                    topLeft = Offset(centre.x - w * r, centre.y - w * r),
+                    size = androidx.compose.ui.geometry.Size(w * r * 2, w * r * 2),
+                    style = Stroke(width = stroke, cap = StrokeCap.Round),
+                )
+            }
+            drawCircle(tint, radius = stroke * 0.9f, center = centre)
+            drawLine(tint, Offset(w * 0.12f, w * 0.1f), Offset(w * 0.88f, w * 0.9f), stroke, StrokeCap.Round)
+        }
+    }
+
     /** 搜尋. A lens and its handle. */
     @Composable
     fun Search(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

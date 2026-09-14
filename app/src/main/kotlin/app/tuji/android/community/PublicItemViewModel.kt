@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.model.AtlasPublicDetail
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.network.ApiError
 import app.tuji.android.core.network.AtlasReading
 import app.tuji.android.core.network.AtlasSaving
@@ -36,6 +37,8 @@ class PublicItemViewModel(
     private val signedIn: Boolean,
     /** The saved 發音口音, for [SpokenVoice]. */
     private val accent: String = "us",
+    /** The system voice, for the many 物見 words that have no recording. */
+    private val speech: WordSpeaking? = null,
     /**
      * A 加入學習 or 停止學習 landed. The card is added to or taken from the
      * reader's own 圖鑑 and study queue, which other tabs draw.
@@ -102,15 +105,21 @@ class PublicItemViewModel(
         }
     }
 
-    /** Whether there is a recording to play, so the button can say so. */
-    fun canPlay(): Boolean = clipUrl() != null
+    /** Whether there is anything to play — a recording, or a voice for its language. */
+    fun canPlay(): Boolean {
+        val word = _state.value.item?.learningWord ?: return false
+        return clipUrl() != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage) == true
+    }
 
     fun play() {
-        val url = clipUrl() ?: return
+        val word = _state.value.item?.learningWord ?: return
+        val url = clipUrl()
+        val language = word.targetLanguage ?: direction.targetLanguage
+        if (url == null && speech?.canSpeak(language) != true) return
         clip?.cancel()
         clip = work.launch {
             _state.value = _state.value.copy(playing = true)
-            audio.play(url)
+            if (url != null) audio.play(url) else speech?.speak(word.word, language, accent)
             _state.value = _state.value.copy(playing = false)
         }
     }
@@ -164,6 +173,7 @@ class PublicItemViewModel(
         clip?.cancel()
         clip = null
         audio.stop()
+        speech?.stop()
     }
 
     override fun onCleared() {

@@ -145,6 +145,16 @@ class TujiApplication : Application() {
         app.tuji.android.study.ClipPlayer(this)
     }
 
+    /** The system voice, for a pronunciation button whose word has no clip. */
+    val speech: app.tuji.android.study.TtsSpeaker by lazy {
+        app.tuji.android.study.TtsSpeaker(this)
+    }
+
+    /** Whether the device is online, for the banner at the top of every screen. */
+    val connectivity: app.tuji.android.ConnectivityMonitor by lazy {
+        app.tuji.android.ConnectivityMonitor(this)
+    }
+
     /**
      * The network primitive, as the shape `core:study` asks for.
      *
