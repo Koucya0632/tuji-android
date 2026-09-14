@@ -40,6 +40,9 @@ sealed interface AppRoute {
     /** 圖鑑管理, reached from 圖鑑's 我做的. */
     data object AtlasManage : AppRoute
 
+    /** 編輯合集, from 圖鑑管理's 合集. */
+    data class CollectionEdit(val collectionId: String) : AppRoute
+
     /** One of the account's own photos in 圖鑑管理. */
     data class ManageCard(val imageId: String) : AppRoute
 

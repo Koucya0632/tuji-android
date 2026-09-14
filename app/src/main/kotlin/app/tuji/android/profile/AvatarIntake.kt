@@ -86,12 +86,18 @@ private sealed interface Intake {
  * Every step is its own window, so the shell's back arrow and the system back
  * gesture close the step rather than the screen behind it.
  */
+/** The preview mask. The saved image is square either way. */
+enum class CropMask { Circle, Square }
+
 @Composable
 fun AvatarIntake(
     hasCustomAvatar: Boolean,
     onImage: (ByteArray) -> Unit,
     onUseDefault: () -> Unit,
     onClose: () -> Unit,
+    title: String = stringResource(R.string.avatar_change),
+    mask: CropMask = CropMask.Circle,
+    encode: suspend (Bitmap, CropSquare) -> ByteArray = PhotoCodec::profileJpeg,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -110,6 +116,7 @@ fun AvatarIntake(
 
     when (val s = step) {
         Intake.Sources -> SourceSheet(
+            title = title,
             hasCustomAvatar = hasCustomAvatar,
             onCamera = { step = Intake.Camera },
             onLibrary = { library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
@@ -125,10 +132,11 @@ fun AvatarIntake(
         }
         is Intake.Cropping -> CropWindow(
             bitmap = s.bitmap,
+            mask = mask,
             onConfirm = { square ->
                 step = Intake.Decoding
                 scope.launch {
-                    runCatching { PhotoCodec.profileJpeg(s.bitmap, square) }
+                    runCatching { encode(s.bitmap, square) }
                         .onSuccess { onImage(it); onClose() }
                         .onFailure { step = Intake.Failed }
                 }
@@ -150,6 +158,7 @@ fun AvatarIntake(
 
 @Composable
 private fun SourceSheet(
+    title: String,
     hasCustomAvatar: Boolean,
     onCamera: () -> Unit,
     onLibrary: () -> Unit,
@@ -171,7 +180,7 @@ private fun SourceSheet(
                 .padding(TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
-            Text(stringResource(R.string.avatar_change), style = TujiType.h3, color = TujiColor.Ink)
+            Text(title, style = TujiType.h3, color = TujiColor.Ink)
             listOfNotNull(
                 R.string.avatar_camera to onCamera,
                 R.string.avatar_library to onLibrary,
@@ -249,7 +258,7 @@ private fun CameraWindow(onPhoto: (ByteArray) -> Unit, onDismiss: () -> Unit) = 
  * The circle is only the preview — the saved image is the square around it.
  */
 @Composable
-private fun CropWindow(bitmap: Bitmap, onConfirm: (CropSquare) -> Unit, onCancel: () -> Unit) = TujiWindow(onDismiss = onCancel) {
+private fun CropWindow(bitmap: Bitmap, mask: CropMask, onConfirm: (CropSquare) -> Unit, onCancel: () -> Unit) = TujiWindow(onDismiss = onCancel) {
     val image: ImageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
     val w = bitmap.width.toFloat()
     val h = bitmap.height.toFloat()
@@ -288,13 +297,17 @@ private fun CropWindow(bitmap: Bitmap, onConfirm: (CropSquare) -> Unit, onCancel
                         dstSize = IntSize(drawn.width.roundToInt(), drawn.height.roundToInt()),
                     )
                     val window = Rect(Offset(size.width / 2f, size.height / 2f), viewport / 2f)
-                    val mask = Path().apply {
+                    val shade = Path().apply {
                         fillType = PathFillType.EvenOdd
                         addRect(Rect(Offset.Zero, size))
-                        addOval(window)
+                        if (mask == CropMask.Circle) addOval(window) else addRect(window)
                     }
-                    drawPath(mask, Color.Black.copy(alpha = 0.58f))
-                    drawOval(Color.White, topLeft = window.topLeft, size = window.size, style = Stroke(width = 2.dp.toPx()))
+                    drawPath(shade, Color.Black.copy(alpha = 0.58f))
+                    if (mask == CropMask.Circle) {
+                        drawOval(Color.White, topLeft = window.topLeft, size = window.size, style = Stroke(width = 2.dp.toPx()))
+                    } else {
+                        drawRect(Color.White, topLeft = window.topLeft, size = window.size, style = Stroke(width = 2.dp.toPx()))
+                    }
                 }
                 Text(
                     stringResource(R.string.avatar_crop_hint),

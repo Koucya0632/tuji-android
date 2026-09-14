@@ -160,8 +160,8 @@ private fun ActionBar(
         textAlign = TextAlign.Center,
         modifier = modifier
             .fillMaxWidth()
-            .background(ground)
             .alpha(if (enabled) 1f else 0.6f)
+            .background(ground)
             .tujiClickable(enabled = enabled, onClick = onClick)
             .padding(vertical = TujiSpace.S3),
     )

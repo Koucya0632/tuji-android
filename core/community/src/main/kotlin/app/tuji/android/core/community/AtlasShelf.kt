@@ -35,6 +35,12 @@ enum class ReviewStatus {
     /** Only a live public card can be pulled back; a takedown is not the author's to reverse. */
     val canWithdraw: Boolean get() = this == Approved
 
+    /**
+     * What may be put up for review. `Withdrawn` may, because taking it down was
+     * the author's own decision; `Takedown` may not.
+     */
+    val canSubmit: Boolean get() = this == Draft || this == Rejected || this == Withdrawn
+
     companion object {
         /** Absent on items older than the field: they were never submitted. */
         fun of(wire: String?): ReviewStatus = when (wire) {
