@@ -38,6 +38,18 @@ class OnboardingStore(context: Context) : StudyHints {
         set(value) = prefs.edit().putBoolean(KEY_INTRO, value).apply()
 
     /**
+     * Whether the five-step tour has run on this install.
+     *
+     * One flag, not one per account, because what it points at is the app's own
+     * furniture — the bar, the hero, 拍照 — and somebody who has been shown
+     * where those are does not need showing again because a second person
+     * signed in.
+     */
+    var tourDone: Boolean
+        get() = prefs.getBoolean(KEY_TOUR, false)
+        set(value) = prefs.edit().putBoolean(KEY_TOUR, value).apply()
+
+    /**
      * [StudyHints] — kept here rather than in a second preferences file because
      * it is the same kind of fact as [introDone]: something the app has already
      * shown this person once.
@@ -74,6 +86,7 @@ class OnboardingStore(context: Context) : StudyHints {
 
     private companion object {
         const val KEY_SETUP_PREFIX = "setupDone."
+        const val KEY_TOUR = "tourDone"
         // The same key names iOS uses, so a future migration or a support
         // question does not have to translate between two vocabularies.
         const val PREFS = "tuji_onboarding"
