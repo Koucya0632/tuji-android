@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.shadow
 import app.tuji.android.atlas.AtlasSearchScreen
+import app.tuji.android.atlas.WordDetailPanel
 import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.atlas.AtlasCardsScreen
 import app.tuji.android.atlas.AtlasThemeScreen
@@ -520,6 +521,20 @@ private fun SignedInScreens(
             ReviewScreen(
                 vm = vm,
                 showChinese = settings.showZh,
+                fullDetail = { wordId ->
+                    WordDetailPanel(
+                        wordId = wordId,
+                        catalog = app.catalogReading,
+                        atlas = app.atlas,
+                        audio = app.clipPlayer,
+                        speech = app.speech,
+                        direction = direction,
+                        uiLang = uiLang,
+                        accent = settings.accent,
+                        showChinese = settings.showZh,
+                        session = direction.targetLanguage,
+                    )
+                },
                 bookmarked = { id -> id in personal.bookmarked },
                 onBookmark = app.cardsSourceStore::toggle,
                 onClose = {
