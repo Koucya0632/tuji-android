@@ -46,6 +46,7 @@ import app.tuji.android.core.design.HeroPillRole
 import app.tuji.android.core.design.MascotFigure
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiProgressBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -331,7 +332,7 @@ private fun StreakChip(days: Int) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TujiGlyph.Flame(size = 12.dp, tint = if (days > 0) TujiColor.Accumulation else TujiColor.Ink3)
-        Text("$days", style = TujiType.bodySmStrong, color = TujiColor.Ink)
+        TujiRollingNumber("$days", style = TujiType.bodySmStrong, color = TujiColor.Ink)
     }
 }
 
@@ -492,7 +493,7 @@ private fun HeroMeter(
                 style = TujiType.label.copy(letterSpacing = 2.sp),
                 color = TujiColor.Paper.copy(alpha = 0.6f),
             )
-            Text(trailing, style = TujiType.label, color = trailingColor)
+            TujiRollingNumber(trailing, style = TujiType.label, color = trailingColor)
         }
         TujiProgressBar(
             progress = progress,

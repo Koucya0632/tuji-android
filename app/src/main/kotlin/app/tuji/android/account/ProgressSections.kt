@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.atlas.label
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiProgressBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -67,7 +68,7 @@ fun CompletionCard(completion: CompletionReadout) {
             style = TujiType.label,
             color = TujiColor.Paper.copy(alpha = 0.6f),
         )
-        Text("${completion.percent}%", style = TujiType.display, color = TujiColor.AccumulationSoft)
+        TujiRollingNumber("${completion.percent}%", style = TujiType.display, color = TujiColor.AccumulationSoft)
         Text(
             stringResource(
                 if (scoped) R.string.me_completion_selected_detail else R.string.me_completion_detail,
@@ -185,7 +186,7 @@ private fun MasteryLegend(spread: MasteryDistribution) {
                             style = TujiType.label,
                             color = TujiColor.Ink3,
                         )
-                        Text(
+                        TujiRollingNumber(
                             "${segment.words}",
                             style = TujiType.monoLabel,
                             color = TujiColor.Ink2,
@@ -235,7 +236,7 @@ private fun StatColumn(label: String, value: Int, unit: String, note: String? = 
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            Text("$value", style = TujiType.display, color = TujiColor.Ink)
+            TujiRollingNumber("$value", style = TujiType.display, color = TujiColor.Ink)
             Text(
                 unit,
                 style = TujiType.bodySm,

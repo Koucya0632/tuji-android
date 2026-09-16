@@ -138,7 +138,10 @@ fun MasteryBar(
                     .padding(horizontal = TujiSpace.S2, vertical = 4.dp),
             )
             Box(Modifier.weight(1f))
-            Text(
+            // A session just moved this; the bar beside it already animates,
+            // and a number that teleports next to a bar that travels reads as
+            // two different facts.
+            TujiRollingNumber(
                 value,
                 style = if (score != null) TujiType.monoLabel else TujiType.label,
                 color = if (score != null) TujiColor.Ink2 else TujiColor.Ink3,

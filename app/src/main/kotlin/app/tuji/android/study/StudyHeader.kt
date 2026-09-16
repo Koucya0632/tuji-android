@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiProgressBar
 import app.tuji.android.core.design.TujiSpace
@@ -90,7 +91,7 @@ internal fun StudyHeader(
         ) {
             Text(label, style = TujiType.label, color = TujiColor.Ink3)
             if (count != null) {
-                Text(count, style = TujiType.monoLabel, color = TujiColor.Ink2)
+                TujiRollingNumber(count, style = TujiType.monoLabel, color = TujiColor.Ink2)
             }
         }
         Spacer(Modifier.height(TujiSpace.S2))
