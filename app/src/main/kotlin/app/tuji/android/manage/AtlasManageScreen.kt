@@ -39,6 +39,7 @@ import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiSkeletonRows
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiNavIcon
@@ -131,7 +132,8 @@ fun AtlasManageScreen(
                     )
                 }
                 when (val shelf = state.shelf) {
-                    ShelfState.Loading -> Hint(stringResource(R.string.atlas_loading))
+                    ShelfState.Loading ->
+                        TujiSkeletonRows(count = 4, height = 88.dp, label = stringResource(R.string.atlas_loading))
                     ShelfState.Failed -> Column(
                         Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
                         verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
@@ -252,11 +254,6 @@ private fun HiddenRow(count: Int, language: TargetLanguage) {
         color = TujiColor.Ink2,
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).background(TujiColor.Paper2).padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
     )
-}
-
-@Composable
-private fun Hint(text: String) {
-    Text(text, style = TujiType.bodySm, color = TujiColor.Ink3, modifier = Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3))
 }
 
 @Composable

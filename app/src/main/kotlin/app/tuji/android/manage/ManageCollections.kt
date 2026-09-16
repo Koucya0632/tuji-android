@@ -33,6 +33,7 @@ import app.tuji.android.community.CollectionIdentityTile
 import app.tuji.android.core.community.CollectionAuthoringRules
 import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiSkeletonRows
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiStatusEdgeLabel
@@ -56,7 +57,7 @@ internal fun MyCollectionsPane(
         val visible = state.visible
         when {
             state.loading && state.collections.isEmpty() ->
-                Line(stringResource(R.string.atlas_loading))
+                TujiSkeletonRows(count = 3, height = 88.dp, label = stringResource(R.string.atlas_loading))
             state.failed && state.collections.isEmpty() -> Column(
                 Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),

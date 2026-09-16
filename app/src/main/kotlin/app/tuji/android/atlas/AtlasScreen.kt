@@ -55,6 +55,9 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiSkeleton
+import app.tuji.android.core.design.TujiImagePlaceholder
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiSpace
@@ -99,7 +102,7 @@ fun AtlasCardsScreen(
     // The dictionary failing to load is the tab failing to load; the other two
     // shelves being empty is an answer, and it has its own sentence.
     if (words.isEmpty()) {
-        Centered(stringResource(if (loading) R.string.atlas_loading else R.string.atlas_failed))
+        if (loading) CardGridSkeleton(bottomPadding) else Centered(stringResource(R.string.atlas_failed))
         return
     }
     var visibleCount by rememberSaveable(source) { mutableIntStateOf(CardsListPaging.PAGE_SIZE) }
@@ -288,7 +291,7 @@ fun AtlasThemesScreen(
     onOpen: (String) -> Unit,
 ) {
     if (shelves.isEmpty()) {
-        Centered(stringResource(if (loading) R.string.atlas_loading else R.string.atlas_failed))
+        if (loading) CardGridSkeleton(bottomPadding) else Centered(stringResource(R.string.atlas_failed))
         return
     }
     LazyVerticalGrid(
@@ -501,5 +504,35 @@ private fun description(category: Category, uiLang: String): String? {
 internal fun Centered(text: String) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text, style = TujiType.body, color = TujiColor.Ink3)
+    }
+}
+
+/**
+ * The grid that is coming, in blocks.
+ *
+ * Two columns and a square each, because that is the shape the tiles land in:
+ * the whole point of a skeleton over a line of text is that nothing moves when
+ * the real ones arrive under a thumb that is already scrolling.
+ */
+@Composable
+private fun CardGridSkeleton(bottomPadding: Dp) {
+    val label = stringResource(R.string.atlas_loading)
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        contentPadding = PaddingValues(
+            start = TujiSpace.S4, end = TujiSpace.S4,
+            top = TujiSpace.S5, bottom = bottomPadding + TujiSpace.S6,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+        modifier = Modifier.fillMaxSize().clearAndSetSemantics { contentDescription = label },
+        userScrollEnabled = false,
+    ) {
+        items(6) {
+            Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                Box(Modifier.fillMaxWidth().aspectRatio(1f)) { TujiImagePlaceholder() }
+                TujiSkeleton(height = 14.dp, width = 72.dp)
+            }
+        }
     }
 }

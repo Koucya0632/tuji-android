@@ -54,6 +54,7 @@ import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiSpace
@@ -120,7 +121,7 @@ fun ReviewScreen(
             .background(TujiColor.Paper),
     ) {
         when (val s = state) {
-            is ReviewViewModel.State.Loading -> Centered(stringResource(R.string.study_loading))
+            is ReviewViewModel.State.Loading -> TujiPageLoading(label = stringResource(R.string.study_loading))
             is ReviewViewModel.State.Failed ->
                 Centered(stringResource(R.string.study_failed), TujiColor.Alert)
 

@@ -42,6 +42,8 @@ import app.tuji.android.core.design.MasteryBar
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPageLoading
+import app.tuji.android.core.design.TujiImagePlaceholder
 import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
@@ -126,7 +128,11 @@ fun WordDetailScreen(
     when (val s = state) {
         is WordDetailViewModel.State.Loading -> Column(Modifier.fillMaxSize()) {
             FloatingBar(bookmarked = false, onBack = onBack, onBookmark = null)
-            Centered(stringResource(R.string.atlas_loading))
+            // The square first, because the square is what the page opens
+            // with: the picture landing must not push the headword down the
+            // screen under a thumb that is already reaching for 書籤.
+            Box(Modifier.fillMaxWidth().aspectRatio(1f)) { TujiImagePlaceholder() }
+            TujiPageLoading(label = stringResource(R.string.atlas_loading))
         }
 
         is WordDetailViewModel.State.Failed -> Column(Modifier.fillMaxSize()) {

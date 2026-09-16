@@ -37,6 +37,8 @@ import app.tuji.android.R
 import app.tuji.android.core.community.DeleteWarning
 import app.tuji.android.core.community.MemberBadge
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiSkeletonRows
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiPrompt
@@ -230,7 +232,7 @@ fun CollectionEditScreen(
                         .padding(vertical = TujiSpace.S3),
                 )
             }
-            state.loading -> Text(stringResource(R.string.atlas_loading), style = TujiType.bodySm, color = TujiColor.Ink3, modifier = Modifier.padding(TujiSpace.S4))
+            state.loading -> TujiPageLoading(label = stringResource(R.string.atlas_loading))
             else -> Column(Modifier.padding(TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
                 Text(stringResource(R.string.atlas_failed), style = TujiType.bodySm, color = TujiColor.Ink3)
                 SmallAction(text = stringResource(R.string.retry), enabled = true, onClick = onRetry)
@@ -334,7 +336,8 @@ private fun ItemPicker(state: CollectionEditViewModel.State, onAdd: (String) -> 
         val available = state.available
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(TujiSpace.S3), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
             when {
-                state.candidatesLoading -> Text(stringResource(R.string.atlas_loading), style = TujiType.bodySm, color = TujiColor.Ink3)
+                state.candidatesLoading ->
+                    TujiSkeletonRows(count = 3, height = 72.dp, label = stringResource(R.string.atlas_loading))
                 state.candidatesFailed -> Text(stringResource(R.string.atlas_failed), style = TujiType.bodySm, color = TujiColor.Ink3)
                 available.isEmpty() -> Text(stringResource(R.string.collections_picker_empty), style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = TujiSpace.S6))
                 else -> {

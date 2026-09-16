@@ -30,6 +30,7 @@ import app.tuji.android.R
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -84,12 +85,7 @@ fun StudyThemesScreen(
 
         if (categories.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    stringResource(R.string.study_themes_loading),
-                    style = TujiType.label,
-                    color = TujiColor.Ink3,
-                    modifier = Modifier.padding(vertical = TujiSpace.S4),
-                )
+                TujiPageLoading(label = stringResource(R.string.study_themes_loading))
             }
             return@LazyVerticalGrid
         }

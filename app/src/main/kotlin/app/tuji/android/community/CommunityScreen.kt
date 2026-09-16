@@ -30,6 +30,7 @@ import app.tuji.android.R
 import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiSkeletonRows
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSegmented
 import app.tuji.android.core.design.TujiSpace
@@ -158,7 +159,8 @@ private fun ShelfList(
     onOpenCollection: (String) -> Unit,
 ) {
     when {
-        state.loading -> Centered(stringResource(R.string.community_loading))
+        state.loading ->
+            TujiSkeletonRows(count = 3, height = 88.dp, label = stringResource(R.string.community_loading))
         state.failed -> Column(
             Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
