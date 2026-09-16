@@ -33,6 +33,7 @@ import app.tuji.android.community.CollectionIdentityTile
 import app.tuji.android.core.community.CollectionAuthoringRules
 import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.design.TujiSkeletonRows
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSpace
@@ -52,7 +53,9 @@ internal fun MyCollectionsPane(
     onRetry: () -> Unit,
     onOpen: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onRefresh: suspend () -> Unit = {},
 ) {
+    TujiPullToRefresh(onRefresh = onRefresh) {
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         val visible = state.visible
         when {
@@ -78,6 +81,7 @@ internal fun MyCollectionsPane(
                 MyCollectionRow(collection, onOpen = { onOpen(collection.id) })
             }
         }
+    }
     }
 }
 

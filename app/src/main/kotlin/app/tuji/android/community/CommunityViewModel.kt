@@ -91,7 +91,18 @@ class CommunityViewModel(
     val blockList: BlockList get() = _blocked.value
 
     fun load() {
-        work.launch {
+        work.launch { reload() }
+    }
+
+    /**
+     * The same read, awaited — what a pull-to-refresh needs so the rule stays
+     * on screen until the shelves land rather than flashing off with the
+     * finger. 已收藏 comes along when there is an account to ask for it: iOS
+     * refreshes only the shelf on screen, and the other one is one tap away
+     * from a reader who has just asked for fresh answers.
+     */
+    suspend fun reload(withSaved: Boolean = false) {
+        run {
             // The block list first, so nothing blocked is ever drawn and then
             // removed — a hidden author flashing on screen is the one thing
             // this feature exists to prevent.
@@ -105,20 +116,25 @@ class CommunityViewModel(
             val cols = runCatching { atlas.collections(lang) }.getOrElse {
                 Log.e(TAG, "物見 collections failed", it)
                 _explore.value = Shelf(loading = false, failed = true)
-                return@launch
+                return@run
             }
             exploreRaw = cols
             _explore.value = Shelf(collections = blockList.filter(cols) { it.author }, loading = false)
         }
+        if (withSaved) reloadSaved()
     }
 
     /** 已收藏. Only for a signed-in account; the screen shows guests a way to sign in instead. */
     fun loadSaved() {
-        work.launch {
+        work.launch { reloadSaved() }
+    }
+
+    private suspend fun reloadSaved() {
+        run {
             val cols = runCatching { bookmarks.savedCollections(lang) }.getOrElse {
                 Log.e(TAG, "saved collections failed", it)
                 _saved.value = _saved.value.copy(loading = false, failed = true)
-                return@launch
+                return@run
             }
             savedRaw = cols
             _saved.value = Shelf(collections = blockList.filter(cols) { it.author }, loading = false)

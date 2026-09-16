@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,10 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import kotlin.math.roundToInt
 
 /**
  * How far along something is, as a rule of ink.
@@ -43,8 +43,15 @@ fun TujiProgressBar(
     modifier: Modifier = Modifier,
     track: Color = TujiColor.Paper3,
     fill: Color = TujiColor.Current,
+    /**
+     * False when a finger is holding the value — a pull-to-refresh rule. A
+     * value that arrives in steps should travel to its new place; one being
+     * dragged has to be exactly where the thumb is, and 120ms of catching up
+     * reads as the bar resisting.
+     */
+    animated: Boolean = true,
 ) {
-    val reduceMotion = rememberReduceMotion()
+    val reduceMotion = rememberReduceMotion() || !animated
     val target = progress.coerceIn(0.0, 1.0).toFloat()
     val shown by animateFloatAsState(
         targetValue = target,
@@ -90,7 +97,7 @@ fun TujiIndeterminateBar(
         )
         value
     }
-    Box(
+    BoxWithConstraints(
         modifier
             .fillMaxWidth()
             .height(TujiBorder.Bw3)
@@ -100,19 +107,17 @@ fun TujiIndeterminateBar(
                 else Modifier.clearAndSetSemantics { contentDescription = label },
             ),
     ) {
+        // The **track's** width, which is the whole reason this is a
+        // `BoxWithConstraints`. Offsetting by a fraction of the fill's own
+        // constraint sweeps 0.65 × 35% of the bar — a rule that wanders around
+        // the left third and never reaches the end. Measured off a 60fps
+        // capture at 1080px: 246px of travel where 702 was meant.
+        val trackPx = constraints.maxWidth.toFloat()
         Box(
             Modifier
                 .fillMaxWidth(IndeterminateSweep.FILL)
                 .fillMaxHeight()
-                // Offset as a fraction of the *track*, which the fill does not
-                // know: a percentage of its own width would sweep a third as
-                // far as it should.
-                .layout { measurable, constraints ->
-                    val placeable = measurable.measure(constraints)
-                    layout(placeable.width, placeable.height) {
-                        placeable.placeRelative((constraints.maxWidth * offset).roundToInt(), 0)
-                    }
-                }
+                .graphicsLayer { translationX = trackPx * offset }
                 .background(fill),
         )
     }

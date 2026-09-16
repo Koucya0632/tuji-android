@@ -30,6 +30,7 @@ import app.tuji.android.R
 import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.design.TujiSkeletonRows
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSegmented
@@ -62,6 +63,7 @@ fun CommunityScreen(
     onSignIn: () -> Unit,
     onOpenCollection: (String) -> Unit,
     onOpenMyPage: (String) -> Unit,
+    onRefresh: suspend () -> Unit = {},
 ) {
     var shelf by rememberSaveable { mutableStateOf(CommunityShelf.Explore) }
     // Asked for the first time 已收藏 is opened, and again on each return to
@@ -88,7 +90,10 @@ fun CommunityScreen(
         )
         Spacer(Modifier.height(TujiSpace.S3))
 
-        Box(Modifier.weight(1f)) {
+        // The list, not the whole page: the identity row above is a header
+        // that scrolls with nothing, and a pull starting on it would have no
+        // scroll to hand the gesture back to.
+        TujiPullToRefresh(onRefresh = onRefresh, modifier = Modifier.weight(1f)) {
             when (shelf) {
                 CommunityShelf.Explore -> ShelfList(
                     state = explore,

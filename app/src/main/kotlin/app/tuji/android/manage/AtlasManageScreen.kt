@@ -71,6 +71,7 @@ fun AtlasManageScreen(
     onDelete: (Set<String>) -> Unit,
     collections: MyCollectionsViewModel.State,
     onLoadCollections: () -> Unit,
+    onRefreshCollections: suspend () -> Unit = {},
     onCreateCollection: (title: String, description: String, onCreated: () -> Unit) -> Unit,
     onDismissCreateError: () -> Unit,
     onOpenCollection: (String) -> Unit,
@@ -120,7 +121,13 @@ fun AtlasManageScreen(
             modifier = Modifier.padding(vertical = TujiSpace.S3),
         )
         if (section == ManageSection.Collections) {
-            MyCollectionsPane(collections, onRetry = onLoadCollections, onOpen = onOpenCollection, modifier = Modifier.weight(1f))
+            MyCollectionsPane(
+                collections,
+                onRetry = onLoadCollections,
+                onOpen = onOpenCollection,
+                modifier = Modifier.weight(1f),
+                onRefresh = onRefreshCollections,
+            )
         } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             TujiSection(title = stringResource(R.string.manage_cards_section)) {
                 if (state.actionFailed) {

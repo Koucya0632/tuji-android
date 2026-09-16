@@ -46,12 +46,15 @@ class MyCollectionsViewModel(
     private val work: CoroutineScope get() = scope ?: viewModelScope
 
     fun load() {
+        work.launch { reload() }
+    }
+
+    /** The same read, awaited, so a pull-to-refresh can wait for its own work. */
+    suspend fun reload() {
         _state.value = _state.value.copy(loading = true, failed = false)
-        work.launch {
-            attempt { authoring.myCollections() }
-                .onSuccess { _state.value = _state.value.copy(collections = it, loading = false) }
-                .onFailure { _state.value = _state.value.copy(loading = false, failed = true) }
-        }
+        attempt { authoring.myCollections() }
+            .onSuccess { _state.value = _state.value.copy(collections = it, loading = false) }
+            .onFailure { _state.value = _state.value.copy(loading = false, failed = true) }
     }
 
     /** @param onCreated the new collection, first on the shelf, for the screen to open. */

@@ -68,7 +68,19 @@ class AccountViewModel(
     private val work: CoroutineScope get() = scope ?: viewModelScope
 
     fun refresh() {
-        work.launch {
+        work.launch { reload() }
+    }
+
+    /**
+     * The same read, awaited.
+     *
+     * A pull-to-refresh has to know when it is over — an indicator that
+     * disappears the instant the finger lifts is a spinner lying about work it
+     * never waited for. One body with two doors, rather than a copy that will
+     * be the one somebody forgets to change.
+     */
+    suspend fun reload() {
+        run {
             val me = runCatching { accounts.me() }
                 .getOrElse {
                     Log.w(TAG, "me failed", it)
@@ -90,6 +102,7 @@ class AccountViewModel(
                 billingAvailable = billingAvailable,
             )
         }
+        loadWeakWordsNow()
     }
 
     /**
@@ -97,12 +110,14 @@ class AccountViewModel(
      * that blinks out on a timeout says the words got better.
      */
     fun loadWeakWords() {
+        work.launch { loadWeakWordsNow() }
+    }
+
+    private suspend fun loadWeakWordsNow() {
         val reader = weakWords ?: return
-        work.launch {
-            runCatching { reader.weakWords(limit = 3) }
-                .onSuccess { _state.value = _state.value.copy(weak = it) }
-                .onFailure { Log.w(TAG, "weak words failed", it) }
-        }
+        runCatching { reader.weakWords(limit = 3) }
+            .onSuccess { _state.value = _state.value.copy(weak = it) }
+            .onFailure { Log.w(TAG, "weak words failed", it) }
     }
 
     private companion object {
