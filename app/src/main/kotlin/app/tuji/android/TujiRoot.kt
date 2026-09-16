@@ -43,6 +43,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.IntOffset
 import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.rememberReduceMotion
 import androidx.compose.foundation.pager.HorizontalPager
 import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
@@ -178,9 +179,19 @@ fun TujiRoot(app: TujiApplication) {
         // The one cut in the app worth covering: the launch mark handing over
         // to the first real screen. Everything after it is navigation, which
         // has a direction; this one has none, so it fades.
+        //
+        // 180ms and suppressed outright under 移除動畫 — iOS keeps this number
+        // in `LaunchTransitionPolicy.opacityDuration(reduceMotion:)` rather
+        // than in its three motion tokens, and returns nil for the second half
+        // of that sentence. It is shorter than D2 on purpose: it is the first
+        // thing anyone sees and it is in the way of the app.
+        val launchReduceMotion = rememberReduceMotion()
         Crossfade(
             targetState = destination,
-            animationSpec = tween(TujiMotion.D2, easing = TujiMotion.EaseOut),
+            animationSpec = tween(
+                if (launchReduceMotion) 0 else LAUNCH_FADE_MS,
+                easing = TujiMotion.EaseOut,
+            ),
             label = "launch",
         ) { destination ->
         when (destination) {
@@ -216,18 +227,19 @@ fun TujiRoot(app: TujiApplication) {
         // rendering glitch, which is the one thing a message about the network
         // must not read as.
         //
-        // Both halves carry the spec. A bare `fadeIn()` is a **spring** — the
-        // one curve this design system rules out — and it is slower than the
-        // slide it is paired with, so the banner spent the whole slide almost
-        // transparent and only became red once it had stopped moving.
-        val enterExit = tween<Float>(TujiMotion.D2, easing = TujiMotion.EaseOut)
+        // 250ms **easeInOut**, which is what `RootView` spells out next to this
+        // same banner — not the D2 easeOut everything else here uses. Both
+        // halves carry the spec: a bare `fadeIn()` is a spring, and it is
+        // slower than the slide it is paired with, so the banner spent the
+        // whole slide almost transparent and only turned red once it had
+        // stopped moving.
+        val enterExit = TujiMotion.easeInOut<Float>(BANNER_MS)
+        val slide = TujiMotion.easeInOut<IntOffset>(BANNER_MS)
         AnimatedVisibility(
             visible = destination != LaunchDestination.Splash && online == false,
-            enter = slideInVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { -it } +
-                fadeIn(enterExit),
-            exit = slideOutVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { -it } +
-                fadeOut(enterExit),
-            modifier = Modifier.align(Alignment.TopCenter),
+            enter = slideInVertically(slide) { -it } + fadeIn(enterExit),
+            exit = slideOutVertically(slide) { -it } + fadeOut(enterExit),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
         ) {
             OfflineBanner()
         }
@@ -828,7 +840,12 @@ private fun SignedInScreens(
             AnimatedContent(
                 targetState = layer,
                 transitionSpec = {
-                    val spec = tween<IntOffset>(TujiMotion.D2, easing = TujiMotion.EaseOut)
+                    // 350ms, not D2. iOS does not write this one down — it
+                    // inherits `NavigationStack`'s push, and UIKit's push is
+                    // visibly slower than the 220ms enter/exit step. Matching
+                    // the token here made every push on Android feel like a
+                    // different app from the same push on iOS.
+                    val spec = tween<IntOffset>(PUSH_MS, easing = TujiMotion.EaseOut)
                     if (forward) {
                         slideInHorizontally(spec) { it } togetherWith
                             slideOutHorizontally(spec) { -it / 3 }
@@ -1343,6 +1360,15 @@ private fun OfflineBanner(modifier: Modifier = Modifier) {
         Text(stringResource(R.string.offline_banner), style = TujiType.bodySmStrong, color = TujiColor.Paper)
     }
 }
+
+/** iOS: `LaunchTransitionPolicy.opacityDuration(reduceMotion:)`. */
+private const val LAUNCH_FADE_MS = 180
+
+/** iOS: `.animation(.easeInOut(duration: 0.25), value: network.isConnected)`. */
+private const val BANNER_MS = 250
+
+/** UIKit's push, which is what iOS's `NavigationStack` uses. */
+private const val PUSH_MS = 350
 
 /**
  * The four tabs, as one thing to animate to and from.

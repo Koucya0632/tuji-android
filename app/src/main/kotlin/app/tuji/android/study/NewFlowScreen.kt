@@ -367,8 +367,9 @@ private fun Pip(step: NewStageStep) {
         },
     )
     // The dots are the one thing on the screen that says how far along this
-    // word is, and they change under a thumb that has just answered — so the
-    // colour travels the same D1 every other state change does.
+    // word is, and they change under a thumb that has just answered. iOS gives
+    // them 200ms of easeInOut rather than the D1 state step — slow enough to
+    // be followed, which is what a progress mark is for.
     val pip by animateColorAsState(
         when (step.state) {
             NewStageStep.State.Done -> TujiColor.Accumulation
@@ -376,7 +377,7 @@ private fun Pip(step: NewStageStep) {
             NewStageStep.State.Active -> TujiColor.Current.copy(alpha = 0.18f)
             NewStageStep.State.Pending -> TujiColor.Paper3
         },
-        TujiMotion.ease(TujiMotion.D1),
+        TujiMotion.easeInOut(PIP_MS),
         label = "pip",
     )
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -976,3 +977,6 @@ private fun NewDoneView(
         TujiButton(text = stringResource(R.string.study_close), onClick = onClose)
     }
 }
+
+/** iOS: `.animation(.easeInOut(duration: 0.2), value: self.steps)` in `NewFlowView`. */
+private const val PIP_MS = 200

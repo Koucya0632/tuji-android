@@ -1,6 +1,7 @@
 package app.tuji.android.core.design
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -107,20 +108,31 @@ fun StudyOptionRow(
     // answered a press with nothing at all.
     val ground = if (pressed && state == StudyOptionState.Idle) TujiColor.Paper3 else state.ground
 
-    // D1 on every colour, not just the ground. Half-animating the reveal is
-    // worse than not animating it: the ink arrives over 120ms while 紙 text
-    // snaps to 紙 in the first frame, and for that frame the label is invisible
-    // against its own ground.
-    val groundNow by animateColorAsState(ground, TujiMotion.ease(TujiMotion.D1), label = "optionGround")
-    val inkNow by animateColorAsState(state.foreground, TujiMotion.ease(TujiMotion.D1), label = "optionInk")
+    // **Every colour on the same spec, not just the ground.** Half-animating
+    // the reveal is worse than not animating it: the ink arrives over 350ms
+    // while 紙 text snaps to 紙 in the first frame, and for that frame the
+    // label is invisible against its own ground.
+    //
+    // Which spec depends on what moved. iOS animates the recolour on the
+    // question's *phase* with `.spring(duration: 0.35)`; a press is not a phase
+    // change and stays on the D1 state step. The two never overlap, because the
+    // press ground only exists while the row is still Idle — which is also why
+    // reading the state is enough to tell them apart.
+    val recolour: FiniteAnimationSpec<Color> = if (state == StudyOptionState.Idle) {
+        TujiMotion.ease(TujiMotion.D1)
+    } else {
+        TujiMotion.spring(PICK_SECONDS)
+    }
+    val groundNow by animateColorAsState(ground, recolour, label = "optionGround")
+    val inkNow by animateColorAsState(state.foreground, recolour, label = "optionInk")
     val letterGroundNow by animateColorAsState(
         state.letterGround,
-        TujiMotion.ease(TujiMotion.D1),
+        recolour,
         label = "optionLetterGround",
     )
     val letterInkNow by animateColorAsState(
         state.letterForeground,
-        TujiMotion.ease(TujiMotion.D1),
+        recolour,
         label = "optionLetterInk",
     )
     // Ruling an option out does not move the question's phase, so without this
@@ -138,7 +150,11 @@ fun StudyOptionRow(
     )
     val dimNow by animateFloatAsState(
         state.dimAlpha,
-        TujiMotion.ease(TujiMotion.D1),
+        if (state == StudyOptionState.Idle) {
+            TujiMotion.ease(TujiMotion.D1)
+        } else {
+            TujiMotion.spring(PICK_SECONDS)
+        },
         label = "optionDim",
     )
 
@@ -237,3 +253,6 @@ private object Shake {
     const val BACK = 60
     const val SETTLE = 50
 }
+
+/** iOS `ReviewFlowView`: `.animation(.spring(duration: 0.35), value: coord.question?.phase)`. */
+private const val PICK_SECONDS = 0.35f

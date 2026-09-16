@@ -1,6 +1,7 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,7 @@ import app.tuji.android.core.design.MasteryBar
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiMotion
 import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiImagePlaceholder
 import app.tuji.android.core.design.TujiErrorState
@@ -399,19 +401,28 @@ private fun Details(
             ) {
                 tabs.forEach { tab ->
                     val active = tab == selected
+                    // iOS inverts these pills on a critically damped spring —
+                    // `withAnimation(.spring(duration: 0.25))` — not on the D1
+                    // state step. It does not bounce; it arrives differently.
+                    val ground by animateColorAsState(
+                        if (active) TujiColor.Ink else TujiColor.Paper2,
+                        TujiMotion.spring(PILL_SECONDS),
+                        label = "detailPillGround",
+                    )
+                    val ink by animateColorAsState(
+                        if (active) TujiColor.Paper else TujiColor.Ink2,
+                        TujiMotion.spring(PILL_SECONDS),
+                        label = "detailPillInk",
+                    )
                     Box(
                         Modifier
                             .height(36.dp)
-                            .background(if (active) TujiColor.Ink else TujiColor.Paper2)
+                            .background(ground)
                             .tujiClickable { chosen = tab }
                             .padding(horizontal = TujiSpace.S3),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            stringResource(tab.label()),
-                            style = TujiType.label,
-                            color = if (active) TujiColor.Paper else TujiColor.Ink2,
-                        )
+                        Text(stringResource(tab.label()), style = TujiType.label, color = ink)
                     }
                 }
             }
@@ -567,3 +578,6 @@ private fun WordDetailTab.label(): Int = when (this) {
     WordDetailTab.Origin -> R.string.word_tab_origin
     WordDetailTab.Collocations -> R.string.word_tab_collocations
 }
+
+/** iOS `WordDetailSections`: `withAnimation(.spring(duration: 0.25))`. */
+private const val PILL_SECONDS = 0.25f

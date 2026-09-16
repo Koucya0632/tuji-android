@@ -8,6 +8,11 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -196,8 +201,24 @@ fun ReviewScreen(
             }
         }
 
-        (state as? ReviewViewModel.State.Studying)?.flash?.let {
-            FlashCapsule(flash = it, bottomPadding = insets.calculateBottomPadding())
+        // Rides up from the bottom edge and fades, on iOS's
+        // `.spring(duration: 0.3)`. Before this it simply appeared: a line of
+        // text that blinks into the corner of a screen you are answering
+        // questions on reads as a glitch, not as an acknowledgement — and the
+        // whole job of this capsule is to be noticed without being in the way.
+        val flash = (state as? ReviewViewModel.State.Studying)?.flash
+        var lastFlash by remember { mutableStateOf(flash) }
+        flash?.let { lastFlash = it }
+        AnimatedVisibility(
+            visible = flash != null,
+            enter = slideInVertically(TujiMotion.spring(FLASH_SECONDS)) { it } +
+                fadeIn(TujiMotion.spring(FLASH_SECONDS)),
+            exit = slideOutVertically(TujiMotion.spring(FLASH_SECONDS)) { it } +
+                fadeOut(TujiMotion.spring(FLASH_SECONDS)),
+        ) {
+            lastFlash?.let {
+                FlashCapsule(flash = it, bottomPadding = insets.calculateBottomPadding())
+            }
         }
 
         if (leaving) {
@@ -411,10 +432,15 @@ private fun HeroCard(
     val reduceMotion = rememberReduceMotion()
     val angle by animateFloatAsState(
         targetValue = if (faceUp) 180f else 0f,
-        // D3 — the turn is meant to be *watched*; that is the whole reason it
-        // is a turn and not a swap. Under 移除動畫 it becomes a crossfade at D1,
-        // because the two faces still have to change places.
-        animationSpec = TujiMotion.ease(if (reduceMotion) TujiMotion.D1 else TujiMotion.D3),
+        // iOS: `.spring(duration: 0.45)` for the turn, and `.easeInOut(0.2)`
+        // under Reduce Motion — the rotation is dropped there anyway (see the
+        // `graphicsLayer` below), so what that 200ms actually carries is the
+        // crossfade between the two faces.
+        animationSpec = if (reduceMotion) {
+            TujiMotion.easeInOut(FLIP_REDUCED_MS)
+        } else {
+            TujiMotion.spring(FLIP_SECONDS)
+        },
         label = "hintFlip",
     )
     val density = LocalDensity.current
@@ -1028,3 +1054,10 @@ private fun ImagePair(
 
 /** 慢讀's multiplier. Slow enough to separate the syllables, not so slow it warbles. */
 private const val SLOW_RATE = 0.8f
+
+/** iOS `ReviewHeroCard`: `.spring(duration: 0.45)`, or `.easeInOut(0.2)` under Reduce Motion. */
+private const val FLIP_SECONDS = 0.45f
+private const val FLIP_REDUCED_MS = 200
+
+/** iOS `ReviewFlowView`: `.animation(.spring(duration: 0.3), value: coord.flash)`. */
+private const val FLASH_SECONDS = 0.3f

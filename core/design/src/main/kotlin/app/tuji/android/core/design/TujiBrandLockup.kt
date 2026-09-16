@@ -5,7 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredSize
@@ -59,12 +62,11 @@ fun TujiBrandLockup(
     val catSize = 150.dp
     val lift = catSize * MascotPose.Peek.visibleHeightRatio - 16.dp
 
-    // **easeOut, not the spring iOS uses.** That platform's lockup rises with a
-    // 0.28 bounce; this design system allows one curve and rules out overshoot
-    // by name, and the rule wins over copying the number. What survives is the
-    // shape of the moment: the hole opens first, then the cat comes up out of
-    // it — which is the reason the two are separate animations rather than one
-    // fade.
+    // Timed off `TujiBrandLockup.playEntranceIfNeeded()` on iOS, beat for beat:
+    // hold the native launch frame, open the hole, wait, then let the cat up on
+    // a spring that overshoots by 0.28. The pause between the two is the part
+    // that makes it read as a cat coming *out of* something rather than two
+    // things fading in together.
     val reduceMotion = rememberReduceMotion()
     val entered = animateEntrance && !reduceMotion
     val hole = remember { Animatable(if (entered) 0f else 1f) }
@@ -72,8 +74,9 @@ fun TujiBrandLockup(
     LaunchedEffect(entered) {
         if (!entered) return@LaunchedEffect
         delay(HOLE_DELAY)
-        hole.animateTo(1f, tween(TujiMotion.D1, easing = TujiMotion.EaseOut))
-        rise.animateTo(1f, tween(TujiMotion.D3, easing = TujiMotion.EaseOut))
+        hole.animateTo(1f, tween(HOLE_MS, easing = TujiMotion.EaseOut))
+        delay(RISE_DELAY)
+        rise.animateTo(1f, TujiMotion.spring(RISE_SECONDS, RISE_BOUNCE))
     }
 
     Box(
@@ -109,18 +112,33 @@ fun TujiBrandLockup(
                     },
             )
 
-            MascotFigure(
-                pose = MascotPose.Peek,
-                size = catSize,
-                modifier = Modifier.graphicsLayer {
-                    alpha = rise.value
-                    // Anchored at the feet, so it grows *out of* the hole
-                    // rather than towards it from the middle.
-                    transformOrigin = TransformOrigin(0.5f, 1f)
-                    scaleY = 0.82f + 0.18f * rise.value
-                    translationY = (1f - rise.value) * (lift + 10.dp).toPx()
-                },
-            )
+            // Clipped to where the hole is, the way iOS frames the figure at
+            // `lift + 17` and clips. Without it the cat is drawn across the
+            // wordmark card on its way up, because the rise is a translation
+            // and nothing above it clips.
+            Box(
+                Modifier
+                    .width(catSize)
+                    .height(lift + 17.dp)
+                    .clipToBounds(),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                MascotFigure(
+                    pose = MascotPose.Peek,
+                    size = catSize,
+                    modifier = Modifier.graphicsLayer {
+                        // The spring overshoots past 1, which is the whole
+                        // point of it — but an alpha above 1 is not a brighter
+                        // cat, it is undefined.
+                        alpha = rise.value.coerceIn(0f, 1f)
+                        // Anchored at the feet, so it grows *out of* the hole
+                        // rather than towards it from the middle.
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        scaleY = 0.82f + 0.18f * rise.value
+                        translationY = (1f - rise.value) * (lift + 10.dp).toPx()
+                    },
+                )
+            }
 
             WordmarkCard(Modifier.offset(y = lift))
         }
@@ -199,3 +217,13 @@ private fun WordmarkCard(modifier: Modifier = Modifier) {
 
 /** Long enough for the screen to be there before anything moves on it. */
 private const val HOLE_DELAY = 70L
+
+/** iOS: `withAnimation(.easeOut(duration: 0.14)) { holeOpen = true }`. */
+private const val HOLE_MS = 140
+
+/** iOS sleeps 100ms between the hole and the cat. */
+private const val RISE_DELAY = 100L
+
+/** iOS: `.spring(duration: 0.34, bounce: 0.28)`. */
+private const val RISE_SECONDS = 0.34f
+private const val RISE_BOUNCE = 0.28f
