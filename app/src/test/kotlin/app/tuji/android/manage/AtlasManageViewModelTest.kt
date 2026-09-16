@@ -4,6 +4,7 @@ import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.model.AtlasImageSummary
 import app.tuji.android.core.model.AtlasItem
+import app.tuji.android.core.model.AtlasPublishResult
 import app.tuji.android.core.model.AtlasSyncResponse
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.network.AtlasShelfManaging
@@ -35,10 +36,12 @@ class AtlasManageViewModelTest {
         var images: List<AtlasImageSummary>,
         var items: List<AtlasItem>,
         val failDelete: Set<String> = emptySet(),
+        val failPublish: Set<String> = emptySet(),
         var failSync: Boolean = false,
     ) : AtlasShelfManaging {
         val deleted = mutableListOf<String>()
         val withdrawn = mutableListOf<String>()
+        val published = mutableListOf<String>()
         override suspend fun sync(): AtlasSyncResponse {
             if (failSync) throw IOException("down")
             return AtlasSyncResponse(images = images, items = items)
@@ -51,6 +54,12 @@ class AtlasManageViewModelTest {
         override suspend fun withdrawItem(itemId: String) {
             withdrawn += itemId
             items = items.map { if (it.id == itemId) it.copy(reviewStatus = "withdrawn") else it }
+        }
+        override suspend fun publishItem(itemId: String): AtlasPublishResult {
+            if (itemId in failPublish) throw IOException("nope")
+            published += itemId
+            items = items.map { if (it.id == itemId) it.copy(reviewStatus = "pending") else it }
+            return AtlasPublishResult(moderation = null)
         }
     }
 

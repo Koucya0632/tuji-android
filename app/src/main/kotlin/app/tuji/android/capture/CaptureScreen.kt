@@ -105,63 +105,11 @@ fun CaptureScreen(
 
         is CaptureViewModel.Step.Naming -> Naming(s, vm, bottomPadding)
 
-        is CaptureViewModel.Step.Made -> Column(
-            Modifier.fillMaxSize().padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(stringResource(R.string.capture_made), style = TujiType.h1, color = TujiColor.Ink)
-            Spacer(Modifier.height(TujiSpace.S2))
-            Text(
-                stringResource(R.string.capture_made_cards, s.item.lemma, s.cards),
-                style = TujiType.body,
-                color = TujiColor.Ink2,
-            )
-            Spacer(Modifier.height(TujiSpace.S4))
-
-            // Publishing is offered, never automatic. And the three outcomes
-            // are three different sentences — "live" and "queued for review"
-            // are not the same fact, and saying the first when the second is
-            // true is a lie the feed contradicts a minute later.
-            when (s.publish) {
-                null -> TujiButton(
-                    text = stringResource(
-                        if (s.publishing) R.string.capture_publishing else R.string.capture_publish,
-                    ),
-                    onClick = vm::publish,
-                    enabled = !s.publishing,
-                )
-
-                CaptureViewModel.PublishOutcome.Published -> Text(
-                    stringResource(R.string.capture_published),
-                    style = TujiType.bodySmStrong,
-                    color = TujiColor.Accumulation,
-                )
-
-                CaptureViewModel.PublishOutcome.Queued -> Text(
-                    stringResource(R.string.capture_queued),
-                    style = TujiType.bodySm,
-                    color = TujiColor.Ink2,
-                    textAlign = TextAlign.Center,
-                )
-
-                CaptureViewModel.PublishOutcome.Failed -> Text(
-                    stringResource(R.string.capture_publish_failed),
-                    style = TujiType.bodySm,
-                    color = TujiColor.Ink2,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Spacer(Modifier.height(TujiSpace.S4))
-            TujiButton(text = stringResource(R.string.capture_made_again), onClick = vm::reset)
-            Spacer(Modifier.height(TujiSpace.S2))
-            TujiButton(
-                text = stringResource(R.string.study_close),
-                style = TujiButtonStyle.Secondary,
-                onClick = onDone,
-            )
-        }
+        // Nothing to show: the work is in the queue and the 圖鑑 grid is
+        // where it is now visible. Closing here is what iOS does in the same
+        // breath as enqueuing, and what it leaves behind is a 生成中 tile
+        // rather than a screen saying 完成 about something not finished yet.
+        CaptureViewModel.Step.Queued -> LaunchedEffect(Unit) { onDone() }
     }
 }
 

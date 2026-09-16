@@ -54,7 +54,7 @@ class TujiApplication : Application() {
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
             accountScopedStores = {
-                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore)
+                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue)
             },
         )
     }
@@ -107,6 +107,31 @@ class TujiApplication : Application() {
             scope = kotlinx.coroutines.CoroutineScope(
                 kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate,
             ),
+        )
+    }
+
+    /**
+     * 生成佇列 — the durable tail of 拍照做卡.
+     *
+     * Application-lifetime on purpose, and not a `ViewModel`: the whole point
+     * is that the work outlives the screen that started it. Its scope is the
+     * app's, so a job survives the capture page being popped, and the journal
+     * carries it across an app kill.
+     */
+    val captureQueue: app.tuji.android.capture.AtlasCaptureQueue by lazy {
+        app.tuji.android.capture.AtlasCaptureQueue(
+            authoring = atlas,
+            journal = app.tuji.android.capture.FileCaptureJobJournal(this),
+            scope = appScope,
+            // What a finished capture refreshes: the shelf it landed on.
+            // Forced, because the server has a word it did not have a moment
+            // ago and the store's own freshness window would hide it. The two
+            // arguments come from settings rather than from a screen, which is
+            // the only reason this can live here at all.
+            onCompleted = {
+                val settings = settingsStore.current.value
+                cardsSourceStore.load(settings.language.wire, settings.direction, force = true)
+            },
         )
     }
 

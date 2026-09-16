@@ -171,6 +171,17 @@ interface AtlasShelfManaging {
     suspend fun deleteImage(imageId: String)
     /** Off 物見; the card and everyone's progress on it stay. */
     suspend fun withdrawItem(itemId: String)
+
+    /**
+     * On to 物見, for review.
+     *
+     * The other half of [withdrawItem], and here rather than only on
+     * [AtlasAuthoring] because 圖鑑管理 is where an author looks at one card and
+     * decides. It used to be reachable from exactly one place — the screen
+     * shown immediately after making a card — so a word published a day later
+     * could not be published at all.
+     */
+    suspend fun publishItem(itemId: String): AtlasPublishResult
 }
 
 /** 我的合集: making one, filling it, and putting it up for review. */
@@ -289,6 +300,9 @@ class AtlasRepository(private val api: TujiApiClient) :
 
     override suspend fun createCards(itemId: String, cardTypes: List<String>): List<AtlasCard> =
         api.post<AtlasCardsResponse>(Endpoint.AtlasCards(itemId), CardsBody(cardTypes)).cards
+
+    /** The same call under the shelf's name — see [AtlasShelfManaging.publishItem]. */
+    override suspend fun publishItem(itemId: String): AtlasPublishResult = publish(itemId)
 
     override suspend fun publish(itemId: String): AtlasPublishResult =
         api.post(Endpoint.AtlasPublish(itemId), Empty())

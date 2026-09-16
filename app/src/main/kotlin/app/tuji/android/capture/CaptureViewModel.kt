@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.community.CaptureDraft
+import app.tuji.android.core.model.AtlasConfirmPayload
 import app.tuji.android.core.model.AtlasImageSummary
-import app.tuji.android.core.model.AtlasItem
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.RecognitionMode
 import app.tuji.android.core.network.AtlasAuthoring
@@ -26,6 +26,9 @@ class CaptureViewModel(
     private val authoring: AtlasAuthoring,
     private val direction: LearningDirection,
     private val scope: CoroutineScope? = null,
+    /** Where a confirmed capture goes. See [confirm]. */
+    private val enqueue: (imageId: String, payload: AtlasConfirmPayload, thumbUrl: String?) -> Unit =
+        { _, _, _ -> },
 ) : ViewModel() {
 
     sealed interface Step {
@@ -53,17 +56,14 @@ class CaptureViewModel(
         enum class Work { Recognizing, Creating }
 
         /**
-         * Confirmed. The item exists and its cards were made.
+         * Handed to 生成佇列. The screen's work is over.
          *
-         * [publish] is null until the user asks: putting their own photograph on
-         * a public feed is a decision, not a side effect of naming it.
+         * There is no 已完成 step any more, because at this point the card does
+         * not exist yet — `confirm` and `createCards` run in the queue, after
+         * this screen is gone. iOS has never had one either: 確認並生成卡片
+         * enqueues and dismisses in the same breath.
          */
-        data class Made(
-            val item: AtlasItem,
-            val cards: Int,
-            val publishing: Boolean = false,
-            val publish: PublishOutcome? = null,
-        ) : Step
+        data object Queued : Step
 
         data class Failed(val message: String) : Step
     }
@@ -141,90 +141,28 @@ class CaptureViewModel(
     private fun _draft(): CaptureDraft? = (_step.value as? Step.Naming)?.draft
 
     /**
-     * Confirm, then make the cards.
+     * Hand the capture to 生成佇列 and get out of the way.
      *
-     * Two calls, and the second is what makes the word reviewable — an item
-     * without cards is a picture in a list that 複習 will never show. Reported
-     * as one step because a half-made word is not something the user can act on.
+     * Everything the queue needs is already decided: the photograph is
+     * uploaded, the names are typed. What is left — `confirm`, then the cards
+     * that make the word reviewable — is two API calls nobody has to watch, so
+     * the screen closes and the 圖鑑 grid draws them as a 生成中 tile.
+     *
+     * [enqueue] rather than a queue instance, so this can still be walked in a
+     * test with no journal and no file system.
      */
     fun confirm() {
         val now = _step.value as? Step.Naming ?: return
         if (!now.draft.isComplete || now.busy != null) return
-        _step.value = now.copy(busy = Step.Work.Creating)
-        work.launch {
-            val item = runCatching {
-                authoring.confirm(now.image.id, now.draft.payload())
-            }.getOrElse {
-                Log.e(TAG, "confirm failed", it)
-                _step.value = now.copy(busy = null)
-                return@launch
-            }
-            val cards = runCatching {
-                authoring.createCards(item.id, DEFAULT_CARDS)
-            }.getOrElse {
-                Log.e(TAG, "cards failed for ${item.id}", it)
-                emptyList()
-            }
-            _step.value = Step.Made(item = item, cards = cards.size)
-        }
+        enqueue(now.image.id, now.draft.payload(), now.image.thumbUrl ?: now.image.imageUrl)
+        _step.value = Step.Queued
     }
 
-    /** What 物見 did with it. */
-    enum class PublishOutcome {
-        /** Live on the feed now. */
-        Published,
-
-        /**
-         * Accepted, but a human will look first.
-         *
-         * A distinct outcome from [Published] on purpose: telling someone their
-         * word is live when it is queued is a lie the feed will contradict
-         * within a minute of them going to look for it.
-         */
-        Queued,
-        Failed,
-    }
-
-    /** Offer the finished item to 物見. */
-    fun publish() {
-        val now = _step.value as? Step.Made ?: return
-        if (now.publishing || now.publish != null) return
-        _step.value = now.copy(publishing = true)
-        work.launch {
-            val outcome = runCatching { authoring.publish(now.item.id) }
-                .map { if (it.published) PublishOutcome.Published else PublishOutcome.Queued }
-                .getOrElse {
-                    Log.e(TAG, "publish failed for ${now.item.id}", it)
-                    PublishOutcome.Failed
-                }
-            (_step.value as? Step.Made)?.let {
-                _step.value = it.copy(publishing = false, publish = outcome)
-            }
-        }
-    }
-
-    /** Start over without leaving the screen. */
     fun reset() {
         _step.value = Step.Framing
     }
 
     private companion object {
         const val TAG = "TujiCapture"
-
-        /**
-         * **One card, not two.**
-         *
-         * A 自製圖鑑 word studies as a single card: the unified study flow
-         * renders every custom card as an image MCQ and dedupes the queue to
-         * one per item, so a second `card_type` is pure overhead — extra SRS
-         * state, doubled due counts, wasted signed-URL work.
-         *
-         * The server collapses any request to one anyway (preferring
-         * `image_recall`, which is why that is the one asked for). Sending two
-         * and receiving one is how a "2 張卡" that is really 1 gets shown to a
-         * user — this client asked for both until a device run printed
-         * 「1 張卡」 and the discrepancy was chased down.
-         */
-        val DEFAULT_CARDS = listOf("image_recall")
     }
 }

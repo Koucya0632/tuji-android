@@ -41,6 +41,7 @@ class AtlasManageViewModel(
         val selecting: Boolean = false,
         val selected: Set<String> = emptySet(),
         val deleting: Boolean = false,
+        val publishing: Boolean = false,
         val withdrawing: Boolean = false,
         /** The last delete or withdraw failed. */
         val actionFailed: Boolean = false,
@@ -120,6 +121,35 @@ class AtlasManageViewModel(
     }
 
     /** 取消公開. The server owns the resulting state, so the shelf re-reads rather than guessing it. */
+    /**
+     * Put one card up for 物見 review.
+     *
+     * The mirror of [withdraw]. It used to live only on the screen shown right
+     * after a card was made — so a word somebody decided to share a day later
+     * had nowhere to be shared from, and that screen is gone now anyway: the
+     * card is finished by 生成佇列, after the capture page has closed.
+     */
+    fun publish(itemId: String) {
+        if (_state.value.publishing) return
+        _state.value = _state.value.copy(publishing = true, actionFailed = false)
+        work.launch {
+            val ok = try {
+                shelf.publishItem(itemId)
+                true
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "publish failed: $itemId", failure)
+                false
+            }
+            _state.value = _state.value.copy(publishing = false, actionFailed = !ok)
+            if (ok) {
+                onChanged()
+                load()
+            }
+        }
+    }
+
     fun withdraw(itemId: String) {
         if (_state.value.withdrawing) return
         _state.value = _state.value.copy(withdrawing = true, actionFailed = false)
