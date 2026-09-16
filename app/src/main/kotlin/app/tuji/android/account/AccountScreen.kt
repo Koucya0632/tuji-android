@@ -35,6 +35,7 @@ import app.tuji.android.core.design.TujiStatusEdgeLabel
 import app.tuji.android.core.model.UserMe
 import app.tuji.android.core.study.CompletionReadout
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.TujiBorder
@@ -68,7 +69,9 @@ fun AccountScreen(
     onOpenSettings: () -> Unit,
     showChinese: Boolean = true,
     onOpenWord: (String) -> Unit = {},
+    onRefresh: suspend () -> Unit = {},
 ) {
+    TujiPullToRefresh(onRefresh = onRefresh) {
     Column(
         Modifier
             .fillMaxSize()
@@ -119,6 +122,7 @@ fun AccountScreen(
             WeakWords(state.weak, showChinese, onOpenWord)
         }
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
+    }
     }
 }
 

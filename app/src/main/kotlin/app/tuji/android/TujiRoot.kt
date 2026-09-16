@@ -43,6 +43,10 @@ import app.tuji.android.settings.SettingsReadiness
 import app.tuji.android.settings.SettingsScreen
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.study.MasteryDistribution
+import app.tuji.android.core.design.TujiPullToRefresh
+import app.tuji.android.core.study.targets
+import app.tuji.android.core.study.RefreshTarget
+import app.tuji.android.core.study.LearningRefreshCause
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
@@ -410,6 +414,22 @@ private fun SignedInScreens(
     }
     val accountState by account.state.collectAsStateWithLifecycle()
 
+    // What a pull re-reads is [LearningRefreshCause]'s to say; this only
+    // knows which store answers each target. Written once, because the two
+    // pulls used to be two lists and two lists drift.
+    val refreshLearning: suspend (LearningRefreshCause) -> Unit = { cause ->
+        cause.targets.forEach { target ->
+            when (target) {
+                RefreshTarget.Progress -> app.progressStore.load(direction)
+                RefreshTarget.Mastery -> app.masteryStore.load(direction, force = true)
+                RefreshTarget.Catalogue -> app.catalog.load(direction, force = true)
+                // Held by 今日's own model rather than a store, so it is asked
+                // rather than loaded.
+                RefreshTarget.Stats -> Unit
+            }
+        }
+    }
+
     val today = remember(direction) {
         TodayViewModel(
             stats = app.study,
@@ -639,6 +659,11 @@ private fun SignedInScreens(
                     },
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
+                    onRefresh = {
+                        val cause = LearningRefreshCause.PulledToday(isGuest = isGuest)
+                        if (RefreshTarget.Stats in cause.targets) today.refresh()
+                        refreshLearning(cause)
+                    },
                 )
 
                 AppRoute.Atlas -> AtlasCardsScreen(
@@ -666,6 +691,7 @@ private fun SignedInScreens(
                         onDelete = { ids -> manage.delete(ids) },
                         collections = myCollectionsState,
                         onLoadCollections = myCollections::load,
+                        onRefreshCollections = { myCollections.reload() },
                         onCreateCollection = { title, description, onCreated -> myCollections.create(title, description) { onCreated() } },
                         onDismissCreateError = myCollections::dismissCreateError,
                         onOpenCollection = { nav = nav.push(AppRoute.CollectionEdit(it)) },
@@ -831,6 +857,9 @@ private fun SignedInScreens(
                     onSignIn = { app.auth.exitGuestMode() },
                     onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
                     onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
+                    // Not the learning policy: 物見 is other people's shelves,
+                    // and none of the numbers this table is about are on it.
+                    onRefresh = { community.reload(withSaved = !isGuest) },
                 )
 
                 is AppRoute.PublicItem -> {
@@ -967,6 +996,12 @@ private fun SignedInScreens(
                     onOpenSettings = { nav = nav.push(AppRoute.Settings) },
                     showChinese = settings.showZh,
                     onOpenWord = openCard,
+                    onRefresh = {
+                        refreshLearning(LearningRefreshCause.PulledMe(isGuest = isGuest))
+                        // 我's own payload — the weakest words and the plan —
+                        // which no learning store holds.
+                        if (!isGuest) account.reload()
+                    },
                 )
 
                 AppRoute.Search -> AtlasSearchScreen(
@@ -1071,6 +1106,7 @@ private fun TodayColumn(
     onOpenShelf: (String) -> Unit,
     onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
+    onRefresh: suspend () -> Unit,
 ) {
     // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts can re-run
     // it, so the door stays in debug builds — as a long press on the page, not
@@ -1081,6 +1117,7 @@ private fun TodayColumn(
     } else {
         Modifier
     }
+    TujiPullToRefresh(onRefresh = onRefresh) {
     Column(Modifier.fillMaxSize().then(spikeDoor).verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
@@ -1098,6 +1135,7 @@ private fun TodayColumn(
             onOpenShelf = onOpenShelf,
             onOpenStudyThemes = onOpenStudyThemes,
         )
+    }
     }
 }
 
