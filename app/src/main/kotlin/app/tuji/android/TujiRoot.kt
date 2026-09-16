@@ -50,6 +50,13 @@ import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.study.SetupChoices
+import app.tuji.android.tour.FeatureTourFlow
+import app.tuji.android.tour.FeatureTourOverlay
+import app.tuji.android.tour.ProvideTourAnchors
+import app.tuji.android.tour.TourAdvance
+import app.tuji.android.tour.TourCopy
+import app.tuji.android.tour.rememberTourAnchors
+import kotlinx.coroutines.delay
 import app.tuji.android.onboarding.OnboardingFlow
 import app.tuji.android.onboarding.SetupScreen
 import app.tuji.android.core.design.TujiFace
@@ -768,6 +775,30 @@ private fun SignedInScreens(
     val myUid = accountState.me?.username
     LaunchedEffect(myUid) { if (!isGuest && myUid != null) community.loadMe(myUid) }
 
+    // The five-step tour, on the first launch only. The marked composables
+    // below report where they are; the overlay reads that and nothing else in
+    // the shell knows the tour exists.
+    val anchors = rememberTourAnchors()
+    val tour = remember(isGuest) { FeatureTourFlow(isGuest) }
+    var tourStep by remember { mutableStateOf<Int?>(null) }
+    var tourCrossing by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        // After the launch beat, not before: everything `mayStart` asks about
+        // can change while the shell settles.
+        delay(TOUR_START_DELAY)
+        val may = FeatureTourFlow.mayStart(
+            tourDone = app.onboarding.tourDone,
+            studyFocusActive = !TabShell.tabBarVisible(nav),
+            // Nothing hands this app a deep link yet. Named rather than
+            // dropped, so the day something does, the rule is already here.
+            hasPendingLink = false,
+            alreadyRunning = tourStep != null,
+        )
+        if (may) tourStep = 0
+    }
+
+    Box(Modifier.fillMaxSize()) {
+    ProvideTourAnchors(anchors) {
     Column(
         Modifier
             .fillMaxSize()
@@ -1349,7 +1380,51 @@ private fun SignedInScreens(
             Spacer(Modifier.height(insets.calculateBottomPadding()))
         }
     }
+    }
+
+    tourStep?.let { index ->
+        val step = tour.steps[index]
+        val end = { finished: Boolean ->
+            app.onboarding.tourDone = true
+            tourStep = null
+            // Finishing lands where the closing card points; skipping stays
+            // put. That is the only difference between the two.
+            if (finished) nav = nav.select(FeatureTourFlow.tabAfterFinishing)
+        }
+        FeatureTourOverlay(
+            step = step,
+            copy = TourCopy.of(step, isGuest),
+            anchors = anchors,
+            transitioning = tourCrossing,
+            isLast = index == tour.steps.lastIndex,
+            onSkip = { end(false) },
+            onNext = {
+                when (val next = tour.advance(index, nav.tab ?: AppRoute.Today)) {
+                    is TourAdvance.Show -> tourStep = next.index
+                    is TourAdvance.CrossTab -> {
+                        // Hide the hole while the pager slides, so nothing is
+                        // dragged across two pages, then show it where it is.
+                        tourCrossing = true
+                        nav = nav.select(next.to)
+                        tourStep = next.index
+                        scope.launch {
+                            delay(TOUR_CROSS_SETTLE)
+                            tourCrossing = false
+                        }
+                    }
+                    TourAdvance.Finish -> end(true)
+                }
+            },
+        )
+    }
+    }
 }
+
+/** Long enough for the shell to have laid out and measured its anchors. */
+private const val TOUR_START_DELAY = 900L
+
+/** One D2 page slide, plus a frame for the anchors to settle where they land. */
+private const val TOUR_CROSS_SETTLE = 320L
 
 /** Whether the shell draws a back bar over [route]. */
 private fun hasBackBar(route: AppRoute): Boolean = when (route) {

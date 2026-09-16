@@ -42,6 +42,8 @@ import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.billing.PurchaseGate
 import app.tuji.android.core.design.HeroPill
+import app.tuji.android.tour.TourTarget
+import app.tuji.android.tour.tourAnchor
 import app.tuji.android.core.design.HeroPillRole
 import app.tuji.android.core.design.MascotCrossfade
 import app.tuji.android.core.design.MascotPose
@@ -258,7 +260,7 @@ private fun Greeting(
                 TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
             }
             Spacer(Modifier.width(TujiSpace.S3))
-            StreakChip(streak)
+            StreakChip(streak, Modifier.tourAnchor(TourTarget.Streak))
         }
 
         // One string with the name inside it, so the whole greeting wraps as
@@ -321,10 +323,10 @@ private fun dateLabel(): String {
  * 墨3 at zero — a lit flame over a 0 would be congratulating nothing.
  */
 @Composable
-private fun StreakChip(days: Int) {
+private fun StreakChip(days: Int, modifier: Modifier = Modifier) {
     val label = stringResource(R.string.today_streak, days)
     Row(
-        Modifier
+        modifier
             .background(TujiColor.Paper)
             .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f))
             .clearAndSetSemantics { contentDescription = label }
@@ -353,7 +355,7 @@ private fun Hero(
     onLearnNew: () -> Unit,
     onCreateAccount: () -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth()) {
+    Box(Modifier.fillMaxWidth().tourAnchor(TourTarget.Hero)) {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -367,7 +369,9 @@ private fun Hero(
                 Modifier.padding(end = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
             ) {
-                if (!inputs.isGuest) DailyGoal(decisions, inputs)
+                if (!inputs.isGuest) {
+                    Box(Modifier.tourAnchor(TourTarget.DailyGoal)) { DailyGoal(decisions, inputs) }
+                }
                 ThemeProgress(completion)
             }
 
@@ -392,7 +396,10 @@ private fun Hero(
                 // label wraps, an unconstrained row draws a short button beside
                 // a tall one and the pair reads as two unrelated things.
                 Row(
-                    Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                    Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
+                        .tourAnchor(TourTarget.HeroCtas),
                     horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
                 ) {
                     HeroPill(

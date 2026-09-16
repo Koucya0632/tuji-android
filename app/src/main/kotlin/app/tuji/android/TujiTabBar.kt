@@ -31,6 +31,8 @@ import androidx.core.view.WindowCompat
 import app.tuji.android.core.design.MascotEye
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.tour.TourTarget
+import app.tuji.android.tour.tourAnchor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -60,6 +62,7 @@ fun TujiTabBar(
         Modifier
             .fillMaxWidth()
             .background(TujiColor.Ink)
+            .tourAnchor(TourTarget.TabBar)
             .padding(bottom = bottomInset),
     ) {
         TabShell.tabs.forEach { tab ->
@@ -151,7 +154,10 @@ private fun RowScope.CaptureButton(onClick: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        MascotEye(size = 44.dp)
+        // The anchor is the eye, not the 64dp target around it: what the
+        // tour frames is the one circle in the app, and a round hole cut to
+        // the target's bounds would be a circle round nothing.
+        MascotEye(size = 44.dp, modifier = Modifier.tourAnchor(TourTarget.Capture))
     }
 }
 
