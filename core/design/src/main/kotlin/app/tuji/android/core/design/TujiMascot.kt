@@ -1,6 +1,7 @@
 package app.tuji.android.core.design
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
@@ -92,6 +93,41 @@ fun MascotFigure(
                 layout(placeable.width, visible) { placeable.place(0, -top) }
             },
     )
+}
+
+/**
+ * The cat changing pose — a fade, never a cut.
+ *
+ * Two poses of the same cat are two drawings, and swapping one picture for
+ * another in a single frame reads as the image failing to load, not as the cat
+ * doing something. The fade is what makes it one animal.
+ *
+ * [durationMillis] because the two places this happens are different kinds of
+ * moment: the speech bubble changes pose *because the reader just answered*, so
+ * it moves at the D2 enter/exit step alongside the words it is saying, while
+ * 今日's hero changes because the day's goal came in — something to be watched,
+ * so D3. Watched motion is also the kind that has to be suppressed rather than
+ * shortened under 移除動畫, which is why reduce-motion takes the plain figure.
+ */
+@Composable
+fun MascotCrossfade(
+    pose: MascotPose,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    durationMillis: Int = TujiMotion.D2,
+) {
+    if (rememberReduceMotion()) {
+        MascotFigure(pose = pose, size = size, modifier = modifier)
+        return
+    }
+    Crossfade(
+        targetState = pose,
+        modifier = modifier,
+        animationSpec = TujiMotion.ease(durationMillis),
+        label = "mascotPose",
+    ) { shown ->
+        MascotFigure(pose = shown, size = size)
+    }
 }
 
 /**
@@ -225,7 +261,7 @@ fun MascotSpeechBubble(pose: MascotPose, text: String, modifier: Modifier = Modi
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(width = 56.dp, height = 64.dp).zIndex(1f), contentAlignment = Alignment.Center) {
-            MascotFigure(pose = pose, size = 64.dp)
+            MascotCrossfade(pose = pose, size = 64.dp)
         }
         Text(
             text,

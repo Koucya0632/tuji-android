@@ -1,5 +1,7 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -39,10 +41,23 @@ fun <T> TujiSegmented(
     ) {
         options.forEach { (value, title) ->
             val on = value == selected
+            // The inversion is a state change, so it moves at D1. A block that
+            // teleports between two words reads as a redraw; the same 120ms
+            // every other selected state in the app takes reads as an answer.
+            val ground by animateColorAsState(
+                if (on) TujiColor.Ink else TujiColor.Ink.copy(alpha = 0f),
+                TujiMotion.ease(TujiMotion.D1),
+                label = "segmentGround",
+            )
+            val ink by animateColorAsState(
+                if (on) TujiColor.Paper else TujiColor.Ink2,
+                TujiMotion.ease(TujiMotion.D1),
+                label = "segmentInk",
+            )
             Box(
                 Modifier
                     .height(40.dp)
-                    .background(if (on) TujiColor.Ink else TujiColor.Paper.copy(alpha = 0f))
+                    .background(ground)
                     .tujiClickable { if (!on) onSelect(value) }
                     .semantics {
                         role = Role.Tab
@@ -51,7 +66,7 @@ fun <T> TujiSegmented(
                     .padding(horizontal = TujiSpace.S3),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(title, style = TujiType.h3, color = if (on) TujiColor.Paper else TujiColor.Ink2)
+                Text(title, style = TujiType.h3, color = ink)
             }
         }
     }

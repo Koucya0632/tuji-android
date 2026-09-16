@@ -205,10 +205,15 @@ fun TujiSettingRow(
  */
 @Composable
 fun TujiCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val ground by animateColorAsState(
+        if (checked) TujiColor.Ink else TujiColor.Paper2,
+        TujiMotion.ease(TujiMotion.D1),
+        label = "checkbox",
+    )
     Box(
         Modifier
             .size(24.dp)
-            .background(if (checked) TujiColor.Ink else TujiColor.Paper2)
+            .background(ground)
             .tujiClickable { onCheckedChange(!checked) },
         contentAlignment = Alignment.Center,
     ) {

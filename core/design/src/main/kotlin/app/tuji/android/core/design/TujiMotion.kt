@@ -4,8 +4,8 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -46,7 +46,12 @@ object TujiMotion {
     /** Compose's `FastOutSlowIn` is a different curve; this is CSS/SwiftUI easeOut. */
     val EaseOut: Easing = Easing { fraction -> 1f - (1f - fraction) * (1f - fraction) }
 
-    fun <T> ease(durationMillis: Int): AnimationSpec<T> =
+    /**
+     * `FiniteAnimationSpec` rather than `AnimationSpec`, because the transition
+     * APIs — `fadeIn`, `Crossfade`, `SizeTransform` — will only take a spec
+     * that is known to end. Every spec here is a tween, so it always was one.
+     */
+    fun <T> ease(durationMillis: Int): FiniteAnimationSpec<T> =
         tween(durationMillis = durationMillis, easing = EaseOut)
 
     /**
@@ -57,7 +62,7 @@ object TujiMotion {
      * Returns null to mean "do not animate", matching the iOS signature; call
      * sites treat null as `snapTo`.
      */
-    fun <T> ease(durationMillis: Int, reduceMotion: Boolean): AnimationSpec<T>? =
+    fun <T> ease(durationMillis: Int, reduceMotion: Boolean): FiniteAnimationSpec<T>? =
         if (reduceMotion) null else ease(durationMillis)
 }
 

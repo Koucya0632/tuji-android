@@ -1,5 +1,7 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -44,6 +46,16 @@ fun TujiTextField(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
+    val edgeWidth by animateDpAsState(
+        if (focused) TujiBorder.Bw2 else TujiBorder.Bw1,
+        TujiMotion.ease(TujiMotion.D1),
+        label = "fieldEdgeWidth",
+    )
+    val edgeColor by animateColorAsState(
+        if (focused) TujiColor.Current else TujiColor.Rule,
+        TujiMotion.ease(TujiMotion.D1),
+        label = "fieldEdgeColor",
+    )
     val type = TujiType
 
     Column(modifier) {
@@ -62,9 +74,12 @@ fun TujiTextField(
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 52.dp)
                 .background(TujiColor.Paper2)
+                // 瞳黃 means 現在, and a focused field is exactly where the
+                // user is — so the edge arrives at the same D1 every other
+                // state change in the app takes, rather than snapping.
                 .border(
-                    width = if (focused) TujiBorder.Bw2 else TujiBorder.Bw1,
-                    color = if (focused) TujiColor.Current else TujiColor.Rule,
+                    width = edgeWidth,
+                    color = edgeColor,
                     shape = RoundedCornerShape(TujiRadius.R0),
                 )
                 .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
