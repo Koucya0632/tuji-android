@@ -28,9 +28,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +44,7 @@ import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordPicture
@@ -241,13 +241,17 @@ private fun FloatingBar(bookmarked: Boolean, onBack: () -> Unit, onBookmark: (()
 
 @Composable
 private fun BarControl(label: String, onClick: () -> Unit, icon: @Composable () -> Unit) {
-    Box(
-        Modifier
-            .size(48.dp)
-            .tujiClickable(onClick = onClick)
-            .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) { icon() }
+    // Transparent, and that is also why these two are the controls with no
+    // press ground: they float over the hero picture, and a rectangle
+    // appearing on a photograph under the thumb reads as a drawing bug rather
+    // than as an answer. The tap still buzzes.
+    TujiIconButton(
+        label = label,
+        onClick = onClick,
+        size = 48.dp,
+        ground = Color.Transparent,
+        content = icon,
+    )
 }
 
 /**
@@ -303,14 +307,11 @@ internal fun TitleRow(
             }
         }
         if (canPlay) {
-            val label = stringResource(R.string.word_play)
-            Box(
-                Modifier
-                    .size(48.dp)
-                    .background(if (playing) TujiColor.Current else TujiColor.Paper2)
-                    .semantics { contentDescription = label }
-                    .tujiClickable(onClick = onPlay),
-                contentAlignment = Alignment.Center,
+            TujiIconButton(
+                label = stringResource(R.string.word_play),
+                onClick = onPlay,
+                size = 48.dp,
+                ground = if (playing) TujiColor.Current else TujiColor.Paper2,
             ) {
                 TujiGlyph.Speaker(tint = TujiColor.Ink)
             }

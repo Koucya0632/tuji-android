@@ -55,6 +55,7 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.WordPicture
 import app.tuji.android.core.design.TujiType
@@ -474,16 +475,12 @@ private fun HeroCard(
         }
 
         if (canPlay) {
-            val label = stringResource(R.string.word_play)
-            Box(
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(TujiSpace.S3)
-                    .size(48.dp)
-                    .background(if (playing) TujiColor.Current else TujiColor.Paper)
-                    .semantics { contentDescription = label }
-                    .tujiClickable(onClick = onPlay),
-                contentAlignment = Alignment.Center,
+            TujiIconButton(
+                label = stringResource(R.string.word_play),
+                onClick = onPlay,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(TujiSpace.S3),
+                size = 48.dp,
+                ground = if (playing) TujiColor.Current else TujiColor.Paper,
             ) {
                 TujiGlyph.Speaker(tint = TujiColor.Ink)
             }
@@ -606,27 +603,18 @@ private fun RevealSheet(
                     // No star on a 自製 card: 書籤 filters the catalogue, which
                     // has never heard of it, so the mark would go nowhere.
                     if (onBookmark != null && !CardsSourceRules.isCustom(wordId)) {
-                        val mark = stringResource(R.string.word_bookmark)
-                        Box(
-                            Modifier
-                                .size(44.dp)
-                                .background(TujiColor.Paper2)
-                                .semantics { contentDescription = mark }
-                                .tujiClickable { onBookmark(wordId) },
-                            contentAlignment = Alignment.Center,
+                        TujiIconButton(
+                            label = stringResource(R.string.word_bookmark),
+                            onClick = { onBookmark(wordId) },
                         ) {
                             TujiGlyph.Star(filled = bookmarked(wordId), tint = TujiColor.Ink)
                         }
                     }
                     if (canPlay) {
-                        val label = stringResource(R.string.word_play)
-                        Box(
-                            Modifier
-                                .size(44.dp)
-                                .background(if (playing) TujiColor.Current else TujiColor.Paper2)
-                                .semantics { contentDescription = label }
-                                .tujiClickable(onClick = onPlay),
-                            contentAlignment = Alignment.Center,
+                        TujiIconButton(
+                            label = stringResource(R.string.word_play),
+                            onClick = onPlay,
+                            ground = if (playing) TujiColor.Current else TujiColor.Paper2,
                         ) {
                             TujiGlyph.Speaker(tint = TujiColor.Ink)
                         }
@@ -968,14 +956,14 @@ private fun ListenButton(
     background: androidx.compose.ui.graphics.Color = TujiColor.Paper,
     content: @Composable () -> Unit,
 ) {
-    Box(
-        modifier
-            .size(48.dp)
-            .background(background)
-            .semantics { contentDescription = label }
-            .tujiClickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) { content() }
+    TujiIconButton(
+        label = label,
+        onClick = onClick,
+        modifier = modifier,
+        size = 48.dp,
+        ground = background,
+        content = content,
+    )
 }
 
 /**
