@@ -1073,39 +1073,59 @@ private fun SignedInScreens(
                 )
 
                 is AppRoute.Word -> {
-                    val vm = remember(route.wordId) {
-                        WordDetailViewModel(
-                            catalog = app.catalogReading,
-                            atlas = app.atlas,
-                            audio = app.clipPlayer,
-                            direction = direction,
-                            uiLang = uiLang,
-                            accent = settings.accent,
-                            speech = app.speech,
-                        ).also { it.load(route.wordId) }
+                    // The whole catalogue in store order — the 官方 grid's own
+                    // order — so the next word is the one that was beside it.
+                    // A word the catalogue has never heard of (a 自製 card, a
+                    // 物見 item) is its own single page rather than no page.
+                    val ids = remember(catalog.words, route.wordId) {
+                        val all = catalog.words.map { it.id }
+                        if (route.wordId in all) all else listOf(route.wordId)
                     }
-                    WordDetailScreen(
-                        vm = vm,
-                        bottomPadding = 0.dp,
-                        session = direction.targetLanguage,
-                        uiLang = uiLang,
-                        showChinese = settings.showZh,
-                        onBack = { nav = nav.pop() },
-                        resolve = { id -> catalog.words.firstOrNull { it.id == id } },
-                        bookmarked = route.wordId in personal.bookmarked,
-                        // 書籤 filters the *catalogue* by marked id, so a mark
-                        // on a card the catalogue never had would go nowhere.
-                        onBookmark = if (CardsSourceRules.isCustom(route.wordId)) null
-                        else ({ app.cardsSourceStore.toggle(route.wordId) }),
-                        scores = scores,
-                        onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
-                        speech = app.speech,
-                        accent = settings.accent,
-                        glossBookmarks = GlossBookmarks(
-                            isMarked = { it in personal.bookmarked },
-                            toggle = app.cardsSourceStore::toggle,
-                        ),
+                    val pager = rememberPagerState(
+                        initialPage = ids.indexOf(route.wordId).coerceAtLeast(0),
+                        pageCount = { ids.size },
                     )
+                    // Deliberately **not** pushed into the stack, as on iOS:
+                    // swiping is reading on, not navigating, and a stack that
+                    // grew a step per swipe would make 返回 walk back through
+                    // every word the reader passed.
+                    HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
+                        val wordId = ids[page]
+                        val vm = remember(wordId) {
+                            WordDetailViewModel(
+                                catalog = app.catalogReading,
+                                atlas = app.atlas,
+                                audio = app.clipPlayer,
+                                direction = direction,
+                                uiLang = uiLang,
+                                accent = settings.accent,
+                                speech = app.speech,
+                            ).also { it.load(wordId) }
+                        }
+                        WordDetailScreen(
+                            vm = vm,
+                            bottomPadding = 0.dp,
+                            session = direction.targetLanguage,
+                            uiLang = uiLang,
+                            showChinese = settings.showZh,
+                            onBack = { nav = nav.pop() },
+                            resolve = { id -> catalog.words.firstOrNull { it.id == id } },
+                            bookmarked = wordId in personal.bookmarked,
+                            // 書籤 filters the *catalogue* by marked id, so a
+                            // mark on a card the catalogue never had would go
+                            // nowhere.
+                            onBookmark = if (CardsSourceRules.isCustom(wordId)) null
+                            else ({ app.cardsSourceStore.toggle(wordId) }),
+                            scores = scores,
+                            onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
+                            speech = app.speech,
+                            accent = settings.accent,
+                            glossBookmarks = GlossBookmarks(
+                                isMarked = { it in personal.bookmarked },
+                                toggle = app.cardsSourceStore::toggle,
+                            ),
+                        )
+                    }
                 }
 
                 else -> Unit
