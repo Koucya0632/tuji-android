@@ -50,6 +50,7 @@ import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.study.SetupChoices
+import app.tuji.android.onboarding.OnboardingFlow
 import app.tuji.android.onboarding.SetupScreen
 import app.tuji.android.core.design.TujiFace
 import app.tuji.android.core.design.TujiBrandLockup
@@ -214,7 +215,21 @@ fun TujiRoot(app: TujiApplication) {
             )
             // The 3-page marketing intro is not ported. Treating it as seen sends a
             // signed-out user to Welcome, which is where they were going anyway.
-            is LaunchDestination.Onboarding -> WelcomeScreen(app.auth)
+            is LaunchDestination.Onboarding -> {
+                var introDone by remember { mutableStateOf(false) }
+                if (introDone) {
+                    WelcomeScreen(app.auth)
+                } else {
+                    OnboardingFlow(
+                        onDone = {
+                            app.onboarding.introDone = true
+                            // The store is a preference, not state routing
+                            // recomposes for — this is what moves the app.
+                            introDone = true
+                        },
+                    )
+                }
+            }
             is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
             is LaunchDestination.Setup -> {
                 val setupLanguage = rememberDeviceLanguage()

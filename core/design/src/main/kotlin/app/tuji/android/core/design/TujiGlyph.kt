@@ -255,6 +255,93 @@ object TujiGlyph {
     }
 
     /**
+     * Four everyday things, for the intro's picture grid.
+     *
+     * iOS draws these as SF Symbols and says in its own comment that they are
+     * placeholders until the real tiles land. There is no SF Symbols here, so
+     * they are drawn like every other mark in this file — same subjects
+     * (fork, cup, leaf, carrot) so the two intros illustrate the same idea.
+     */
+    @Composable
+    fun Fork(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.08f
+            // Three tines into a shared neck, then the handle.
+            listOf(0.32f, 0.5f, 0.68f).forEach { x ->
+                drawLine(tint, Offset(w * x, w * 0.12f), Offset(w * x, w * 0.36f), stroke, StrokeCap.Round)
+            }
+            drawLine(tint, Offset(w * 0.32f, w * 0.36f), Offset(w * 0.68f, w * 0.36f), stroke, StrokeCap.Round)
+            drawLine(tint, Offset(w * 0.5f, w * 0.36f), Offset(w * 0.5f, w * 0.88f), stroke, StrokeCap.Round)
+        }
+    }
+
+    @Composable
+    fun Cup(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val body = Path()
+            body.moveTo(w * 0.22f, w * 0.30f)
+            body.lineTo(w * 0.30f, w * 0.80f)
+            body.lineTo(w * 0.62f, w * 0.80f)
+            body.lineTo(w * 0.70f, w * 0.30f)
+            body.close()
+            drawPath(body, tint, style = stroke)
+            // The handle, on the right where a right-handed cup has one.
+            drawArc(
+                color = tint,
+                startAngle = -80f,
+                sweepAngle = 160f,
+                useCenter = false,
+                topLeft = Offset(w * 0.62f, w * 0.36f),
+                size = Size(w * 0.22f, w * 0.26f),
+                style = stroke,
+            )
+            drawLine(tint, Offset(w * 0.18f, w * 0.30f), Offset(w * 0.74f, w * 0.30f), w * 0.08f, StrokeCap.Round)
+        }
+    }
+
+    @Composable
+    fun Leaf(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val leaf = Path()
+            leaf.moveTo(w * 0.22f, w * 0.78f)
+            leaf.quadraticTo(w * 0.20f, w * 0.20f, w * 0.80f, w * 0.18f)
+            leaf.quadraticTo(w * 0.80f, w * 0.76f, w * 0.22f, w * 0.78f)
+            leaf.close()
+            drawPath(leaf, tint, style = stroke)
+            // The midrib, which is what separates a leaf from a petal.
+            drawLine(tint, Offset(w * 0.26f, w * 0.74f), Offset(w * 0.72f, w * 0.26f), w * 0.07f, StrokeCap.Round)
+        }
+    }
+
+    @Composable
+    fun Carrot(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            val root = Path()
+            root.moveTo(w * 0.30f, w * 0.36f)
+            root.lineTo(w * 0.70f, w * 0.36f)
+            root.lineTo(w * 0.46f, w * 0.88f)
+            root.close()
+            drawPath(root, tint, style = stroke)
+            listOf(-0.14f, 0f, 0.14f).forEach { lean ->
+                drawLine(
+                    tint,
+                    Offset(w * (0.50f + lean * 0.4f), w * 0.34f),
+                    Offset(w * (0.50f + lean), w * 0.10f),
+                    w * 0.07f,
+                    StrokeCap.Round,
+                )
+            }
+        }
+    }
+
+    /**
      * 書籤.
      *
      * A five-pointed star drawn from its own geometry rather than shipped as an
