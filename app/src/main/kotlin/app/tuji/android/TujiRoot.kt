@@ -718,6 +718,9 @@ private fun SignedInScreens(
                     onOpenThemes = { nav = nav.push(AppRoute.Themes) },
                     onOpen = openCard,
                     onOpenManage = if (isGuest) null else ({ nav = nav.push(AppRoute.AtlasManage) }),
+                    session = direction.targetLanguage,
+                    showChinese = settings.showZh,
+                    onBookmark = app.cardsSourceStore::toggle,
                 )
 
                 AppRoute.Community -> CommunityScreen(

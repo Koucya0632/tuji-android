@@ -1,6 +1,8 @@
 package app.tuji.android.core.design
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -23,6 +25,30 @@ fun Modifier.tujiClickable(
         interactionSource = source,
         indication = null,
         enabled = enabled,
+        onClick = onClick,
+    )
+}
+
+/**
+ * The same, plus a long press.
+ *
+ * Separate rather than a nullable parameter on [tujiClickable]: a long press
+ * costs every tap a delay before it is delivered as a tap, and 145 call sites
+ * should not pay that for the handful that want one.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+fun Modifier.tujiClickable(
+    onLongClick: () -> Unit,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    onClick: () -> Unit,
+): Modifier = composed {
+    val source = interactionSource ?: androidx.compose.runtime.remember { MutableInteractionSource() }
+    combinedClickable(
+        interactionSource = source,
+        indication = null,
+        enabled = enabled,
+        onLongClick = onLongClick,
         onClick = onClick,
     )
 }
