@@ -27,7 +27,17 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # `packages` is spelled out because the action's default is
+      # "tools platform-tools", and `tools` — the obsolete SDK Tools package —
+      # has been withdrawn from Google's repository. sdkmanager exits 1 with
+      # "Failed to find package 'tools'", the action fails, and every step
+      # after it is skipped. It happened between 2026-09-14 (last green run on
+      # main) and 2026-09-16, and the first red run was a PR that had not
+      # touched the build at all. Nothing here needs `tools`; AGP fetches the
+      # platform and build-tools it wants on its own.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
