@@ -28,6 +28,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.HorizontalPager
 import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
@@ -475,8 +478,12 @@ private fun SignedInScreens(
     val routeState = rememberSaveableStateHolder()
     val liveKeys = nav.entries.mapIndexed { index, route -> "$index:$route" }
     var heldKeys by remember { mutableStateOf(emptySet<String>()) }
+    // The pager's four pages are always alive, whatever the stack says: they
+    // are composed side by side, and dropping the neighbour's state the moment
+    // it leaves the stack would empty the page a finger is dragging onto.
+    val tabKeys = remember { TabShell.tabs.map { "tab:$it" }.toSet() }
     LaunchedEffect(liveKeys) {
-        (heldKeys - liveKeys.toSet()).forEach(routeState::removeState)
+        (heldKeys - liveKeys.toSet() - tabKeys).forEach(routeState::removeState)
         heldKeys = liveKeys.toSet()
     }
 
@@ -634,9 +641,12 @@ private fun SignedInScreens(
             )
         }
 
-        Box(Modifier.weight(1f)) {
-            routeState.SaveableStateProvider(liveKeys.last()) {
-            when (val route = nav.current) {
+        // The four tab roots live in the pager, not in the route `when` below.
+        // A page that only exists while it is the current route cannot be
+        // swiped to — the neighbour has to be composable before the finger
+        // arrives at it.
+        val tabContent: @Composable (AppRoute.Tab) -> Unit = { tab ->
+            when (tab) {
                 AppRoute.Today -> TodayColumn(
                     inputs = todayInputs,
                     identity = identity,
@@ -679,6 +689,82 @@ private fun SignedInScreens(
                     onOpenManage = if (isGuest) null else ({ nav = nav.push(AppRoute.AtlasManage) }),
                 )
 
+                AppRoute.Community -> CommunityScreen(
+                    explore = communityExplore,
+                    saved = communitySaved,
+                    me = communityMe.takeIf { !isGuest },
+                    isGuest = isGuest,
+                    language = direction.targetLanguage,
+                    onShowSaved = community::loadSaved,
+                    onRetry = community::load,
+                    onSignIn = { app.auth.exitGuestMode() },
+                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
+                    onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
+                    // Not the learning policy: 物見 is other people's shelves,
+                    // and none of the numbers this table is about are on it.
+                    onRefresh = { community.reload(withSaved = !isGuest) },
+                )
+
+                AppRoute.Me -> AccountScreen(
+                    state = accountState,
+                    isGuest = isGuest,
+                    // The same readout 今日's 主題進度 prints.
+                    completion = completion,
+                    progress = progress,
+                    spread = remember(scores) { MasteryDistribution.of(scores.byId) },
+                    masteryLoaded = scores.loaded,
+                    categories = catalog.categories,
+                    bottomPadding = 0.dp,
+                    onOpenSettings = { nav = nav.push(AppRoute.Settings) },
+                    showChinese = settings.showZh,
+                    onOpenWord = openCard,
+                    onRefresh = {
+                        refreshLearning(LearningRefreshCause.PulledMe(isGuest = isGuest))
+                        // 我's own payload — the weakest words and the plan —
+                        // which no learning store holds.
+                        if (!isGuest) account.reload()
+                    },
+                )
+
+            }
+        }
+
+        Box(Modifier.weight(1f)) {
+            val atTab = nav.current as? AppRoute.Tab
+            if (atTab != null) {
+                val pager = rememberPagerState(
+                    initialPage = TabShell.tabs.indexOf(atTab).coerceAtLeast(0),
+                    pageCount = { TabShell.tabs.size },
+                )
+                // Both ways, and each guarded against the other: the bar moves
+                // the pager, a settled swipe moves the stack, and neither may
+                // answer its own move or the two chase each other across the
+                // screen.
+                LaunchedEffect(atTab) {
+                    val target = TabShell.tabs.indexOf(atTab)
+                    if (target >= 0 && target != pager.currentPage) pager.animateScrollToPage(target)
+                }
+                LaunchedEffect(pager) {
+                    snapshotFlow { pager.settledPage }.collect { page ->
+                        val tab = TabShell.tabs.getOrNull(page) ?: return@collect
+                        if (nav.current != tab) nav = nav.select(tab)
+                    }
+                }
+                HorizontalPager(
+                    state = pager,
+                    userScrollEnabled = TabShell.swipeEnabled(nav),
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    // Keyed by the tab rather than by its place in the stack,
+                    // so a scroll position survives being swiped past — which
+                    // is the whole reason the four are side by side.
+                    routeState.SaveableStateProvider("tab:${TabShell.tabs[page]}") {
+                        tabContent(TabShell.tabs[page])
+                    }
+                }
+            } else {
+            routeState.SaveableStateProvider(liveKeys.last()) {
+            when (val route = nav.current) {
                 AppRoute.AtlasManage -> {
                     LaunchedEffect(Unit) { manage.load() }
                     AtlasManageScreen(
@@ -846,22 +932,6 @@ private fun SignedInScreens(
                     },
                 )
 
-                AppRoute.Community -> CommunityScreen(
-                    explore = communityExplore,
-                    saved = communitySaved,
-                    me = communityMe.takeIf { !isGuest },
-                    isGuest = isGuest,
-                    language = direction.targetLanguage,
-                    onShowSaved = community::loadSaved,
-                    onRetry = community::load,
-                    onSignIn = { app.auth.exitGuestMode() },
-                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
-                    onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
-                    // Not the learning policy: 物見 is other people's shelves,
-                    // and none of the numbers this table is about are on it.
-                    onRefresh = { community.reload(withSaved = !isGuest) },
-                )
-
                 is AppRoute.PublicItem -> {
                     val vm = remember(route.slug, isGuest) {
                         PublicItemViewModel(
@@ -983,27 +1053,6 @@ private fun SignedInScreens(
                     )
                 }
 
-                AppRoute.Me -> AccountScreen(
-                    state = accountState,
-                    isGuest = isGuest,
-                    // The same readout 今日's 主題進度 prints.
-                    completion = completion,
-                    progress = progress,
-                    spread = remember(scores) { MasteryDistribution.of(scores.byId) },
-                    masteryLoaded = scores.loaded,
-                    categories = catalog.categories,
-                    bottomPadding = 0.dp,
-                    onOpenSettings = { nav = nav.push(AppRoute.Settings) },
-                    showChinese = settings.showZh,
-                    onOpenWord = openCard,
-                    onRefresh = {
-                        refreshLearning(LearningRefreshCause.PulledMe(isGuest = isGuest))
-                        // 我's own payload — the weakest words and the plan —
-                        // which no learning store holds.
-                        if (!isGuest) account.reload()
-                    },
-                )
-
                 AppRoute.Search -> AtlasSearchScreen(
                     vm = search,
                     direction = direction,
@@ -1060,6 +1109,7 @@ private fun SignedInScreens(
                 }
 
                 else -> Unit
+            }
             }
             }
         }

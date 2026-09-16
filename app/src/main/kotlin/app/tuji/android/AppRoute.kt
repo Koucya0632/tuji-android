@@ -148,6 +148,18 @@ object TabShell {
         }
     }
 
+    /**
+     * Whether the four tab roots may be swiped between.
+     *
+     * Structurally this can only be true where the pager exists, which is the
+     * point: it is written down so the next person who hosts the pager
+     * somewhere else has to read the rule rather than rediscover it. iOS words
+     * it as `!studyFocusActive && currentTabAtRoot` — a pushed screen disables
+     * the swipe on *every* tab, because the race it causes is with the
+     * platform's own back gesture, and that exists everywhere.
+     */
+    fun swipeEnabled(nav: NavStack): Boolean = nav.current is AppRoute.Tab
+
     private val focused: Set<AppRoute> = setOf(
         AppRoute.Review,
         AppRoute.LearnNew,

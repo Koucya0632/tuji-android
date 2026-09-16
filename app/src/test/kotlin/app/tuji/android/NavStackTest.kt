@@ -120,4 +120,24 @@ class NavStackTest {
         val at = TabShell.tabs.indexOf(TabShell.captureFollows)
         assertEquals(TabShell.tabs.size / 2 - 1, at)
     }
+
+    @Test fun `every tab root can be swiped between`() {
+        TabShell.tabs.forEach { tab ->
+            assertTrue("$tab", TabShell.swipeEnabled(NavStack().select(tab)))
+        }
+    }
+
+    @Test fun `a pushed screen turns the swipe off on every tab`() {
+        // Not only on the tab it was pushed from: the race is with the
+        // platform's own back gesture, and that exists everywhere.
+        assertFalse(TabShell.swipeEnabled(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes)))
+        assertFalse(TabShell.swipeEnabled(NavStack().select(AppRoute.Me).push(AppRoute.Settings)))
+        assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.Word("kettle"))))
+    }
+
+    @Test fun `a study session cannot be swiped out of`() {
+        // The one that matters most: a session left by accident is answers lost.
+        assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.Review)))
+        assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.LearnNew)))
+    }
 }
