@@ -32,6 +32,9 @@ import app.tuji.android.R
 import app.tuji.android.atlas.MasteryStore
 import app.tuji.android.atlas.TitleRow
 import app.tuji.android.atlas.WordDetailSections
+import app.tuji.android.core.catalog.WordDetailContent
+import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.gloss.GlossCardHost
 import app.tuji.android.atlas.label
 import app.tuji.android.atlas.nextReviewLabel
 import app.tuji.android.core.catalog.CardsSourceRules
@@ -80,6 +83,9 @@ fun PublicItemScreen(
     onReport: (ReportReason) -> Unit,
     onBlock: () -> Unit,
     onUnblock: () -> Unit,
+    /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
+    speech: WordSpeaking? = null,
+    accent: String = "us",
 ) {
     val item = state.item
     if (item == null) {
@@ -109,6 +115,14 @@ fun PublicItemScreen(
     var reporting by remember { mutableStateOf(false) }
     val word = item.learningWord
 
+    // No 書籤 and no 看完整詳情 here: 書籤 filters the *catalogue* and a 物見 item
+    // is not in it — which is also why this page's own header carries no star —
+    // and this screen has no way to push a catalogue entry.
+    GlossCardHost(
+        partOfSpeech = { WordDetailContent.partOfSpeech(it, uiLang) },
+        speech = speech,
+        accent = accent,
+    ) {
     Column(
         Modifier
             .fillMaxSize()
@@ -176,7 +190,7 @@ fun PublicItemScreen(
         )
 
         if (word != null) {
-            WordDetailSections(word = word, uiLang = uiLang, showChinese = showChinese)
+            WordDetailSections(word = word, uiLang = uiLang, showChinese = showChinese, session = session)
         }
 
         // The publisher's own words, labelled as theirs. Without the label it
@@ -228,6 +242,7 @@ fun PublicItemScreen(
         }
 
         Spacer(Modifier.height(TujiSpace.S6))
+    }
     }
 
     if (askSignIn) {

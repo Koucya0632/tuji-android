@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.design.TujiHaptics
+import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.Milestone
@@ -12,6 +13,8 @@ import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.Word
+import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.network.CatalogReading
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.LearnedRating
@@ -54,6 +57,16 @@ class NewFlowViewModel(
     private val accent: String = "us",
     private val online: () -> Boolean = { false },
     /**
+     * Where 認識's example sentence comes from.
+     *
+     * The queue sends a sentence with no translation and no 詞塊 — deliberately,
+     * on both platforms: carrying the annotation for a hundred cards to serve
+     * the one the user opens is a hundred copies of it. So the detail is
+     * fetched per word, in queue order, and a miss simply leaves the card as it
+     * was. null means no teaching pass at all, which is what a test wants.
+     */
+    private val catalog: CatalogReading? = null,
+    /**
      * What the phone says back. Fired from here rather than from the buttons
      * because the moment worth feeling is when an answer *resolves*, and no
      * composable can name that moment — the tap and the verdict are 450ms
@@ -79,6 +92,13 @@ class NewFlowViewModel(
             val total: Int,
             /** The current word's 認識 → 選字 → 拼字 dots. */
             val steps: List<NewStageStep> = emptyList(),
+            /**
+             * The current word's full entry, once its fetch lands. Absent is
+             * the normal case for the first second of a session, and for every
+             * 自製 card — [Stage.Recognize] falls back to the queue's own bare
+             * sentence.
+             */
+            val teach: WordDetail? = null,
             /** Whether the word on screen has a recording that can play now. */
             val canPlayWord: Boolean = false,
             val playingWord: Boolean = false,
@@ -122,6 +142,9 @@ class NewFlowViewModel(
             val isFull: Boolean get() = picks.size == tiles.size
         }
     }
+
+    /** word id → its full entry, filled in as fetches land. */
+    private val taught = mutableMapOf<String, WordDetail>()
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state.asStateFlow()
@@ -178,6 +201,7 @@ class NewFlowViewModel(
             }
             total = queue.size
             show(StudyLadder(queue))
+            preloadTeach(queue)
         }
     }
 
@@ -392,8 +416,35 @@ class NewFlowViewModel(
             unsynced = unsynced,
             total = total,
             steps = ladder.stagePlan(item, recognized = item.card.id in pendingRatings),
+            teach = taught[item.word.id],
             canPlayWord = wordClip(item).let { it != null && audio.canPlay(it, online()) },
         )
+    }
+
+    /**
+     * Fetches each word's full entry, in queue order, so the first card's
+     * detail lands first and the later ones are long warmed by the time their
+     * 認識 step surfaces.
+     *
+     * Never blocks and never spins: a card whose fetch has not landed — or
+     * failed — shows exactly what it showed before this existed. 自製 cards are
+     * skipped outright; the catalogue has never heard of them.
+     */
+    private fun preloadTeach(queue: List<StudyQueueItem>) {
+        val catalog = catalog ?: return
+        work.launch {
+            for (item in queue) {
+                val id = item.word.id
+                if (id in taught || CardsSourceRules.isCustom(id)) continue
+                val detail = runCatching { catalog.word(id, uiLang, direction) }.getOrNull() ?: continue
+                taught[id] = detail
+                // Patch the card in front of the user rather than rebuilding
+                // it: `show()` would rebuild the stage as well, and a rebuilt
+                // 拼字 board is a scramble the user was halfway through.
+                val now = studying() ?: continue
+                if (now.stage.item.word.id == id) _state.value = now.copy(teach = detail)
+            }
+        }
     }
 
     /**

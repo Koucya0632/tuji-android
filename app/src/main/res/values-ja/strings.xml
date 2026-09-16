@@ -234,6 +234,8 @@
     <string name="word_play">発音を再生</string>
     <string name="word_related">関連する単語</string>
     <string name="word_details_title">単語データ · DETAILS</string>
+    <string name="gloss_base_form">原形</string>
+    <string name="gloss_see_detail">詳細を見る</string>
     <string name="word_examples_title">例文 · EXAMPLE</string>
     <string name="word_tab_definition">訳語</string>
     <string name="word_tab_forms">語形</string>

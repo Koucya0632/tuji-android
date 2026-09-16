@@ -53,6 +53,10 @@ import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.WordExample
+import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.gloss.GlossBookmarks
+import app.tuji.android.gloss.GlossCardHost
+import app.tuji.android.gloss.InteractiveSentenceText
 import app.tuji.android.core.model.WordForm
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
@@ -104,9 +108,21 @@ fun WordDetailScreen(
     scores: MasteryStore.Scores,
     onBack: () -> Unit,
     onOpenRelated: (String) -> Unit,
+    /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
+    speech: WordSpeaking? = null,
+    accent: String = "us",
+    /** 書籤 from inside a 詞塊 card, for the spans that are catalogue words. */
+    glossBookmarks: GlossBookmarks? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
+    GlossCardHost(
+        partOfSpeech = { WordDetailContent.partOfSpeech(it, uiLang) },
+        speech = speech,
+        accent = accent,
+        onOpenWord = onOpenRelated,
+        bookmarks = glossBookmarks,
+    ) {
     when (val s = state) {
         is WordDetailViewModel.State.Loading -> Column(Modifier.fillMaxSize()) {
             FloatingBar(bookmarked = false, onBack = onBack, onBookmark = null)
@@ -164,6 +180,7 @@ fun WordDetailScreen(
                 word = word,
                 uiLang = uiLang,
                 showChinese = showChinese,
+                session = session,
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
 
@@ -196,6 +213,7 @@ fun WordDetailScreen(
 
             Spacer(Modifier.height(bottomPadding + TujiSpace.S5))
         }
+    }
     }
 }
 
@@ -327,9 +345,16 @@ internal fun TitleRow(
  * differently.
  */
 @Composable
-internal fun WordDetailSections(word: WordDetail, uiLang: String, showChinese: Boolean, modifier: Modifier = Modifier) {
+internal fun WordDetailSections(
+    word: WordDetail,
+    uiLang: String,
+    showChinese: Boolean,
+    /** The deck being read — the fallback language for an untagged entry. */
+    session: TargetLanguage,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S4)) {
-        Details(word = word, uiLang = uiLang, showChinese = showChinese)
+        Details(word = word, uiLang = uiLang, showChinese = showChinese, session = session)
 
         val examples = word.examples
             .filter { !it.target.isNullOrBlank() }
@@ -337,7 +362,7 @@ internal fun WordDetailSections(word: WordDetail, uiLang: String, showChinese: B
         if (examples.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
                 SectionTitle(stringResource(R.string.word_examples_title))
-                examples.forEach { ExampleCard(it, showChinese) }
+                examples.forEach { ExampleCard(it, showChinese, session) }
             }
         }
     }
@@ -345,7 +370,13 @@ internal fun WordDetailSections(word: WordDetail, uiLang: String, showChinese: B
 
 /** 字詞資料 · DETAILS — one card at a time, with a pill per kind of fact the entry has. */
 @Composable
-private fun Details(word: WordDetail, uiLang: String, showChinese: Boolean, modifier: Modifier = Modifier) {
+private fun Details(
+    word: WordDetail,
+    uiLang: String,
+    showChinese: Boolean,
+    session: TargetLanguage,
+    modifier: Modifier = Modifier,
+) {
     val tabs = WordDetailContent.tabs(word, showChinese)
     if (tabs.isEmpty()) return
     var chosen by rememberSaveable(word.id) { mutableStateOf(WordDetailTab.Definition) }
@@ -380,7 +411,7 @@ private fun Details(word: WordDetail, uiLang: String, showChinese: Boolean, modi
             }
         }
         when (selected) {
-            WordDetailTab.Definition -> DefinitionCard(word, uiLang, showChinese)
+            WordDetailTab.Definition -> DefinitionCard(word, uiLang, showChinese, session)
             WordDetailTab.Forms -> FormsCard(word.forms)
             WordDetailTab.Origin -> word.etymology?.let { OriginCard(it) }
             WordDetailTab.Collocations -> CollocationsRow(word.collocations, word.collocationsZh)
@@ -389,7 +420,7 @@ private fun Details(word: WordDetail, uiLang: String, showChinese: Boolean, modi
 }
 
 @Composable
-private fun DefinitionCard(word: WordDetail, uiLang: String, showChinese: Boolean) {
+private fun DefinitionCard(word: WordDetail, uiLang: String, showChinese: Boolean, session: TargetLanguage) {
     // Monolingual mode — the interface language is the one being learned —
     // makes the gloss and the target definition the same string. Show it once.
     val target = word.targetDefinition?.takeIf { it.isNotBlank() }
@@ -409,7 +440,16 @@ private fun DefinitionCard(word: WordDetail, uiLang: String, showChinese: Boolea
                 )
             }
         }
-        target?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink) }
+        // The 譯義 line is a sentence in the language being learned, so it is
+        // tappable on the same terms an example is.
+        target?.let {
+            InteractiveSentenceText(
+                sentence = it,
+                spans = word.targetDefinitionSpans,
+                language = word.language(session),
+                style = TujiType.bodySm,
+            )
+        }
         // Written in the reader's own language, so it stays plain: glossing a
         // Chinese explainer for a Chinese reader teaches nothing.
         if (showChinese) {
@@ -482,9 +522,11 @@ private fun CollocationsRow(collocations: List<String>, zh: List<String>?) {
 }
 
 @Composable
-private fun ExampleCard(example: WordExample, showChinese: Boolean) {
+private fun ExampleCard(example: WordExample, showChinese: Boolean, session: TargetLanguage) {
     Card {
-        example.target?.let { Text(it, style = TujiType.body, color = TujiColor.Ink) }
+        example.target?.let {
+            InteractiveSentenceText(sentence = it, spans = example.spans, language = session)
+        }
         if (showChinese) {
             example.zh?.takeIf { it.isNotBlank() }?.let { Text(it, style = TujiType.label, color = TujiColor.Ink3) }
         }

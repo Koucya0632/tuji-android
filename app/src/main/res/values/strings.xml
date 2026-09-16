@@ -234,6 +234,8 @@
     <string name="word_play">Play pronunciation</string>
     <string name="word_related">Related words</string>
     <string name="word_details_title">Details</string>
+    <string name="gloss_base_form">Base form</string>
+    <string name="gloss_see_detail">View full details</string>
     <string name="word_examples_title">Examples</string>
     <string name="word_tab_definition">Meaning</string>
     <string name="word_tab_forms">Word forms</string>

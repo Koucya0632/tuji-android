@@ -67,7 +67,12 @@ import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyQueueItem
+import app.tuji.android.core.catalog.WordDetailContent
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.gloss.GlossCardHost
+import app.tuji.android.gloss.InteractiveSentenceText
+import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.model.language
@@ -96,7 +101,11 @@ fun NewFlowScreen(
     showChinese: Boolean,
     /** The deck being studied — which language an untagged card is asking for. */
     session: TargetLanguage,
+    uiLang: String,
     onClose: () -> Unit,
+    /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
+    speech: WordSpeaking? = null,
+    accent: String = "us",
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val milestone by vm.milestone.collectAsStateWithLifecycle()
@@ -108,6 +117,13 @@ fun NewFlowScreen(
     BackHandler(enabled = state is NewFlowViewModel.State.Studying && started && !leaving) { leaving = true }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    // No 看完整詳情 from inside a session: the card is a glance at one word, and
+    // pushing a catalogue page out of a lesson would leave the lesson behind.
+    GlossCardHost(
+        partOfSpeech = { WordDetailContent.partOfSpeech(it, uiLang) },
+        speech = speech,
+        accent = accent,
+    ) {
     Box(
         Modifier
             .fillMaxSize()
@@ -179,6 +195,7 @@ fun NewFlowScreen(
                 onCancel = { leaving = false },
             )
         }
+    }
     }
 }
 
@@ -378,7 +395,7 @@ private fun StageBody(
                 delay(300)
                 vm.playWord()
             }
-            RecognizeCard(stage, showChinese, session, bottomPadding, speaker, vm::rateRecognize)
+            RecognizeCard(stage, studying.teach, showChinese, session, bottomPadding, speaker, vm::rateRecognize)
         }
         is NewFlowViewModel.Stage.Identify ->
             IdentifyCard(stage, showChinese, session, bottomPadding, speaker, vm::pickIdentify, vm::continueFromWrong)
@@ -399,6 +416,7 @@ private fun StageBody(
 @Composable
 private fun RecognizeCard(
     stage: NewFlowViewModel.Stage.Recognize,
+    teach: WordDetail?,
     showChinese: Boolean,
     session: TargetLanguage,
     bottomPadding: Dp,
@@ -424,14 +442,31 @@ private fun RecognizeCard(
                 word.definition?.takeIf { it.isNotBlank() && it != word.chinese }?.let {
                     Text(it, style = TujiType.label, color = TujiColor.Ink3, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                stage.item.examples?.firstOrNull { it.sentence.isNotBlank() }?.let { example ->
+                // The queue sends the sentence bare — no translation, no 詞塊 —
+                // so the fetched entry supplies both. Matched **by the sentence
+                // itself**: an annotation describes one string, and hanging it
+                // on a different one would underline the wrong words. Until the
+                // fetch lands this is exactly the line it always was.
+                val taught = teach?.examples?.firstOrNull { !it.target.isNullOrBlank() }
+                val queued = stage.item.examples?.firstOrNull { it.sentence.isNotBlank() }?.sentence
+                val sentence = queued ?: taught?.target
+                val annotated = taught?.takeIf { it.target == sentence }
+                if (sentence != null) {
                     Column(
                         Modifier.fillMaxWidth().background(TujiColor.Paper2).padding(TujiSpace.S3),
                         verticalArrangement = Arrangement.spacedBy(TujiSpace.S1),
                     ) {
-                        // The queue sends the sentence alone, without its
-                        // translation; the detail page is where the pair lives.
-                        Text(example.sentence, style = TujiType.bodySm, color = TujiColor.Ink)
+                        InteractiveSentenceText(
+                            sentence = sentence,
+                            spans = annotated?.spans,
+                            language = word.language(session),
+                            style = TujiType.bodySm,
+                        )
+                        if (showChinese) {
+                            annotated?.zh?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = TujiType.label, color = TujiColor.Ink3)
+                            }
+                        }
                     }
                 }
             }

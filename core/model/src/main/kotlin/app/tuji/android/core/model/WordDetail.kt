@@ -27,6 +27,13 @@ data class WordDetail(
     val chineseDefinition: String? = null,
     /** 釋義 in the language being learned. */
     val targetDefinition: String? = null,
+    /**
+     * [targetDefinition] split into tappable 詞塊. The 譯義 line is a sentence
+     * in the language being learned, so it is tappable on the same terms an
+     * example is. Ask [SentenceAnnotation.spans] rather than reading this
+     * directly — the spans are usable only if they re-spell the sentence.
+     */
+    val targetDefinitionSpans: List<GlossSpan>? = null,
     val partOfSpeech: String? = null,
     /** CEFR band for English entries; absent for Japanese. */
     val cefrLevel: String? = null,
@@ -75,6 +82,13 @@ data class WordExample(
     val en: String? = null,
     val cefrLevel: String? = null,
     val sortOrder: Int? = null,
+    /**
+     * The sentence split into tappable 詞塊, glossed in the requested UI
+     * language. Often absent: an un-annotated sentence renders as the plain
+     * text it always was. Covers [target] — the sentence a reader actually
+     * sees — never [en].
+     */
+    val spans: List<GlossSpan>? = null,
 )
 
 @Serializable
