@@ -55,6 +55,7 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.core.design.TujiSkeleton
 import app.tuji.android.core.design.TujiImagePlaceholder
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -65,6 +66,7 @@ import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordTile
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Category
+import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
 import coil3.compose.AsyncImage
 
@@ -93,8 +95,17 @@ fun AtlasCardsScreen(
     isGuest: Boolean = false,
     /** 管理 → on 我做的. Null for a guest, who has made nothing. */
     onOpenManage: (() -> Unit)? = null,
+    /** 當前圖鑑語言, for the reading line a peek draws. */
+    session: TargetLanguage = TargetLanguage.EN,
+    showChinese: Boolean = true,
+    onBookmark: ((String) -> Unit)? = null,
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
+    // The word a long press is holding up. Not saveable: a peek is a look, and
+    // a look that survives the process being killed is a window the reader
+    // never asked to come back to.
+    var peek by remember { mutableStateOf<Word?>(null) }
+    val haptics = rememberTujiHaptics()
     val shown = remember(source, words, personal) {
         CardsSourceRules.words(source, words, personal.mine, personal.taken, personal.bookmarked)
     }
@@ -107,6 +118,18 @@ fun AtlasCardsScreen(
     }
     var visibleCount by rememberSaveable(source) { mutableIntStateOf(CardsListPaging.PAGE_SIZE) }
     val page = remember(shown, visibleCount) { CardsListPaging.page(shown, visibleCount) }
+
+    peek?.let { held ->
+        WordPeekSheet(
+            word = held,
+            session = session,
+            showChinese = showChinese,
+            bookmarked = held.id in personal.bookmarked,
+            onBookmark = onBookmark?.let { toggle -> { toggle(held.id) } },
+            onOpen = { peek = null; onOpen(held.id) },
+            onDismiss = { peek = null },
+        )
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -209,7 +232,11 @@ fun AtlasCardsScreen(
         items(page.words, key = { it.id }) { word ->
             WordTile(
                 word = word,
-                modifier = Modifier.tujiClickable { onOpen(word.id) },
+                modifier = Modifier.tujiClickable(
+                    // The heavier tap: a long press commits to raising
+                    // something, and the card it raises takes a moment.
+                    onLongClick = { haptics.firm(); peek = word },
+                ) { onOpen(word.id) },
                 badge = { MasteryScale(scores.score(word.id)) },
             )
         }
