@@ -45,6 +45,8 @@ import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPromptStyle
 import app.tuji.android.core.design.TujiScreenTitle
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.TujiStatusBlocker
+import app.tuji.android.core.design.TujiStatusKind
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
@@ -84,6 +86,17 @@ fun CollectionEditScreen(
     var askSubmit by remember { mutableStateOf(false) }
     var askWithdraw by remember { mutableStateOf(false) }
     var askDelete by remember { mutableStateOf(false) }
+
+    // Deleting a public 合集 takes it away from everyone who saved it, so the
+    // page stops answering while it happens — including the back arrow, which
+    // otherwise left the screen mid-delete and came back to a list that had not
+    // caught up yet.
+    TujiStatusBlocker(
+        visible = deleting,
+        title = stringResource(R.string.manage_deleting),
+        detail = stringResource(R.string.manage_deleting_detail),
+        kind = TujiStatusKind.Removing,
+    )
 
     Column(Modifier.fillMaxSize().background(TujiColor.Paper)) {
         TujiNavBar(onLeading = onBack, leadingLabel = stringResource(R.string.atlas_back))

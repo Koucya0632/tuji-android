@@ -42,6 +42,7 @@ import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.TujiStatusBlocker
 import app.tuji.android.core.design.TujiTextField
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.rememberTujiHaptics
@@ -229,6 +230,21 @@ private fun Naming(
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val draft = step.draft
+    // 高精度識別 and 確定 both go to the network from this screen, and until now
+    // the only thing that said so was the one button going grey — the name
+    // fields, the candidate list and the other mode stayed live over work that
+    // was about to replace all three.
+    val recognizing = step.busy == CaptureViewModel.Step.Work.Recognizing
+    TujiStatusBlocker(
+        visible = step.busy != null,
+        title = stringResource(if (recognizing) R.string.capture_recognizing else R.string.capture_creating),
+        detail = stringResource(
+            if (recognizing) R.string.capture_recognizing_detail else R.string.capture_creating_detail,
+        ),
+        // Only the photograph can be the reason a wait is long; cards are made
+        // from words that are already on screen.
+        slowLine = stringResource(R.string.capture_recognizing_slow).takeIf { recognizing },
+    )
     Column(
         Modifier
             .fillMaxSize()
@@ -257,7 +273,7 @@ private fun Naming(
                 TujiButton(
                     text = stringResource(label),
                     style = if (draft.mode == mode) TujiButtonStyle.Primary else TujiButtonStyle.Secondary,
-                    enabled = !step.busy,
+                    enabled = step.busy == null,
                     onClick = { vm.setMode(mode) },
                     modifier = Modifier.weight(1f),
                 )
@@ -312,7 +328,7 @@ private fun Naming(
         TujiButton(
             text = stringResource(R.string.capture_confirm),
             onClick = vm::confirm,
-            enabled = draft.isComplete && !step.busy,
+            enabled = draft.isComplete && step.busy == null,
             modifier = Modifier.fillMaxWidth(),
         )
         TujiButton(
