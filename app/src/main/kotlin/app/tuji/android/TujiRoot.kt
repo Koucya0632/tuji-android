@@ -30,12 +30,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.IntOffset
+import app.tuji.android.core.design.TujiMotion
 import androidx.compose.foundation.pager.HorizontalPager
 import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.design.TujiFace
+import app.tuji.android.core.design.TujiBrandLockup
 import app.tuji.android.core.design.TujiTheme
 import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.gloss.GlossBookmarks
@@ -161,6 +175,14 @@ fun TujiRoot(app: TujiApplication) {
 
     val online by app.connectivity.online.collectAsStateWithLifecycle()
     Box(Modifier.fillMaxSize()) {
+        // The one cut in the app worth covering: the launch mark handing over
+        // to the first real screen. Everything after it is navigation, which
+        // has a direction; this one has none, so it fades.
+        Crossfade(
+            targetState = destination,
+            animationSpec = tween(TujiMotion.D2, easing = TujiMotion.EaseOut),
+            label = "launch",
+        ) { destination ->
         when (destination) {
             is LaunchDestination.Splash -> SplashScreen()
             is LaunchDestination.LearningDirection -> LearningDirectionScreen(
@@ -186,10 +208,28 @@ fun TujiRoot(app: TujiApplication) {
                 },
             )
         }
+        }
         // Over every screen but the splash, which says nothing that needs the
         // network yet. Requests explain their own failures; this says why.
-        if (destination != LaunchDestination.Splash && online == false) {
-            OfflineBanner(Modifier.align(Alignment.TopCenter))
+        // It arrives from where it sits rather than blinking into existence:
+        // a red pill appearing under the clock with no motion reads as a
+        // rendering glitch, which is the one thing a message about the network
+        // must not read as.
+        //
+        // Both halves carry the spec. A bare `fadeIn()` is a **spring** — the
+        // one curve this design system rules out — and it is slower than the
+        // slide it is paired with, so the banner spent the whole slide almost
+        // transparent and only became red once it had stopped moving.
+        val enterExit = tween<Float>(TujiMotion.D2, easing = TujiMotion.EaseOut)
+        AnimatedVisibility(
+            visible = destination != LaunchDestination.Splash && online == false,
+            enter = slideInVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { -it } +
+                fadeIn(enterExit),
+            exit = slideOutVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { -it } +
+                fadeOut(enterExit),
+            modifier = Modifier.align(Alignment.TopCenter),
+        ) {
+            OfflineBanner()
         }
     }
 }
@@ -202,7 +242,10 @@ private fun SplashScreen() {
             .background(TujiColor.Paper),
         contentAlignment = Alignment.Center,
     ) {
-        Text("Tuji", style = TujiType.h1, color = TujiColor.Ink)
+        // The mark, not the word. iOS's launch screen is this lockup with its
+        // entrance; Android's was the string 「Tuji」 in a heading style, which
+        // is the app introducing itself in the one place it has a face.
+        TujiBrandLockup(animateEntrance = true)
     }
 }
 
@@ -477,7 +520,11 @@ private fun SignedInScreens(
     // a word was pushed over it, and back came to a fresh screen. A slot is
     // dropped once its entry leaves the stack, so a *new* 搜尋 opens empty.
     val routeState = rememberSaveableStateHolder()
-    val liveKeys = nav.entries.mapIndexed { index, route -> "$index:$route" }
+    // Keyed by the route itself, not by its depth. The push transition composes
+    // the outgoing and incoming screens at the same time, and a key built from
+    // `nav.current` would hand both of them the same one — which is not a
+    // wrong-state bug but a crash, since a state holder rejects a duplicate.
+    val liveKeys = nav.entries.map { "route:$it" }
     var heldKeys by remember { mutableStateOf(emptySet<String>()) }
     // The pager's four pages are always alive, whatever the stack says: they
     // are composed side by side, and dropping the neighbour's state the moment
@@ -764,8 +811,36 @@ private fun SignedInScreens(
         }
 
         Box(Modifier.weight(1f)) {
-            val atTab = nav.current as? AppRoute.Tab
-            if (atTab != null) {
+            // Pushed screens arrive from the right and leave to it, with the
+            // one underneath sliding a third of the way — the parallax every
+            // stack on both platforms uses to say which way you are going.
+            // Before this a push was a cut, and a cut gives no direction: 返回
+            // and 前進 looked the same.
+            //
+            // **All four tabs are one layer here.** The pager is the thing that
+            // animates between them, and wrapping each tab as its own target
+            // would put a push transition on top of a swipe.
+            val depth = nav.entries.size
+            var lastDepth by remember { mutableIntStateOf(depth) }
+            val forward = depth >= lastDepth
+            LaunchedEffect(depth) { lastDepth = depth }
+            val layer: Any = nav.current.takeIf { it !is AppRoute.Tab } ?: TabsLayer
+            AnimatedContent(
+                targetState = layer,
+                transitionSpec = {
+                    val spec = tween<IntOffset>(TujiMotion.D2, easing = TujiMotion.EaseOut)
+                    if (forward) {
+                        slideInHorizontally(spec) { it } togetherWith
+                            slideOutHorizontally(spec) { -it / 3 }
+                    } else {
+                        slideInHorizontally(spec) { -it / 3 } togetherWith
+                            slideOutHorizontally(spec) { it }
+                    }
+                },
+                label = "route",
+            ) { shown ->
+            if (shown === TabsLayer) {
+                val atTab = nav.tab ?: AppRoute.Today
                 val pager = rememberPagerState(
                     initialPage = TabShell.tabs.indexOf(atTab).coerceAtLeast(0),
                     pageCount = { TabShell.tabs.size },
@@ -797,8 +872,8 @@ private fun SignedInScreens(
                     }
                 }
             } else {
-            routeState.SaveableStateProvider(liveKeys.last()) {
-            when (val route = nav.current) {
+            routeState.SaveableStateProvider("route:$shown") {
+            when (val route = shown) {
                 AppRoute.AtlasManage -> {
                     LaunchedEffect(Unit) { manage.load() }
                     AtlasManageScreen(
@@ -1166,16 +1241,24 @@ private fun SignedInScreens(
             }
             }
             }
+            }
         }
 
-        if (TabShell.tabBarVisible(nav)) {
+        // The bar leaves downwards, the way it would if it were a thing on
+        // the screen rather than a thing being deleted from it.
+        AnimatedVisibility(
+            visible = TabShell.tabBarVisible(nav),
+            enter = slideInVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { it },
+            exit = slideOutVertically(tween(TujiMotion.D2, easing = TujiMotion.EaseOut)) { it },
+        ) {
             TujiTabBar(
                 selected = nav.tab,
                 bottomInset = insets.calculateBottomPadding(),
                 onSelect = { nav = nav.select(it) },
                 onCapture = { nav = nav.push(AppRoute.Capture) },
             )
-        } else {
+        }
+        if (!TabShell.tabBarVisible(nav)) {
             Spacer(Modifier.height(insets.calculateBottomPadding()))
         }
     }
@@ -1260,3 +1343,12 @@ private fun OfflineBanner(modifier: Modifier = Modifier) {
         Text(stringResource(R.string.offline_banner), style = TujiType.bodySmStrong, color = TujiColor.Paper)
     }
 }
+
+/**
+ * The four tabs, as one thing to animate to and from.
+ *
+ * They are already a pager, and a pager is its own transition; naming each tab
+ * as its own target would slide a whole shell sideways underneath a swipe that
+ * is already sliding.
+ */
+private data object TabsLayer

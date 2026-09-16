@@ -43,9 +43,10 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.billing.PurchaseGate
 import app.tuji.android.core.design.HeroPill
 import app.tuji.android.core.design.HeroPillRole
-import app.tuji.android.core.design.MascotFigure
+import app.tuji.android.core.design.MascotCrossfade
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiMotion
 import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiProgressBar
 import app.tuji.android.core.design.TujiSpace
@@ -424,9 +425,14 @@ private fun Hero(
         // Over the ink rather than inside it, so the cat straddles the top edge:
         // its body is ink, so the overlapping half reads as a silhouette and
         // only the eyes come forward — the gesture the logo already uses.
-        MascotFigure(
+        // Fades between the two poses rather than cutting: 達成 is the one
+        // thing on this screen that is meant to be *noticed*, so the swap runs
+        // at D3 — and under 移除動畫 it simply arrives, since watched motion is
+        // suppressed rather than raced.
+        MascotCrossfade(
             pose = if (decisions.goalReached) MascotPose.Cheer else MascotPose.Wave,
             size = 96.dp,
+            durationMillis = TujiMotion.D3,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(end = TujiSpace.S4)

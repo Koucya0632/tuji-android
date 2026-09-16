@@ -1,5 +1,9 @@
 package app.tuji.android.core.design
 
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -42,11 +46,35 @@ import androidx.compose.ui.unit.sp
 fun TujiBrandLockup(
     modifier: Modifier = Modifier,
     scale: Float = 1f,
+    /**
+     * The cat leaning out of the hole, once, on the screen that is the first
+     * thing anyone sees. Off everywhere else: the mark on 歡迎 is a letterhead,
+     * and a letterhead that performs every time the screen appears is a
+     * different thing from a launch.
+     */
+    animateEntrance: Boolean = false,
 ) {
     // peek: visibleHeightRatio 0.89 × 150dp cat, less a 16dp overlap, is how far
     // down the card sits — the paws have to land *on* it.
     val catSize = 150.dp
     val lift = catSize * MascotPose.Peek.visibleHeightRatio - 16.dp
+
+    // **easeOut, not the spring iOS uses.** That platform's lockup rises with a
+    // 0.28 bounce; this design system allows one curve and rules out overshoot
+    // by name, and the rule wins over copying the number. What survives is the
+    // shape of the moment: the hole opens first, then the cat comes up out of
+    // it — which is the reason the two are separate animations rather than one
+    // fade.
+    val reduceMotion = rememberReduceMotion()
+    val entered = animateEntrance && !reduceMotion
+    val hole = remember { Animatable(if (entered) 0f else 1f) }
+    val rise = remember { Animatable(if (entered) 0f else 1f) }
+    LaunchedEffect(entered) {
+        if (!entered) return@LaunchedEffect
+        delay(HOLE_DELAY)
+        hole.animateTo(1f, tween(TujiMotion.D1, easing = TujiMotion.EaseOut))
+        rise.animateTo(1f, tween(TujiMotion.D3, easing = TujiMotion.EaseOut))
+    }
 
     Box(
         modifier.size(width = 232.dp * scale, height = 230.dp * scale),
@@ -70,12 +98,28 @@ fun TujiBrandLockup(
                 },
             contentAlignment = Alignment.TopCenter,
         ) {
-            Portal(Modifier.offset(y = lift - 30.dp))
+            Portal(
+                Modifier
+                    .offset(y = lift - 30.dp)
+                    .graphicsLayer {
+                        // Widthways first and further: a hole opening is wider
+                        // than it is taller.
+                        scaleX = 0.58f + 0.42f * hole.value
+                        scaleY = 0.72f + 0.28f * hole.value
+                    },
+            )
 
             MascotFigure(
                 pose = MascotPose.Peek,
                 size = catSize,
-                modifier = Modifier.offset(y = 0.dp),
+                modifier = Modifier.graphicsLayer {
+                    alpha = rise.value
+                    // Anchored at the feet, so it grows *out of* the hole
+                    // rather than towards it from the middle.
+                    transformOrigin = TransformOrigin(0.5f, 1f)
+                    scaleY = 0.82f + 0.18f * rise.value
+                    translationY = (1f - rise.value) * (lift + 10.dp).toPx()
+                },
             )
 
             WordmarkCard(Modifier.offset(y = lift))
@@ -153,3 +197,5 @@ private fun WordmarkCard(modifier: Modifier = Modifier) {
     }
 }
 
+/** Long enough for the screen to be there before anything moves on it. */
+private const val HOLE_DELAY = 70L

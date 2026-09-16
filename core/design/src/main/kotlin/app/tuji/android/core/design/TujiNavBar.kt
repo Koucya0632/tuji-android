@@ -1,5 +1,12 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,15 +75,36 @@ fun TujiNavBar(
                     }
                 }
             }
-            title?.let {
-                Text(it, style = TujiType.h3, color = TujiColor.Ink, maxLines = 1)
+            // The compact title answers the same event the rule does — the
+            // page's own 34pt title scrolling up out of sight — so it arrives
+            // the same way, at D2, instead of popping in mid-word. The explicit
+            // `SizeTransform` is here because Compose's default is a spring,
+            // and this design system allows one curve.
+            AnimatedContent(
+                targetState = title,
+                transitionSpec = {
+                    val spec = TujiMotion.ease<Float>(TujiMotion.D2)
+                    (fadeIn(spec) togetherWith fadeOut(spec))
+                        .using(SizeTransform { _, _ -> TujiMotion.ease(TujiMotion.D2) })
+                },
+                label = "navTitle",
+            ) { shown ->
+                shown?.let {
+                    Text(it, style = TujiType.h3, color = TujiColor.Ink, maxLines = 1)
+                }
             }
             Box(Modifier.weight(1f))
             trailing?.invoke()
         }
-        if (showsRule) {
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
-        }
+        // The rule appears when the page scrolls under the bar, which is a
+        // thing the reader is doing rather than a thing they asked for — so it
+        // fades in at D2 rather than blinking on at the first pixel of scroll.
+        val rule by animateColorAsState(
+            if (showsRule) TujiColor.Rule else TujiColor.Rule.copy(alpha = 0f),
+            TujiMotion.ease(TujiMotion.D2),
+            label = "navRule",
+        )
+        Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(rule))
     }
 }
 

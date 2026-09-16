@@ -1,5 +1,7 @@
 package app.tuji.android.study
 
+import app.tuji.android.core.design.TujiMotion
+import androidx.compose.animation.animateColorAsState
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -364,19 +366,24 @@ private fun Pip(step: NewStageStep) {
             NewTaskKind.SpellTiles -> R.string.new_stage_spell
         },
     )
+    // The dots are the one thing on the screen that says how far along this
+    // word is, and they change under a thumb that has just answered — so the
+    // colour travels the same D1 every other state change does.
+    val pip by animateColorAsState(
+        when (step.state) {
+            NewStageStep.State.Done -> TujiColor.Accumulation
+            NewStageStep.State.Skipped -> TujiColor.Accumulation.copy(alpha = 0.35f)
+            NewStageStep.State.Active -> TujiColor.Current.copy(alpha = 0.18f)
+            NewStageStep.State.Pending -> TujiColor.Paper3
+        },
+        TujiMotion.ease(TujiMotion.D1),
+        label = "pip",
+    )
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
             Modifier
                 .size(16.dp)
-                .background(
-                    when (step.state) {
-                        NewStageStep.State.Done -> TujiColor.Accumulation
-                        NewStageStep.State.Skipped -> TujiColor.Accumulation.copy(alpha = 0.35f)
-                        NewStageStep.State.Active -> TujiColor.Current.copy(alpha = 0.18f)
-                        NewStageStep.State.Pending -> TujiColor.Paper3
-                    },
-                    CircleShape,
-                )
+                .background(pip, CircleShape)
                 .then(
                     if (step.state == NewStageStep.State.Active) Modifier.border(2.dp, TujiColor.Current, CircleShape)
                     else Modifier,

@@ -1,7 +1,9 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -146,6 +148,11 @@ object TujiGlyph {
      * asset, so it takes the same 2dp round-cap stroke as every other mark here
      * and the filled state is the *same shape* filled — not a second icon that
      * has to be kept in step with the first.
+     *
+     * Because it is one shape, filling it in can be a crossfade between the two
+     * renderings rather than a cut between two pictures — which is what iOS
+     * gets for free from `.symbolEffect(.replace)` on the SF Symbol. Marking a
+     * word is a state change, so it travels D1.
      */
     @Composable
     fun Star(
@@ -154,6 +161,11 @@ object TujiGlyph {
         tint: Color = TujiColor.Ink,
         modifier: Modifier = Modifier,
     ) {
+        val fill by animateFloatAsState(
+            if (filled) 1f else 0f,
+            TujiMotion.ease(TujiMotion.D1),
+            label = "starFill",
+        )
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
             val centre = Rect(Offset.Zero, this.size).center
@@ -170,10 +182,17 @@ object TujiGlyph {
                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
             path.close()
-            if (filled) {
-                drawPath(path, tint)
-            } else {
-                drawPath(path, tint, style = Stroke(width = w * 0.09f, join = StrokeJoin.Round))
+            // Both, at opposite alphas, for the 120ms in between: the outline
+            // is still the star's edge, so what the eye sees is the middle
+            // filling in rather than two icons swapping places.
+            if (fill > 0f) drawPath(path, tint, alpha = fill)
+            if (fill < 1f) {
+                drawPath(
+                    path,
+                    tint,
+                    alpha = 1f - fill,
+                    style = Stroke(width = w * 0.09f, join = StrokeJoin.Round),
+                )
             }
         }
     }
