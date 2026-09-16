@@ -1,5 +1,6 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,7 +30,12 @@ import androidx.compose.ui.unit.dp
  * whose depth comes from *changing the ground* cannot also cast shadows.
  *
  * Pressed state is therefore a different ground, never a shadow and never a
- * scale. That is the same rule the ink and paper tokens state.
+ * scale. That is the same rule the ink and paper tokens state — and it *moves*
+ * at D1, because a ground that teleports reads as a redraw rather than as an
+ * answer to the finger.
+ *
+ * Every tap also buzzes ([TujiHaptics.soft]), as iOS's `BBtn` has since it
+ * existed. A button is the one control whose whole job is to have been pressed.
  */
 enum class TujiButtonStyle {
     /** The one action a screen is asking for. */
@@ -50,21 +56,22 @@ fun TujiButton(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val haptics = rememberTujiHaptics()
 
+    val resting: Color = if (style == TujiButtonStyle.Primary) TujiColor.Current else TujiColor.Paper
     val ground: Color = when {
         !enabled -> TujiColor.Paper3
-        style == TujiButtonStyle.Primary && pressed -> TujiColor.CurrentDeep
-        style == TujiButtonStyle.Primary -> TujiColor.Current
-        pressed -> TujiColor.Paper2
-        else -> TujiColor.Paper
+        pressed -> TujiColor.pressed(resting)
+        else -> resting
     }
     val ink: Color = if (enabled) TujiColor.Ink else TujiColor.Ink3
+    val groundNow by animateColorAsState(ground, TujiMotion.ease(TujiMotion.D1), label = "buttonGround")
 
     Box(
         modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = 52.dp)
-            .background(ground)
+            .background(groundNow)
             .then(
                 if (style == TujiButtonStyle.Secondary) {
                     Modifier.border(TujiBorder.Bw1, TujiColor.Rule, RoundedCornerShape(TujiRadius.R0))
@@ -72,7 +79,10 @@ fun TujiButton(
                     Modifier
                 }
             )
-            .tujiClickable(enabled = enabled, interactionSource = interaction, onClick = onClick)
+            .tujiClickable(enabled = enabled, interactionSource = interaction) {
+                haptics.soft()
+                onClick()
+            }
             .padding(horizontal = TujiSpace.S3),
         contentAlignment = Alignment.Center,
     ) {

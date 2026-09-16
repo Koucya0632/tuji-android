@@ -3,6 +3,7 @@ package app.tuji.android.study
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tuji.android.core.design.TujiHaptics
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.Milestone
@@ -52,6 +53,13 @@ class NewFlowViewModel(
     /** The saved 發音口音. */
     private val accent: String = "us",
     private val online: () -> Boolean = { false },
+    /**
+     * What the phone says back. Fired from here rather than from the buttons
+     * because the moment worth feeling is when an answer *resolves*, and no
+     * composable can name that moment — the tap and the verdict are 450ms
+     * apart, and on a miss the verdict is the whole point.
+     */
+    private val haptics: TujiHaptics = TujiHaptics.None,
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -181,6 +189,7 @@ class NewFlowViewModel(
         if (stage.rated != null) return
 
         _state.value = now.copy(stage = stage.copy(rated = rating))
+        haptics.success()
         beat?.cancel()
         beat = work.launch {
             // A beat so the button fill registers before the card changes.
@@ -232,6 +241,11 @@ class NewFlowViewModel(
         _state.value = now.copy(stage = stage.copy(picked = label, revealed = !correct))
         if (!correct) {
             mistakes[wordId] = (mistakes[wordId] ?: 0) + 1
+            // Now, not after a beat: iOS delays its warning by 800ms because
+            // that is when the answer appears there. Here the answer is already
+            // on screen in this frame, and a buzz arriving after it would be
+            // reporting something the user has finished reading.
+            haptics.warning()
             return  // waits for 下一題 — the answer stays on screen
         }
         beat?.cancel()
@@ -239,6 +253,7 @@ class NewFlowViewModel(
             delay(450)
             val settled = studying() ?: return@launch
             complete(settled.ladder.markIdentifyCleared(wordId))
+            haptics.success()
         }
     }
 
@@ -249,6 +264,10 @@ class NewFlowViewModel(
         val stage = now.stage as? Stage.Spell ?: return
         if (stage.correct != null || index in stage.picks) return
 
+        // Every tile that lands, not just the one that finishes the word: the
+        // board is the one place in the app where the user is building
+        // something a piece at a time.
+        haptics.soft()
         val picks = stage.picks + index
         val next = stage.copy(picks = picks)
         if (!next.isFull) {
@@ -260,6 +279,7 @@ class NewFlowViewModel(
         _state.value = now.copy(stage = next.copy(correct = correct))
         if (!correct) {
             mistakes[stage.item.word.id] = (mistakes[stage.item.word.id] ?: 0) + 1
+            haptics.warning()
             return  // waits for 下一題
         }
         beat?.cancel()
@@ -267,6 +287,7 @@ class NewFlowViewModel(
             delay(600)
             val settled = studying() ?: return@launch
             complete(settled.ladder)
+            haptics.success()
         }
     }
 
@@ -275,6 +296,7 @@ class NewFlowViewModel(
         val now = studying() ?: return
         val stage = now.stage as? Stage.Spell ?: return
         if (stage.correct != null || stage.picks.isEmpty()) return
+        haptics.soft()
         _state.value = now.copy(stage = stage.copy(picks = stage.picks.dropLast(1)))
     }
 

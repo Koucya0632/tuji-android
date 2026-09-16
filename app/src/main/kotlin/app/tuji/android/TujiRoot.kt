@@ -34,6 +34,7 @@ import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.design.TujiFace
 import app.tuji.android.core.design.TujiTheme
+import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
 import app.tuji.android.settings.SettingsBusy
@@ -472,6 +473,7 @@ private fun SignedInScreens(
     // accident.
     when (nav.current) {
         AppRoute.Review -> {
+            val haptics = rememberTujiHaptics()
             val vm = remember {
                 ReviewViewModel(
                     queues = app.study,
@@ -484,6 +486,7 @@ private fun SignedInScreens(
                     audio = app.clipPlayer,
                     online = { app.isOnline() },
                     hints = app.onboarding,
+                    haptics = haptics,
                 ).also { it.load(StudyMode.Review) }
             }
             ReviewScreen(
@@ -504,6 +507,7 @@ private fun SignedInScreens(
             return
         }
         AppRoute.LearnNew -> {
+            val haptics = rememberTujiHaptics()
             val vm = remember {
                 NewFlowViewModel(
                     queues = app.study,
@@ -515,6 +519,7 @@ private fun SignedInScreens(
                     audio = app.clipPlayer,
                     accent = settings.accent,
                     online = { app.isOnline() },
+                    haptics = haptics,
                 ).also {
                     // The goal from 設定, tapered by the backlog, from the
                     // themes 設定 picked — the same numbers 今日 printed on

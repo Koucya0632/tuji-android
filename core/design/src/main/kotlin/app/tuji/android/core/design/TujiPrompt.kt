@@ -23,9 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -202,7 +200,7 @@ private fun PromptSurface(
 private fun PromptAction(text: String, destructive: Boolean, onClick: () -> Unit, quiet: Boolean = false) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberTujiHaptics()
     val ground = when {
         destructive && pressed -> TujiColor.Alert
         destructive -> TujiColor.Paper2
@@ -222,7 +220,7 @@ private fun PromptAction(text: String, destructive: Boolean, onClick: () -> Unit
             .height(56.dp)
             .background(ground)
             .tujiClickable(interactionSource = interaction) {
-                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                haptics.soft()
                 onClick()
             },
         contentAlignment = Alignment.Center,

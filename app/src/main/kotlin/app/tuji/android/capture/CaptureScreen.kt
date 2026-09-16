@@ -43,6 +43,7 @@ import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiTextField
 import app.tuji.android.core.design.TujiType
+import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.RecognitionMode
 import coil3.compose.AsyncImage
@@ -150,6 +151,7 @@ private fun Framing(vm: CaptureViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val controller = remember { CameraController() }
+    val haptics = rememberTujiHaptics()
 
     var granted by remember {
         mutableStateOf(
@@ -196,6 +198,10 @@ private fun Framing(vm: CaptureViewModel) {
                 .clip(CircleShape)
                 .background(TujiColor.Paper)
                 .tujiClickable {
+                    // The heavier of the two taps. A shutter is the one control
+                    // here that commits to something, and the screen it leads
+                    // to takes a second to arrive.
+                    haptics.firm()
                     scope.launch {
                         runCatching { controller.takePhoto(context) }
                             .onSuccess(vm::submit)

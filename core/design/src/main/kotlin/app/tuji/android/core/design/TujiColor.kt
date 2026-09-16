@@ -93,4 +93,24 @@ object TujiColor {
 
     /** Behind sheets and dialogs. */
     val Scrim = Color(0xFF191512).copy(alpha = 0.4f)
+
+    /**
+     * What a ground becomes under the finger.
+     *
+     * Depth is a change of ground, so "pressed" is not a new colour — it is the
+     * next step down the ladder the ground already belongs to, and both steps
+     * are already named above: 紙2 is *the* pressed step for paper, 瞳黃深 for
+     * anything current-coloured.
+     *
+     * One function because the rule was being spelled out at every control that
+     * wanted it, and a rule written four times is a rule that will be four
+     * different rules by the next screen. Anything unnamed comes back
+     * unchanged: a ground with no step below it should not invent one.
+     */
+    fun pressed(ground: Color): Color = when (ground) {
+        Paper -> Paper2
+        Paper2 -> Paper3
+        Current -> CurrentDeep
+        else -> ground
+    }
 }

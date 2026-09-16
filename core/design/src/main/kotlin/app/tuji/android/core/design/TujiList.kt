@@ -1,6 +1,9 @@
 package app.tuji.android.core.design
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -95,6 +100,11 @@ fun TujiRowDivider() {
  * The height follows what it carries rather than being fixed — 56 plain, taller
  * once a subtitle wraps — which is what keeps a two-line explanation from being
  * clipped in the one language whose translation runs long.
+ *
+ * A tappable row takes 紙2 under the finger. Rows sit straight on the page
+ * ground with no card edge of their own, so until this landed the entire
+ * settings tree — and 我, and 主題索引 — answered a press with nothing moving
+ * at all; the only sign a tap had registered was the next screen arriving.
  */
 @Composable
 fun TujiRow(
@@ -103,10 +113,27 @@ fun TujiRow(
     trailing: @Composable RowScope.() -> Unit = {},
     leading: @Composable RowScope.() -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val ground = TujiColor.pressed(TujiColor.Paper)
+    val groundNow by animateColorAsState(
+        // Off is the same colour at zero, never `Transparent`: fading to a
+        // transparent *black* drags every ground it passes through darker.
+        if (pressed) ground else ground.copy(alpha = 0f),
+        TujiMotion.ease(TujiMotion.D1),
+        label = "rowGround",
+    )
     Row(
         modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.tujiClickable(onClick = onClick) else Modifier)
+            .background(groundNow)
+            .then(
+                if (onClick != null) {
+                    Modifier.tujiClickable(interactionSource = interaction, onClick = onClick)
+                } else {
+                    Modifier
+                },
+            )
             .heightIn(min = 56.dp)
             .padding(horizontal = TujiSpace.S4),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),

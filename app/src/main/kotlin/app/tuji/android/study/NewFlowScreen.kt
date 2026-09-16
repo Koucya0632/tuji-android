@@ -40,7 +40,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -59,6 +58,7 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -787,14 +787,11 @@ private fun StudyHeadword(item: StudyQueueItem, session: TargetLanguage) {
 
 @Composable
 private fun SpeakerButton(size: Dp, ground: Color, playing: Boolean, onClick: () -> Unit) {
-    val label = stringResource(R.string.word_play)
-    Box(
-        Modifier
-            .size(size)
-            .background(if (playing) TujiColor.Current else ground)
-            .tujiClickable(onClick = onClick)
-            .clearAndSetSemantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
+    TujiIconButton(
+        label = stringResource(R.string.word_play),
+        onClick = onClick,
+        size = size,
+        ground = if (playing) TujiColor.Current else ground,
     ) {
         TujiGlyph.Speaker(tint = TujiColor.Ink)
     }

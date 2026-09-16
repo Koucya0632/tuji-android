@@ -4,6 +4,7 @@ import android.util.Log
 import app.tuji.android.BuildConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.tuji.android.core.design.TujiHaptics
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.model.ReviewQuestionKind
@@ -76,6 +77,13 @@ class ReviewViewModel(
      * in-memory one so a test never reaches for storage.
      */
     private val hints: StudyHints = InMemoryStudyHints(),
+    /**
+     * What the phone says back. Here rather than on the option rows because
+     * 看圖選字 has *two* kinds of wrong — one that rules an option out with the
+     * question still open, and one that ends it — and only this half knows
+     * which just happened.
+     */
+    private val haptics: TujiHaptics = TujiHaptics.None,
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
@@ -169,6 +177,7 @@ class ReviewViewModel(
     fun rate(rating: SRSRating) {
         val now = current() ?: return
         if (now.revealMode != ReviewRevealMode.Rate) return
+        haptics.soft()
         val step = now.session.rate(rating)
         send(step.write)
         _state.value = studying(step.session, revealMode = null)
@@ -216,12 +225,22 @@ class ReviewViewModel(
         send(step.write)
         when (val outcome = step.outcome) {
             is ReviewOutcome.Nothing -> _state.value = studying(step.session)
-            is ReviewOutcome.RuledOut -> _state.value = studying(step.session)
+            is ReviewOutcome.RuledOut -> {
+                // Ruling one option out of four is its own firm tap. The
+                // question carries on afterwards, so without it the only sign
+                // anything happened is a frame arriving beside three options
+                // that are still live.
+                haptics.firm()
+                _state.value = studying(step.session)
+            }
+
             is ReviewOutcome.Flash -> {
+                settled(step)
                 _state.value = studying(step.session, flash = outcome.flash)
                 scheduleAdvance(after = 700)
             }
             is ReviewOutcome.Reveal -> {
+                settled(step)
                 _state.value = studying(step.session)
                 // The sheet used to go up in the same frame the options
                 // resolved, so the block that says *what just happened* was on
@@ -234,6 +253,15 @@ class ReviewViewModel(
                 }
             }
         }
+    }
+
+    /**
+     * The question is over. Felt before it is drawn — soft when it went in,
+     * firm when it did not — because the sheet that says so is 600ms away and
+     * the answer is already decided.
+     */
+    private fun settled(step: ReviewSession.Step) {
+        if (step.session.question?.wasCorrect == true) haptics.soft() else haptics.firm()
     }
 
     private fun scheduleAdvance(after: Long) {
