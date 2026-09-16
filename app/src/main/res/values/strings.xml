@@ -326,6 +326,7 @@
     <string name="manage_action_failed">That didn\'t go through. Please try again.</string>
     <string name="manage_delete_count">Delete %1$d cards</string>
     <string name="manage_deleting">Deleting…</string>
+    <string name="manage_deleting_detail">Please wait</string>
     <string name="manage_delete">Delete</string>
     <string name="manage_delete_title">Delete this card?</string>
     <string name="manage_delete_message">This card and its study history will be deleted together. This can\'t be undone.</string>
@@ -480,6 +481,11 @@
     <string name="capture_permission">Camera access is needed to take a photo</string>
     <string name="capture_permission_grant">Allow camera access</string>
     <string name="capture_uploading">Recognising…</string>
+    <string name="capture_recognizing">AI recognizing…</string>
+    <string name="capture_recognizing_detail">Analyzing image</string>
+    <string name="capture_recognizing_slow">This one’s taking a moment</string>
+    <string name="capture_creating">Making cards…</string>
+    <string name="capture_creating_detail">Building this word’s cards</string>
     <string name="capture_mode_primary">Standard recognition</string>
     <string name="capture_mode_escalate">Precise</string>
     <string name="capture_no_candidates">Couldn’t recognise it — type the name yourself</string>

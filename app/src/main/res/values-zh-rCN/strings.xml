@@ -326,6 +326,7 @@
     <string name="manage_action_failed">操作没有完成，请稍后再试</string>
     <string name="manage_delete_count">删除 %1$d 张卡片</string>
     <string name="manage_deleting">删除中…</string>
+    <string name="manage_deleting_detail">请稍候</string>
     <string name="manage_delete">删除</string>
     <string name="manage_delete_title">删除这张卡片？</string>
     <string name="manage_delete_message">这张卡片和它的学习记录都会一起删除，无法复原。</string>
@@ -480,6 +481,11 @@
     <string name="capture_permission">需要相机权限才能拍照</string>
     <string name="capture_permission_grant">允许使用相机</string>
     <string name="capture_uploading">识别中…</string>
+    <string name="capture_recognizing">AI 识别中…</string>
+    <string name="capture_recognizing_detail">正在分析图片</string>
+    <string name="capture_recognizing_slow">这张比较费工，再等一下</string>
+    <string name="capture_creating">创建卡片中…</string>
+    <string name="capture_creating_detail">正在做这个字的卡片</string>
     <string name="capture_mode_primary">普通识别</string>
     <string name="capture_mode_escalate">精准识别</string>
     <string name="capture_no_candidates">没有认出来，自己打上名字吧</string>

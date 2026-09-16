@@ -50,6 +50,8 @@ import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiScreenTitle
 import app.tuji.android.core.design.TujiSection
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.TujiStatusBlocker
+import app.tuji.android.core.design.TujiStatusKind
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.TargetLanguage
@@ -180,7 +182,10 @@ fun AtlasManageScreen(
         if (state.selecting && state.selected.isNotEmpty()) {
             Box(Modifier.fillMaxWidth().background(TujiColor.Paper).padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3)) {
                 Text(
-                    if (state.deleting) stringResource(R.string.manage_deleting) else stringResource(R.string.manage_delete_count, state.selected.size),
+                    // Not 刪除中… any more: the panel over this bar is already
+                    // saying that, and a screen that says the same thing twice
+                    // in two places reads as two different things happening.
+                    stringResource(R.string.manage_delete_count, state.selected.size),
                     style = TujiType.h3,
                     color = TujiColor.Paper,
                     modifier = Modifier
@@ -194,6 +199,17 @@ fun AtlasManageScreen(
             }
         }
     }
+
+    // Deleting reaches other accounts when any of the chosen cards is public,
+    // so the page stops answering until it is done: the selection this is
+    // deleting cannot be edited underneath it, and 刪除中… no longer has to be
+    // said by the button that is already gone grey.
+    TujiStatusBlocker(
+        visible = state.deleting,
+        title = stringResource(R.string.manage_deleting),
+        detail = stringResource(R.string.manage_deleting_detail),
+        kind = TujiStatusKind.Removing,
+    )
 
     if (creating) {
         CreateCollectionSheet(

@@ -326,6 +326,7 @@
     <string name="manage_action_failed">操作を完了できませんでした。しばらくしてからもう一度お試しください</string>
     <string name="manage_delete_count">%1$d枚のカードを削除</string>
     <string name="manage_deleting">削除中…</string>
+    <string name="manage_deleting_detail">お待ちください</string>
     <string name="manage_delete">削除</string>
     <string name="manage_delete_title">このカードを削除しますか？</string>
     <string name="manage_delete_message">このカードと学習記録はまとめて削除され、元に戻せません。</string>
@@ -480,6 +481,11 @@
     <string name="capture_permission">写真を撮るにはカメラの許可が必要です</string>
     <string name="capture_permission_grant">カメラを許可する</string>
     <string name="capture_uploading">認識中…</string>
+    <string name="capture_recognizing">AI認識中…</string>
+    <string name="capture_recognizing_detail">画像を分析中</string>
+    <string name="capture_recognizing_slow">この写真は少し時間がかかります</string>
+    <string name="capture_creating">カードを作成中…</string>
+    <string name="capture_creating_detail">この単語のカードを作っています</string>
     <string name="capture_mode_primary">通常認識</string>
     <string name="capture_mode_escalate">高精度認識</string>
     <string name="capture_no_candidates">認識できませんでした。名前を入力してください</string>

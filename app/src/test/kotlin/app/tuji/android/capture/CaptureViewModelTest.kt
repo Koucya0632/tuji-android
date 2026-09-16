@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -191,7 +192,7 @@ class CaptureViewModelTest {
         vm.confirm(); advanceUntilIdle()
         val s = vm.naming()
         assertEquals("a", s.draft.selectedCandidateId)
-        assertEquals(false, s.busy)
+        assertNull(s.busy)
     }
 
     @Test fun `cards failing does not lose the item that was made`() = runTest(dispatcher) {

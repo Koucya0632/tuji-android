@@ -39,8 +39,18 @@ class CaptureViewModel(
         data class Naming(
             val image: AtlasImageSummary,
             val draft: CaptureDraft,
-            val busy: Boolean = false,
+            /** Null when the form is the user's to use. */
+            val busy: Work? = null,
         ) : Step
+
+        /**
+         * The two waits this screen can be in, kept apart because they are two
+         * different sentences. Saying 「AI 識別中」 while the app is making
+         * cards is a description of the wrong thing — the picture was
+         * recognised a moment ago, and the user is watching the app do
+         * something it can name.
+         */
+        enum class Work { Recognizing, Creating }
 
         /**
          * Confirmed. The item exists and its cards were made.
@@ -103,7 +113,7 @@ class CaptureViewModel(
             _step.value = now.copy(draft = now.draft.showing(mode))
             return
         }
-        _step.value = now.copy(busy = true)
+        _step.value = now.copy(busy = Step.Work.Recognizing)
         work.launch {
             val candidates = runCatching {
                 authoring.recognize(now.image.id, mode).candidates
@@ -139,14 +149,14 @@ class CaptureViewModel(
      */
     fun confirm() {
         val now = _step.value as? Step.Naming ?: return
-        if (!now.draft.isComplete || now.busy) return
-        _step.value = now.copy(busy = true)
+        if (!now.draft.isComplete || now.busy != null) return
+        _step.value = now.copy(busy = Step.Work.Creating)
         work.launch {
             val item = runCatching {
                 authoring.confirm(now.image.id, now.draft.payload())
             }.getOrElse {
                 Log.e(TAG, "confirm failed", it)
-                _step.value = now.copy(busy = false)
+                _step.value = now.copy(busy = null)
                 return@launch
             }
             val cards = runCatching {
