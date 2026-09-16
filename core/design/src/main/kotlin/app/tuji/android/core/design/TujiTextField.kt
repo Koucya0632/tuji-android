@@ -20,6 +20,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -43,6 +46,15 @@ fun TujiTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     isPassword: Boolean = false,
     enabled: Boolean = true,
+    /**
+     * What this field holds, for the password manager — iOS's
+     * `textContentType`.
+     *
+     * Null for the fields nobody stores: a search box, a nickname, the name of
+     * a 合集. Marking those is how a keyboard starts offering somebody's home
+     * address where a word should go.
+     */
+    contentType: ContentType? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
@@ -73,6 +85,11 @@ fun TujiTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 52.dp)
+                .then(
+                    contentType?.let { type ->
+                        Modifier.semantics { this.contentType = type }
+                    } ?: Modifier,
+                )
                 .background(TujiColor.Paper2)
                 // 瞳黃 means 現在, and a focused field is exactly where the
                 // user is — so the edge arrives at the same D1 every other
