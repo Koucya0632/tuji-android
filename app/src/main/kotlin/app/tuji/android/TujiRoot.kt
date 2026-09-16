@@ -363,6 +363,13 @@ private fun SignedInScreens(
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
     val scores by app.masteryStore.scores.collectAsStateWithLifecycle()
     val personal by app.cardsSourceStore.personal.collectAsStateWithLifecycle()
+    val captureJobs by app.captureQueue.jobs.collectAsStateWithLifecycle()
+    // The buzz for a capture landing belongs to a window, not to the queue —
+    // which is why the queue reports it rather than owning a `TujiHaptics`.
+    val captureHaptics = rememberTujiHaptics()
+    LaunchedEffect(Unit) {
+        app.captureQueue.celebrations.collect { captureHaptics.success() }
+    }
 
     // 收藏 happens in 物見 and lands on a shelf 圖鑑 draws. A tick rather than a
     // call from inside the view model, for the same reason `refreshTick` is one:
@@ -780,6 +787,8 @@ private fun SignedInScreens(
                     session = direction.targetLanguage,
                     showChinese = settings.showZh,
                     onBookmark = app.cardsSourceStore::toggle,
+                    captureJobs = captureJobs,
+                    onRetryCapture = { app.captureQueue.retry(it) },
                 )
 
                 AppRoute.Community -> CommunityScreen(
@@ -948,9 +957,11 @@ private fun SignedInScreens(
                 is AppRoute.ManageCard -> ManageCardScreen(
                     row = manageState.row(route.imageId),
                     withdrawing = manageState.withdrawing,
+                    publishing = manageState.publishing,
                     actionFailed = manageState.actionFailed,
                     onDelete = { manage.delete(setOf(route.imageId)) { if (nav.current == route) nav = nav.pop() } },
                     onWithdraw = manage::withdraw,
+                    onPublish = manage::publish,
                 )
 
                 AppRoute.Settings -> SettingsScreen(
@@ -1170,7 +1181,11 @@ private fun SignedInScreens(
 
                 AppRoute.Capture -> {
                     val vm = remember {
-                        CaptureViewModel(authoring = app.atlas, direction = direction)
+                        CaptureViewModel(
+                            authoring = app.atlas,
+                            direction = direction,
+                            enqueue = app.captureQueue::enqueue,
+                        )
                     }
                     CaptureScreen(
                         vm = vm,

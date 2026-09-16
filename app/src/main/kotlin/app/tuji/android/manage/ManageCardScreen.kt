@@ -43,9 +43,11 @@ import coil3.compose.AsyncImage
 fun ManageCardScreen(
     row: ShelfRow?,
     withdrawing: Boolean,
+    publishing: Boolean,
     actionFailed: Boolean,
     onDelete: () -> Unit,
     onWithdraw: (String) -> Unit,
+    onPublish: (String) -> Unit,
 ) {
     if (row == null) {
         // Deleted from under the page, or a sync that dropped it.
@@ -54,6 +56,7 @@ fun ManageCardScreen(
     }
     var askDelete by remember { mutableStateOf(false) }
     var askWithdraw by remember { mutableStateOf(false) }
+    var askPublish by remember { mutableStateOf(false) }
     val item = row.item
 
     Column(
@@ -80,6 +83,19 @@ fun ManageCardScreen(
                 Field(stringResource(R.string.manage_field_visibility), review.label())
                 if (actionFailed) {
                     Text(stringResource(R.string.manage_action_failed), style = TujiType.label, color = TujiColor.Alert)
+                }
+                // 瞳黃, because it is the action this screen recommends when a
+                // card is still private and finished. The whole point of a
+                // 自製圖鑑 card being shareable is that the decision can be made
+                // later than the photograph.
+                if (review.canSubmit) {
+                    ActionBar(
+                        text = stringResource(if (publishing) R.string.capture_publishing else R.string.capture_publish),
+                        ground = TujiColor.BrandPrimary,
+                        ink = TujiColor.Ink,
+                        enabled = !publishing,
+                        onClick = { askPublish = true },
+                    )
                 }
                 // Secondary, not red: withdrawing is reversible and carries no
                 // penalty — it is the path that *avoids* deleting a card.
@@ -121,6 +137,17 @@ fun ManageCardScreen(
             onAlternative = { askDelete = false; item?.let { onWithdraw(it.id) } },
             onConfirm = { askDelete = false; onDelete() },
             onCancel = { askDelete = false },
+        )
+    }
+    if (askPublish && item != null) {
+        TujiPrompt(
+            title = stringResource(R.string.manage_publish_title),
+            message = stringResource(R.string.manage_publish_message),
+            detail = stringResource(R.string.manage_publish_detail),
+            confirm = stringResource(R.string.capture_publish),
+            cancel = stringResource(R.string.cancel),
+            onConfirm = { askPublish = false; onPublish(item.id) },
+            onCancel = { askPublish = false },
         )
     }
     if (askWithdraw && item != null) {

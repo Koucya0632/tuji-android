@@ -63,6 +63,9 @@ import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
+import app.tuji.android.capture.AtlasCaptureQueue
+import app.tuji.android.core.model.CaptureProgress
+import app.tuji.android.capture.CaptureQueueTile
 import app.tuji.android.core.design.WordTile
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Category
@@ -99,6 +102,9 @@ fun AtlasCardsScreen(
     session: TargetLanguage = TargetLanguage.EN,
     showChinese: Boolean = true,
     onBookmark: ((String) -> Unit)? = null,
+    /** Captures still being made. Drawn at the head of 我做的. */
+    captureJobs: List<AtlasCaptureQueue.Item> = emptyList(),
+    onRetryCapture: (String) -> Unit = {},
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     // The word a long press is holding up. Not saveable: a peek is a look, and
@@ -207,10 +213,32 @@ fun AtlasCardsScreen(
             }
         }
 
+        // Captures being made sit at the head of their own shelf, in the grid
+        // rather than in a strip above it: a band pinned over the chips says
+        // "notification about a card" for something that *is* a card, and it
+        // costs a permanent stripe of the tab for as long as any job is alive.
+        if (source == CardsSource.Mine) {
+            items(captureJobs, key = { "job:" + it.id }) { job ->
+                // Three tiles, three taps, as iOS routes them: retry what can
+                // be retried, and send everything else to 圖鑑管理 — which is
+                // where the card landed, and where the one way out of 已達上限
+                // (delete something) lives.
+                val tap: (() -> Unit)? = when {
+                    job.progress.canRetry -> ({ onRetryCapture(job.id) })
+                    job.progress.isFailed || job.progress == CaptureProgress.Ready -> onOpenManage
+                    else -> null
+                }
+                CaptureQueueTile(
+                    job = job,
+                    modifier = tap?.let { Modifier.tujiClickable(onClick = it) } ?: Modifier,
+                )
+            }
+        }
+
         // An empty shelf is an answer, and it goes *inside* the grid so the
         // chips stay on screen: a sentence that replaces the whole page would
         // take away the only way back to a shelf that has something on it.
-        if (page.words.isEmpty()) {
+        if (page.words.isEmpty() && !(source == CardsSource.Mine && captureJobs.isNotEmpty())) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 val (title, hint) = when (source) {
                     CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty to R.string.atlas_bookmarked_empty_hint

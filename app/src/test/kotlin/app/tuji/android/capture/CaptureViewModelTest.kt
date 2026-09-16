@@ -93,10 +93,14 @@ class CaptureViewModelTest {
         }
     }
 
+    /** What `confirm` handed to 生成佇列, which is now all it does. */
+    private val enqueued = mutableListOf<Triple<String, AtlasConfirmPayload, String?>>()
+
     private fun vm(fake: AtlasAuthoring) = CaptureViewModel(
         authoring = fake,
         direction = LearningDirection.ZH_JA,
         scope = TestScope(dispatcher),
+        enqueue = { imageId, payload, thumb -> enqueued += Triple(imageId, payload, thumb) },
     )
 
     private fun CaptureViewModel.naming() = step.value as CaptureViewModel.Step.Naming
@@ -143,18 +147,19 @@ class CaptureViewModelTest {
         assertEquals(1, fake.recognitions)
     }
 
-    @Test fun `confirming makes the item and its one card`() = runTest(dispatcher) {
+    @Test fun `confirming hands the capture to the queue and leaves`() = runTest(dispatcher) {
         val fake = Fake(uploadCandidates = listOf(candidate("a", label = "マグカップ")))
         val vm = vm(fake)
         vm.submit(ByteArray(4)); advanceUntilIdle()
         vm.confirm(); advanceUntilIdle()
 
-        val made = vm.step.value as CaptureViewModel.Step.Made
-        assertEquals("item1", made.item.id)
-        // One, not two. The server collapses any request to a single card, and
-        // asking for two is how a screen ends up promising 「2 張卡」 for one.
-        assertEquals(1, made.cards)
-        assertEquals("マグカップ", fake.lastPayload!!.lemma)
+        // **Nothing was created here.** confirm and createCards belong to the
+        // queue now, which is the whole point: the screen is free to close.
+        assertEquals(0, fake.confirms)
+        assertEquals(0, fake.cardCalls)
+        assertEquals(CaptureViewModel.Step.Queued, vm.step.value)
+        assertEquals(1, enqueued.size)
+        assertEquals("マグカップ", enqueued.single().second.lemma)
     }
 
     @Test fun `a photo with no name cannot be confirmed`() = runTest(dispatcher) {
@@ -173,7 +178,7 @@ class CaptureViewModelTest {
         vm.edit(lemma = "やかん", zhHant = "水壺")
         vm.confirm(); advanceUntilIdle()
 
-        val payload = fake.lastPayload!!
+        val payload = enqueued.single().second
         assertEquals("やかん", payload.lemma)
         assertEquals("a hand-typed word still needs a primary label", "やかん", payload.primaryLabel)
     }
@@ -184,91 +189,13 @@ class CaptureViewModelTest {
         assertTrue(vm.step.value is CaptureViewModel.Step.Failed)
     }
 
-    @Test fun `a failed confirm leaves the form as it was`() = runTest(dispatcher) {
-        // Everything the user typed is still on screen; they tap again.
-        val fake = Fake(uploadCandidates = listOf(candidate("a")), failConfirm = true)
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        val s = vm.naming()
-        assertEquals("a", s.draft.selectedCandidateId)
-        assertNull(s.busy)
-    }
-
-    @Test fun `cards failing does not lose the item that was made`() = runTest(dispatcher) {
-        // The item exists on the server. Reporting a total failure would tell
-        // the user to try again and produce a second copy.
-        val fake = Fake(uploadCandidates = listOf(candidate("a")), failCards = true)
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        val made = vm.step.value as CaptureViewModel.Step.Made
-        assertEquals("item1", made.item.id)
-        assertEquals(0, made.cards)
-    }
-
-    @Test fun `publishing is a decision, not a side effect of confirming`() =
-        runTest(dispatcher) {
-            val fake = Fake(uploadCandidates = listOf(candidate("a")))
-            val vm = vm(fake)
-            vm.submit(ByteArray(4)); advanceUntilIdle()
-            vm.confirm(); advanceUntilIdle()
-            // The card exists and nothing is on the public feed yet.
-            assertEquals(0, fake.publishes)
-        }
-
-    @Test fun `a queued submission is not reported as live`() = runTest(dispatcher) {
-        // "It is live" and "someone will look at it" are different sentences,
-        // and the feed contradicts the first within a minute.
-        val fake = Fake(uploadCandidates = listOf(candidate("a")), publishGoesLive = false)
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        vm.publish(); advanceUntilIdle()
-
-        val made = vm.step.value as CaptureViewModel.Step.Made
-        assertEquals(CaptureViewModel.PublishOutcome.Queued, made.publish)
-    }
-
-    @Test fun `a clean submission says it is live`() = runTest(dispatcher) {
-        val fake = Fake(uploadCandidates = listOf(candidate("a")))
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        vm.publish(); advanceUntilIdle()
-        assertEquals(
-            CaptureViewModel.PublishOutcome.Published,
-            (vm.step.value as CaptureViewModel.Step.Made).publish,
-        )
-    }
-
-    @Test fun `a failed publish does not lose the card`() = runTest(dispatcher) {
-        val fake = Fake(uploadCandidates = listOf(candidate("a")), failPublish = true)
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        vm.publish(); advanceUntilIdle()
-        val made = vm.step.value as CaptureViewModel.Step.Made
-        assertEquals(CaptureViewModel.PublishOutcome.Failed, made.publish)
-        assertEquals("the card is still theirs", "item1", made.item.id)
-    }
-
-    @Test fun `publishing twice does not offer it twice`() = runTest(dispatcher) {
-        val fake = Fake(uploadCandidates = listOf(candidate("a")))
-        val vm = vm(fake)
-        vm.submit(ByteArray(4)); advanceUntilIdle()
-        vm.confirm(); advanceUntilIdle()
-        vm.publish(); advanceUntilIdle()
-        vm.publish(); advanceUntilIdle()
-        assertEquals(1, fake.publishes)
-    }
-
-    @Test fun `a second confirm tap while sending does not make two items`() = runTest(dispatcher) {
+    @Test fun `a second confirm tap does not queue the same capture twice`() = runTest(dispatcher) {
         val fake = Fake(uploadCandidates = listOf(candidate("a")))
         val vm = vm(fake)
         vm.submit(ByteArray(4)); advanceUntilIdle()
         vm.confirm(); vm.confirm()
         advanceUntilIdle()
-        assertEquals(1, fake.confirms)
+        // The first tap leaves `Naming`, so the second has nothing to confirm.
+        assertEquals(1, enqueued.size)
     }
 }

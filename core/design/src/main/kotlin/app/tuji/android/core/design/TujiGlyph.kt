@@ -208,6 +208,52 @@ object TujiGlyph {
         }
     }
 
+    /** 重試 — a circular arrow, open at the top with a head on the right. */
+    @Composable
+    fun Refresh(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.10f
+            drawArc(
+                color = tint,
+                startAngle = -50f,
+                sweepAngle = 300f,
+                useCenter = false,
+                topLeft = Offset(stroke, stroke),
+                size = Size(w - stroke * 2f, w - stroke * 2f),
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+            // The head, on the open end. Two strokes rather than a filled
+            // triangle, so it keeps the same weight as the arc it ends.
+            val tip = Offset(w * 0.82f, w * 0.26f)
+            drawLine(tint, tip, Offset(w * 0.62f, w * 0.24f), strokeWidth = stroke, cap = StrokeCap.Round)
+            drawLine(tint, tip, Offset(w * 0.84f, w * 0.05f), strokeWidth = stroke, cap = StrokeCap.Round)
+        }
+    }
+
+    /** 警示 — a triangle with a bar and a dot, for a dead end. */
+    @Composable
+    fun Warning(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.10f
+            val path = Path()
+            path.moveTo(w * 0.5f, w * 0.12f)
+            path.lineTo(w * 0.94f, w * 0.86f)
+            path.lineTo(w * 0.06f, w * 0.86f)
+            path.close()
+            drawPath(path, tint, style = Stroke(width = stroke, join = StrokeJoin.Round))
+            drawLine(
+                tint,
+                Offset(w * 0.5f, w * 0.40f),
+                Offset(w * 0.5f, w * 0.60f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round,
+            )
+            drawCircle(tint, radius = stroke * 0.6f, center = Offset(w * 0.5f, w * 0.73f))
+        }
+    }
+
     /**
      * 書籤.
      *
