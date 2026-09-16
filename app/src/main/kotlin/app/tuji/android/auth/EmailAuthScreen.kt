@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.text.input.KeyboardType
 import app.tuji.android.R
 import app.tuji.android.core.auth.AuthAttempt
@@ -64,6 +66,11 @@ fun EmailAuthScreen(
     val type = TujiType
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    // Android does not save a credential because a field said what it holds —
+    // something has to tell the framework the form is finished. Compose exposes
+    // that as `commit()`, and without it the hints only ever *fill*, never
+    // store, which is the half of this that the test account fell through.
+    val autofill = LocalAutofillManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -121,6 +128,10 @@ fun EmailAuthScreen(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
             ),
+            // iOS: `.textContentType(.emailAddress)`. It is the account name
+            // here as well as an address, which is what lets a manager store
+            // the pair rather than two unrelated strings.
+            contentType = ContentType.EmailAddress + ContentType.Username,
         )
 
         Spacer(Modifier.height(TujiSpace.S3))
@@ -142,6 +153,15 @@ fun EmailAuthScreen(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done,
             ),
+            // 新密碼 and 既有密碼 are two different requests: the first asks the
+            // manager to *generate and offer to save*, the second to fill what
+            // it already has. iOS draws the same distinction with
+            // `.newPassword` and `.password`.
+            contentType = if (mode == EmailRoute.SignUp) {
+                ContentType.NewPassword
+            } else {
+                ContentType.Password
+            },
         )
 
         // Progress, not a scolding: the count says how far there is to go.
@@ -185,6 +205,14 @@ fun EmailAuthScreen(
                             else -> Unit
                         }
                     }
+                    // Ask to save once the credential is real, which is any
+                    // outcome that is not a rejection — **including 待確認**.
+                    // The account exists at that point with that password; not
+                    // saving it there is precisely how somebody confirms their
+                    // email a day later and finds they have nothing to sign in
+                    // with. Committing on every tap would be the opposite
+                    // mistake: storing the typo that just failed.
+                    if (failure == null) autofill?.commit()
                     busy = false
                 }
             },
