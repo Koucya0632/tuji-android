@@ -43,6 +43,23 @@ class OnboardingStore(context: Context) : StudyHints {
      * shown this person once.
      */
     /**
+     * Whether this account has been through 先幫你排一份學習節奏 **on this device**.
+     *
+     * Per account, not one flag: two people sharing a phone each get asked
+     * once. Per device, not on the server, because it is a record of what this
+     * install has shown somebody — which is also why a reinstall asks again,
+     * and why `SetupChoices.seed` has to open on the account's real themes
+     * rather than on a beginner's.
+     */
+    fun setupDone(userId: String): Boolean = prefs.getBoolean(setupKey(userId), false)
+
+    fun markSetupDone(userId: String) {
+        prefs.edit().putBoolean(setupKey(userId), true).apply()
+    }
+
+    private fun setupKey(userId: String) = "$KEY_SETUP_PREFIX$userId"
+
+    /**
      * Whether this device's locally-stored direction has ever been reconciled
      * with the server's. See [app.tuji.android.core.study.SettingsHandover] for
      * why one bit decides which of the two sources wins.
@@ -56,6 +73,7 @@ class OnboardingStore(context: Context) : StudyHints {
         set(value) = prefs.edit().putBoolean(KEY_REVIEW_HINT, value).apply()
 
     private companion object {
+        const val KEY_SETUP_PREFIX = "setupDone."
         // The same key names iOS uses, so a future migration or a support
         // question does not have to translate between two vocabularies.
         const val PREFS = "tuji_onboarding"

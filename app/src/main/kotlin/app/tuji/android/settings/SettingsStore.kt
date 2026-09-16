@@ -1,5 +1,6 @@
 package app.tuji.android.settings
 
+import app.tuji.android.core.study.SettingsRules
 import android.util.Log
 import app.tuji.android.core.auth.AccountScopedStore
 import app.tuji.android.core.model.UiLanguage
@@ -156,6 +157,34 @@ class SettingsStore(
                 Log.w(TAG, "settings save failed — the local value stands", failure)
             }
         }
+    }
+
+    /**
+     * 完成設定 — the one save that is not a debounced fire-and-forget.
+     *
+     * [update] is built for a switch being flipped: it waits 400ms, sends, and
+     * swallows a failure because the local value is still the right one to draw.
+     * None of that holds here. The user is being held on a screen *until* this
+     * lands, so it saves at once and lets the failure out — a Setup that
+     * silently did nothing drops them into an app configured for nobody.
+     *
+     * It refuses outright when the account's settings have not arrived, for the
+     * reason `SetupChoices.seed` documents: an account still loading looks
+     * exactly like a new one, and saving then replaces real themes with a
+     * beginner's.
+     */
+    suspend fun completeSetup(topicIds: Set<String>, dailyGoal: Int) {
+        if (!_loaded.value) throw IllegalStateException("settings have not arrived for this account")
+        save?.cancel()
+        save = null
+        val next = _current.value.copy(
+            studyCategories = SettingsRules.selection(topicIds),
+            dailyGoal = SettingsRules.clampDailyGoal(dailyGoal),
+            learningDirection = (local.learningDirection ?: _current.value.direction).wire,
+        )
+        remote.saveSettings(next)
+        _current.value = next
+        local.learningDirection = next.direction
     }
 
     /**

@@ -189,6 +189,14 @@
     <string name="settings_daily_goal">Daily goal questions</string>
     <string name="settings_daily_goal_why">New questions per day — automatically reduced when reviews pile up</string>
     <string name="settings_goal_value">%1$d questions</string>
+    <string name="setup_title">Let’s set your pace</string>
+    <string name="setup_topics">What would you like to learn about?</string>
+    <string name="setup_goal">Daily goal</string>
+    <string name="setup_done">Finish setup</string>
+    <string name="setup_saving">Saving…</string>
+    <string name="setup_loading">Loading topics…</string>
+    <string name="setup_failed">That didn’t save. Check your connection and try again.</string>
+    <string name="setup_sign_in_again">Sign in again</string>
     <string name="settings_goal_footer">This number sets your daily new-word quota and goal tracking</string>
     <string name="settings_themes">Study topics</string>
     <string name="settings_themes_why">New words and topic progress only cover your chosen topics</string>

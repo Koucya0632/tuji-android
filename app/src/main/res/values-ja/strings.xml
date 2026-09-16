@@ -189,6 +189,14 @@
     <string name="settings_daily_goal">毎日の目標問題数</string>
     <string name="settings_daily_goal_why">1日に新しく学びたい問題数。復習が多い日は自動で減ります</string>
     <string name="settings_goal_value">%1$d問</string>
+    <string name="setup_title">学習のペースを決めましょう</string>
+    <string name="setup_topics">どんなテーマを学びたいですか？</string>
+    <string name="setup_goal">1日の目標</string>
+    <string name="setup_done">設定を完了</string>
+    <string name="setup_saving">保存中…</string>
+    <string name="setup_loading">テーマを読み込み中…</string>
+    <string name="setup_failed">保存できませんでした。通信を確認してもう一度お試しください。</string>
+    <string name="setup_sign_in_again">ログインし直す</string>
     <string name="settings_goal_footer">この数字は1日の新出単語枠と目標達成度の計算に使われます</string>
     <string name="settings_themes">学習テーマ</string>
     <string name="settings_themes_why">新出単語とテーマ進捗は選んだテーマのみが対象です</string>
