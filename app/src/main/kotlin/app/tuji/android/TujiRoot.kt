@@ -35,6 +35,7 @@ import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.design.TujiFace
 import app.tuji.android.core.design.TujiTheme
 import app.tuji.android.core.design.rememberTujiHaptics
+import app.tuji.android.gloss.GlossBookmarks
 import app.tuji.android.core.model.LaunchDestination
 import app.tuji.android.core.model.LaunchRouting
 import app.tuji.android.settings.SettingsBusy
@@ -520,6 +521,7 @@ private fun SignedInScreens(
                     accent = settings.accent,
                     online = { app.isOnline() },
                     haptics = haptics,
+                    catalog = app.catalogReading,
                 ).also {
                     // The goal from 設定, tapered by the backlog, from the
                     // themes 設定 picked — the same numbers 今日 printed on
@@ -537,6 +539,9 @@ private fun SignedInScreens(
                 vm = vm,
                 showChinese = settings.showZh,
                 session = direction.targetLanguage,
+                uiLang = uiLang,
+                speech = app.speech,
+                accent = settings.accent,
                 onClose = {
                     refreshTick++
                     nav = nav.pop()
@@ -875,6 +880,8 @@ private fun SignedInScreens(
                             }
                         },
                         onUnblock = { authorHandle?.let(community::unblock) },
+                        speech = app.speech,
+                        accent = settings.accent,
                     )
                 }
 
@@ -1008,6 +1015,12 @@ private fun SignedInScreens(
                         else ({ app.cardsSourceStore.toggle(route.wordId) }),
                         scores = scores,
                         onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
+                        speech = app.speech,
+                        accent = settings.accent,
+                        glossBookmarks = GlossBookmarks(
+                            isMarked = { it in personal.bookmarked },
+                            toggle = app.cardsSourceStore::toggle,
+                        ),
                     )
                 }
 

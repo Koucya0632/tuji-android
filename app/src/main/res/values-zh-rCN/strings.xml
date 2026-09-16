@@ -234,6 +234,8 @@
     <string name="word_play">播放发音</string>
     <string name="word_related">相关的词</string>
     <string name="word_details_title">字词资料 · DETAILS</string>
+    <string name="gloss_base_form">原形</string>
+    <string name="gloss_see_detail">看完整详情</string>
     <string name="word_examples_title">例句 · EXAMPLE</string>
     <string name="word_tab_definition">译义</string>
     <string name="word_tab_forms">词形</string>
