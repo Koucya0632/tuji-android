@@ -54,6 +54,7 @@ import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiDetentSheet
 import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
@@ -98,6 +99,12 @@ import app.tuji.android.core.study.maskedSentence
 @Composable
 fun ReviewScreen(
     vm: ReviewViewModel,
+    /**
+     * A word's whole entry, for the half of the reveal sheet a drag opens up.
+     * Handed in rather than fetched here: this screen knows nothing about
+     * repositories, and the panel is the same one 詞條頁 draws.
+     */
+    fullDetail: @Composable (String) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     /** Gates the 中文 line on the reveal sheet, as `showZh` does on iOS. */
@@ -183,6 +190,7 @@ fun ReviewScreen(
                         onPlay = vm::playWord,
                         onRate = vm::rate,
                         onContinue = vm::continueFromReveal,
+                        fullDetail = fullDetail,
                     )
                 }
             }
@@ -559,22 +567,24 @@ private fun RevealSheet(
     onPlay: () -> Unit,
     onRate: (SRSRating) -> Unit,
     onContinue: () -> Unit,
+    fullDetail: @Composable (String) -> Unit,
 ) {
     val question = session.question ?: return
     // No dimming, as on iOS, where the question stays live behind the sheet:
     // the sentence 聽句 just marked is what the rating is about, and a scrim
-    // over it hid the one thing worth rereading. Nothing here consumes taps,
-    // so the replay buttons behind it still work.
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+    // over it hid the one thing worth rereading.
+    //
+    // Two heights: what the summary and the rating need, and everything the
+    // window can give. The pulled-up half is the word's whole entry — the same
+    // reading its page offers, without leaving the session for it.
+    TujiDetentSheet(
+        expandedContent = { fullDetail(question.item.word.id) },
+    ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .background(TujiColor.Paper)
-                // The sheet's top edge is a selection indicator, which is the
-                // one thing a 3dp border means.
-                .padding(top = TujiBorder.Bw3)
                 .padding(horizontal = TujiSpace.S4)
-                .padding(top = TujiSpace.S4, bottom = bottomPadding + TujiSpace.S4),
+                .padding(bottom = bottomPadding + TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
             // The word, and it said aloud. The sheet is the first moment the
