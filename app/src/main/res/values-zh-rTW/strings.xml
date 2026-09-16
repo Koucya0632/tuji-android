@@ -189,6 +189,14 @@
     <string name="settings_daily_goal">每日目標題數</string>
     <string name="settings_daily_goal_why">每天想新學的題數，複習多時會自動調降</string>
     <string name="settings_goal_value">%1$d 題</string>
+    <string name="setup_title">先幫你排一份學習節奏</string>
+    <string name="setup_topics">你對學習什麼主題有興趣？</string>
+    <string name="setup_goal">每日目標</string>
+    <string name="setup_done">完成設定</string>
+    <string name="setup_saving">儲存中…</string>
+    <string name="setup_loading">載入主題中…</string>
+    <string name="setup_failed">沒有存起來。檢查一下網路再試一次。</string>
+    <string name="setup_sign_in_again">重新登入</string>
     <string name="settings_goal_footer">這個數字會用來算今日新字額度與目標達成度</string>
     <string name="settings_themes">學習主題</string>
     <string name="settings_themes_why">學新字與主題進度只涵蓋你選的主題</string>

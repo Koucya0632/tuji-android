@@ -110,31 +110,50 @@ fun StudyThemesScreen(
         }
 
         items(categories, key = { it.id }) { category ->
-            val on = category.id in picked
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(if (on) TujiColor.Current.copy(alpha = 0.18f) else TujiColor.Paper)
-                    .border(if (on) 1.5.dp else TujiBorder.Bw1, if (on) TujiColor.Current else TujiColor.Rule)
-                    .tujiClickable {
-                        onChange(SettingsRules.selection(SettingsRules.toggleCategory(selected, category.id)))
-                    }
-                    .semantics {
-                        role = Role.Checkbox
-                        this.selected = on
-                    }
-                    .padding(horizontal = TujiSpace.S1, vertical = TujiSpace.S4),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    CategoryShelf.title(category, uiLang),
-                    style = TujiType.label,
-                    color = TujiColor.Ink2,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            ThemeTile(
+                label = CategoryShelf.title(category, uiLang),
+                selected = category.id in picked,
+                onClick = {
+                    onChange(SettingsRules.selection(SettingsRules.toggleCategory(selected, category.id)))
+                },
+            )
         }
+    }
+}
+
+/**
+ * One theme, on or off.
+ *
+ * Shared with 先幫你排一份學習節奏, which asks the same question on the first
+ * launch. Two copies of a tile is how one screen ends up with a 1.5dp 瞳黃 edge
+ * and the other with a 1dp one, and nobody notices until the two are on screen
+ * within a minute of each other — which, on a first launch, they are.
+ */
+@Composable
+fun ThemeTile(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .background(if (selected) TujiColor.Current.copy(alpha = 0.18f) else TujiColor.Paper)
+            .border(
+                if (selected) 1.5.dp else TujiBorder.Bw1,
+                if (selected) TujiColor.Current else TujiColor.Rule,
+            )
+            .tujiClickable(onClick = onClick)
+            .semantics {
+                role = Role.Checkbox
+                this.selected = selected
+            }
+            .padding(horizontal = TujiSpace.S1, vertical = TujiSpace.S4),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            style = TujiType.label,
+            color = TujiColor.Ink2,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

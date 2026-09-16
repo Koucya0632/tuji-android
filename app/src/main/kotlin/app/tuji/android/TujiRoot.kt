@@ -49,6 +49,8 @@ import app.tuji.android.auth.WelcomeScreen
 import app.tuji.android.core.auth.AuthState
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
+import app.tuji.android.core.study.SetupChoices
+import app.tuji.android.onboarding.SetupScreen
 import app.tuji.android.core.design.TujiFace
 import app.tuji.android.core.design.TujiBrandLockup
 import app.tuji.android.core.design.TujiTheme
@@ -153,14 +155,22 @@ fun TujiRoot(app: TujiApplication) {
     // Held in composition as well as on disk so picking a language re-routes
     // immediately rather than on the next launch.
     var direction by remember { mutableStateOf<LearningDirection?>(app.onboarding.learningDirection) }
+    // Read once into state rather than off the store on every recomposition:
+    // finishing Setup has to *move* the app, and a plain preference read is not
+    // something the routing recomposes for.
+    var setupDone by remember { mutableStateOf(emptySet<String>()) }
+    LaunchedEffect(session.state) {
+        (session.state as? AuthState.SignedIn)?.user?.id?.let { id ->
+            if (app.onboarding.setupDone(id)) setupDone = setupDone + id
+        }
+    }
 
     val account = when (val s = session.state) {
         is AuthState.Checking -> LaunchAccountState.Checking
         is AuthState.SignedOut -> LaunchAccountState.SignedOut
         is AuthState.Guest -> LaunchAccountState.Guest
-        // `setupDone` is 設定 the account's first-run profile step, which
-        // arrives with M4. Until it exists, nobody is held at it.
-        is AuthState.SignedIn -> LaunchAccountState.SignedIn(s.user.id, setupDone = true)
+        is AuthState.SignedIn ->
+            LaunchAccountState.SignedIn(s.user.id, setupDone = setupDone.contains(s.user.id))
     }
 
     val destination = LaunchRouting.destination(
@@ -206,7 +216,37 @@ fun TujiRoot(app: TujiApplication) {
             // signed-out user to Welcome, which is where they were going anyway.
             is LaunchDestination.Onboarding -> WelcomeScreen(app.auth)
             is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
-            is LaunchDestination.Setup -> SignedInShell(app, identity = null)
+            is LaunchDestination.Setup -> {
+                val setupLanguage = rememberDeviceLanguage()
+                val setupScope = rememberCoroutineScope()
+                val catalog by app.catalog.contents.collectAsStateWithLifecycle()
+                val settings by app.settingsStore.current.collectAsStateWithLifecycle()
+                val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
+                LaunchedEffect(destination.userId) {
+                    app.settingsStore.load(setupLanguage)
+                    app.catalog.load(app.settingsStore.current.value.direction)
+                }
+                SetupScreen(
+                    categories = catalog.categories,
+                    uiLang = settings.uiLang,
+                    account = SetupChoices.AccountThemes(settings.studyCategories, settings.dailyGoal)
+                        .takeIf { settingsLoaded },
+                    settingsLoaded = settingsLoaded,
+                    onDone = { topics, goal ->
+                        runCatching { app.settingsStore.completeSetup(topics, goal) }
+                            .onSuccess {
+                                // The shell needs the catalogue for the themes
+                                // just chosen; loading it here keeps Setup on
+                                // screen instead of showing the launch mark a
+                                // second time.
+                                app.catalog.load(app.settingsStore.current.value.direction, force = true)
+                                app.onboarding.markSetupDone(destination.userId)
+                                setupDone = setupDone + destination.userId
+                            }
+                    },
+                    onSignOut = { setupScope.launch { app.auth.signOut() } },
+                )
+            }
             is LaunchDestination.Main -> SignedInShell(
                 app,
                 // iOS's order, blanks skipped, and the email's local part rather
