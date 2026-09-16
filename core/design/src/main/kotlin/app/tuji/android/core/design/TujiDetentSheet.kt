@@ -172,6 +172,16 @@ fun TujiDetentSheet(
                 Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
                     expandedContent()
                 }
+                // The line between reading and acting. Without it the last
+                // visible line of the entry sits a pixel off the summary's
+                // first, and a half-cut sentence touching a label reads as two
+                // things drawn on top of each other.
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(TujiBorder.Bw1)
+                        .background(TujiColor.Rule),
+                )
             }
             // Measured rather than declared: this is the rest detent, and it is
             // whatever the summary and the actions happen to need.

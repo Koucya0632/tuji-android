@@ -582,6 +582,22 @@ private fun SignedInScreens(
                 showChinese = settings.showZh,
                 session = direction.targetLanguage,
                 uiLang = uiLang,
+                fullDetail = { wordId ->
+                    WordDetailPanel(
+                        wordId = wordId,
+                        catalog = app.catalogReading,
+                        atlas = app.atlas,
+                        audio = app.clipPlayer,
+                        speech = app.speech,
+                        direction = direction,
+                        uiLang = uiLang,
+                        accent = settings.accent,
+                        showChinese = settings.showZh,
+                        session = direction.targetLanguage,
+                    )
+                },
+                bookmarked = { it in personal.bookmarked },
+                onBookmark = app.cardsSourceStore::toggle,
                 speech = app.speech,
                 accent = settings.accent,
                 onClose = {

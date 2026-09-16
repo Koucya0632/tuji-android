@@ -57,6 +57,8 @@ import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.catalog.CardsSourceRules
+import app.tuji.android.core.design.TujiDetentSheet
 import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
@@ -104,6 +106,10 @@ fun NewFlowScreen(
     session: TargetLanguage,
     uiLang: String,
     onClose: () -> Unit,
+    /** A word's whole entry, for the half of the wrong-answer card a drag opens. */
+    fullDetail: @Composable (String) -> Unit,
+    bookmarked: (String) -> Boolean = { false },
+    onBookmark: ((String) -> Unit)? = null,
     /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
     speech: WordSpeaking? = null,
     accent: String = "us",
@@ -177,6 +183,27 @@ fun NewFlowScreen(
                             session = session,
                             bottomPadding = insets.calculateBottomPadding(),
                         )
+                        // A miss raises the word rather than printing a line
+                        // under the board: the answer is the one thing worth
+                        // reading at that moment, and the card gives it a
+                        // pronunciation, a 書籤 and — one drag away — its whole
+                        // entry, which is what the reader would otherwise have
+                        // to leave the lesson to see.
+                        missedWord(s.stage)?.let { item ->
+                            WrongAnswerSheet(
+                                item = item,
+                                session = session,
+                                showChinese = showChinese,
+                                bottomPadding = insets.calculateBottomPadding(),
+                                bookmarked = bookmarked,
+                                onBookmark = onBookmark,
+                                playing = s.playingWord,
+                                canPlay = s.canPlayWord,
+                                onPlay = vm::playWord,
+                                onContinue = vm::continueFromWrong,
+                                fullDetail = fullDetail,
+                            )
+                        }
                     }
                 }
             }
@@ -611,7 +638,6 @@ private fun IdentifyCard(
                     onClick = { onPick(label) },
                 )
             }
-            if (stage.revealed) WrongFooter(answer = item.word.word, onContinue = onContinue)
         }
     }
 }
@@ -689,16 +715,6 @@ private fun SpellCard(
                 }
             }
         }
-        if (stage.correct == false) {
-            Text(
-                stringResource(R.string.new_wrong_answer_is, stage.board.target),
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
         TilePool(stage, onTap)
 
         // 退一格 stays, though iOS has no visible delete: taking back the last
@@ -714,9 +730,6 @@ private fun SpellCard(
             )
         }
 
-        if (stage.correct == false) {
-            TujiButton(text = stringResource(R.string.study_next), onClick = onContinue, modifier = Modifier.fillMaxWidth())
-        }
     }
 }
 
@@ -833,25 +846,92 @@ private fun SpeakerButton(size: Dp, ground: Color, playing: Boolean, onClick: ()
     }
 }
 
+/** The word a miss is still sitting on, or null while the question is open. */
+private fun missedWord(stage: NewFlowViewModel.Stage): StudyQueueItem? = when (stage) {
+    is NewFlowViewModel.Stage.Identify -> stage.item.takeIf { stage.revealed }
+    is NewFlowViewModel.Stage.Spell -> stage.item.takeIf { stage.correct == false }
+    is NewFlowViewModel.Stage.Recognize -> null
+}
+
 /**
- * What a wrong answer leaves on screen: the answer, and one button. It does not
- * advance on its own — the task is about to be requeued a few positions back,
- * and the only moment the user can read what they missed is now.
+ * What a wrong answer raises: the word, said aloud, markable — and one button.
+ *
+ * It does not advance on its own. The task is about to be requeued a few
+ * positions back, and the only moment the reader can study what they missed is
+ * now; 下一題 is the single exit, so the queue moves exactly once however the
+ * card is left.
+ *
+ * Two heights, like 複習's reveal: the whole entry is one drag up rather than a
+ * trip out of the lesson.
  */
 @Composable
-private fun WrongFooter(answer: String, onContinue: () -> Unit) {
-    Text(
-        stringResource(R.string.new_wrong_answer_is, answer),
-        style = TujiType.bodyStrong,
-        color = TujiColor.Ink,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().padding(top = TujiSpace.S2),
-    )
-    TujiButton(
-        text = stringResource(R.string.study_next),
-        onClick = onContinue,
-        modifier = Modifier.fillMaxWidth(),
-    )
+private fun WrongAnswerSheet(
+    item: StudyQueueItem,
+    session: TargetLanguage,
+    showChinese: Boolean,
+    bottomPadding: Dp,
+    bookmarked: (String) -> Boolean,
+    onBookmark: ((String) -> Unit)?,
+    playing: Boolean,
+    canPlay: Boolean,
+    onPlay: () -> Unit,
+    onContinue: () -> Unit,
+    fullDetail: @Composable (String) -> Unit,
+) {
+    val wordId = item.word.id
+    TujiDetentSheet(expandedContent = { fullDetail(wordId) }) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TujiSpace.S4)
+                .padding(bottom = bottomPadding + TujiSpace.S4),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        ) {
+            Text(
+                stringResource(R.string.new_wrong_answer_is, item.word.word),
+                style = TujiType.label,
+                color = TujiColor.Ink3,
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
+                    StudyHeadword(item, session)
+                    if (showChinese) {
+                        Text(item.word.chinese, style = TujiType.bodySm, color = TujiColor.Ink2)
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                    // No star on a 自製 card: 書籤 filters the catalogue, which
+                    // has never heard of it, so the mark would go nowhere.
+                    if (onBookmark != null && !CardsSourceRules.isCustom(wordId)) {
+                        TujiIconButton(
+                            label = stringResource(R.string.word_bookmark),
+                            onClick = { onBookmark(wordId) },
+                        ) {
+                            TujiGlyph.Star(filled = bookmarked(wordId), tint = TujiColor.Ink)
+                        }
+                    }
+                    if (canPlay) {
+                        TujiIconButton(
+                            label = stringResource(R.string.word_play),
+                            onClick = onPlay,
+                            ground = if (playing) TujiColor.Current else TujiColor.Paper2,
+                        ) {
+                            TujiGlyph.Speaker(tint = TujiColor.Ink)
+                        }
+                    }
+                }
+            }
+            TujiButton(
+                text = stringResource(R.string.study_next),
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
 @Composable
