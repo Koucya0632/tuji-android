@@ -4,8 +4,11 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,8 +46,26 @@ object TujiMotion {
      */
     const val D3 = 400
 
-    /** Compose's `FastOutSlowIn` is a different curve; this is CSS/SwiftUI easeOut. */
-    val EaseOut: Easing = Easing { fraction -> 1f - (1f - fraction) * (1f - fraction) }
+    /**
+     * SwiftUI's `.easeOut`, which is the CSS curve `cubic-bezier(0, 0, 0.58, 1)`.
+     *
+     * Compose's `FastOutSlowInEasing` is Material's own curve and lands
+     * somewhere else entirely. This was also a quadratic `1-(1-t)²` for a
+     * while, which is the shape people reach for when they mean "ease out" —
+     * but it is not the same curve: half way through, the quadratic is at
+     * 0.75 and this is at 0.70.
+     */
+    val EaseOut: Easing = CubicBezierEasing(0f, 0f, 0.58f, 1f)
+
+    /**
+     * SwiftUI's `.easeInOut` — `cubic-bezier(0.42, 0, 0.58, 1)`.
+     *
+     * Not part of the three-durations-one-curve rule, and deliberately so: it
+     * exists because three places on iOS ask for it by name (the offline
+     * banner, 學新字's stage dots, and the reveal card's turn under Reduce
+     * Motion), and this app's job is to be the same app.
+     */
+    val EaseInOut: Easing = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
 
     /**
      * `FiniteAnimationSpec` rather than `AnimationSpec`, because the transition
@@ -64,6 +85,58 @@ object TujiMotion {
      */
     fun <T> ease(durationMillis: Int, reduceMotion: Boolean): FiniteAnimationSpec<T>? =
         if (reduceMotion) null else ease(durationMillis)
+
+    fun <T> easeInOut(durationMillis: Int): FiniteAnimationSpec<T> =
+        tween(durationMillis = durationMillis, easing = EaseInOut)
+
+    /**
+     * SwiftUI's `.spring(duration:bounce:)`, in Compose's parameters.
+     *
+     * The two platforms describe the same physical spring from opposite ends.
+     * SwiftUI takes a *perceptual duration* and a bounce; Compose takes a
+     * stiffness and a damping ratio. Converting is two lines of algebra rather
+     * than a judgement call, so it lives here once instead of being eyeballed
+     * per call site — see [SwiftSpring].
+     *
+     * @param durationSeconds SwiftUI's `duration:`, in seconds, because that is
+     *   what the iOS source says and a translation that renames its inputs is
+     *   a translation nobody can check.
+     */
+    fun <T> spring(durationSeconds: Float, bounce: Float = 0f): FiniteAnimationSpec<T> =
+        spring(
+            dampingRatio = SwiftSpring.dampingRatio(bounce),
+            stiffness = SwiftSpring.stiffness(durationSeconds),
+        )
+}
+
+/**
+ * The algebra behind [TujiMotion.spring], kept apart so it can be tested
+ * without a composition.
+ *
+ * SwiftUI defines `Spring(duration:bounce:)` as a unit-mass spring with
+ * `stiffness = (2π / duration)²` and `damping = 4π(1 - bounce) / duration`.
+ * Compose's damping *ratio* is `damping / (2√(stiffness · mass))`, and with
+ * mass 1 that whole expression collapses to `1 - bounce`: the duration cancels
+ * out. So a SwiftUI bounce is a Compose damping ratio read backwards, and
+ * nothing else about the spring depends on it.
+ */
+object SwiftSpring {
+    /** `(2π / duration)²`. */
+    fun stiffness(durationSeconds: Float): Float {
+        val omega = (2.0 * Math.PI / durationSeconds).toFloat()
+        return omega * omega
+    }
+
+    /**
+     * `1 - bounce`, clamped to Compose's no-bounce ceiling.
+     *
+     * A bounce of 0 is critically damped, which is what SwiftUI gives you when
+     * `bounce:` is left out — five of iOS's eight springs are this, and they do
+     * not bounce at all. They are still springs: a critically damped spring
+     * arrives with a different velocity profile than any tween.
+     */
+    fun dampingRatio(bounce: Float): Float =
+        (1f - bounce).coerceIn(0.05f, Spring.DampingRatioNoBouncy)
 }
 
 /**

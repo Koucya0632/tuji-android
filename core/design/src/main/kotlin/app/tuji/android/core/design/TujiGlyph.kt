@@ -142,6 +142,73 @@ object TujiGlyph {
     }
 
     /**
+     * AI 在做事 — SF Symbols' `sparkles`, drawn.
+     *
+     * One large four-pointed star with two smaller ones tucked around it. The
+     * concave sides are what separate a sparkle from a plus sign: each arm is
+     * a quadratic curve pulled towards the centre, not a straight spike.
+     *
+     * [phases] fades the three stars independently, which is the shape of
+     * iOS's `.variableColor.iterative.nonReversing` — the large one is index 0.
+     */
+    @Composable
+    fun Sparkles(
+        size: Dp = 20.dp,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+        phases: (Int) -> Float = { 1f },
+    ) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            fun star(cx: Float, cy: Float, r: Float, alpha: Float) {
+                val path = Path()
+                val waist = r * 0.26f
+                path.moveTo(cx, cy - r)
+                path.quadraticTo(cx + waist, cy - waist, cx + r, cy)
+                path.quadraticTo(cx + waist, cy + waist, cx, cy + r)
+                path.quadraticTo(cx - waist, cy + waist, cx - r, cy)
+                path.quadraticTo(cx - waist, cy - waist, cx, cy - r)
+                path.close()
+                drawPath(path, tint, alpha = alpha)
+            }
+            star(w * 0.42f, w * 0.44f, w * 0.34f, phases(0))
+            star(w * 0.82f, w * 0.20f, w * 0.16f, phases(1))
+            star(w * 0.80f, w * 0.74f, w * 0.13f, phases(2))
+        }
+    }
+
+    /** 刪除 — SF Symbols' `trash`, drawn: a lid, a handle, and a tapered can. */
+    @Composable
+    fun Trash(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = Stroke(width = w * 0.10f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            // Lid.
+            drawLine(
+                tint,
+                Offset(w * 0.14f, w * 0.26f),
+                Offset(w * 0.86f, w * 0.26f),
+                strokeWidth = w * 0.10f,
+                cap = StrokeCap.Round,
+            )
+            // Handle.
+            val handle = Path()
+            handle.moveTo(w * 0.38f, w * 0.26f)
+            handle.lineTo(w * 0.40f, w * 0.13f)
+            handle.lineTo(w * 0.60f, w * 0.13f)
+            handle.lineTo(w * 0.62f, w * 0.26f)
+            drawPath(handle, tint, style = stroke)
+            // Can, narrower at the foot.
+            val can = Path()
+            can.moveTo(w * 0.24f, w * 0.26f)
+            can.lineTo(w * 0.31f, w * 0.88f)
+            can.lineTo(w * 0.69f, w * 0.88f)
+            can.lineTo(w * 0.76f, w * 0.26f)
+            drawPath(can, tint, style = stroke)
+        }
+    }
+
+    /**
      * 書籤.
      *
      * A five-pointed star drawn from its own geometry rather than shipped as an

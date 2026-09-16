@@ -182,10 +182,14 @@ fun AtlasManageScreen(
         if (state.selecting && state.selected.isNotEmpty()) {
             Box(Modifier.fillMaxWidth().background(TujiColor.Paper).padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3)) {
                 Text(
-                    // Not 刪除中… any more: the panel over this bar is already
-                    // saying that, and a screen that says the same thing twice
-                    // in two places reads as two different things happening.
-                    stringResource(R.string.manage_delete_count, state.selected.size),
+                    // Both this and the card over it say 刪除中…, which is what
+                    // iOS does: the card is a window of its own and the bar is
+                    // what the page still reads as behind it.
+                    if (state.deleting) {
+                        stringResource(R.string.manage_deleting)
+                    } else {
+                        stringResource(R.string.manage_delete_count, state.selected.size)
+                    },
                     style = TujiType.h3,
                     color = TujiColor.Paper,
                     modifier = Modifier

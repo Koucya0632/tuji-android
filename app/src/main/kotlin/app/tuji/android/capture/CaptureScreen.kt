@@ -4,6 +4,14 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import app.tuji.android.core.design.MascotPose
+import app.tuji.android.core.design.MascotSpeechBubble
+import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.model.AtlasImageSummary
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,18 +75,17 @@ fun CaptureScreen(
     val step by vm.step.collectAsStateWithLifecycle()
 
     when (val s = step) {
-        is CaptureViewModel.Step.Framing -> Framing(vm)
-        is CaptureViewModel.Step.Uploading -> Column(
-            Modifier.fillMaxSize().padding(horizontal = TujiSpace.S5),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val label = stringResource(R.string.capture_uploading)
-            Text(label, style = TujiType.body, color = TujiColor.Ink3)
-            // Work with no known end, so a rule that sweeps rather than a
-            // percentage: a bar that fills to 90% and waits there is a promise
-            // nobody made.
-            TujiIndeterminateBar(label = label)
+        // The upload keeps the camera on screen with the status over it, the
+        // way iOS keeps the source panel under its toast. It also removes a
+        // black flash the old full-screen label had, because the preview is
+        // never torn down and rebuilt between the shutter and the result.
+        is CaptureViewModel.Step.Framing, is CaptureViewModel.Step.Uploading -> {
+            Framing(vm)
+            TujiStatusBlocker(
+                visible = s is CaptureViewModel.Step.Uploading,
+                title = stringResource(R.string.capture_recognizing),
+                detail = stringResource(R.string.capture_recognizing_detail),
+            )
         }
 
         is CaptureViewModel.Step.Failed -> Column(
@@ -223,6 +230,51 @@ private fun Framing(vm: CaptureViewModel) {
     }
 }
 
+/**
+ * 辨識中 — iOS's `recognizingPanel`.
+ *
+ * **No spinner.** A determinate-looking bar for work of unknown length is a
+ * lie, and a spinner is the platform's own idle mark; the sweeping rule is this
+ * app's. The cat only arrives after three seconds, which is C.11's
+ * "waiting > 3s" clause — before that the wait is short enough that a character
+ * turning up to acknowledge it would be the slower thing on screen.
+ */
+@Composable
+private fun RecognizingPanel(image: AtlasImageSummary) {
+    var slow by remember { mutableStateOf(false) }
+    LaunchedEffect(image.id) {
+        slow = false
+        delay(SLOW_AFTER)
+        slow = true
+    }
+    Column(
+        Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+    ) {
+        Spacer(Modifier.height(TujiSpace.S2))
+        Box(Modifier.fillMaxWidth().height(240.dp).background(TujiColor.Paper2)) {
+            AsyncImage(
+                model = image.thumbUrl ?: image.imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        val label = stringResource(R.string.capture_uploading)
+        TujiIndeterminateBar(label = label)
+        Text(label, style = TujiType.label, color = TujiColor.Ink3)
+        AnimatedVisibility(
+            visible = slow,
+            enter = fadeIn(TujiMotion.ease(TujiMotion.D2)),
+            exit = fadeOut(TujiMotion.ease(TujiMotion.D2)),
+        ) {
+            MascotSpeechBubble(
+                pose = MascotPose.Think,
+                text = stringResource(R.string.capture_recognizing_slow),
+            )
+        }
+    }
+}
+
 @Composable
 private fun Naming(
     step: CaptureViewModel.Step.Naming,
@@ -230,20 +282,22 @@ private fun Naming(
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val draft = step.draft
-    // 高精度識別 and 確定 both go to the network from this screen, and until now
-    // the only thing that said so was the one button going grey — the name
-    // fields, the candidate list and the other mode stayed live over work that
-    // was about to replace all three.
-    val recognizing = step.busy == CaptureViewModel.Step.Work.Recognizing
+    // Re-recognising **replaces the form**, which is what iOS's
+    // `recognizingPanel` does: the candidates, the two names and the mode
+    // buttons are all about to be answers to a different question, so leaving
+    // them on screen under a card invites the user to read stale ones.
+    if (step.busy == CaptureViewModel.Step.Work.Recognizing) {
+        RecognizingPanel(step.image)
+        return
+    }
+    // Making the cards is a wait iOS does not have — there, 確認並生成卡片 hands
+    // the work to `AtlasCaptureQueue` and closes the sheet at once. Until that
+    // queue exists here the wait is real, so it is at least sealed off and
+    // named rather than left as one grey button.
     TujiStatusBlocker(
-        visible = step.busy != null,
-        title = stringResource(if (recognizing) R.string.capture_recognizing else R.string.capture_creating),
-        detail = stringResource(
-            if (recognizing) R.string.capture_recognizing_detail else R.string.capture_creating_detail,
-        ),
-        // Only the photograph can be the reason a wait is long; cards are made
-        // from words that are already on screen.
-        slowLine = stringResource(R.string.capture_recognizing_slow).takeIf { recognizing },
+        visible = step.busy == CaptureViewModel.Step.Work.Creating,
+        title = stringResource(R.string.capture_creating),
+        detail = stringResource(R.string.capture_creating_detail),
     )
     Column(
         Modifier
@@ -340,3 +394,6 @@ private fun Naming(
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
+
+/** C.11: a wait only earns a sentence about itself after three seconds. */
+private const val SLOW_AFTER = 3_000L
