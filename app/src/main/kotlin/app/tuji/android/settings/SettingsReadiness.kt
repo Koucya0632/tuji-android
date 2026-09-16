@@ -51,6 +51,10 @@ internal fun SettingsReadinessLine(
 ) {
     when (readiness) {
         SettingsReadiness.Ready -> Unit
+        // Stays a line of words, not a skeleton. Nothing is *arriving* here —
+        // the controls below are already on screen and already greyed; this
+        // says why. A block in their place would claim the settings page had
+        // not loaded, which is the opposite of what happened.
         SettingsReadiness.Loading -> Text(
             stringResource(R.string.settings_loading),
             style = TujiType.label,

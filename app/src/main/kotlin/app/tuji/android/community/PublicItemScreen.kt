@@ -46,6 +46,8 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiImagePlaceholder
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
@@ -55,6 +57,7 @@ import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.study.MasteryLevel
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 
 /**
  * One published word — iOS's `AtlasPublicDetailView`: the photograph, the
@@ -90,7 +93,7 @@ fun PublicItemScreen(
     val item = state.item
     if (item == null) {
         if (state.loading) {
-            Centered(stringResource(R.string.community_loading))
+            TujiPageLoading(label = stringResource(R.string.community_loading))
         } else {
             Column(
                 Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
@@ -149,10 +152,18 @@ fun PublicItemScreen(
                 .background(TujiColor.Paper)
                 .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.2f)),
         ) {
+            // The one other image in the app that sits on bare 紙: everywhere
+            // else the container is already 紙2, which is what a placeholder
+            // looks like standing still.
+            var state: AsyncImagePainter.State by remember(item.imageUrl) {
+                mutableStateOf(AsyncImagePainter.State.Empty)
+            }
+            if (state is AsyncImagePainter.State.Loading) TujiImagePlaceholder()
             AsyncImage(
                 model = item.imageUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
+                onState = { state = it },
                 modifier = Modifier.fillMaxSize().padding(TujiSpace.S3),
             )
         }

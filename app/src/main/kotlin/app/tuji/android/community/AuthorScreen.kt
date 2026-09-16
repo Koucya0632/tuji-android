@@ -39,6 +39,7 @@ import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiInkStat
 import app.tuji.android.core.design.TujiNavBar
@@ -128,7 +129,8 @@ fun AuthorScreen(
                 }
                 Spacer(Modifier.height(TujiSpace.S6))
             }
-            state.phase == AuthorViewModel.Phase.Loading -> Centered(stringResource(R.string.community_loading))
+            state.phase == AuthorViewModel.Phase.Loading ->
+                TujiPageLoading(label = stringResource(R.string.community_loading))
             // Your own page with no public identity behind it yet: the way
             // forward, not "not found".
             state.phase == AuthorViewModel.Phase.NotFound && isMine -> Box(

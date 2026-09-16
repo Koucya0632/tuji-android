@@ -37,6 +37,7 @@ import app.tuji.android.core.community.ReportReason
 import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiInkStat
 import app.tuji.android.core.design.TujiNavBar
@@ -138,7 +139,7 @@ fun CollectionScreen(
                     )
                 }
             }
-            state.loading -> Centered(stringResource(R.string.community_loading))
+            state.loading -> TujiPageLoading(label = stringResource(R.string.community_loading))
             else -> Column(
                 Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),

@@ -40,6 +40,7 @@ import app.tuji.android.R
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiTextField
 import app.tuji.android.core.design.TujiType
@@ -66,8 +67,18 @@ fun CaptureScreen(
 
     when (val s = step) {
         is CaptureViewModel.Step.Framing -> Framing(vm)
-        is CaptureViewModel.Step.Uploading ->
-            Centered(stringResource(R.string.capture_uploading))
+        is CaptureViewModel.Step.Uploading -> Column(
+            Modifier.fillMaxSize().padding(horizontal = TujiSpace.S5),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            val label = stringResource(R.string.capture_uploading)
+            Text(label, style = TujiType.body, color = TujiColor.Ink3)
+            // Work with no known end, so a rule that sweeps rather than a
+            // percentage: a bar that fills to 90% and waits there is a promise
+            // nobody made.
+            TujiIndeterminateBar(label = label)
+        }
 
         is CaptureViewModel.Step.Failed -> Column(
             Modifier.fillMaxSize().padding(TujiSpace.S4),
@@ -311,12 +322,5 @@ private fun Naming(
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
-    }
-}
-
-@Composable
-private fun Centered(text: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text, style = TujiType.body, color = TujiColor.Ink3)
     }
 }
