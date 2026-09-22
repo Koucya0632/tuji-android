@@ -60,6 +60,7 @@ import kotlinx.coroutines.delay
 import app.tuji.android.onboarding.OnboardingFlow
 import app.tuji.android.onboarding.SetupScreen
 import app.tuji.android.core.design.TujiFace
+import app.tuji.android.core.design.LockupEntrance
 import app.tuji.android.core.design.TujiBrandLockup
 import app.tuji.android.core.design.TujiTheme
 import app.tuji.android.core.design.rememberTujiHaptics
@@ -181,6 +182,16 @@ fun TujiRoot(app: TujiApplication) {
             LaunchAccountState.SignedIn(s.user.id, setupDone = setupDone.contains(s.user.id))
     }
 
+    // The floor under the launch mark. Without it the splash lasts exactly as
+    // long as Supabase takes to say "no session" — tens of milliseconds — and
+    // `TujiBrandLockup`'s 650ms entrance is cut off inside the first frame.
+    // iOS runs the same gate as a task in `LaunchCoordinator.runLaunchGate()`.
+    var launchReady by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(LaunchRouting.MINIMUM_SPLASH_MS)
+        launchReady = true
+    }
+
     val destination = LaunchRouting.destination(
         LaunchContext(
             account = account,
@@ -190,6 +201,7 @@ fun TujiRoot(app: TujiApplication) {
         // The 3-page intro is not ported yet, so nobody is held waiting for a
         // catalogue that no screen consumes.
         catalogReady = true,
+        launchReady = launchReady,
     )
 
     val online by app.connectivity.online.collectAsStateWithLifecycle()
@@ -319,7 +331,7 @@ private fun SplashScreen() {
         // The mark, not the word. iOS's launch screen is this lockup with its
         // entrance; Android's was the string 「Tuji」 in a heading style, which
         // is the app introducing itself in the one place it has a face.
-        TujiBrandLockup(animateEntrance = true)
+        TujiBrandLockup(entrance = LockupEntrance.Animated)
     }
 }
 

@@ -32,6 +32,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
+ * Where the mark is in its entrance. Mirrors iOS's `TujiBrandLockup.Entrance`.
+ *
+ * [Start] exists for exactly one caller: the thing that renders the native
+ * launch image. It is the frame the window shows *before* Compose has drawn
+ * anything, so it has to come from this composable rather than be drawn by
+ * hand — a hand-drawn approximation is a visible jump at the handover, in the
+ * one place in the app where nothing else is happening to hide it.
+ */
+enum class LockupEntrance {
+    /** The settled mark. A letterhead. */
+    Finished,
+
+    /**
+     * The cat leaning out of the hole, once, on the screen that is the first
+     * thing anyone sees. Off everywhere else: the mark on 歡迎 is a letterhead,
+     * and a letterhead that performs every time the screen appears is a
+     * different thing from a launch.
+     */
+    Animated,
+
+    /** Frozen on the first frame: hole shut, cat still inside it. */
+    Start,
+}
+
+/**
  * 「Tuji.」 with the cat behind it — the app's mark, and the first thing anyone
  * sees.
  *
@@ -49,13 +74,7 @@ import androidx.compose.ui.unit.sp
 fun TujiBrandLockup(
     modifier: Modifier = Modifier,
     scale: Float = 1f,
-    /**
-     * The cat leaning out of the hole, once, on the screen that is the first
-     * thing anyone sees. Off everywhere else: the mark on 歡迎 is a letterhead,
-     * and a letterhead that performs every time the screen appears is a
-     * different thing from a launch.
-     */
-    animateEntrance: Boolean = false,
+    entrance: LockupEntrance = LockupEntrance.Finished,
 ) {
     // peek: visibleHeightRatio 0.89 × 150dp cat, less a 16dp overlap, is how far
     // down the card sits — the paws have to land *on* it.
@@ -68,9 +87,16 @@ fun TujiBrandLockup(
     // that makes it read as a cat coming *out of* something rather than two
     // things fading in together.
     val reduceMotion = rememberReduceMotion()
-    val entered = animateEntrance && !reduceMotion
-    val hole = remember { Animatable(if (entered) 0f else 1f) }
-    val rise = remember { Animatable(if (entered) 0f else 1f) }
+    // 移除動畫 resolves Animated straight to the finished mark, the way iOS's
+    // `entranceFinished` does — the entrance is skipped, not slowed.
+    val settled = when (entrance) {
+        LockupEntrance.Finished -> true
+        LockupEntrance.Animated -> reduceMotion
+        LockupEntrance.Start -> false
+    }
+    val entered = entrance == LockupEntrance.Animated && !reduceMotion
+    val hole = remember { Animatable(if (settled) 1f else 0f) }
+    val rise = remember { Animatable(if (settled) 1f else 0f) }
     LaunchedEffect(entered) {
         if (!entered) return@LaunchedEffect
         delay(HOLE_DELAY)

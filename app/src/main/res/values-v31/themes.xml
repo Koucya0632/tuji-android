@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Android 12 put a system splash screen in front of every cold start, and it
+      does not use windowBackground. Left unsaid, a layer-list windowBackground
+      is not a colour the platform can read, so it falls back to something that
+      is not 紙 — a white or Material-tinted flash ahead of our own paper.
+
+      Naming the colour here keeps the sequence one ground throughout: system
+      splash on 紙, then @drawable/launch_background's mark on the same 紙, then
+      Compose. The mark is not repeated as windowSplashScreenAnimatedIcon
+      because that slot is circle-masked and the lockup is wide.
+    -->
+    <style name="Theme.Tuji" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowSplashScreenBackground">@color/tuji_paper</item>
+    </style>
+</resources>

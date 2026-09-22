@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What the window shows before Compose has drawn anything.
+
+  A flat colour here is the app opening on an empty page: on a LIO-L29 debug
+  build the gap between the window appearing and Compose's first frame measured
+  ~1.1 seconds, all of it blank, after which the launch mark had time for a
+  glimpse before the crossfade took it away.
+
+  iOS covers the same gap with `LaunchLockupPeekStart` (Info.plist →
+  UILaunchScreen). The bitmap here is the Android equivalent and is *rendered*
+  from `TujiBrandLockup(entrance = Start)` rather than drawn by hand — see
+  `scripts/launch-asset.sh`. That matters: `SplashScreen` continues the entrance
+  from exactly this frame, so a hand-approximated image would show up as a jump
+  at the handover, in the one moment of the app where nothing else is moving to
+  hide it.
+
+  Centred, because the Compose splash centres the same 232×230 box in the same
+  full-bleed window.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/tuji_paper" />
+    <item>
+        <bitmap
+            android:src="@drawable/launch_lockup_peek_start"
+            android:gravity="center" />
+    </item>
+</layer-list>
