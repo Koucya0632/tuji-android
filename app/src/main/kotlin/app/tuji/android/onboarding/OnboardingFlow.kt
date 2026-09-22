@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,10 +55,12 @@ import kotlinx.coroutines.launch
  * Swipeable, with 跳過 on the first two pages and 開始使用 on the last; either
  * way out sets `introDone`, which is what lets routing move to 歡迎.
  *
- * The artwork is deliberately made of this app's own parts — tiles, option
- * rows, a heatmap — rather than illustration. iOS's version says in its own
- * comment that its SF Symbols are placeholders; these are the same three
- * subjects drawn the way the app draws everything else.
+ * The artwork is made of this app's own parts — tiles, option rows, a heatmap.
+ * Every measurement in it is iOS's: the frame's quarter-strength rule, the
+ * 220pt grid, the s5/s4/s2 rhythm down the page. iOS draws its four tiles with
+ * SF Symbols, which Android has no access to, so [TujiGlyph] draws the same
+ * four subjects — **filled**, because three of iOS's four are `.fill` variants
+ * and the stroked versions read as a different, lighter set.
  */
 @Composable
 fun OnboardingFlow(onDone: () -> Unit) {
@@ -109,7 +113,7 @@ fun OnboardingFlow(onDone: () -> Unit) {
                 Box(
                     Modifier
                         .size(width = width, height = 7.dp)
-                        .background(if (on) TujiColor.Current else TujiColor.Paper2),
+                        .background(if (on) TujiColor.Current else TujiColor.Paper2.copy(alpha = 0.4f)),
                 )
             }
         }
@@ -160,18 +164,15 @@ private val PAGES = listOf(
 @Composable
 private fun IntroPage(page: IntroPageSpec) {
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S4)) {
+        Box(Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S5)) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .then(
-                        if (page.artwork == IntroPageSpec.Artwork.Streak) {
-                            Modifier
-                        } else {
-                            Modifier.border(TujiBorder.Bw1, TujiColor.Rule)
-                        },
-                    )
-                    .padding(if (page.artwork == IntroPageSpec.Artwork.Streak) 0.dp else TujiSpace.S4),
+                    // A quarter-strength rule, which is what iOS strokes this
+                    // frame with. At full [TujiColor.Rule] the box competes with
+                    // the artwork inside it for the same attention.
+                    .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.25f))
+                    .padding(TujiSpace.S4),
             ) {
                 when (page.artwork) {
                     IntroPageSpec.Artwork.Grid -> GridArtwork()
@@ -195,10 +196,12 @@ private fun IntroPage(page: IntroPageSpec) {
             style = TujiType.h2,
             color = TujiColor.Ink,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = TujiSpace.S2, start = TujiSpace.S4, end = TujiSpace.S4),
+            modifier = Modifier.padding(top = TujiSpace.S4, start = TujiSpace.S4, end = TujiSpace.S4),
         )
         Column(
-            Modifier.padding(top = TujiSpace.S2, start = TujiSpace.S4, end = TujiSpace.S4),
+            // S3, not S2: iOS stacks these in a `VStack(spacing: s2)` and *then*
+            // pads the lines by another s2, so the gap is 16 rather than 8.
+            Modifier.padding(top = TujiSpace.S3, start = TujiSpace.S4, end = TujiSpace.S4),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
@@ -209,26 +212,39 @@ private fun IntroPage(page: IntroPageSpec) {
     }
 }
 
-/** 用圖學語言: four picture tiles, which is what the whole app looks like. */
+/**
+ * 用圖學語言: four picture tiles, which is what the whole app looks like.
+ *
+ * The block is a fixed [GRID_H] tall, copied from iOS's `.frame(height: 220)`,
+ * and that is what makes the tiles **wide** rather than square — an
+ * `aspectRatio(1f)` here read as four squares and pushed the title off the
+ * bottom of a small screen.
+ */
 @Composable
 private fun GridArtwork() {
-    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+    Column(
+        Modifier.height(GRID_H),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+    ) {
         listOf(
             listOf<@Composable (Dp) -> Unit>(
-                { TujiGlyph.Fork(size = it, tint = TujiColor.BrandSecondary) },
-                { TujiGlyph.Cup(size = it, tint = TujiColor.BrandSecondary) },
+                { TujiGlyph.Fork(size = it, tint = TujiColor.BrandSecondary, filled = true) },
+                { TujiGlyph.Cup(size = it, tint = TujiColor.BrandSecondary, filled = true) },
             ),
             listOf<@Composable (Dp) -> Unit>(
-                { TujiGlyph.Leaf(size = it, tint = TujiColor.BrandSecondary) },
-                { TujiGlyph.Carrot(size = it, tint = TujiColor.BrandSecondary) },
+                { TujiGlyph.Leaf(size = it, tint = TujiColor.BrandSecondary, filled = true) },
+                { TujiGlyph.Carrot(size = it, tint = TujiColor.BrandSecondary, filled = true) },
             ),
         ).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+            Row(
+                Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+            ) {
                 row.forEach { glyph ->
                     Box(
                         Modifier
                             .weight(1f)
-                            .aspectRatio(1f)
+                            .fillMaxHeight()
                             .background(TujiColor.BrandSecondary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -251,7 +267,7 @@ private fun SrsArtwork() {
                 .background(TujiColor.BrandSecondary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
-            TujiGlyph.Carrot(size = 40.dp, tint = TujiColor.BrandSecondary)
+            TujiGlyph.Carrot(size = 40.dp, tint = TujiColor.BrandSecondary, filled = true)
         }
         Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
             OptionStub("lettuce", picked = false)
@@ -322,13 +338,17 @@ private fun StreakArtwork() {
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .background(
-                                    TujiColor.Paper.copy(
+                                    color = TujiColor.Paper.copy(
                                         alpha = when {
                                             strength < 3 -> 0.12f
                                             strength < 6 -> 0.35f
                                             else -> 0.85f
                                         },
                                     ),
+                                    // iOS rounds these 3pt. At this size it is
+                                    // the difference between a heatmap and a
+                                    // chequerboard.
+                                    shape = RoundedCornerShape(3.dp),
                                 ),
                         )
                     }
@@ -340,3 +360,6 @@ private fun StreakArtwork() {
 
 /** iOS: `.easeOut(duration: 0.25)` on the indicator. */
 private const val INDICATOR_MS = 250
+
+/** iOS: `.frame(height: 220)` on the 2x2 grid. */
+private val GRID_H = 220.dp
