@@ -1,9 +1,9 @@
 package app.tuji.android.study
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -40,7 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -99,7 +99,6 @@ import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
 import app.tuji.android.core.study.SentenceHighlight
 import app.tuji.android.core.study.StudyOptionState
-import app.tuji.android.core.study.maskedSentence
 import kotlinx.coroutines.delay
 
 /**
@@ -1059,28 +1058,26 @@ private fun ListenCard(
             .height(height)
             .background(TujiColor.Paper2),
     ) {
-        // Three states, not two. The blur is the design — it leaves the shape
-        // of the words, the line count, where it breaks — but it needs
-        // RenderEffect, which is API 31, and `minSdk` is 29. Below that
-        // `Modifier.blur` silently draws nothing at all, so those two API
-        // levels replace the glyphs instead of covering them.
-        val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        Text(
-            when {
-                legible -> highlighted(example.sentence, question.item.word.word)
-                canBlur -> AnnotatedString(example.sentence)
-                else -> AnnotatedString(maskedSentence(example.sentence))
-            },
-            style = TujiType.body,
-            color = TujiColor.Ink,
-            textAlign = TextAlign.Center,
-            lineHeight = 28.sp,
-            modifier = Modifier
+        // iOS animates the blur away over 280ms rather than cutting to the
+        // sentence, and skips it under 移除動畫. The blurred copy fades out over
+        // the sharp one underneath, which is the same thing seen from the
+        // other side — and unlike animating the radius it keeps the blur a
+        // cached bitmap instead of a re-render per frame.
+        val reduceMotion = rememberReduceMotion()
+        val veil by animateFloatAsState(
+            targetValue = if (legible) 0f else 1f,
+            animationSpec = tween(
+                if (reduceMotion) 0 else REVEAL_MS,
+                easing = TujiMotion.EaseOut,
+            ),
+            label = "sentenceVeil",
+        )
+
+        val sentenceStyle = TujiType.body.copy(color = TujiColor.Ink, lineHeight = 28.sp)
+        Box(
+            Modifier
                 .align(Alignment.Center)
                 .padding(horizontal = TujiSpace.S4)
-                // 12dp, not something gentler: enough to say "there is a
-                // sentence here" without leaving one letter legible.
-                .then(if (!legible && canBlur) Modifier.blur(12.dp) else Modifier)
                 // The blur is a *visual* effect and a screen reader does not
                 // see through it — it reads the sentence out, handing over the
                 // answer without the eye ever being pressed and therefore
@@ -1093,12 +1090,31 @@ private fun ListenCard(
                     if (legible) {
                         Modifier
                     } else {
-                        Modifier.clearAndSetSemantics {
-                            contentDescription = maskedLabel
-                        }
+                        Modifier.clearAndSetSemantics { contentDescription = maskedLabel }
                     },
                 ),
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (legible) {
+                    highlighted(example.sentence, question.item.word.word)
+                } else {
+                    AnnotatedString(example.sentence)
+                },
+                style = sentenceStyle,
+                textAlign = TextAlign.Center,
+                // Nothing sharp is on screen until the veil starts lifting, so
+                // the sentence is never briefly readable underneath it.
+                modifier = Modifier.alpha(1f - veil),
+            )
+            if (veil > 0f) {
+                BlurredSentence(
+                    text = example.sentence,
+                    style = sentenceStyle,
+                    modifier = Modifier.matchParentSize().alpha(veil),
+                )
+            }
+        }
 
         Row(
             Modifier
@@ -1245,3 +1261,6 @@ private const val FLIP_REDUCED_MS = 200
 
 /** iOS `ReviewFlowView`: `.animation(.spring(duration: 0.3), value: coord.flash)`. */
 private const val FLASH_SECONDS = 0.3f
+
+/** iOS: `.easeOut(duration: 0.28)` on the sentence's blur. */
+private const val REVEAL_MS = 280
