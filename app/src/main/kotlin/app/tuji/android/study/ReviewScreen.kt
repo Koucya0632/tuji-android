@@ -52,12 +52,15 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
+import app.tuji.android.atlas.label
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.design.FuriganaHeadword
+import app.tuji.android.core.design.MascotCelebrationCard
 import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
@@ -70,11 +73,15 @@ import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPullUpHint
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.TujiStatusEdgeLabel
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordPicture
+import app.tuji.android.core.design.ground
+import app.tuji.android.core.design.onGround
 import app.tuji.android.core.design.rememberReduceMotion
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
+import app.tuji.android.core.model.MasteryDelta
 import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyExample
@@ -84,6 +91,7 @@ import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.study.HintFace
 import app.tuji.android.core.study.ImageChoiceOption
+import app.tuji.android.core.study.MasteryLevel
 import app.tuji.android.core.study.ReviewFlash
 import app.tuji.android.core.study.ReviewPhase
 import app.tuji.android.core.study.ReviewQuestion
@@ -119,6 +127,11 @@ fun ReviewScreen(
     bookmarked: (String) -> Boolean = { false },
     /** Mark or unmark; null for a card the catalogue does not have, which draws no star. */
     onBookmark: ((String) -> Unit)? = null,
+    /**
+     * 連勝, for the completion screen's one line about the account. Null while
+     * the shell has not read it yet, which the line says rather than guessing.
+     */
+    streak: Int? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val milestone by vm.milestone.collectAsStateWithLifecycle()
@@ -148,7 +161,10 @@ fun ReviewScreen(
                 )
             } ?: CompleteView(
                 session = s.session,
+                mastery = s.mastery,
                 unsynced = s.unsynced,
+                streak = streak,
+                showChinese = showChinese,
                 topPadding = insets.calculateTopPadding(),
                 bottomPadding = insets.calculateBottomPadding(),
                 onClose = onClose,
@@ -807,56 +823,208 @@ private fun SRSRating.label(): String = stringResource(
     }
 )
 
+/**
+ * 複習完成 — the cat, the count, the streak, and what moved.
+ *
+ * iOS's `CompleteView`. The per-word rows are the point of the screen: a review
+ * session's result is not "you did twenty", it is **which words went up**, and
+ * the before→after pair is the evidence for that. The ↑ appears only when the
+ * word actually crossed into a higher [MasteryLevel] — the numbers already say
+ * it moved, so the arrow is reserved for the crossing.
+ *
+ * Reviews deliberately do not count towards 今日目標 (that target is new words
+ * only), which is why this frames itself as 複習完成 rather than a goal met.
+ */
 @Composable
 private fun CompleteView(
     session: ReviewSession,
+    mastery: Map<String, MasteryDelta>,
     unsynced: Int,
+    streak: Int?,
+    showChinese: Boolean,
     topPadding: androidx.compose.ui.unit.Dp,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onClose: () -> Unit,
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = TujiSpace.S4),
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-    ) {
-        Spacer(Modifier.height(topPadding + TujiSpace.S6))
-        Text(stringResource(R.string.study_done_title), style = TujiType.h1, color = TujiColor.Ink)
-        Text(
-            stringResource(R.string.study_done_count, session.passedCount),
-            style = TujiType.body,
-            color = TujiColor.Ink2,
+    Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+        ) {
+            Spacer(Modifier.height(topPadding + TujiSpace.S5))
+            MascotCelebrationCard(title = stringResource(R.string.review_done_title)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    // The pale teal step, not the deep one: 深 teal on ink is
+                    // only 3.04:1, and this is the biggest number on the screen.
+                    Text(
+                        "${session.passedCount}",
+                        style = TujiType.display,
+                        color = TujiColor.AccumulationSoft,
+                    )
+                    Text(
+                        stringResource(R.string.review_done_unit),
+                        style = TujiType.h2,
+                        color = TujiColor.Paper.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
+            }
+            StreakLine(streak, Modifier.padding(horizontal = TujiSpace.S4))
+            UnsyncedAnswersNotice(unsynced, Modifier.padding(horizontal = TujiSpace.S4))
+            if (session.answered.isNotEmpty()) {
+                Column(Modifier.fillMaxWidth()) {
+                    Text(
+                        stringResource(R.string.study_today_reviewed),
+                        style = TujiType.label,
+                        color = TujiColor.Ink3,
+                        modifier = Modifier
+                            .padding(horizontal = TujiSpace.S4)
+                            .padding(bottom = TujiSpace.S3),
+                    )
+                    session.answered.forEachIndexed { index, item ->
+                        if (index > 0) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = TujiSpace.S4)
+                                    .height(TujiBorder.Bw1)
+                                    .background(TujiColor.Rule),
+                            )
+                        }
+                        MasteryChangeRow(
+                            item = item,
+                            change = mastery[item.word.id],
+                            wasWrong = item.word.id in session.retriedIds,
+                            showChinese = showChinese,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(TujiSpace.S4))
+        }
+        // Pinned: the way out of a finished session is not below a scroll.
+        // iOS's `.safeAreaInset(edge: .bottom)`.
+        TujiButton(
+            text = stringResource(R.string.study_close),
+            onClick = onClose,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TujiSpace.S4)
+                .padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S3),
         )
-        if (unsynced > 0) {
-            Text(
-                stringResource(R.string.study_unsynced_done, unsynced),
-                style = TujiType.bodySm,
-                color = TujiColor.Ink3,
+    }
+}
+
+/**
+ * 連勝 N 天.
+ *
+ * **A line, not a badge.** iOS's note: the streak used to sit in a teal-tinted
+ * box with a teal border and a flame — three ways of shouting a number that is
+ * simply a fact about the account. It is 積累, so it is teal, and that is the
+ * whole treatment.
+ */
+@Composable
+private fun StreakLine(streak: Int?, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+        if (streak == null) return@Row
+        Text(stringResource(R.string.study_streak_label), style = TujiType.label, color = TujiColor.Ink3)
+        Text("$streak", style = TujiType.monoLabel, color = TujiColor.Accumulation)
+        Text(stringResource(R.string.study_streak_unit), style = TujiType.label, color = TujiColor.Ink3)
+    }
+}
+
+/** One word, and what this session did to its 熟練度. */
+@Composable
+private fun MasteryChangeRow(
+    item: StudyQueueItem,
+    change: MasteryDelta?,
+    wasWrong: Boolean,
+    showChinese: Boolean,
+) {
+    val after = MasteryLevel.of(change?.after)
+    val leveledUp = change != null && after.ordinal > MasteryLevel.of(change.before).ordinal
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .padding(horizontal = TujiSpace.S4),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(48.dp).background(TujiColor.Paper2)) {
+            WordPicture(
+                url = item.word.imageUrl,
+                kind = WordImageKind.of(item.word.category),
+                inset = TujiSpace.S1,
+                modifier = Modifier.fillMaxSize(),
             )
         }
-        Spacer(Modifier.height(TujiSpace.S3))
-        session.answered.forEach { item ->
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = TujiSpace.S1),
-                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                item.word.word,
+                style = TujiType.h3,
+                color = TujiColor.Ink,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (wasWrong) {
+                TujiStatusEdgeLabel(
+                    text = stringResource(R.string.study_was_wrong),
+                    edge = TujiColor.Alert,
+                )
+            } else if (showChinese) {
+                Text(
+                    item.word.chinese,
+                    style = TujiType.bodySm,
+                    color = TujiColor.Ink3,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        if (change != null) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(TujiSpace.S1),
             ) {
-                Text(item.word.word, style = TujiType.bodyStrong, color = TujiColor.Ink)
-                Text(item.word.chinese, style = TujiType.bodySm, color = TujiColor.Ink3)
-                if (item.word.id in session.retriedIds) {
+                MasteryPill(after)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // ↑ only, and only when the word actually crossed a level.
+                    if (leveledUp) {
+                        TujiGlyph.ArrowUp(size = 10.dp, tint = TujiColor.Accumulation)
+                    }
                     Text(
-                        stringResource(R.string.study_was_wrong),
-                        style = TujiType.label,
-                        color = TujiColor.Alert,
+                        "${change.before}→${change.after}",
+                        style = TujiType.monoLabel,
+                        color = TujiColor.Ink3,
                     )
                 }
             }
         }
-        Spacer(Modifier.height(TujiSpace.S4))
-        TujiButton(text = stringResource(R.string.study_close), onClick = onClose)
-        Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
+}
+
+/** The tier the word now sits in, using 圖鑑's own badge colours. */
+@Composable
+private fun MasteryPill(level: MasteryLevel) {
+    Text(
+        level.label(),
+        style = TujiType.label,
+        color = level.onGround,
+        modifier = Modifier
+            .background(level.ground)
+            .padding(horizontal = TujiSpace.S2, vertical = 2.dp),
+    )
 }
 
 // MARK: - 聽句

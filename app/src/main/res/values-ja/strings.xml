@@ -62,6 +62,15 @@
     <string name="study_done_title">このラウンドは終わりです</string>
     <string name="study_done_count">%1$d 語を復習しました</string>
     <string name="study_was_wrong">間違えたことあり</string>
+    <string name="study_done_learned">このセッションで%1$d個の新しい単語を学びました</string>
+    <string name="study_done_added">図鑑に追加されました</string>
+    <string name="study_done_finish">完了</string>
+    <string name="review_done_title">復習完了！</string>
+    <string name="review_done_unit">語</string>
+    <string name="study_streak_label">連続日数</string>
+    <string name="study_streak_unit">日</string>
+    <string name="study_today_reviewed">今日の復習</string>
+    <string name="study_wrong_times">%1$d回間違えた</string>
     <string name="study_listen_replay">もう一度聞く</string>
     <string name="study_listen_slow">ゆっくり再生</string>
     <string name="study_listen_reveal">例文を表示</string>

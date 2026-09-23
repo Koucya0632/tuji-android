@@ -106,7 +106,18 @@ class NewFlowViewModel(
             val playingWord: Boolean = false,
         ) : State
 
-        data class Done(val learned: Int, val unsynced: Int) : State
+        /**
+         * @param queue every word this session taught, in the order it taught
+         *   them — what the celebration lists.
+         * @param mistakes wrong 選字/拼字 answers per word id, so the recap can
+         *   point at the ones to watch.
+         */
+        data class Done(
+            val learned: Int,
+            val unsynced: Int,
+            val queue: List<StudyQueueItem> = emptyList(),
+            val mistakes: Map<String, Int> = emptyMap(),
+        ) : State
     }
 
     /** What the card in front of the user is asking, and what they have done to it. */
@@ -193,6 +204,9 @@ class NewFlowViewModel(
     private var total = 0
     private var unsynced = 0
 
+    /** This session's words, kept for the celebration that lists them. */
+    private var sessionQueue: List<StudyQueueItem> = emptyList()
+
     /** Self-ratings waiting on the stages that get a vote. Keyed by card id. */
     private val pendingRatings = mutableMapOf<String, SRSRating>()
 
@@ -233,6 +247,7 @@ class NewFlowViewModel(
                 return@launch
             }
             total = queue.size
+            sessionQueue = queue
             show(StudyLadder(queue))
             preloadTeach(queue)
         }
@@ -431,7 +446,12 @@ class NewFlowViewModel(
     private fun show(ladder: StudyLadder) {
         val task = ladder.current
         if (task == null) {
-            _state.value = State.Done(ladder.clearedWords, unsynced)
+            _state.value = State.Done(
+                learned = ladder.clearedWords,
+                unsynced = unsynced,
+                queue = sessionQueue,
+                mistakes = mistakes.toMap(),
+            )
             return
         }
         val item = task.item

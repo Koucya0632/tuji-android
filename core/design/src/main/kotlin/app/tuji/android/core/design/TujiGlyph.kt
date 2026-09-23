@@ -714,6 +714,28 @@ object TujiGlyph {
         }
     }
 
+    /** Rotate [ArrowLeft] a quarter turn: 熟練度 crossed into a higher tier. */
+    @Composable
+    fun ArrowUp(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.16f
+            val x = w * 0.5f
+            drawLine(tint, Offset(x, h * 0.88f), Offset(x, h * 0.12f), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.16f, h * 0.46f)
+                lineTo(x, h * 0.12f)
+                lineTo(w * 0.84f, h * 0.46f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

@@ -62,6 +62,7 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.WordDetailContent
 import app.tuji.android.core.design.FuriganaHeadword
 import app.tuji.android.core.design.MascotPose
+import app.tuji.android.core.design.MascotCelebrationCard
 import app.tuji.android.core.design.MascotSpeechBubble
 import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
@@ -160,8 +161,10 @@ fun NewFlowScreen(
             is NewFlowViewModel.State.Done -> milestone?.let {
                 MilestoneView(streak = it.streak, topPadding = 0.dp, bottomPadding = insets.calculateBottomPadding(), onFinish = onClose)
             } ?: NewDoneView(
-                learned = s.learned,
+                queue = s.queue,
+                mistakes = s.mistakes,
                 unsynced = s.unsynced,
+                showChinese = showChinese,
                 bottomPadding = insets.calculateBottomPadding(),
                 onClose = onClose,
             )
@@ -1194,39 +1197,54 @@ private fun WrongAnswerSheet(
     }
 }
 
+/**
+ * 學完了 — what the session taught, and one way out.
+ *
+ * iOS's `NewDoneView`: the cheering cat on an ink block, then every word as a
+ * picture tile. A count in a sentence is a receipt; the grid is the thing
+ * worth looking at, and a word that took retries says so on its own tile
+ * rather than being counted up somewhere else.
+ */
 @Composable
 private fun NewDoneView(
-    learned: Int,
+    queue: List<StudyQueueItem>,
+    mistakes: Map<String, Int>,
     unsynced: Int,
+    showChinese: Boolean,
     bottomPadding: Dp,
     onClose: () -> Unit,
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(TujiSpace.S4)
-            .padding(bottom = bottomPadding),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(stringResource(R.string.new_done_title), style = TujiType.h1, color = TujiColor.Ink)
-        Spacer(Modifier.height(TujiSpace.S2))
-        Text(
-            stringResource(R.string.new_done_count, learned),
-            style = TujiType.body,
-            color = TujiColor.Ink2,
-        )
-        if (unsynced > 0) {
-            Spacer(Modifier.height(TujiSpace.S2))
-            Text(
-                stringResource(R.string.study_unsynced_done, unsynced),
-                style = TujiType.bodySm,
-                color = TujiColor.Ink3,
-                textAlign = TextAlign.Center,
-            )
+    Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+        ) {
+            Spacer(Modifier.height(TujiSpace.S5))
+            MascotCelebrationCard(title = stringResource(R.string.study_done_learned, queue.size)) {
+                Text(
+                    stringResource(R.string.study_done_added),
+                    style = TujiType.bodySm,
+                    color = TujiColor.Paper.copy(alpha = 0.7f),
+                )
+            }
+            UnsyncedAnswersNotice(unsynced, Modifier.padding(horizontal = TujiSpace.S4))
+            StudyWordGrid(items = queue, showChinese = showChinese, mistakeCounts = mistakes)
+            Spacer(Modifier.height(TujiSpace.S5))
         }
-        Spacer(Modifier.height(TujiSpace.S5))
-        TujiButton(text = stringResource(R.string.study_close), onClick = onClose)
+        // Pinned, as iOS pins it with `.safeAreaInset(edge: .bottom)`: the way
+        // out of a finished session should not be below a scroll.
+        TujiButton(
+            text = stringResource(R.string.study_done_finish),
+            onClick = onClose,
+            leading = { TujiGlyph.Check(size = 16.dp, tint = TujiColor.Ink) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TujiSpace.S4)
+                .padding(bottom = bottomPadding + TujiSpace.S3),
+        )
     }
 }
 

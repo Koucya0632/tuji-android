@@ -62,6 +62,15 @@
     <string name="study_done_title">这轮结束</string>
     <string name="study_done_count">复习了 %1$d 个字</string>
     <string name="study_was_wrong">答错过</string>
+    <string name="study_done_learned">这节学了 %1$d 个新字</string>
+    <string name="study_done_added">它们已加入你的图鉴</string>
+    <string name="study_done_finish">完成</string>
+    <string name="review_done_title">复习完成！</string>
+    <string name="review_done_unit">个字</string>
+    <string name="study_streak_label">连胜</string>
+    <string name="study_streak_unit">天</string>
+    <string name="study_today_reviewed">今天复习</string>
+    <string name="study_wrong_times">答错 %1$d 次</string>
     <string name="study_listen_replay">再听一次</string>
     <string name="study_listen_slow">慢速播放</string>
     <string name="study_listen_reveal">显示例句</string>

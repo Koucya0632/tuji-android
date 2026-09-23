@@ -13,6 +13,7 @@ import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.DurableAnswerWriter
+import app.tuji.android.core.model.MasteryDelta
 import app.tuji.android.core.model.Milestone
 import app.tuji.android.core.study.ImageChoiceOption
 import app.tuji.android.core.study.ImageChoicePair
@@ -110,11 +111,23 @@ class ReviewViewModel(
             val hintTaught: Boolean = false,
         ) : State
 
-        data class Done(val session: ReviewSession, val unsynced: Int) : State
+        /**
+         * @param mastery per-word 熟練度 before/after, as the server reported it
+         *   on each answer — what the completion screen's change rows read.
+         *   A word whose write was parked offline is simply absent.
+         */
+        data class Done(
+            val session: ReviewSession,
+            val unsynced: Int,
+            val mastery: Map<String, MasteryDelta> = emptyMap(),
+        ) : State
     }
 
     private val _state = MutableStateFlow<State>(State.Loading)
     val state: StateFlow<State> = _state.asStateFlow()
+
+    /** word id → what this session's answer did to its 熟練度. */
+    private val mastery = mutableMapOf<String, MasteryDelta>()
 
     private val _milestone = MutableStateFlow<Milestone?>(null)
 
@@ -160,7 +173,7 @@ class ReviewViewModel(
             }
             val session = prepared(ReviewSession(queue, nowMs()))
             _state.value = if (session.finished) {
-                State.Done(session, unsynced)
+                State.Done(session, unsynced, mastery.toMap())
             } else {
                 studying(session)
             }
@@ -271,7 +284,7 @@ class ReviewViewModel(
             val now = current() ?: return@launch
             val next = now.session.advance(nowMs())
             _state.value = if (next.finished) {
-                State.Done(next, unsynced)
+                State.Done(next, unsynced, mastery.toMap())
             } else {
                 studying(prepared(next))
             }
@@ -283,7 +296,17 @@ class ReviewViewModel(
         val pending = write ?: return
         work.launch {
             val outcome = writer.submitAnswer(pending.payload)
-            (outcome as? StudyWriteOutcome.Synced)?.response?.milestone?.let { _milestone.value = it }
+            val response = (outcome as? StudyWriteOutcome.Synced)?.response
+            response?.milestone?.let { _milestone.value = it }
+            // The answer endpoint is the only place that knows what the rating
+            // did to the score, so it is kept as it lands. A write that never
+            // reached the server has no delta and the row simply shows none —
+            // an invented one would be a number the account does not hold.
+            response?.mastery?.let { delta ->
+                mastery[pending.wordId] = delta
+                (_state.value as? State.Done)
+                    ?.let { _state.value = it.copy(mastery = mastery.toMap()) }
+            }
             if (outcome is StudyWriteOutcome.Parked) {
                 unsynced += 1
                 requestDrain()
