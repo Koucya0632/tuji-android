@@ -43,7 +43,7 @@ class StudyLadderTest {
         for (id in listOf("a", "b")) {
             val mine = order.filter { it.first == id }.map { it.second }
             assertEquals(
-                listOf(NewTaskKind.Recognize, NewTaskKind.Identify, NewTaskKind.SpellTiles),
+                listOf(NewTaskKind.Recognize, NewTaskKind.Identify, NewTaskKind.Spell),
                 mine,
             )
         }
@@ -105,7 +105,7 @@ class StudyLadderTest {
 
         assertTrue(
             "head was ${ladder.current?.kind}",
-            ladder.current?.kind != NewTaskKind.SpellTiles,
+            ladder.current?.kind != NewTaskKind.Spell,
         )
     }
 
@@ -168,7 +168,7 @@ class StudyLadderTest {
             listOf(
                 NewTaskKind.Recognize to NewStageStep.State.Active,
                 NewTaskKind.Identify to NewStageStep.State.Pending,
-                NewTaskKind.SpellTiles to NewStageStep.State.Pending,
+                NewTaskKind.Spell to NewStageStep.State.Pending,
             ),
             states(ladder.stagePlan(a, recognized = false)),
         )
@@ -183,7 +183,7 @@ class StudyLadderTest {
             listOf(
                 NewTaskKind.Recognize to NewStageStep.State.Done,
                 NewTaskKind.Identify to NewStageStep.State.Skipped,
-                NewTaskKind.SpellTiles to NewStageStep.State.Active,
+                NewTaskKind.Spell to NewStageStep.State.Active,
             ),
             states(ladder.stagePlan(a, recognized = true)),
         )

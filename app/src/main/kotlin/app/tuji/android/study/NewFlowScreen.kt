@@ -1,8 +1,7 @@
 package app.tuji.android.study
 
-import app.tuji.android.core.design.TujiMotion
-import androidx.compose.animation.animateColorAsState
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -13,8 +12,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,19 +38,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
+import app.tuji.android.core.catalog.CardsSourceRules
+import app.tuji.android.core.catalog.WordDetailContent
 import app.tuji.android.core.design.FuriganaHeadword
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.MascotSpeechBubble
@@ -59,11 +67,11 @@ import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.design.TujiDetentSheet
-import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
+import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -72,19 +80,20 @@ import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.SRSRating
 import app.tuji.android.core.model.StudyQueueItem
-import app.tuji.android.core.catalog.WordDetailContent
 import app.tuji.android.core.model.TargetLanguage
-import app.tuji.android.core.model.WordSpeaking
-import app.tuji.android.gloss.GlossCardHost
-import app.tuji.android.gloss.InteractiveSentenceText
 import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.WordImageKind
+import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.model.language
 import app.tuji.android.core.study.NewStageStep
 import app.tuji.android.core.study.NewTaskKind
+import app.tuji.android.core.study.SpellGaps
 import app.tuji.android.core.study.SpellSubject
 import app.tuji.android.core.study.StudyOptionState
+import app.tuji.android.gloss.GlossCardHost
+import app.tuji.android.gloss.InteractiveSentenceText
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /**
@@ -363,7 +372,7 @@ private fun Pip(step: NewStageStep) {
         when (step.kind) {
             NewTaskKind.Recognize -> R.string.new_stage_recognize
             NewTaskKind.Identify -> R.string.new_stage_identify
-            NewTaskKind.SpellTiles -> R.string.new_stage_spell
+            NewTaskKind.Spell -> R.string.new_stage_spell
         },
     )
     // The dots are the one thing on the screen that says how far along this
@@ -436,7 +445,7 @@ private fun StageBody(
         is NewFlowViewModel.Stage.Identify ->
             IdentifyCard(stage, showChinese, session, bottomPadding, speaker, vm::pickIdentify, vm::continueFromWrong)
         is NewFlowViewModel.Stage.Spell ->
-            SpellCard(stage, showChinese, bottomPadding, speaker, vm::tapTile, vm::undoTile, vm::continueFromWrong)
+            SpellCard(stage, showChinese, bottomPadding, speaker, vm::pickSpell, vm::unpickSpell, vm::undoSpell, vm::continueFromWrong)
     }
 }
 
@@ -659,10 +668,12 @@ private fun SpellCard(
     bottomPadding: Dp,
     speaker: @Composable (Dp, Color) -> Unit,
     onTap: (Int) -> Unit,
+    onUnpick: (Int) -> Unit,
     onUndo: () -> Unit,
     onContinue: () -> Unit,
 ) {
     val item = stage.item
+    val gaps = stage.plan
     Column(
         Modifier
             .fillMaxSize()
@@ -679,9 +690,15 @@ private fun SpellCard(
         } else {
             Text(
                 stringResource(
-                    // 排出讀音 and 拼出字形 are different questions, and a word
-                    // whose 振假名 is itself is asking the second — see [SpellSubject].
-                    if (stage.subject is SpellSubject.Reading) R.string.new_spell_reading else R.string.new_spell_term,
+                    when {
+                        // 挖空拼字 shows the word already; what it asks for is
+                        // the parts taken out of it.
+                        gaps != null -> R.string.new_spell_gaps
+                        // 排出讀音 and 拼出字形 are different questions, and a word
+                        // whose 振假名 is itself is asking the second — see [SpellSubject].
+                        stage.subject is SpellSubject.Reading -> R.string.new_spell_reading
+                        else -> R.string.new_spell_term
+                    },
                 ),
                 style = TujiType.label,
                 color = TujiColor.Ink3,
@@ -702,7 +719,14 @@ private fun SpellCard(
                 Modifier.fillMaxWidth().padding(start = TujiSpace.S3, end = TujiSpace.S3, bottom = TujiSpace.S3),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (showChinese) Text(item.word.chinese, style = TujiType.bodySmStrong, color = TujiColor.Ink)
+                // 拼字塊 hides the string it is asking for, so the gloss is the
+                // only cue besides the picture and has to stay. 挖空拼字 already
+                // shows the word with holes in it, so the gloss says nothing the
+                // prompt has not — and on a word whose hole is most of a
+                // syllable it edges towards handing over the answer.
+                if (showChinese && gaps == null) {
+                    Text(item.word.chinese, style = TujiType.bodySmStrong, color = TujiColor.Ink)
+                }
                 Spacer(Modifier.weight(1f).heightIn(min = 36.dp))
                 speaker(36.dp, TujiColor.Paper2)
             }
@@ -710,20 +734,32 @@ private fun SpellCard(
 
         Spacer(Modifier.height(TujiSpace.S2))
 
-        // The slots: one row per whitespace token, so "cutting board" reads as
-        // two words rather than one run of letters.
-        var consumed = 0
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-            stage.board.tokenUnits.forEach { token ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1, Alignment.CenterHorizontally)) {
-                    token.indices.forEach { _ ->
-                        val slot = consumed++
-                        Slot(text = stage.picks.getOrNull(slot)?.let { stage.tiles[it] }, verdict = stage.correct)
+        if (gaps != null) {
+            GapWordLine(stage, gaps, onUnpick)
+        } else {
+            // The slots: one row per whitespace token, so "cutting board" reads
+            // as two words rather than one run of letters.
+            var consumed = 0
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                stage.board?.tokenUnits?.forEach { token ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1, Alignment.CenterHorizontally)) {
+                        token.indices.forEach { _ ->
+                            val slot = consumed++
+                            Slot(
+                                text = stage.picks.getOrNull(slot)?.let { stage.pool[it] },
+                                verdict = stage.correct,
+                                onClick = { onUnpick(slot) }.takeIf { stage.correct == null && slot < stage.picks.size },
+                            )
+                        }
                     }
                 }
             }
         }
-        TilePool(stage, onTap)
+        // iOS lays the gap-fill's chunks out three to a row
+        // (`min(3, pool.count)`) and the tiles by the rule below. Three is
+        // wider than a tile needs and exactly what a chunk needs: `tion` in a
+        // sixth-of-a-screen column is a chunk you have to squint at.
+        TilePool(stage, onTap, columns = if (gaps != null) minOf(3, stage.pool.size) else null)
 
         // 退一格 stays, though iOS has no visible delete: taking back the last
         // tile is the one correction a spelling board needs, and a board with
@@ -742,17 +778,183 @@ private fun SpellCard(
 }
 
 /**
+ * 挖空拼字 — the word with its holes, on one line.
+ *
+ * iOS writes the fit as `.lineLimit(1).minimumScaleFactor(0.5)`, which Compose
+ * has no equivalent of across a *row of separate composables* — so [ScaleToFit]
+ * below is that modifier, done honestly: measure the row unbounded, then scale
+ * it down to whatever room there is. Wrapping instead would break "air
+ * conditioner" over two lines, and the point of the line is that the word keeps
+ * one readable shape with pieces missing from it.
+ */
+@Composable
+private fun GapWordLine(
+    stage: NewFlowViewModel.Stage.Spell,
+    gaps: SpellGaps,
+    onUnpick: (Int) -> Unit,
+) {
+    val style = TujiType.headword(GAP_WORD_SP)
+    // Sized to the pool's widest option rather than to its own answer: a box
+    // that grows with the answer would tell you how many letters go in it,
+    // which is half the question on a 3-vs-4-letter family.
+    val widest = stage.pool.maxOfOrNull { it.length } ?: 0
+    val slotWidth = maxOf(GAP_SLOT_MIN, (widest * GAP_SLOT_PER_CHAR).dp)
+    val filled = stage.picks.map { stage.pool[it] }
+    // Where the next tap lands — the view draws a thicker rule there.
+    val active = if (stage.correct == null) filled.size.takeIf { it < gaps.gaps.size } else null
+
+    ScaleToFit(Modifier.fillMaxWidth()) {
+        // Every piece on one baseline, holes included — the word has to read as
+        // a word with bits missing, not as a word with bits sitting on a shelf.
+        Row {
+            gaps.segments.forEachIndexed { index, segment ->
+                Text(
+                    segment,
+                    style = style,
+                    color = TujiColor.Ink,
+                    maxLines = 1,
+                    modifier = Modifier.alignByBaseline(),
+                )
+                if (index < gaps.gaps.size) {
+                    GapSlot(
+                        text = filled.getOrNull(index),
+                        answer = gaps.gaps[index].answer,
+                        verdict = stage.correct,
+                        active = active == index,
+                        width = slotWidth,
+                        onClick = { onUnpick(index) }.takeIf {
+                            stage.correct == null && index < filled.size
+                        },
+                        modifier = Modifier.alignByBaseline(),
+                    )
+                }
+            }
+        }
+    }
+    // iOS reveals 正解 under the board here as well, because over there the
+    // sheet rests at a fixed `.fraction(0.34)` and there is room. Android's
+    // sheet *measures* its rest height from its own content and lands higher,
+    // right across this line — the first cut drew it behind the panel, clipped
+    // halfway through its own descenders. The answer is not lost: it is the
+    // headword at the top of that sheet, in larger type than this was.
+}
+
+/**
+ * One hole. Marked per slot once the answer is out: a wrong board should say
+ * *which* chunk missed, not just that the word came out wrong.
+ *
+ * **The rule is drawn, not laid out.** Stacking it under the text in a Column
+ * makes the column taller than a plain letter by the gap plus the rule, and a
+ * bottom-aligned row then lifts the chunk that much above the word it belongs
+ * to — `p[ea]ch` with `ea` riding high. iOS avoids it by construction:
+ * `.overlay(alignment: .bottom) { Rectangle()… .offset(y: 4) }` takes no space
+ * at all. `drawBehind` is that, and it leaves the text a plain Row child so it
+ * can share the word's baseline.
+ */
+@Composable
+private fun GapSlot(
+    text: String?,
+    answer: String,
+    verdict: Boolean?,
+    active: Boolean,
+    width: Dp,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val correct = text == answer
+    val ink = when {
+        verdict == null -> TujiColor.Ink
+        correct -> TujiColor.Accumulation
+        else -> TujiColor.Alert
+    }
+    val rule = when {
+        verdict != null -> if (correct) TujiColor.Accumulation else TujiColor.Alert
+        active -> TujiColor.Accumulation
+        text == null -> TujiColor.Paper3
+        else -> TujiColor.Accumulation.copy(alpha = 0.5f)
+    }
+    val thickness = if (active) GAP_RULE_ACTIVE else GAP_RULE
+    Text(
+        text ?: " ",
+        style = TujiType.headword(GAP_WORD_SP),
+        color = ink,
+        maxLines = 1,
+        textAlign = TextAlign.Center,
+        modifier = modifier
+            .then(if (onClick != null) Modifier.tujiClickable(onClick = onClick) else Modifier)
+            .padding(horizontal = TujiSpace.S1)
+            .widthIn(min = width)
+            .drawBehind {
+                // Below the text box rather than inside it, so the hole is as
+                // wide as whatever lands in it — [width] is only the minimum.
+                drawRect(
+                    color = rule,
+                    topLeft = Offset(0f, size.height + GAP_RULE_DROP.toPx()),
+                    size = Size(size.width, thickness.toPx()),
+                )
+            },
+    )
+}
+
+/**
+ * Lay the content out with no width limit, then shrink it to fit.
+ *
+ * This is `minimumScaleFactor` for a row of composables. Estimating the natural
+ * width instead — measuring the text and adding the slots — is what the first
+ * cut did, and it under-counted by the few dp a filled chunk measures past its
+ * slot's minimum: the row got pinned a hair too narrow and dropped the `y` off
+ * the end of `strawberry`. Measuring the real thing cannot be off by a hair.
+ */
+@Composable
+private fun ScaleToFit(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val placeable = measurables.first().measure(Constraints())
+        val scale =
+            if (placeable.width > constraints.maxWidth && placeable.width > 0) {
+                constraints.maxWidth.toFloat() / placeable.width
+            } else {
+                1f
+            }
+        layout((placeable.width * scale).roundToInt(), (placeable.height * scale).roundToInt()) {
+            placeable.placeWithLayer(0, 0) {
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = TransformOrigin(0f, 0f)
+            }
+        }
+    }
+}
+
+/** iOS: `.tujiHeadword(30)` on the gap line. */
+private val GAP_WORD_SP = 30.sp
+
+/** iOS: `max(34, widestOption.count * 19)`. */
+private val GAP_SLOT_MIN = 34.dp
+private const val GAP_SLOT_PER_CHAR = 19
+
+/** iOS: `.offset(y: 4)` on the rule, and 3 under the cursor against 2 elsewhere. */
+private val GAP_RULE_DROP = 4.dp
+private val GAP_RULE = 2.dp
+private val GAP_RULE_ACTIVE = 3.dp
+
+/**
  * The scrambled tiles, in flexible columns: wider units (a chunked long word,
  * merged 拗音) get fewer of them. A spent tile stays in place and dims rather
  * than vanishing — the pool jumping under the thumb is how the next tap lands
  * on the wrong one.
  */
 @Composable
-private fun TilePool(stage: NewFlowViewModel.Stage.Spell, onTap: (Int) -> Unit) {
-    val wide = stage.tiles.any { it.length > 1 }
-    val columns = if (wide) stage.tiles.size.coerceIn(3, 5) else stage.tiles.size.coerceIn(4, 6)
+private fun TilePool(
+    stage: NewFlowViewModel.Stage.Spell,
+    onTap: (Int) -> Unit,
+    columns: Int? = null,
+) {
+    val wide = stage.pool.any { it.length > 1 }
+    @Suppress("NAME_SHADOWING")
+    val columns = columns
+        ?: if (wide) stage.pool.size.coerceIn(3, 5) else stage.pool.size.coerceIn(4, 6)
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-        stage.tiles.indices.chunked(columns).forEach { row ->
+        stage.pool.indices.chunked(columns).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
                 row.forEach { index ->
                     val spent = index in stage.picks
@@ -772,7 +974,7 @@ private fun TilePool(stage: NewFlowViewModel.Stage.Spell, onTap: (Int) -> Unit) 
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            stage.tiles[index],
+                            stage.pool[index],
                             style = TujiType.headword(22.sp),
                             color = if (spent) TujiColor.Ink3 else TujiColor.Ink,
                             maxLines = 1,
@@ -786,7 +988,7 @@ private fun TilePool(stage: NewFlowViewModel.Stage.Spell, onTap: (Int) -> Unit) 
 }
 
 @Composable
-private fun Slot(text: String?, verdict: Boolean?) {
+private fun Slot(text: String?, verdict: Boolean?, onClick: (() -> Unit)? = null) {
     val filled = text != null
     val (ground, edge, ink) = when (verdict) {
         true -> Triple(TujiColor.Accumulation.copy(alpha = 0.12f), TujiColor.Accumulation, TujiColor.Accumulation)
@@ -803,7 +1005,8 @@ private fun Slot(text: String?, verdict: Boolean?) {
             .width(IntrinsicSize.Max)
             .height(46.dp)
             .background(ground)
-            .border(1.5.dp, edge),
+            .border(1.5.dp, edge)
+            .then(if (onClick != null) Modifier.tujiClickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Text(text ?: " ", style = TujiType.headword(22.sp), color = ink, maxLines = 1, modifier = Modifier.padding(horizontal = 4.dp))

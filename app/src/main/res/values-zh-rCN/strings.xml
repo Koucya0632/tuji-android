@@ -86,6 +86,7 @@
     <string name="new_spell_undo">退一格</string>
     <string name="new_spell_close">差一点，看看正解</string>
     <string name="new_wrong_answer_is">正解 %1$s</string>
+    <string name="new_spell_gaps">补上缺少的部分</string>
     <string name="new_done_title">学完了</string>
     <string name="new_done_count">学会了 %1$d 个字</string>
     <string name="today_greeting_morning">早安，%1$s。</string>
