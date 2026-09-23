@@ -1,97 +1,98 @@
 package app.tuji.android.study
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import app.tuji.android.core.design.TujiMotion
-import app.tuji.android.core.design.rememberReduceMotion
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import app.tuji.android.core.catalog.CardsSourceRules
-import app.tuji.android.core.study.SentenceHighlight
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
-import app.tuji.android.core.design.TujiPrompt
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
+import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.design.FuriganaHeadword
 import app.tuji.android.core.design.StudyOptionRow
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiDetentSheet
-import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
+import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.TujiPageLoading
+import app.tuji.android.core.design.TujiPrompt
+import app.tuji.android.core.design.TujiPullUpHint
 import app.tuji.android.core.design.TujiSpace
-import app.tuji.android.core.design.WordPicture
 import app.tuji.android.core.design.TujiType
+import app.tuji.android.core.design.WordPicture
+import app.tuji.android.core.design.rememberReduceMotion
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
+import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.SRSRating
+import app.tuji.android.core.model.StudyExample
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
-import app.tuji.android.core.study.ReviewFlash
-import app.tuji.android.core.study.ReviewPhase
-import app.tuji.android.core.study.ReviewRevealMode
-import app.tuji.android.core.study.ReviewSession
-import app.tuji.android.core.study.StudyOptionState
-import android.os.Build
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.sp
-import app.tuji.android.core.model.ReviewQuestionKind
-import app.tuji.android.core.model.StudyExample
 import app.tuji.android.core.study.HintFace
 import app.tuji.android.core.study.ImageChoiceOption
+import app.tuji.android.core.study.ReviewFlash
+import app.tuji.android.core.study.ReviewPhase
 import app.tuji.android.core.study.ReviewQuestion
+import app.tuji.android.core.study.ReviewRevealMode
+import app.tuji.android.core.study.ReviewSession
+import app.tuji.android.core.study.SentenceHighlight
+import app.tuji.android.core.study.StudyOptionState
 import app.tuji.android.core.study.maskedSentence
+import kotlinx.coroutines.delay
 
 /**
  * 複習. A picture, four words, and — when the answer is not obvious — a sheet
@@ -605,12 +606,70 @@ private fun RevealSheet(
     // reading its page offers, without leaving the session for it.
     TujiDetentSheet(
         expandedContent = { fullDetail(question.item.word.id) },
+        collapsedHint = {
+            TujiPullUpHint(
+                stringResource(R.string.sheet_pull_up_detail),
+                modifier = Modifier.padding(top = TujiSpace.S4, bottom = TujiSpace.S3),
+            )
+        },
+        actions = {
+            // Pinned at both heights, as iOS pins the same row with
+            // `.safeAreaInset(edge: .bottom)`: this is the question the sheet is
+            // asking, and the answer must never be a scroll away.
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TujiSpace.S4)
+                    .padding(top = TujiSpace.S2, bottom = bottomPadding + TujiSpace.S4),
+                verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            ) {
+                when (mode) {
+                    ReviewRevealMode.ContinueOnly -> {
+                        Text(
+                            stringResource(R.string.reveal_again_later),
+                            style = TujiType.label,
+                            color = TujiColor.Ink3,
+                        )
+                        TujiButton(
+                            text = stringResource(R.string.study_next),
+                            onClick = onContinue,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
+                    ReviewRevealMode.Rate -> {
+                        Text(
+                            stringResource(
+                                if (question.wasCorrect) {
+                                    R.string.reveal_how_well
+                                } else {
+                                    R.string.reveal_mark_it
+                                },
+                            ),
+                            style = TujiType.label,
+                            color = TujiColor.Ink3,
+                        )
+                        question.availableRatings.forEach { rating ->
+                            RatingRow(
+                                rating = rating,
+                                // Pre-inverted rather than badged: the ink block
+                                // is already this app's "this is the one", so a
+                                // 建議 caption over the label was a second,
+                                // weaker way of saying the same thing.
+                                filled = rating == question.suggested,
+                                onClick = { onRate(rating) },
+                            )
+                        }
+                    }
+                }
+            }
+        },
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TujiSpace.S4)
-                .padding(bottom = bottomPadding + TujiSpace.S4),
+                .padding(top = TujiSpace.S3),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
             // The word, and it said aloud. The sheet is the first moment the
@@ -655,49 +714,6 @@ private fun RevealSheet(
                         ) {
                             TujiGlyph.Speaker(tint = TujiColor.Ink)
                         }
-                    }
-                }
-            }
-            Spacer(Modifier.height(TujiSpace.S2))
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
-            Spacer(Modifier.height(TujiSpace.S1))
-
-            when (mode) {
-                ReviewRevealMode.ContinueOnly -> {
-                    Text(
-                        stringResource(R.string.reveal_again_later),
-                        style = TujiType.label,
-                        color = TujiColor.Ink3,
-                    )
-                    TujiButton(
-                        text = stringResource(R.string.study_next),
-                        onClick = onContinue,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
-                ReviewRevealMode.Rate -> {
-                    Text(
-                        stringResource(
-                            if (question.wasCorrect) {
-                                R.string.reveal_how_well
-                            } else {
-                                R.string.reveal_mark_it
-                            },
-                        ),
-                        style = TujiType.label,
-                        color = TujiColor.Ink3,
-                    )
-                    question.availableRatings.forEach { rating ->
-                        RatingRow(
-                            rating = rating,
-                            // Pre-inverted rather than badged: the ink block is
-                            // already this app's "this is the one", so a 建議
-                            // caption over the label was a second, weaker way
-                            // of saying the same thing.
-                            filled = rating == question.suggested,
-                            onClick = { onRate(rating) },
-                        )
                     }
                 }
             }

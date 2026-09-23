@@ -85,7 +85,7 @@
     <string name="new_spell_reading">排出這個字的讀音</string>
     <string name="new_spell_undo">退一格</string>
     <string name="new_spell_close">差一點，看看正解</string>
-    <string name="new_wrong_answer_is">正解 %1$s</string>
+    <string name="sheet_pull_up_detail">向上拉看完整詳情</string>
     <string name="new_spell_gaps">補上缺少的部分</string>
     <string name="new_done_title">學完了</string>
     <string name="new_done_count">學會了 %1$d 個字</string>

@@ -85,7 +85,7 @@
     <string name="new_spell_reading">この単語の読みを並べる</string>
     <string name="new_spell_undo">1つ戻す</string>
     <string name="new_spell_close">惜しい！正解を確認しましょう</string>
-    <string name="new_wrong_answer_is">正解 %1$s</string>
+    <string name="sheet_pull_up_detail">上にスワイプして詳細を見る</string>
     <string name="new_spell_gaps">足りない部分を埋める</string>
     <string name="new_done_title">学習が終わりました</string>
     <string name="new_done_count">%1$d 語を覚えました</string>

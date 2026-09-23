@@ -85,7 +85,7 @@
     <string name="new_spell_reading">Arrange this word\'s reading</string>
     <string name="new_spell_undo">Undo one</string>
     <string name="new_spell_close">So close — check the answer</string>
-    <string name="new_wrong_answer_is">Answer: %1$s</string>
+    <string name="sheet_pull_up_detail">Pull up for full details</string>
     <string name="new_spell_gaps">Fill in the missing letters</string>
     <string name="new_done_title">All learned</string>
     <string name="new_done_count">Learned %1$d words</string>

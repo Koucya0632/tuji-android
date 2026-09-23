@@ -68,6 +68,7 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiDetentSheet
+import app.tuji.android.core.design.TujiPullUpHint
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiMotion
@@ -1036,6 +1037,31 @@ private fun StageHero(item: StudyQueueItem, height: Dp) {
     }
 }
 
+/**
+ * The phonetic line under the headword — IPA for English, kana for a Japanese
+ * word whose reading could not be split over its characters.
+ *
+ * [HeadwordDisplay] answers Ruby *or* Line, never both, and that is the whole
+ * reason it exists: a screen that drew the ruby and the line printed バスマット
+ * over the word and again underneath it. So this draws nothing whenever
+ * [StudyHeadword] already put the reading on top.
+ */
+@Composable
+private fun StudyReadingLine(item: StudyQueueItem, session: TargetLanguage) {
+    val display = item.word.headwordDisplay(session)
+    if (display !is HeadwordDisplay.Line) return
+    Text(
+        display.text,
+        // iOS: `.tujiMono` for an IPA transcription, `.tujiBodySm` for kana.
+        style = if (item.word.language(session) == TargetLanguage.JA) {
+            TujiType.bodySm
+        } else {
+            TujiType.monoLabel
+        },
+        color = TujiColor.Ink3,
+    )
+}
+
 /** Left-aligned, at the page margin — the headword is part of the text, not a title floating over it. */
 @Composable
 private fun StudyHeadword(item: StudyQueueItem, session: TargetLanguage) {
@@ -1090,19 +1116,38 @@ private fun WrongAnswerSheet(
     fullDetail: @Composable (String) -> Unit,
 ) {
     val wordId = item.word.id
-    TujiDetentSheet(expandedContent = { fullDetail(wordId) }) {
+    TujiDetentSheet(
+        expandedContent = { fullDetail(wordId) },
+        collapsedHint = {
+            TujiPullUpHint(
+                stringResource(R.string.sheet_pull_up_detail),
+                modifier = Modifier.padding(top = TujiSpace.S4, bottom = TujiSpace.S3),
+            )
+        },
+        actions = {
+            // Pinned, so 下一題 is reachable at both heights — iOS pins the same
+            // button with `.safeAreaInset(edge: .bottom)`.
+            TujiButton(
+                text = stringResource(R.string.study_next),
+                onClick = onContinue,
+                // iOS: `BBtn(… icon: "arrow.right")`, and the icon leads the
+                // label there too. It is the only button in the lesson that
+                // moves the queue, which is what the arrow is saying.
+                leading = { TujiGlyph.ArrowRight(tint = TujiColor.Ink) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TujiSpace.S4)
+                    .padding(top = TujiSpace.S2, bottom = bottomPadding + TujiSpace.S4),
+            )
+        },
+    ) {
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TujiSpace.S4)
-                .padding(bottom = bottomPadding + TujiSpace.S4),
+                .padding(top = TujiSpace.S3),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
-            Text(
-                stringResource(R.string.new_wrong_answer_is, item.word.word),
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-            )
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
@@ -1110,8 +1155,17 @@ private fun WrongAnswerSheet(
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
                     StudyHeadword(item, session)
+                    StudyReadingLine(item, session)
                     if (showChinese) {
-                        Text(item.word.chinese, style = TujiType.bodySm, color = TujiColor.Ink2)
+                        Text(
+                            item.word.chinese,
+                            style = TujiType.bodySm,
+                            color = TujiColor.Ink2,
+                            // iOS puts 2 here and nowhere else in the stack: the
+                            // gloss is a different kind of line from the reading
+                            // above it, and s1 between all three flattens that.
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
@@ -1136,11 +1190,6 @@ private fun WrongAnswerSheet(
                     }
                 }
             }
-            TujiButton(
-                text = stringResource(R.string.study_next),
-                onClick = onContinue,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }
