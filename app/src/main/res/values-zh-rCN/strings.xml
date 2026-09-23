@@ -138,6 +138,7 @@
     <string name="atlas_source_taken">已收进</string>
     <string name="atlas_source_mine">我做的</string>
     <string name="atlas_mine_empty">还没有自制图鉴</string>
+    <string name="atlas_themes_empty">还没有主题</string>
     <string name="atlas_mine_empty_hint">用底下中间的相机拍一张，就会多一张卡片</string>
     <string name="atlas_bookmarked_empty">还没有书签</string>
     <string name="atlas_bookmarked_empty_hint">你加书签的字会出现在这里</string>
@@ -147,8 +148,6 @@
     <string name="atlas_loading">载入图鉴中…</string>
     <string name="atlas_failed">拿不到图鉴，请稍后再试</string>
     <string name="atlas_back">返回</string>
-    <string name="atlas_themes_link">主题 →</string>
-    <string name="atlas_themes_title">主题</string>
     <string name="atlas_show_more">显示更多</string>
     <string name="atlas_words_header">单字</string>
     <string name="atlas_theme_empty">这个主题还没有字</string>
