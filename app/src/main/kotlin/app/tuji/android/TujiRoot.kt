@@ -677,6 +677,10 @@ private fun SignedInScreens(
                 },
                 bookmarked = { id -> id in personal.bookmarked },
                 onBookmark = app.cardsSourceStore::toggle,
+                // The same value 今日 draws. Read here rather than after the
+                // session, because the reload that follows it belongs to the
+                // shell — this screen only prints the number it is handed.
+                streak = progress.streak?.current,
                 onClose = {
                     // A session just moved the scores every badge in 圖鑑
                     // draws. Without this the user finishes twenty cards,

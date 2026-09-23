@@ -3,30 +3,33 @@ package app.tuji.android.core.design
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 
 /**
@@ -79,12 +82,48 @@ fun MascotFigure(
     pose: MascotPose,
     size: Dp,
     modifier: Modifier = Modifier,
+    /**
+     * A soft halo behind the cat, for the ink surfaces — iOS's
+     * `MascotGrounding.glow`. A black cat on 墨 loses its silhouette entirely
+     * and only the eyes survive, which is the one thing this image cannot
+     * afford.
+     *
+     * A **radial gradient, not a blurred ellipse**, which is what iOS uses:
+     * `Modifier.blur` needs RenderEffect (API 31) and on 29–30 it silently
+     * draws nothing at all — so the halo would be missing on exactly the
+     * devices `minSdk` exists to serve, with no error anywhere.
+     */
+    glow: Boolean = false,
 ) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        if (glow) {
+            val visible = size * pose.visibleHeightRatio
+            Box(
+                Modifier
+                    .size(width = size * 0.84f, height = visible * 0.94f)
+                    .drawBehind {
+                        drawOval(
+                            Brush.radialGradient(
+                                0f to Color.White.copy(alpha = 0.18f),
+                                1f to Color.White.copy(alpha = 0f),
+                                center = center,
+                                radius = maxOf(this.size.width, this.size.height) / 2f,
+                            ),
+                        )
+                    },
+            )
+        }
+        MascotArtwork(pose, size)
+    }
+}
+
+@Composable
+private fun MascotArtwork(pose: MascotPose, size: Dp) {
     Image(
         painter = painterResource(pose.res),
         contentDescription = null,
         contentScale = ContentScale.Fit,
-        modifier = modifier
+        modifier = Modifier
             .size(size)
             .layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints)

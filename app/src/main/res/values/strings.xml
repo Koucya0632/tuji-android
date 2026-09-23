@@ -62,6 +62,15 @@
     <string name="study_done_title">Round complete</string>
     <string name="study_done_count">Reviewed %1$d words</string>
     <string name="study_was_wrong">Missed before</string>
+    <string name="study_done_learned">%1$d new words this session</string>
+    <string name="study_done_added">They\'ve been added to your atlas</string>
+    <string name="study_done_finish">Done</string>
+    <string name="review_done_title">Review complete!</string>
+    <string name="review_done_unit">words</string>
+    <string name="study_streak_label">Streak</string>
+    <string name="study_streak_unit">days</string>
+    <string name="study_today_reviewed">Today\'s review</string>
+    <string name="study_wrong_times">Missed %1$d times</string>
     <string name="study_listen_replay">Play again</string>
     <string name="study_listen_slow">Play slowly</string>
     <string name="study_listen_reveal">Show sentence</string>
@@ -85,7 +94,8 @@
     <string name="new_spell_reading">Arrange this word\'s reading</string>
     <string name="new_spell_undo">Undo one</string>
     <string name="new_spell_close">So close — check the answer</string>
-    <string name="new_wrong_answer_is">Answer: %1$s</string>
+    <string name="sheet_pull_up_detail">Pull up for full details</string>
+    <string name="new_spell_gaps">Fill in the missing letters</string>
     <string name="new_done_title">All learned</string>
     <string name="new_done_count">Learned %1$d words</string>
     <string name="today_greeting_morning">Good morning, %1$s.</string>

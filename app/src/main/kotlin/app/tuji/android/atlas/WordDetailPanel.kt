@@ -1,26 +1,25 @@
 package app.tuji.android.atlas
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.network.AtlasRepository
 import app.tuji.android.core.network.CatalogReading
-import app.tuji.android.core.model.ClipPlaying
 
 /**
  * One word's full entry, for a surface that is not its page — the pulled-up
@@ -63,10 +62,13 @@ internal fun WordDetailPanel(
     val state by vm.state.collectAsStateWithLifecycle()
 
     when (val s = state) {
+        // Wraps its content and does **not** scroll: the sheet above it is one
+        // scrolling column holding the summary and this, so that the word rides
+        // up with the drag rather than staying pinned while the entry slides in
+        // over it. A scroller here would be a second one inside that one.
         is WordDetailViewModel.State.Loaded -> Column(
             modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
                 .padding(horizontal = TujiSpace.S4),
         ) {
             WordDetailSections(
@@ -82,8 +84,14 @@ internal fun WordDetailPanel(
         // half is extra reading, and extra reading that did not arrive is not
         // an error worth interrupting a session for.
         else -> TujiPageLoading(
-            modifier = modifier.fillMaxSize(),
+            // A bounded height, because this now sits in a scrolling column:
+            // `fillMaxSize` inside one asks for infinity and is what a crash in
+            // measurement looks like before it gets there.
+            modifier = modifier.fillMaxWidth().height(LOADING_HEIGHT),
             label = stringResource(R.string.atlas_loading),
         )
     }
 }
+
+/** Enough to read as "something is coming", not as a blank half-screen. */
+private val LOADING_HEIGHT = 160.dp

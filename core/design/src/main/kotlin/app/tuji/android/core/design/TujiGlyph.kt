@@ -665,6 +665,77 @@ object TujiGlyph {
         }
     }
 
+    /** The mirror of [ArrowLeft]: same shaft, head on the other end. */
+    @Composable
+    fun ArrowRight(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.11f
+            val y = h * 0.5f
+            drawLine(tint, Offset(w * 0.12f, y), Offset(w * 0.88f, y), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.54f, h * 0.16f)
+                lineTo(w * 0.88f, y)
+                lineTo(w * 0.54f, h * 0.84f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
+    /**
+     * The pull-up affordance, and the one chevron in this file.
+     *
+     * [ArrowLeft]'s note says a chevron is iOS's own mark and this system uses
+     * an arrow instead — that is about *navigation*, where a chevron reads as
+     * the platform's back button. This one points at a gesture, which is the
+     * shape iOS uses here too (`chevron.up`), and an arrow would read as a
+     * button to press rather than an edge to drag.
+     */
+    @Composable
+    fun ChevronUp(size: Dp = 14.dp, tint: Color = TujiColor.Ink3, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val path = Path().apply {
+                moveTo(w * 0.18f, h * 0.66f)
+                lineTo(w * 0.5f, h * 0.34f)
+                lineTo(w * 0.82f, h * 0.66f)
+            }
+            drawPath(
+                path,
+                tint,
+                style = Stroke(width = w * 0.14f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
+    /** Rotate [ArrowLeft] a quarter turn: 熟練度 crossed into a higher tier. */
+    @Composable
+    fun ArrowUp(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.16f
+            val x = w * 0.5f
+            drawLine(tint, Offset(x, h * 0.88f), Offset(x, h * 0.12f), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.16f, h * 0.46f)
+                lineTo(x, h * 0.12f)
+                lineTo(w * 0.84f, h * 0.46f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

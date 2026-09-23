@@ -6,7 +6,13 @@ import app.tuji.android.core.model.StudyQueueItem
 enum class NewTaskKind(val wire: String) {
     Recognize("recognize"),
     Identify("identify"),
-    SpellTiles("spell_tiles"),
+
+    /**
+     * 拼字. The wire value stays `spell_tiles` because it travels to the server
+     * as a 報錯 snapshot's `phase`; the constant is no longer named after tiles
+     * because most words no longer get them — see [SpellForm].
+     */
+    Spell("spell_tiles"),
 }
 
 data class NewStudyTask(val item: StudyQueueItem, val kind: NewTaskKind) {
@@ -70,8 +76,8 @@ data class StudyLadder private constructor(
     val stageClears: Int,
     /**
      * Stages actually scheduled: 3 per word, minus the 拼字 of single-unit
-     * subjects (a 1-tile board is a free answer). Shrinks again when the 已認識
-     * fast path drops a 選字.
+     * subjects (a 1-tile board is a free answer, so those words finish after
+     * 選字). Shrinks again when the 已認識 fast path drops a 選字.
      */
     val totalStages: Int,
 ) {
@@ -82,7 +88,7 @@ data class StudyLadder private constructor(
     val progress: Double get() = if (totalStages > 0) stageClears.toDouble() / totalStages else 0.0
 
     /** Whether this word still has a 拼字 stage on its ladder. */
-    fun hasSpellStage(item: StudyQueueItem): Boolean = TileBoard.of(item).unitCount >= 2
+    fun hasSpellStage(item: StudyQueueItem): Boolean = SpellForm.of(item) != null
 
     /**
      * The word's own ladder, for the dots over its card — iOS's
@@ -114,7 +120,7 @@ data class StudyLadder private constructor(
                     else state(NewTaskKind.Identify, wordId in identifyCleared),
                 ),
             )
-            if (hasSpellStage(item)) add(NewStageStep(NewTaskKind.SpellTiles, state(NewTaskKind.SpellTiles, done = false)))
+            if (hasSpellStage(item)) add(NewStageStep(NewTaskKind.Spell, state(NewTaskKind.Spell, done = false)))
         }
     }
 
@@ -186,7 +192,7 @@ data class StudyLadder private constructor(
         var moved = 0
         while (true) {
             val head = work.firstOrNull() ?: break
-            if (head.kind != NewTaskKind.SpellTiles) break
+            if (head.kind != NewTaskKind.Spell) break
             if (head.item.word.id in identifyCleared) break
             if (moved > work.size) break
             work.removeAt(0)
@@ -231,7 +237,9 @@ data class StudyLadder private constructor(
         /**
          * rec@3i, id@3i+4, spell@3i+8, stable-sorted by position. Guarantees
          * each word's stages stay ordered while neighbouring words interleave
-         * between them. Words whose tile board has a single unit skip 拼字.
+         * between them. Words that can carry neither a gap-fill nor a two-tile
+         * board skip 拼字 entirely — the one predicate lives in [SpellForm] so
+         * the gate and the board agree.
          */
         private fun initialSchedule(queue: List<StudyQueueItem>): List<NewStudyTask> {
             data class Slot(val pos: Int, val order: Int, val task: NewStudyTask)
@@ -242,8 +250,8 @@ data class StudyLadder private constructor(
             queue.forEachIndexed { i, item ->
                 add(3 * i, NewStudyTask(item, NewTaskKind.Recognize))
                 add(3 * i + 4, NewStudyTask(item, NewTaskKind.Identify))
-                if (TileBoard.of(item).unitCount >= 2) {
-                    add(3 * i + 8, NewStudyTask(item, NewTaskKind.SpellTiles))
+                if (SpellForm.of(item) != null) {
+                    add(3 * i + 8, NewStudyTask(item, NewTaskKind.Spell))
                 }
             }
             return scheduled

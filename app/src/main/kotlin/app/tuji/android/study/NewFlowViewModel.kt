@@ -20,6 +20,8 @@ import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.LearnedRating
 import app.tuji.android.core.study.NewStageStep
 import app.tuji.android.core.study.NewTaskKind
+import app.tuji.android.core.study.SpellForm
+import app.tuji.android.core.study.SpellGaps
 import app.tuji.android.core.study.SpellSubject
 import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.study.StudyLadder
@@ -104,7 +106,18 @@ class NewFlowViewModel(
             val playingWord: Boolean = false,
         ) : State
 
-        data class Done(val learned: Int, val unsynced: Int) : State
+        /**
+         * @param queue every word this session taught, in the order it taught
+         *   them — what the celebration lists.
+         * @param mistakes wrong 選字/拼字 answers per word id, so the recap can
+         *   point at the ones to watch.
+         */
+        data class Done(
+            val learned: Int,
+            val unsynced: Int,
+            val queue: List<StudyQueueItem> = emptyList(),
+            val mistakes: Map<String, Int> = emptyMap(),
+        ) : State
     }
 
     /** What the card in front of the user is asking, and what they have done to it. */
@@ -127,19 +140,50 @@ class NewFlowViewModel(
             val revealed: Boolean = false,
         ) : Stage
 
-        /** 拼字 — the scrambled tiles. */
+        /**
+         * 拼字 — one stage, two boards.
+         *
+         * [SpellForm] decides which: English gets the gap-fill (the word with a
+         * few confusable chunks cut out), a kana reading gets the from-scratch
+         * tiles. One stage rather than two because the gesture is identical —
+         * a shuffled pool, slots filled left to right, tap a filled slot to take
+         * it back — and the server is told `spell_tiles` either way.
+         */
         data class Spell(
             override val item: StudyQueueItem,
             val subject: SpellSubject,
-            val board: TileBoard,
-            val tiles: List<String>,
-            /** Indices into [tiles], in the order they were tapped. */
+            val form: SpellForm,
+            /** What the learner taps: scrambled tiles, or shuffled chunks. */
+            val pool: List<String>,
+            /** Indices into [pool] in tap order — pick *i* fills slot *i*. */
             val picks: List<Int> = emptyList(),
             /** Null while still assembling. */
             val correct: Boolean? = null,
         ) : Stage {
-            val assembled: String get() = picks.joinToString("") { tiles[it] }
-            val isFull: Boolean get() = picks.size == tiles.size
+            val board: TileBoard? get() = (form as? SpellForm.Tiles)?.board
+            val plan: SpellGaps? get() = (form as? SpellForm.Gaps)?.plan
+
+            /** The picks resolved to their strings, bounds-checked. */
+            val chosen: List<String> get() = picks.mapNotNull { pool.getOrNull(it) }
+
+            /**
+             * Full when every *slot* is filled — which the form answers and the
+             * pool cannot: a gap-fill's pool carries distractors that belong in
+             * no slot at all.
+             */
+            val isFull: Boolean get() = picks.size == form.slotCount
+
+            /**
+             * Does this spell the word? The two forms ask different questions of
+             * the same picks: tiles want the assembled string, a gap-fill wants
+             * each chunk in its own slot. Joining a gap-fill's picks would
+             * accept them in any order.
+             */
+            val matches: Boolean
+                get() = when (form) {
+                    is SpellForm.Tiles -> chosen.joinToString("") == form.board.target
+                    is SpellForm.Gaps -> chosen == form.plan.answers
+                }
         }
     }
 
@@ -159,6 +203,9 @@ class NewFlowViewModel(
     private var wordJob: Job? = null
     private var total = 0
     private var unsynced = 0
+
+    /** This session's words, kept for the celebration that lists them. */
+    private var sessionQueue: List<StudyQueueItem> = emptyList()
 
     /** Self-ratings waiting on the stages that get a vote. Keyed by card id. */
     private val pendingRatings = mutableMapOf<String, SRSRating>()
@@ -200,6 +247,7 @@ class NewFlowViewModel(
                 return@launch
             }
             total = queue.size
+            sessionQueue = queue
             show(StudyLadder(queue))
             preloadTeach(queue)
         }
@@ -283,7 +331,7 @@ class NewFlowViewModel(
 
     // 拼字
 
-    fun tapTile(index: Int) {
+    fun pickSpell(index: Int) {
         val now = studying() ?: return
         val stage = now.stage as? Stage.Spell ?: return
         if (stage.correct != null || index in stage.picks) return
@@ -299,7 +347,7 @@ class NewFlowViewModel(
             return
         }
 
-        val correct = next.assembled == stage.board.target
+        val correct = next.matches
         _state.value = now.copy(stage = next.copy(correct = correct))
         if (!correct) {
             mistakes[stage.item.word.id] = (mistakes[stage.item.word.id] ?: 0) + 1
@@ -315,13 +363,26 @@ class NewFlowViewModel(
         }
     }
 
-    /** Take the last tile back. Only while still assembling. */
-    fun undoTile() {
+    /**
+     * Tap a filled slot to take that entry back out. Only while still
+     * assembling.
+     *
+     * Everything after it shifts left, which is iOS's `unpickSpell(atSlot:)` —
+     * the picks *are* the slots, so removing one is a list removal and the
+     * board re-reads itself.
+     */
+    fun unpickSpell(slot: Int) {
         val now = studying() ?: return
         val stage = now.stage as? Stage.Spell ?: return
-        if (stage.correct != null || stage.picks.isEmpty()) return
+        if (stage.correct != null || slot !in stage.picks.indices) return
         haptics.soft()
-        _state.value = now.copy(stage = stage.copy(picks = stage.picks.dropLast(1)))
+        _state.value = now.copy(stage = stage.copy(picks = stage.picks.filterIndexed { i, _ -> i != slot }))
+    }
+
+    /** 退一格 — the last one out. Android keeps this button; see `NewFlowScreen`. */
+    fun undoSpell() {
+        val stage = (studying()?.stage as? Stage.Spell) ?: return
+        unpickSpell(stage.picks.lastIndex)
     }
 
     /**
@@ -385,7 +446,12 @@ class NewFlowViewModel(
     private fun show(ladder: StudyLadder) {
         val task = ladder.current
         if (task == null) {
-            _state.value = State.Done(ladder.clearedWords, unsynced)
+            _state.value = State.Done(
+                learned = ladder.clearedWords,
+                unsynced = unsynced,
+                queue = sessionQueue,
+                mistakes = mistakes.toMap(),
+            )
             return
         }
         val item = task.item
@@ -403,12 +469,22 @@ class NewFlowViewModel(
                     ),
                 )
             }
-            NewTaskKind.SpellTiles -> Stage.Spell(
-                item = item,
-                subject = TileBoard.spellSubject(item),
-                board = TileBoard.of(item),
-                tiles = TileBoard.scrambled(item, spellAttempts[item.word.id] ?: 0),
-            )
+            NewTaskKind.Spell -> {
+                val attempt = spellAttempts[item.word.id] ?: 0
+                // The ladder scheduled this stage off the same predicate, so a
+                // task that got here always has a form. The elvis is for the
+                // compiler, not for a case that happens.
+                val form = SpellForm.of(item) ?: SpellForm.Tiles(TileBoard.of(item))
+                Stage.Spell(
+                    item = item,
+                    subject = TileBoard.spellSubject(item),
+                    form = form,
+                    pool = when (form) {
+                        is SpellForm.Tiles -> TileBoard.scrambled(item, attempt)
+                        is SpellForm.Gaps -> SpellGaps.options(item, attempt)
+                    },
+                )
+            }
         }
         _state.value = State.Studying(
             ladder = ladder,
