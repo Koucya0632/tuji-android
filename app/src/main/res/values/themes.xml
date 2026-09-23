@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      The Android-side ground, used before Compose has drawn anything. It exists
-      so the window does not flash the platform's default white behind 紙
-      (#FBF7EF) on cold start — the same reason iOS pins its launch screen
-      colour. Everything after the first frame comes from TujiTheme.
+      The Android-side ground, used before Compose has drawn anything — which
+      on a cold start is a whole second, so it is not a formality. It carries
+      the launch mark itself (see @drawable/launch_background), the same way
+      iOS's UILaunchScreen names an image and not only a colour. Everything
+      after Compose's first frame comes from TujiTheme.
 
       Deliberately does NOT set statusBarColor / navigationBarColor /
       windowLightNavigationBar. `enableEdgeToEdge()` owns the system bars at
@@ -13,7 +14,7 @@
       was API 27; raising minSdk to 29 silenced the check, not the reason.
     -->
     <style name="Theme.Tuji" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/tuji_paper</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

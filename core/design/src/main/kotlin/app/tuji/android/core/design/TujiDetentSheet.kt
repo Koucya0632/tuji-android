@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -55,9 +57,23 @@ import kotlinx.coroutines.launch
  * The 3dp ink edge along the top is the same mark the tab bar and every
  * selected state already use.
  *
+ * **The summary rides up with the sheet; only the actions are pinned.** That
+ * is iOS's shape in both places this exists — `WordPeekSheet.expandableBody`
+ * and `ReviewRevealSheet` are each a `ScrollView { summary; detail }` with the
+ * buttons in a `.safeAreaInset(edge: .bottom)`. The first cut here had it
+ * upside down: the entry opened *above* a summary nailed to the bottom, so
+ * pulling up pushed the word away from the reader instead of carrying it along.
+ *
+ * @param summary the word, or whatever the sheet is about. Scrolls.
+ * @param actions the buttons. Pinned to the bottom edge at both heights,
+ *   because they are what the sheet is asking for and the answer must not be a
+ *   scroll away.
  * @param expandedContent what appears in the space the drag opens up. Composed
  *   only once the sheet has begun to open, so the work behind it — a word's
  *   full entry, say — is not paid for by a reader who never drags.
+ * @param collapsedHint what stands in its place until then, in the whitespace
+ *   the resting height leaves. A two-height sheet with no sentence saying so
+ *   has only the drag indicator to advertise its second height.
  * @param onCollapsedDragDown a downward drag with nothing left to collapse.
  *   null means the sheet cannot be dismissed that way.
  */
@@ -66,13 +82,25 @@ fun TujiDetentSheet(
     modifier: Modifier = Modifier,
     onCollapsedDragDown: (() -> Unit)? = null,
     expandedContent: (@Composable () -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit,
+    collapsedHint: (@Composable () -> Unit)? = null,
+    actions: @Composable ColumnScope.() -> Unit,
+    summary: @Composable ColumnScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+    val reading = rememberScrollState()
     var fraction by remember { mutableFloatStateOf(0f) }
-    var restPx by remember { mutableIntStateOf(0) }
+    var summaryPx by remember { mutableIntStateOf(0) }
+    var hintPx by remember { mutableIntStateOf(0) }
+    var actionsPx by remember { mutableIntStateOf(0) }
     var containerPx by remember { mutableIntStateOf(0) }
+    // Measured rather than declared — iOS's `ReviewRevealLayout.restHeight`,
+    // which replaced a fixed fraction the rating row had quietly outgrown.
+    val restPx = if (summaryPx > 0 && actionsPx > 0) {
+        indicatorPx(density) + summaryPx + hintPx + actionsPx
+    } else {
+        0
+    }
     val extraPx = (containerPx - restPx).coerceAtLeast(0)
 
     fun drag(delta: Float): Float {
@@ -164,16 +192,32 @@ fun TujiDetentSheet(
                 ),
         ) {
             DragIndicator()
-            if (expandedContent != null && fraction > 0f) {
-                // `weight`, not a computed height: the leftover is whatever the
-                // summary below does not use, so a rest measurement that is a
-                // few pixels out costs a few pixels of reading rather than
-                // pushing the rating buttons off the bottom of the screen.
-                Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
-                    expandedContent()
+            // The reading half. `weight` only once open: at rest it wraps, and
+            // wrapping is what makes the rest height *measured*. A computed
+            // height instead would put a rest measurement a few pixels out into
+            // the rating row rather than into the reading.
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .then(if (fraction > 0f) Modifier.weight(1f) else Modifier)
+                    .clipToBounds()
+                    .verticalScroll(reading),
+            ) {
+                Column(Modifier.onSizeChanged { summaryPx = it.height }) { summary() }
+                if (expandedContent != null) {
+                    if (fraction > 0f) {
+                        expandedContent()
+                    } else {
+                        // Measured while it is the thing standing there, so the
+                        // rest height includes it — an affordance below the fold
+                        // is not an affordance.
+                        Box(Modifier.onSizeChanged { hintPx = it.height }) { collapsedHint?.invoke() }
+                    }
                 }
+            }
+            if (expandedContent != null && fraction > 0f) {
                 // The line between reading and acting. Without it the last
-                // visible line of the entry sits a pixel off the summary's
+                // visible line of the entry sits a pixel off the actions'
                 // first, and a half-cut sentence touching a label reads as two
                 // things drawn on top of each other.
                 Box(
@@ -183,11 +227,7 @@ fun TujiDetentSheet(
                         .background(TujiColor.Rule),
                 )
             }
-            // Measured rather than declared: this is the rest detent, and it is
-            // whatever the summary and the actions happen to need.
-            Column(Modifier.onSizeChanged { restPx = it.height + indicatorPx(density) }) {
-                content()
-            }
+            Column(Modifier.onSizeChanged { actionsPx = it.height }) { actions() }
         }
     }
 }

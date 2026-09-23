@@ -1,6 +1,7 @@
 package app.tuji.android.core.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -16,9 +17,11 @@ class LaunchRoutingTest {
         directionSelected: Boolean = true,
         introDone: Boolean = true,
         catalogReady: Boolean = true,
+        launchReady: Boolean = true,
     ) = LaunchRouting.destination(
         LaunchContext(account, directionSelected, introDone),
         catalogReady = catalogReady,
+        launchReady = launchReady,
     )
 
     @Test
@@ -28,6 +31,41 @@ class LaunchRoutingTest {
         assertEquals(
             LaunchDestination.Splash,
             route(LaunchAccountState.Checking, directionSelected = false, introDone = false),
+        )
+    }
+
+    @Test
+    fun `the launch mark outlasts an account that resolves instantly`() {
+        // The floor iOS keeps in LaunchCoordinator. Every account state is held,
+        // not just the slow ones — a signed-out launch is the *fastest* to
+        // resolve and therefore the one that loses the entrance entirely.
+        for (account in listOf(
+            LaunchAccountState.SignedOut,
+            LaunchAccountState.Guest,
+            LaunchAccountState.SignedIn("u", setupDone = true),
+        )) {
+            assertEquals(
+                LaunchDestination.Splash,
+                route(account, launchReady = false),
+            )
+        }
+    }
+
+    @Test
+    fun `the floor is long enough to be worth having`() {
+        // iOS's number, and it is deliberately a little *shorter* than the
+        // entrance it protects: TujiBrandLockup takes 650ms end to end
+        // (70 hold + 140 hole + 100 pause + 340 spring), so the spring's tail
+        // runs under the 180ms crossfade rather than delaying it. What the
+        // floor has to cover is the part that carries the idea — the hole
+        // opening and the cat clearing it, 310ms in.
+        //
+        // The assertion is here because the failure it guards against is
+        // silent: drop this number and every test still passes, every screen
+        // still works, and the launch animation simply stops being visible.
+        assertTrue(
+            "MINIMUM_SPLASH_MS must outlast the hole opening and the cat clearing it",
+            LaunchRouting.MINIMUM_SPLASH_MS >= 310L,
         )
     }
 

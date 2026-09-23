@@ -18,6 +18,7 @@ import app.tuji.android.core.study.AnswerSubmitting
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.NewStageStep
 import app.tuji.android.core.study.NewTaskKind
+import app.tuji.android.core.study.SpellForm
 import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.StudyAnswerOutbox
 import kotlinx.coroutines.Dispatchers
@@ -100,13 +101,32 @@ class NewFlowViewModelTest {
     private fun NewFlowViewModel.studying() = state.value as NewFlowViewModel.State.Studying
     private fun NewFlowViewModel.stage() = studying().stage
 
-    /** Solve the tiles in the board's own order. */
-    private fun NewFlowViewModel.solveTiles() {
-        val spell = stage() as NewFlowViewModel.Stage.Spell
-        spell.board.orderedUnits.forEach { unit ->
+    /**
+     * What the board wants, slot by slot — the tiles in the board's own order,
+     * or the chunks the gap-fill cut out. One helper for both, because which
+     * board a word takes is [SpellForm]'s call and the tests should not have to
+     * know which one they got.
+     */
+    private fun NewFlowViewModel.Stage.Spell.wanted(): List<String> = when (val f = form) {
+        is SpellForm.Gaps -> f.plan.answers
+        is SpellForm.Tiles -> f.board.orderedUnits
+    }
+
+    private fun NewFlowViewModel.solveSpell() {
+        (stage() as NewFlowViewModel.Stage.Spell).wanted().forEach { unit ->
             val s = stage() as NewFlowViewModel.Stage.Spell
-            tapTile(s.tiles.indexOfFirst { it == unit && s.tiles.indexOf(it) !in s.picks }
-                .let { if (it >= 0) it else s.tiles.indices.first { i -> i !in s.picks } })
+            pickSpell(s.pool.indices.first { it !in s.picks && s.pool[it] == unit })
+        }
+    }
+
+    /** Fill every slot with something that does not belong in it. */
+    private fun NewFlowViewModel.failSpell() {
+        (stage() as NewFlowViewModel.Stage.Spell).wanted().forEach { unit ->
+            val s = stage() as NewFlowViewModel.Stage.Spell
+            pickSpell(
+                s.pool.indices.firstOrNull { it !in s.picks && s.pool[it] != unit }
+                    ?: s.pool.indices.first { it !in s.picks },
+            )
         }
     }
 
@@ -146,7 +166,7 @@ class NewFlowViewModelTest {
 
         val ladder = vm.studying().ladder
         assertTrue("the fast path removes it", ladder.tasks.none { it.kind == NewTaskKind.Identify })
-        assertTrue("but the tiles still gate the write", ladder.tasks.any { it.kind == NewTaskKind.SpellTiles })
+        assertTrue("but the tiles still gate the write", ladder.tasks.any { it.kind == NewTaskKind.Spell })
     }
 
     /** The server marks the answer that crosses a streak threshold; the finished screen is drawn from it. */
@@ -156,7 +176,7 @@ class NewFlowViewModelTest {
         vm.load(); advanceUntilIdle()
         assertEquals(null, vm.milestone.value)
         vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
-        vm.solveTiles(); advanceUntilIdle()
+        vm.solveSpell(); advanceUntilIdle()
         assertTrue(vm.state.value is NewFlowViewModel.State.Done)
         assertEquals(30, vm.milestone.value?.streak)
     }
@@ -166,7 +186,7 @@ class NewFlowViewModelTest {
             val vm = vm(listOf(item("kettle", "kettle")))
             vm.load(); advanceUntilIdle()
             vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
-            vm.solveTiles(); advanceUntilIdle()
+            vm.solveSpell(); advanceUntilIdle()
 
             assertEquals(1, posted.size)
             assertEquals(SRSRating.Good, posted[0].rating)
@@ -191,7 +211,7 @@ class NewFlowViewModelTest {
         while (vm.state.value !is NewFlowViewModel.State.Done && guard++ < 30) {
             when (vm.stage()) {
                 is NewFlowViewModel.Stage.Identify -> vm.pickIdentify("kettle")
-                is NewFlowViewModel.Stage.Spell -> vm.solveTiles()
+                is NewFlowViewModel.Stage.Spell -> vm.solveSpell()
                 is NewFlowViewModel.Stage.Recognize -> vm.rateRecognize(SRSRating.Good)
             }
             advanceUntilIdle()
@@ -208,7 +228,7 @@ class NewFlowViewModelTest {
         while (vm.stage() !is NewFlowViewModel.Stage.Identify) {
             when (val s = vm.stage()) {
                 is NewFlowViewModel.Stage.Recognize -> vm.rateRecognize(SRSRating.Hard)
-                is NewFlowViewModel.Stage.Spell -> vm.solveTiles()
+                is NewFlowViewModel.Stage.Spell -> vm.solveSpell()
                 else -> Unit
             }
             advanceUntilIdle()
@@ -228,36 +248,88 @@ class NewFlowViewModelTest {
         vm.load(); advanceUntilIdle()
         vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
 
-        val first = (vm.stage() as NewFlowViewModel.Stage.Spell).tiles
-        // Fill it wrong: reverse order is wrong for any board of 2+ distinct units.
-        first.indices.reversed().forEach { vm.tapTile(it) }
+        val first = (vm.stage() as NewFlowViewModel.Stage.Spell).pool
+        vm.failSpell()
         advanceUntilIdle()
         assertEquals(false, (vm.stage() as NewFlowViewModel.Stage.Spell).correct)
 
         vm.continueFromWrong(); advanceUntilIdle()
-        val second = (vm.stage() as NewFlowViewModel.Stage.Spell).tiles
+        val second = (vm.stage() as NewFlowViewModel.Stage.Spell).pool
         assertTrue("staring at the same layout again is not a retry", first != second)
     }
 
-    @Test fun `undo takes the last tile back and only while assembling`() = runTest(dispatcher) {
-        val vm = vm(listOf(item("kettle", "kettle")))
+    @Test fun `undo takes the last one back and only while assembling`() = runTest(dispatcher) {
+        // refrigerator is long enough for three slots, so two picks leave the
+        // board unfinished — on a two-slot board the second pick locks it and
+        // there is nothing left to undo.
+        val vm = vm(listOf(item("fridge", "refrigerator")))
         vm.load(); advanceUntilIdle()
         vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
 
-        vm.tapTile(0); vm.tapTile(1)
+        vm.pickSpell(0); vm.pickSpell(1)
         assertEquals(2, (vm.stage() as NewFlowViewModel.Stage.Spell).picks.size)
-        vm.undoTile()
+        vm.undoSpell()
         assertEquals(1, (vm.stage() as NewFlowViewModel.Stage.Spell).picks.size)
     }
 
-    @Test fun `the same tile cannot be spent twice`() = runTest(dispatcher) {
+    @Test fun `tapping a filled slot takes that one out and the rest shift up`() =
+        runTest(dispatcher) {
+            val vm = vm(listOf(item("fridge", "refrigerator")))
+            vm.load(); advanceUntilIdle()
+            vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
+
+            vm.pickSpell(0); vm.pickSpell(1)
+            // iOS's `unpickSpell(atSlot:)`: the picks *are* the slots, so
+            // removing the first moves the second into slot 0.
+            vm.unpickSpell(0)
+            assertEquals(listOf(1), (vm.stage() as NewFlowViewModel.Stage.Spell).picks)
+        }
+
+    @Test fun `the same option cannot be spent twice`() = runTest(dispatcher) {
         val vm = vm(listOf(item("kettle", "kettle")))
         vm.load(); advanceUntilIdle()
         vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
 
-        vm.tapTile(0); vm.tapTile(0)
+        vm.pickSpell(0); vm.pickSpell(0)
         assertEquals(1, (vm.stage() as NewFlowViewModel.Stage.Spell).picks.size)
     }
+
+    @Test fun `an English word gets the gap-fill and a kana reading gets the tiles`() =
+        runTest(dispatcher) {
+            val vm = vm(listOf(item("kettle", "kettle")))
+            vm.load(); advanceUntilIdle()
+            vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
+            val english = vm.stage() as NewFlowViewModel.Stage.Spell
+            assertTrue("English spells into holes", english.form is SpellForm.Gaps)
+            // The pool carries distractors, so it is longer than the slots —
+            // which is exactly why `isFull` has to ask the form and not the pool.
+            assertTrue(english.pool.size > english.form.slotCount)
+
+            val ja = vm(listOf(item("neko", "ねこ")))
+            ja.load(); advanceUntilIdle()
+            ja.rateRecognize(SRSRating.Good); advanceUntilIdle()
+            val kana = ja.stage() as NewFlowViewModel.Stage.Spell
+            assertTrue("kana has no confusables to cut", kana.form is SpellForm.Tiles)
+            assertEquals(kana.pool.size, kana.form.slotCount)
+        }
+
+    @Test fun `a gap-fill wants each chunk in its own slot, not merely the right set`() =
+        runTest(dispatcher) {
+            val vm = vm(listOf(item("fridge", "refrigerator")))
+            vm.load(); advanceUntilIdle()
+            vm.rateRecognize(SRSRating.Good); advanceUntilIdle()
+
+            val spell = vm.stage() as NewFlowViewModel.Stage.Spell
+            val answers = (spell.form as SpellForm.Gaps).plan.answers
+            // The right chunks, deliberately in the wrong order. Joining the
+            // picks — which is how a tile board decides — would accept this.
+            answers.reversed().forEach { unit ->
+                val s = vm.stage() as NewFlowViewModel.Stage.Spell
+                vm.pickSpell(s.pool.indices.first { it !in s.picks && s.pool[it] == unit })
+            }
+            advanceUntilIdle()
+            assertEquals(false, (vm.stage() as NewFlowViewModel.Stage.Spell).correct)
+        }
 
     @Test fun `leaving mid-beat does not advance the session behind the user`() =
         runTest(dispatcher) {
@@ -325,7 +397,7 @@ class NewFlowViewModelTest {
         while (vm.state.value !is NewFlowViewModel.State.Done && guard++ < 30) {
             when (vm.stage()) {
                 is NewFlowViewModel.Stage.Identify -> vm.pickIdentify("kettle")
-                is NewFlowViewModel.Stage.Spell -> vm.solveTiles()
+                is NewFlowViewModel.Stage.Spell -> vm.solveSpell()
                 is NewFlowViewModel.Stage.Recognize -> vm.rateRecognize(SRSRating.Good)
             }
             advanceUntilIdle()
@@ -358,7 +430,7 @@ class NewFlowViewModelTest {
         while (vm.state.value !is NewFlowViewModel.State.Done && guard++ < 30) {
             when (vm.stage()) {
                 is NewFlowViewModel.Stage.Identify -> vm.pickIdentify("kettle")
-                is NewFlowViewModel.Stage.Spell -> vm.solveTiles()
+                is NewFlowViewModel.Stage.Spell -> vm.solveSpell()
                 is NewFlowViewModel.Stage.Recognize -> vm.rateRecognize(SRSRating.Good)
             }
             advanceUntilIdle()

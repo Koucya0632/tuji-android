@@ -39,11 +39,27 @@ export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
 | `log` | 只跟這個 App 的 logcat |
 | `kill` | 關掉 |
 
-`TUJI_AVD=<名字>` 可以換 AVD。SDK 位置依序找 `ANDROID_HOME` → `local.properties` 的
+`ANDROID_SERIAL=<serial>` 可以指到實機 —— `install`／`shot`／`log` 都會跟著走，
+只有 `up` 一定是模擬器。`TUJI_AVD=<名字>` 可以換 AVD。SDK 位置依序找 `ANDROID_HOME` → `local.properties` 的
 `sdk.dir` → Homebrew 預設 —— 第二項是 Gradle 自己讀的那個，所以腳本跟建置不會各說各話。
 
 ⚠️ **模擬器映像沒有 Google 帳號**（`google_apis` 不是 `google_apis_playstore`），
 所以 **Google 登入在上面必然拿到 `NoCredentialException`**。那不是 bug，要實機測。
+
+### 啟動圖
+
+`app/src/main/res/drawable-xxhdpi/launch_lockup_peek_start.png` 是 `windowBackground`
+上的那張圖 —— Compose 畫出第一幀之前，螢幕上就只有它（實機冷啟動量到約 1.1 秒）。
+它**不是手繪的**，是用 `TujiBrandLockup(entrance = Start)` 算出來的，和 iOS 用
+`ImageRenderer` 產 `LaunchLockupPeekStart` 是同一招：動畫會從這一幀接著演下去，
+手繪的近似值會在交棒的那一刻看見一個跳動。改了品牌標誌之後重產：
+
+```bash
+ANDROID_SERIAL=<serial> ./scripts/launch-asset.sh
+```
+
+⚠️ 不要用 `./gradlew connectedAndroidTest` 跑那個 test。那個 task 跑完會反安裝 App，
+連帶刪掉 App 的 external files 目錄 —— 也就是剛產好的 PNG。測試會是綠的，檔案不會在。
 
 `check-test-counts.sh` 不是多餘的。iOS 那邊付過代價：suite 崩潰時 xcodebuild
 照樣印 ✔，唯一的差別是測試總數變小。Gradle 的等價情形是某個模組的 test task

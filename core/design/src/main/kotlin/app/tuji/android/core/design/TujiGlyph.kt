@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -261,12 +262,27 @@ object TujiGlyph {
      * placeholders until the real tiles land. There is no SF Symbols here, so
      * they are drawn like every other mark in this file — same subjects
      * (fork, cup, leaf, carrot) so the two intros illustrate the same idea.
+     *
+     * [filled] is the one place they diverge from the rest of this object.
+     * Three of iOS's four are `.fill` variants (`cup.and.saucer.fill`,
+     * `leaf.fill`, `carrot.fill`) and the fourth (`fork.knife`) is a solid
+     * silhouette, so the grid reads as four **solid** shapes. The stroked
+     * default is this file's own weight and is what everything outside the
+     * intro wants; only the intro asks for the solid pair.
      */
     @Composable
-    fun Fork(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+    fun Fork(
+        size: Dp = 40.dp,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+        filled: Boolean = false,
+    ) {
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
-            val stroke = w * 0.08f
+            // Solid: the tines are bars rather than lines, and the neck widens
+            // into the handle — a stroked fork thickened in place turns into a
+            // blob at this size.
+            val stroke = if (filled) w * 0.13f else w * 0.08f
             // Three tines into a shared neck, then the handle.
             listOf(0.32f, 0.5f, 0.68f).forEach { x ->
                 drawLine(tint, Offset(w * x, w * 0.12f), Offset(w * x, w * 0.36f), stroke, StrokeCap.Round)
@@ -277,7 +293,12 @@ object TujiGlyph {
     }
 
     @Composable
-    fun Cup(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+    fun Cup(
+        size: Dp = 40.dp,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+        filled: Boolean = false,
+    ) {
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
             val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
@@ -287,7 +308,7 @@ object TujiGlyph {
             body.lineTo(w * 0.62f, w * 0.80f)
             body.lineTo(w * 0.70f, w * 0.30f)
             body.close()
-            drawPath(body, tint, style = stroke)
+            drawPath(body, tint, style = if (filled) Fill else stroke)
             // The handle, on the right where a right-handed cup has one.
             drawArc(
                 color = tint,
@@ -303,7 +324,12 @@ object TujiGlyph {
     }
 
     @Composable
-    fun Leaf(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+    fun Leaf(
+        size: Dp = 40.dp,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+        filled: Boolean = false,
+    ) {
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
             val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
@@ -312,14 +338,27 @@ object TujiGlyph {
             leaf.quadraticTo(w * 0.20f, w * 0.20f, w * 0.80f, w * 0.18f)
             leaf.quadraticTo(w * 0.80f, w * 0.76f, w * 0.22f, w * 0.78f)
             leaf.close()
-            drawPath(leaf, tint, style = stroke)
-            // The midrib, which is what separates a leaf from a petal.
-            drawLine(tint, Offset(w * 0.26f, w * 0.74f), Offset(w * 0.72f, w * 0.26f), w * 0.07f, StrokeCap.Round)
+            drawPath(leaf, tint, style = if (filled) Fill else stroke)
+            // The midrib, which is what separates a leaf from a petal. On the
+            // solid leaf it has to be cut *out* of the blade, not drawn over
+            // it, or the shape loses the one line that names it.
+            drawLine(
+                if (filled) TujiColor.Paper else tint,
+                Offset(w * 0.26f, w * 0.74f),
+                Offset(w * 0.72f, w * 0.26f),
+                w * 0.07f,
+                StrokeCap.Round,
+            )
         }
     }
 
     @Composable
-    fun Carrot(size: Dp = 40.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+    fun Carrot(
+        size: Dp = 40.dp,
+        tint: Color = TujiColor.Ink,
+        modifier: Modifier = Modifier,
+        filled: Boolean = false,
+    ) {
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
             val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
@@ -328,7 +367,7 @@ object TujiGlyph {
             root.lineTo(w * 0.70f, w * 0.36f)
             root.lineTo(w * 0.46f, w * 0.88f)
             root.close()
-            drawPath(root, tint, style = stroke)
+            drawPath(root, tint, style = if (filled) Fill else stroke)
             listOf(-0.14f, 0f, 0.14f).forEach { lean ->
                 drawLine(
                     tint,
@@ -617,6 +656,77 @@ object TujiGlyph {
                 moveTo(w * 0.46f, h * 0.16f)
                 lineTo(w * 0.12f, y)
                 lineTo(w * 0.46f, h * 0.84f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
+    /** The mirror of [ArrowLeft]: same shaft, head on the other end. */
+    @Composable
+    fun ArrowRight(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.11f
+            val y = h * 0.5f
+            drawLine(tint, Offset(w * 0.12f, y), Offset(w * 0.88f, y), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.54f, h * 0.16f)
+                lineTo(w * 0.88f, y)
+                lineTo(w * 0.54f, h * 0.84f)
+            }
+            drawPath(
+                head,
+                tint,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
+    /**
+     * The pull-up affordance, and the one chevron in this file.
+     *
+     * [ArrowLeft]'s note says a chevron is iOS's own mark and this system uses
+     * an arrow instead — that is about *navigation*, where a chevron reads as
+     * the platform's back button. This one points at a gesture, which is the
+     * shape iOS uses here too (`chevron.up`), and an arrow would read as a
+     * button to press rather than an edge to drag.
+     */
+    @Composable
+    fun ChevronUp(size: Dp = 14.dp, tint: Color = TujiColor.Ink3, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val path = Path().apply {
+                moveTo(w * 0.18f, h * 0.66f)
+                lineTo(w * 0.5f, h * 0.34f)
+                lineTo(w * 0.82f, h * 0.66f)
+            }
+            drawPath(
+                path,
+                tint,
+                style = Stroke(width = w * 0.14f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+    }
+
+    /** Rotate [ArrowLeft] a quarter turn: 熟練度 crossed into a higher tier. */
+    @Composable
+    fun ArrowUp(size: Dp = 12.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.16f
+            val x = w * 0.5f
+            drawLine(tint, Offset(x, h * 0.88f), Offset(x, h * 0.12f), stroke, cap = StrokeCap.Round)
+            val head = Path().apply {
+                moveTo(w * 0.16f, h * 0.46f)
+                lineTo(x, h * 0.12f)
+                lineTo(w * 0.84f, h * 0.46f)
             }
             drawPath(
                 head,

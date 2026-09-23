@@ -37,12 +37,36 @@ data class LaunchContext(
 
 object LaunchRouting {
     /**
+     * The shortest time the launch mark stays up, however fast the account
+     * resolves. iOS keeps this number in
+     * `LaunchCoordinator(minimumSplashDuration: .milliseconds(600))`.
+     *
+     * It is not decoration. `TujiBrandLockup`'s entrance takes 650ms end to end
+     * (70 hold + 140 hole + 100 pause + 340 spring), and a signed-out launch
+     * resolves in a few tens of milliseconds — so without a floor the crossfade
+     * to the next screen starts while the cat is still inside the hole, and
+     * nobody ever sees the animation the lockup exists to play.
+     */
+    const val MINIMUM_SPLASH_MS = 600L
+
+    /**
+     * [launchReady] is [MINIMUM_SPLASH_MS] having elapsed. iOS spells the same
+     * gate as `guard launchReady else { return .splash }`, the first line of
+     * `LaunchDestination.resolve` — this port dropped it, which is the whole
+     * reason the entrance was invisible on device.
+     *
      * [catalogReady] holds a guest (and a signed-in user) on the splash until
      * the catalogue has loaded — landing on an empty 首頁 reads as a broken app
      * rather than a loading one.
      */
-    fun destination(context: LaunchContext, catalogReady: Boolean = true): LaunchDestination =
-        when (val account = context.account) {
+    fun destination(
+        context: LaunchContext,
+        catalogReady: Boolean = true,
+        launchReady: Boolean = true,
+    ): LaunchDestination {
+        if (!launchReady) return LaunchDestination.Splash
+
+        return when (val account = context.account) {
             is LaunchAccountState.Checking -> LaunchDestination.Splash
 
             is LaunchAccountState.SignedOut -> when {
@@ -64,4 +88,5 @@ object LaunchRouting {
                 else -> LaunchDestination.Splash
             }
         }
+    }
 }

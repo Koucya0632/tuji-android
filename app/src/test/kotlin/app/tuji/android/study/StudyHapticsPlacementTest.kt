@@ -177,8 +177,8 @@ class StudyHapticsPlacementTest {
         haptics.taps.clear()
 
         val spell = vm.studying().stage as NewFlowViewModel.Stage.Spell
-        val order = spell.board.orderedUnits.map { unit -> spell.tiles.indexOf(unit) }
-        order.forEach { vm.tapTile(it) }
+        val order = spell.board!!.orderedUnits.map { unit -> spell.pool.indexOf(unit) }
+        order.forEach { vm.pickSpell(it) }
 
         assertEquals(
             "one per tile, and the success waits for the beat",
@@ -196,8 +196,8 @@ class StudyHapticsPlacementTest {
         vm.pickIdentify("ox"); advanceUntilIdle()
         haptics.taps.clear()
 
-        vm.tapTile(0)
-        vm.undoTile()
+        vm.pickSpell(0)
+        vm.undoSpell()
         assertEquals(listOf(Tap.Soft, Tap.Soft), haptics.taps)
     }
 
