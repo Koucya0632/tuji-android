@@ -89,9 +89,25 @@ object TujiGlyph {
         }
     }
 
-    /** An eye — 顯示例句. */
+    /**
+     * An eye — 顯示例句, and the 顯示／隱藏密碼 toggle.
+     *
+     * [crossed] draws the slash that means "hidden": **the state the button
+     * will switch _to_ is the one the icon shows**, which is the pairing iOS
+     * makes with `eye` / `eye.slash`.
+     *
+     * One function rather than two marks. The password field's eye and 聽句's
+     * eye are the same affordance — "let me look at what is being kept from
+     * me" — and a second drawing of it is a second set of curves to keep in
+     * step with the first.
+     */
     @Composable
-    fun Eye(size: Dp = 20.dp, tint: Color = TujiColor.Ink2, modifier: Modifier = Modifier) {
+    fun Eye(
+        size: Dp = 20.dp,
+        tint: Color = TujiColor.Ink2,
+        modifier: Modifier = Modifier,
+        crossed: Boolean = false,
+    ) {
         Canvas(modifier.then(Modifier.size(size))) {
             val w = this.size.width
             val h = this.size.height
@@ -107,6 +123,15 @@ object TujiGlyph {
             }
             drawPath(lens, tint, style = Stroke(width = stroke))
             drawCircle(tint, radius = w * 0.15f, center = Rect(Offset.Zero, this.size).center)
+            if (crossed) {
+                drawLine(
+                    tint,
+                    Offset(w * 0.14f, h * 0.12f),
+                    Offset(w * 0.86f, h * 0.88f),
+                    stroke,
+                    cap = StrokeCap.Round,
+                )
+            }
         }
     }
 
