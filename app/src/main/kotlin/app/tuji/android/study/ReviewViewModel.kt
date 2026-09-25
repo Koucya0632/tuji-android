@@ -26,7 +26,7 @@ import app.tuji.android.core.study.ReviewSession
 import app.tuji.android.core.model.ClipPlayback
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.study.StudyWriteOutcome
-import app.tuji.android.core.study.studyChoices
+import app.tuji.android.core.study.StudyChoiceSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -88,6 +88,7 @@ class ReviewViewModel(
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
+    private var choiceSession = StudyChoiceSession()
 
     sealed interface State {
         data object Loading : State
@@ -151,6 +152,7 @@ class ReviewViewModel(
      * which is exactly the account that has nothing to review.
      */
     fun load(mode: StudyMode = StudyMode.Review, limit: Int = 20) {
+        choiceSession = StudyChoiceSession()
         _state.value = State.Loading
         work.launch {
             val queue = runCatching {
@@ -325,7 +327,7 @@ class ReviewViewModel(
     ): State.Studying {
         val item = session.question?.item
         val choices = item?.let {
-            studyChoices(
+            choiceSession.choices(
                 item = it,
                 pool = pool(),
                 session = direction.targetLanguage,

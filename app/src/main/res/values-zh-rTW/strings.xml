@@ -141,6 +141,7 @@
     <string name="atlas_source_taken">已收進</string>
     <string name="atlas_source_mine">我做的</string>
     <string name="atlas_mine_empty">還沒有自製圖鑑</string>
+    <string name="atlas_themes_empty">還沒有主題</string>
     <string name="atlas_mine_empty_hint">用底下中間的相機拍一張，就會多一張卡片</string>
     <string name="atlas_bookmarked_empty">還沒有書籤</string>
     <string name="atlas_bookmarked_empty_hint">你加書籤的字會出現在這裡</string>
@@ -150,8 +151,6 @@
     <string name="atlas_loading">載入圖鑑中…</string>
     <string name="atlas_failed">拿不到圖鑑，請稍後再試</string>
     <string name="atlas_back">返回</string>
-    <string name="atlas_themes_link">主題 →</string>
-    <string name="atlas_themes_title">主題</string>
     <string name="atlas_show_more">顯示更多</string>
     <string name="atlas_words_header">單字</string>
     <string name="atlas_theme_empty">這個主題還沒有字</string>

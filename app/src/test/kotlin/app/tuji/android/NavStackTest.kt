@@ -99,8 +99,7 @@ class NavStackTest {
     }
 
     @Test fun `今天 and 圖鑑 keep the bar through a push`() {
-        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes)))
-        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes).push(shelf)))
+        assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(shelf)))
         assertTrue(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.PublicItem("saved-abc"))))
     }
 
@@ -130,7 +129,7 @@ class NavStackTest {
     @Test fun `a pushed screen turns the swipe off on every tab`() {
         // Not only on the tab it was pushed from: the race is with the
         // platform's own back gesture, and that exists everywhere.
-        assertFalse(TabShell.swipeEnabled(NavStack().select(AppRoute.Atlas).push(AppRoute.Themes)))
+        assertFalse(TabShell.swipeEnabled(NavStack().select(AppRoute.Atlas).push(shelf)))
         assertFalse(TabShell.swipeEnabled(NavStack().select(AppRoute.Me).push(AppRoute.Settings)))
         assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.Word("kettle"))))
     }

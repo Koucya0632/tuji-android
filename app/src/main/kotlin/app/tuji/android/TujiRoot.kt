@@ -94,7 +94,6 @@ import app.tuji.android.atlas.WordDetailPanel
 import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.atlas.AtlasCardsScreen
 import app.tuji.android.atlas.AtlasThemeScreen
-import app.tuji.android.atlas.AtlasThemesScreen
 import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
 import app.tuji.android.account.AccountScreen
@@ -883,7 +882,16 @@ private fun SignedInScreens(
                     scores = scores,
                     loading = !catalog.loaded,
                     bottomPadding = 0.dp,
-                    onOpenThemes = { nav = nav.push(AppRoute.Themes) },
+                    shelves = catalog.shelves,
+                    seenAndTotal = progress::seenAndTotal,
+                    uiLang = uiLang,
+                    onOpenTheme = { id ->
+                        val shelf = catalog.shelves.first { it.category.id == id }
+                        nav = nav.push(
+                            AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)),
+                        )
+                    },
+                    onRetry = { scope.launch { app.catalog.load(direction, force = true) } },
                     onOpen = openCard,
                     onOpenManage = if (isGuest) null else ({ nav = nav.push(AppRoute.AtlasManage) }),
                     session = direction.targetLanguage,
@@ -1153,22 +1161,6 @@ private fun SignedInScreens(
                     categories = catalog.categories,
                     uiLang = uiLang,
                     onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
-                )
-
-                AppRoute.Themes -> AtlasThemesScreen(
-                    shelves = catalog.shelves,
-                    words = catalog.words,
-                    scores = scores,
-                    seenAndTotal = progress::seenAndTotal,
-                    uiLang = uiLang,
-                    loading = !catalog.loaded,
-                    bottomPadding = 0.dp,
-                    onOpen = { id ->
-                        val shelf = catalog.shelves.first { it.category.id == id }
-                        nav = nav.push(
-                            AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)),
-                        )
-                    },
                 )
 
                 is AppRoute.PublicItem -> {
@@ -1449,7 +1441,7 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
     // whose bar carries 更多.
     is AppRoute.PublicItem,
-    AppRoute.Themes, AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors,
+    AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors,
     is AppRoute.ManageCard -> true
     else -> false
 }
