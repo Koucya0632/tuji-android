@@ -136,6 +136,19 @@ data class StudyExample(
 )
 
 @Serializable
+data class StudyChoiceCandidate(
+    val wordId: String,
+    val label: String,
+    val language: TargetLanguage,
+    val gloss: String,
+    val category: String? = null,
+    val pos: String? = null,
+    val exclusions: List<String> = emptyList(),
+    val tier: Int,
+    val weight: Double,
+)
+
+@Serializable
 data class StudyQueueItem(
     val card: StudyCard,
     val word: StudyQueueWord,
@@ -148,6 +161,8 @@ data class StudyQueueItem(
      * question rather than a gate at the session's entrance.
      */
     val examples: List<StudyExample>? = null,
+    val choiceCandidates: List<StudyChoiceCandidate>? = null,
+    val choiceExclusions: List<String>? = null,
 ) {
     val id: String get() = word.id
 }
