@@ -20,7 +20,17 @@ OAuth client ID → **Android**：
 |---|---|
 | Package name | `app.tuji.android.debug`（debug）／`app.tuji.android`（release） |
 | SHA-1（debug，本機 `~/.android/debug.keystore`） | `F4:17:C9:DF:1D:59:71:FE:02:D1:A0:9D:51:6F:EC:DF:3A:73:E7:D9` |
-| SHA-1（release） | 由 Play App Signing 提供，上架流程走完才會有 |
+| SHA-1（release，Play App Signing 的 app signing key） | `48:F5:57:16:78:5A:42:52:4D:EF:1A:37:FD:71:E0:AE:BF:E6:EA:4B` |
+
+> release 要登記的是 Play Console → Protected with Play → App signing 的
+> **App signing key（Classical key）**，不是 Upload key certificate。使用者從
+> Play 裝到的版本是 Google 用 app signing key 重簽的。
+>
+> 本機直接裝 `app-release.apk`（上傳金鑰簽的，SHA-1 `BB:85:DC:63:2C:75:D5:B9:14:E7:67:4E:7F:E2:0D:59:96:76:EA:83`）
+> 時 Google 登入會失敗，這是預期的；要測 Google 登入請從 Play 測試軌道安裝。
+>
+> App signing key 的 SHA-256（App Links 的 `assetlinks.json` 會用到）：
+> `88:E1:7F:2F:38:1B:AB:34:05:00:C8:8E:D9:C2:5E:7C:16:9C:CB:51:18:80:22:CD:DD:F1:AA:F8:8B:CD:16:9A`
 
 > ⚠️ 那個 debug SHA-1 是**這台機器**的。換一台機器開發、或 CI 上跑 instrumented
 > 測試，都會是不同的 SHA-1，各自要再登記一次。取得方式：

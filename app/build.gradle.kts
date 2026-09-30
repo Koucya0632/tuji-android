@@ -17,6 +17,16 @@ val secrets = Properties().apply {
 fun secret(key: String, fallback: String = ""): String =
     (secrets.getProperty(key) ?: System.getenv(key) ?: fallback)
 
+// The Play upload key, from `keystore.properties` (also outside version
+// control). Absent on CI and on a fresh clone, and then the release build is
+// simply left unsigned: nothing but an upload to Play needs it, and a missing
+// key must not stop `./gradlew test`. Play App Signing re-signs what users
+// install, so this key only proves an upload came from us.
+val uploadKey = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
 android {
     namespace = "app.tuji.android"
     // compileSdk is the newest platform available; targetSdk is what Play's
@@ -54,6 +64,17 @@ android {
         buildConfigField("String", "TUJI_GOOGLE_WEB_CLIENT_ID", "\"${secret("TUJI_GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
+    signingConfigs {
+        if (uploadKey.getProperty("storeFile") != null) {
+            create("upload") {
+                storeFile = file(uploadKey.getProperty("storeFile"))
+                storePassword = uploadKey.getProperty("storePassword")
+                keyAlias = uploadKey.getProperty("keyAlias")
+                keyPassword = uploadKey.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -63,6 +84,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("upload")
         }
     }
 
