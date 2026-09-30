@@ -141,6 +141,8 @@ object TabShell {
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
         if (current in focused || current is AppRoute.Word) return false
+        // A page read to the end — its last lines are the ones a bar would cover.
+        if (current == AppRoute.Membership) return false
         if (current is AppRoute.Tab) return true
         return when (nav.tab) {
             AppRoute.Community, AppRoute.Me -> false

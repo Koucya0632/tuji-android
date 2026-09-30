@@ -139,4 +139,9 @@ class NavStackTest {
         assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.Review)))
         assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.LearnNew)))
     }
+
+    @Test fun `the membership page never wears the tab bar`() {
+        assertFalse(TabShell.tabBarVisible(NavStack().push(AppRoute.Membership)))
+        assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Membership)))
+    }
 }
