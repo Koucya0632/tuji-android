@@ -73,6 +73,18 @@ sealed interface AppRoute {
     /** The study flows, which take over the whole screen. */
     data object Review : AppRoute
     data object LearnNew : AppRoute
+
+    /** 個人詞表, from 我. */
+    data object WordLists : AppRoute
+
+    /** One 個人詞表. */
+    data class WordList(val listId: String) : AppRoute
+
+    /**
+     * 學新字 or 複習 drawn from one 個人詞表 — the same two flows, fed by the
+     * list instead of 今日's themes.
+     */
+    data class WordListStudy(val listId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
 }
 
 /**
@@ -140,7 +152,7 @@ object TabShell {
      */
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
-        if (current in focused || current is AppRoute.Word) return false
+        if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy) return false
         // A page read to the end — its last lines are the ones a bar would cover.
         if (current == AppRoute.Membership) return false
         if (current is AppRoute.Tab) return true

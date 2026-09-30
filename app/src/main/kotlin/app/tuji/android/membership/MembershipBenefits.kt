@@ -10,9 +10,7 @@ import app.tuji.android.core.model.MembershipTier
  * the purchase: this build cannot take money yet (ADR-0001, Play Billing not
  * set up), so the page says what each plan gives and where it can be bought.
  *
- * The numbers must match docs/MEMBERSHIP_PUBLIC_COPY.md §1. 詞表 is iOS's row
- * too, but this app has no 詞表 screen yet, so it is not listed here — a page
- * must not promise what the app it sits in cannot do.
+ * The numbers must match docs/MEMBERSHIP_PUBLIC_COPY.md §1.
  */
 data class MembershipOffer(
     /** The 永久會員 card exists only under policy v2: before that it bought nothing. */
@@ -25,12 +23,14 @@ data class MembershipOffer(
     val lifetimeRows: List<Int> get() = LIFETIME
 
     val proRows: List<Int>
-        get() = listOf(
-            R.string.membership_benefit_slots_300,
-            if (isV2) R.string.membership_benefit_ai_200 else R.string.membership_benefit_ai_500,
-            R.string.membership_benefit_precision,
-            R.string.membership_benefit_support,
-        )
+        get() = buildList {
+            add(R.string.membership_benefit_slots_300)
+            add(if (isV2) R.string.membership_benefit_ai_200 else R.string.membership_benefit_ai_500)
+            add(R.string.membership_benefit_precision)
+            // 詞表 does not exist under v1.
+            if (isV2) add(R.string.membership_benefit_lists_100)
+            add(R.string.membership_benefit_support)
+        }
 
     /** Under v2 the headline sells 永久會員 — unless it is already owned. */
     @get:StringRes
@@ -47,6 +47,7 @@ data class MembershipOffer(
             R.string.membership_benefit_slots_20,
             R.string.membership_benefit_ai_10,
             R.string.membership_benefit_community,
+            R.string.membership_benefit_lists_20,
             R.string.membership_benefit_notes,
         )
 

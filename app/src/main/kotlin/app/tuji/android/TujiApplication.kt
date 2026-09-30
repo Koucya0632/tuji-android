@@ -56,7 +56,7 @@ class TujiApplication : Application() {
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
             accountScopedStores = {
-                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore)
+                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore, wordListsStore)
             },
         )
     }
@@ -76,6 +76,11 @@ class TujiApplication : Application() {
     /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
     val catalog: app.tuji.android.atlas.CatalogStore by lazy {
         app.tuji.android.atlas.CatalogStore(catalogReading)
+    }
+
+    /** 個人詞表 in the live learning language — 我, 詞表 and 加入詞表 share it. */
+    val wordListsStore: app.tuji.android.wordlists.WordListsStore by lazy {
+        app.tuji.android.wordlists.WordListsStore(study, direction = { settingsStore.current.value.direction })
     }
 
     /** 個人筆記, read once per account — the word page and the review reveal share it. */
