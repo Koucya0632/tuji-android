@@ -28,7 +28,7 @@ import app.tuji.android.core.study.StudyLadder
 import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.TileBoard
-import app.tuji.android.core.study.studyChoices
+import app.tuji.android.core.study.StudyChoiceSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -78,6 +78,7 @@ class NewFlowViewModel(
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
+    private var choiceSession = StudyChoiceSession()
 
     sealed interface State {
         data object Loading : State
@@ -230,6 +231,7 @@ class NewFlowViewModel(
      *   theme filter, for callers that have neither to hand.
      */
     fun load(request: StudyQuotas.NewQueue = StudyQuotas.NewQueue(limit = 10, categories = emptyList())) {
+        choiceSession = StudyChoiceSession()
         _state.value = State.Loading
         work.launch {
             val queue = runCatching {
@@ -461,7 +463,7 @@ class NewFlowViewModel(
                 identifyShownAt = item.word.id to nowMs()
                 Stage.Identify(
                     item = item,
-                    choices = studyChoices(
+                    choices = choiceSession.choices(
                         item = item,
                         pool = pool(),
                         session = direction.targetLanguage,

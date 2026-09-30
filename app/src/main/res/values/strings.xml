@@ -141,6 +141,7 @@
     <string name="atlas_source_taken">Taken in</string>
     <string name="atlas_source_mine">Mine</string>
     <string name="atlas_mine_empty">No cards of your own yet</string>
+    <string name="atlas_themes_empty">No themes yet</string>
     <string name="atlas_mine_empty_hint">Tap the camera in the middle of the bar below to add a card</string>
     <string name="atlas_bookmarked_empty">No bookmarks yet</string>
     <string name="atlas_bookmarked_empty_hint">Words you bookmark will show up here</string>
@@ -150,8 +151,6 @@
     <string name="atlas_loading">Loading the atlas…</string>
     <string name="atlas_failed">Couldn’t load the atlas. Please try again later.</string>
     <string name="atlas_back">Back</string>
-    <string name="atlas_themes_link">Topics →</string>
-    <string name="atlas_themes_title">Topics</string>
     <string name="atlas_show_more">Show more</string>
     <string name="atlas_words_header">Word</string>
     <string name="atlas_theme_empty">No words in this topic yet</string>

@@ -1,5 +1,6 @@
 package app.tuji.android.core.study
 
+import app.tuji.android.core.model.StudyChoiceCandidate
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
@@ -28,6 +29,7 @@ enum class DistractorFairness {
 
     /** The dictionary translates both identically: pan / frying pan → 平底鍋. */
     SharedGloss,
+    Synonym,
 }
 
 /**
@@ -55,8 +57,9 @@ class DistractorPool(
      * legitimately pick it.
      */
     fun fairness(of: String): DistractorFairness {
-        if (of.equals(answer, ignoreCase = true)) return DistractorFairness.SameTerm
+        if (choiceKey(of) == choiceKey(answer)) return DistractorFairness.SameTerm
 
+        if (choiceAliasesConflict(of, answer)) return DistractorFairness.Synonym
         val answerTokens = wordTokens(answer)
         val labelTokens = wordTokens(of)
         if (answerTokens.isNotEmpty() && labelTokens.isNotEmpty() &&
@@ -72,7 +75,7 @@ class DistractorPool(
         }
 
         if (answerGlosses.isNotEmpty()) {
-            val glosses = glossIndex[of.lowercase()]
+            val glosses = glossIndex[choiceKey(of)]
             if (glosses != null && glosses.any { it in answerGlosses }) {
                 return DistractorFairness.SharedGloss
             }
@@ -110,7 +113,7 @@ class DistractorPool(
         private fun buildGlossIndex(pool: List<Word>): Map<String, Set<String>> {
             val index = mutableMapOf<String, MutableSet<String>>()
             for (word in pool) {
-                index.getOrPut(word.word.lowercase()) { mutableSetOf() }
+                index.getOrPut(choiceKey(word.word)) { mutableSetOf() }
                     .addAll(chineseGlosses(word.chinese))
             }
             return index
@@ -118,59 +121,28 @@ class DistractorPool(
     }
 }
 
-/**
- * Up to four MCQ option labels for [item]: the correct answer plus fair
- * distractors.
- *
- * Server-provided `choices` are preferred — they are difficulty-curated, same
- * category — but **scrubbed** first, then the set is topped up from [pool].
- * 自制圖鑑 cards have no server choices and build the whole set from the pool.
- *
- * [variant] folds into the seed: the coordinator bumps it per wrong attempt so
- * a requeued question re-shuffles. Otherwise remembering "the answer was C"
- * stands in for knowing the word.
- *
- * [session] is 當前圖鑑語言, used to place words the server did not tag. iOS's
- * top-up used to skip its same-language filter entirely for an untagged
- * question, drawing English distractors under a Japanese answer.
- */
+/** Four labels from server candidates, falling back to same-language local data.
+ * StudyChoiceSession owns the fresh round seed, stable snapshots and retry history. */
 fun studyChoices(
     item: StudyQueueItem,
     pool: List<Word>,
     session: TargetLanguage,
     variant: Int = 0,
+    seed: Long? = null,
+    previous: List<String> = emptyList(),
 ): List<String> {
-    val answer = item.word.word
-    val random = SeededRandom(studyStableHash(item.id) + variant * -0x61c8864680b583ebL)
-    val fairness = DistractorPool(answer = answer, gloss = item.word.chinese, pool = pool)
-
-    val seen = mutableSetOf(answer.lowercase())
-    val distractors = mutableListOf<String>()
-
-    fun admit(label: String) {
-        if (distractors.size >= 3) return
-        if (label.isEmpty()) return
-        if (fairness.fairness(label) != DistractorFairness.Fair) return
-        if (!seen.add(label.lowercase())) return
-        distractors.add(label)
+    val language = item.word.language(session)
+    val target = StudyChoiceCandidate(wordId = item.id, label = item.word.word, language = language,
+        gloss = item.word.chinese, category = item.word.category, exclusions = item.choiceExclusions.orEmpty(), tier = 0, weight = 1.0)
+    val local = pool.filter { it.asHeadworded().language(session) == language }.map { word ->
+        StudyChoiceCandidate(wordId = word.id, label = word.word, language = language, gloss = word.chinese.orEmpty(),
+            category = word.category, tier = if (word.category == target.category) 2 else 3,
+            weight = 1.0)
     }
-
-    // Server distractors first.
-    item.choices?.forEach(::admit)
-
-    if (distractors.size < 3) {
-        val lang = item.word.language(session)
-        // Same language first, so an untagged custom word still lands in the
-        // right half of the pool.
-        pool.filter { it.asHeadworded().language(session) == lang }
-            .shuffled(random)
-            .forEach { admit(it.word) }
-        if (distractors.size < 3) {
-            // The same-language pool was thin (a brand-new account) — widen so
-            // the quiz still has plausible-ish options.
-            pool.shuffled(random).forEach { admit(it.word) }
-        }
-    }
-
-    return (listOf(answer) + distractors).shuffled(random)
+    val known = local + StudyChoiceData.reserve.filter { it.language == language }
+    val legacy = item.choices.orEmpty().mapNotNull { label -> known.firstOrNull { choiceKey(it.label) == choiceKey(label) } }
+    val server = item.choiceCandidates.orEmpty()
+    val candidates = if (prepareChoiceCandidates(target, server).size >= 3) server else server + local + legacy
+    return assembleStudyChoices(target, candidates,
+        seed ?: choiceHash("${language.name.lowercase(java.util.Locale.ROOT)}:${item.id}:$variant"), previous)
 }

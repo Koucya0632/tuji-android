@@ -178,10 +178,10 @@ class DistractorPoolTest {
             ),
             session = TargetLanguage.JA,
         )
-        // A brand-new account has no Japanese pool yet. Plausible-ish beats
-        // a one-option quiz.
+        // A brand-new account uses bundled Japanese words, never English.
         assertEquals(4, choices.size)
         assertTrue("箸" in choices)
+        assertFalse(choices.any { it in listOf("spoon", "fork", "plate") })
     }
 
     // The seeded source

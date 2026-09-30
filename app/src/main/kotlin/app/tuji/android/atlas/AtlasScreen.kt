@@ -7,6 +7,7 @@ import app.tuji.android.core.study.ThemeStatus
 import app.tuji.android.core.study.MasteryLevel
 import app.tuji.android.core.design.MasteryBadge
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,7 +55,9 @@ import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.MascotEmptyState
+import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.core.design.TujiSkeleton
 import app.tuji.android.core.design.TujiImagePlaceholder
@@ -74,16 +77,19 @@ import app.tuji.android.core.model.Word
 import coil3.compose.AsyncImage
 
 /**
- * 圖鑑 — every word, two to a row.
+ * 圖鑑 — one filter row, and what the chosen source has.
  *
- * It was a grid of shelves, and browsing by theme was the *only* way in. That
- * put a whole screen between the user and the thing the tab is named after,
- * and it made the 557-word dictionary look like ten rooms rather than one
- * book. Themes are still there — the count row links to them — but the tab
- * opens on the words.
+ * **官方 does not show words at all.** It shows the themes, each with its
+ * cover, and the words behind one are on the theme's own page. The dictionary
+ * is 800 words long; a flat grid of it was a list you paged through sixty at a
+ * time, with the themes hidden behind a small 主題 → link that had its own
+ * screen. That screen is retired: this *is* it, at the top of the tab where
+ * browsing starts.
  *
- * The grid pages rather than rendering 557 tiles: see [CardsListPaging], where
- * the window rule lives because nobody can see it is wrong by looking.
+ * The other three sources still show word tiles — a photographed card or one
+ * taken in from 物見 belongs to no theme. Those grids page rather than
+ * rendering everything: see [CardsListPaging], where the window rule lives
+ * because nobody can see it is wrong by looking.
  */
 @Composable
 fun AtlasCardsScreen(
@@ -92,7 +98,14 @@ fun AtlasCardsScreen(
     scores: MasteryStore.Scores,
     loading: Boolean,
     bottomPadding: Dp,
-    onOpenThemes: () -> Unit,
+    /** The dictionary's themes, for 官方. */
+    shelves: List<CategoryShelf.Shelf>,
+    /** A theme's (seen, total) from the server, or null while unfetched. */
+    seenAndTotal: (String) -> Pair<Int, Int>?,
+    uiLang: String,
+    onOpenTheme: (String) -> Unit,
+    /** Another go at the catalogue, for the error state. */
+    onRetry: () -> Unit,
     onOpen: (String) -> Unit,
     onSearch: () -> Unit = {},
     isGuest: Boolean = false,
@@ -112,14 +125,35 @@ fun AtlasCardsScreen(
     // never asked to come back to.
     var peek by remember { mutableStateOf<Word?>(null) }
     val haptics = rememberTujiHaptics()
+    val showsThemes = source == CardsSource.Official
     val shown = remember(source, words, personal) {
         CardsSourceRules.words(source, words, personal.mine, personal.taken, personal.bookmarked)
     }
 
     // The dictionary failing to load is the tab failing to load; the other two
     // shelves being empty is an answer, and it has its own sentence.
+    //
+    // An error is only worth the whole screen when there is nothing behind it —
+    // and unlike the sentence this used to print, it offers a way out. iOS's
+    // `TujiErrorState` carries 重試 for the same reason: a dead end that names
+    // the problem is still a dead end.
     if (words.isEmpty()) {
-        if (loading) CardGridSkeleton(bottomPadding) else Centered(stringResource(R.string.atlas_failed))
+        if (loading) {
+            CardGridSkeleton(bottomPadding)
+        } else {
+            Box(Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4), Alignment.Center) {
+                TujiErrorState(
+                    title = stringResource(R.string.atlas_failed),
+                    actions = {
+                        TujiButton(
+                            text = stringResource(R.string.retry),
+                            onClick = onRetry,
+                            modifier = Modifier.padding(top = TujiSpace.S4),
+                        )
+                    },
+                )
+            }
+        }
         return
     }
     var visibleCount by rememberSaveable(source) { mutableIntStateOf(CardsListPaging.PAGE_SIZE) }
@@ -185,9 +219,14 @@ fun AtlasCardsScreen(
                     color = TujiColor.Ink3,
                     modifier = Modifier.weight(1f),
                 )
-                // 主題 only on 官方: a theme describes a dictionary word, and
-                // the ones you photographed or took in have no theme to browse
-                // by. 我做的 carries 管理 → instead, as on iOS.
+                // 我做的 is the only source with an action now. 官方 used to
+                // carry 主題 → beside the count; the themes *are* the grid, so
+                // the link would point at the screen the reader is on.
+                //
+                // The count stays in words even on 官方 — 807 字 is what the
+                // official half of the catalogue has, which is the number worth
+                // knowing, and it reuses the one 「%1$d 字」 key rather than
+                // minting a second concept.
                 if (source == CardsSource.Mine && onOpenManage != null) {
                     Text(
                         stringResource(R.string.atlas_manage_link),
@@ -199,17 +238,6 @@ fun AtlasCardsScreen(
                             .padding(vertical = TujiSpace.S1),
                     )
                 }
-                if (source == CardsSource.Official) {
-                    Text(
-                        stringResource(R.string.atlas_themes_link),
-                        style = TujiType.label,
-                        color = TujiColor.Ink,
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier
-                            .tujiClickable(onClick = onOpenThemes)
-                            .padding(vertical = TujiSpace.S1),
-                    )
-                }
             }
         }
 
@@ -217,7 +245,7 @@ fun AtlasCardsScreen(
         // rather than in a strip above it: a band pinned over the chips says
         // "notification about a card" for something that *is* a card, and it
         // costs a permanent stripe of the tab for as long as any job is alive.
-        if (source == CardsSource.Mine) {
+        if (source == CardsSource.Mine && !showsThemes) {
             items(captureJobs, key = { "job:" + it.id }) { job ->
                 // Three tiles, three taps, as iOS routes them: retry what can
                 // be retried, and send everything else to 圖鑑管理 — which is
@@ -238,9 +266,15 @@ fun AtlasCardsScreen(
         // An empty shelf is an answer, and it goes *inside* the grid so the
         // chips stay on screen: a sentence that replaces the whole page would
         // take away the only way back to a shelf that has something on it.
-        if (page.words.isEmpty() && !(source == CardsSource.Mine && captureJobs.isNotEmpty())) {
+        val empty = if (showsThemes) shelves.isEmpty() else page.words.isEmpty()
+        if (empty && !(source == CardsSource.Mine && captureJobs.isNotEmpty())) {
             item(span = { GridItemSpan(maxLineSpan) }) {
+                // 官方 empties differently from the other three: what is missing
+                // is the catalogue itself, not a word of yours, so it says so
+                // in the theme grid's own words — and has no hint, because
+                // there is nothing the reader can do to put a theme there.
                 val (title, hint) = when (source) {
+                    CardsSource.Official -> R.string.atlas_themes_empty to (null as Int?)
                     CardsSource.Bookmarked -> R.string.atlas_bookmarked_empty to R.string.atlas_bookmarked_empty_hint
                     CardsSource.Mine -> R.string.atlas_mine_empty to R.string.atlas_mine_empty_hint
                     else -> R.string.atlas_taken_empty to R.string.atlas_taken_empty_hint
@@ -252,12 +286,30 @@ fun AtlasCardsScreen(
                     Modifier.fillMaxWidth().height(320.dp).padding(top = 112.dp),
                     contentAlignment = Alignment.TopCenter,
                 ) {
-                    MascotEmptyState(title = stringResource(title), message = stringResource(hint))
+                    MascotEmptyState(title = stringResource(title), message = hint?.let { stringResource(it) })
                 }
             }
         }
 
-        items(page.words, key = { it.id }) { word ->
+        if (showsThemes) {
+            items(shelves, key = { "theme:" + it.category.id }) { shelf ->
+                val status = remember(shelf.category.id, words, scores) {
+                    ThemeStatus.of(
+                        wordIds = CategoryShelf.words(shelf.category.id, words).map { it.id },
+                        masteryScore = scores::score,
+                        seenAndTotal = seenAndTotal(shelf.category.id),
+                    )
+                }
+                ThemeCoverTile(
+                    shelf = shelf,
+                    status = status,
+                    uiLang = uiLang,
+                    onClick = { onOpenTheme(shelf.category.id) },
+                )
+            }
+        }
+
+        items(if (showsThemes) emptyList() else page.words, key = { it.id }) { word ->
             WordTile(
                 word = word,
                 modifier = Modifier.tujiClickable(
@@ -269,7 +321,7 @@ fun AtlasCardsScreen(
             )
         }
 
-        if (page.canShowMore) {
+        if (page.canShowMore && !showsThemes) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     stringResource(R.string.atlas_show_more),
@@ -316,71 +368,15 @@ private fun SourceRow(selected: CardsSource, isGuest: Boolean, onSelect: (CardsS
                 ),
                 style = TujiType.bodySmStrong,
                 color = if (lit) TujiColor.Paper else TujiColor.Ink2,
+                // A fixed 36, as iOS sets it: the chips are a row of one
+                // shape, and a height that falls out of the padding moves with
+                // the font and stops being one.
                 modifier = Modifier
+                    .height(36.dp)
                     .background(if (lit) TujiColor.Ink else TujiColor.Paper2)
                     .tujiClickable { if (!lit) onSelect(source) }
-                    .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
-            )
-        }
-    }
-}
-
-/**
- * 主題 — the index of every theme in the dictionary.
- *
- * Text tiles, not the photographic covers this screen used to draw. The cover
- * art belongs to the theme's own page, where it is a hero worth the height;
- * here it made ten rooms compete with each other at the size of a thumbnail,
- * and pushed the count off the fold.
- */
-@Composable
-fun AtlasThemesScreen(
-    shelves: List<CategoryShelf.Shelf>,
-    words: List<Word>,
-    scores: MasteryStore.Scores,
-    /** The theme's (seen, total) from the server, or null while unfetched. */
-    seenAndTotal: (String) -> Pair<Int, Int>?,
-    uiLang: String,
-    loading: Boolean,
-    bottomPadding: Dp,
-    onOpen: (String) -> Unit,
-) {
-    if (shelves.isEmpty()) {
-        if (loading) CardGridSkeleton(bottomPadding) else Centered(stringResource(R.string.atlas_failed))
-        return
-    }
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(
-            start = TujiSpace.S4, end = TujiSpace.S4,
-            top = 0.dp, bottom = bottomPadding + TujiSpace.S6,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        // The page's own name, under the back arrow rather than beside it.
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                stringResource(R.string.atlas_themes_title),
-                style = TujiType.h2,
-                color = TujiColor.Ink,
-                modifier = Modifier.padding(bottom = TujiSpace.S2),
-            )
-        }
-        items(shelves, key = { it.category.id }) { shelf ->
-            val status = remember(shelf.category.id, words, scores) {
-                ThemeStatus.of(
-                    wordIds = CategoryShelf.words(shelf.category.id, words).map { it.id },
-                    masteryScore = scores::score,
-                    seenAndTotal = seenAndTotal(shelf.category.id),
-                )
-            }
-            ThemeTile(
-                shelf = shelf,
-                status = status,
-                uiLang = uiLang,
-                onClick = { onOpen(shelf.category.id) },
+                    .padding(horizontal = TujiSpace.S3)
+                    .wrapContentHeight(),
             )
         }
     }
