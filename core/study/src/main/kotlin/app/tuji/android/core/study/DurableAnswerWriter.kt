@@ -16,6 +16,12 @@ sealed interface StudyWriteOutcome {
 
     /** Every attempt failed; the payload is in the outbox and will replay. */
     data object Parked : StudyWriteOutcome
+
+    /**
+     * The server refused this answer for good ([AnswerRejected]). Neither
+     * retried nor parked — it would never succeed, and is not 未同步 either.
+     */
+    data object Rejected : StudyWriteOutcome
 }
 
 /**
@@ -39,6 +45,7 @@ class DurableAnswerWriter(
         repeat(maxAttempts) { attempt ->
             val result = runCatching { submit.submit(payload) }
             result.getOrNull()?.let { return StudyWriteOutcome.Synced(it) }
+            if (result.exceptionOrNull() is AnswerRejected) return StudyWriteOutcome.Rejected
             if (attempt < maxAttempts - 1) backoff(attempt)
         }
         // A dropped SRS write is user-visible damage — the word stays 未學 and

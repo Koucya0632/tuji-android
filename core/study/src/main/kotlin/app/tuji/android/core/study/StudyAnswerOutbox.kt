@@ -76,7 +76,8 @@ class StudyAnswerOutbox(
      *
      * Successes leave the outbox; the **first failure stops the pass** — the
      * next entry would meet the same network — and keeps the rest for the next
-     * trigger. Re-checks the account on every iteration, because a sign-out
+     * trigger. The exception is [AnswerRejected]: that entry can never be sent,
+     * so it leaves too and the pass goes on to the next. Re-checks the account on every iteration, because a sign-out
      * mid-replay must not let the following answers through, and must not let a
      * late success remove an entry belonging to whoever signed in after.
      */
@@ -90,6 +91,9 @@ class StudyAnswerOutbox(
                 val stamped = entry.payload.copy(ownerUserId = owner)
                 try {
                     submit.submit(stamped)
+                } catch (rejected: AnswerRejected) {
+                    // Refused for good — kept, it would wedge every answer
+                    // behind it. Falls through to removal below.
                 } catch (e: Throwable) {
                     // Left in place on purpose. A drain that clears what it
                     // could not send is a drain that loses data quietly.

@@ -12,8 +12,36 @@ import app.tuji.android.core.model.StudyAnswerResponse
  * HTTP client to be true.
  */
 fun interface AnswerSubmitting {
-    /** Throws on any failure. Retrying is the caller's decision, not this one's. */
+    /**
+     * Throws on any failure — [AnswerRejected] when the server refused this
+     * answer for good. Retrying is the caller's decision, not this one's.
+     */
     suspend fun submit(payload: StudyAnswerPayload): StudyAnswerResponse
+}
+
+/**
+ * The server refused this answer and always will: the card is gone (404), the
+ * account may not write it (403), it needs a plan (402), the request itself is
+ * refused (another 4xx). Such an answer is dropped, not retried or parked —
+ * [StudyAnswerOutbox.replay] stops at the first failure, so one parked
+ * permanent failure blocked every answer queued behind it, forever.
+ *
+ * Thrown by the network adapter, which is the side that knows what a status
+ * is; this module only knows the verdict.
+ */
+class AnswerRejected(val status: Int, cause: Throwable? = null) :
+    Exception("Answer rejected: HTTP $status", cause) {
+
+    companion object {
+        /**
+         * Which HTTP statuses are permanent. 401 is not (the next attempt
+         * carries a refreshed token), nor are 408 and 429, nor anything that is
+         * not a 4xx. Unknown failures stay transient: dropping an answer is the
+         * worse mistake of the two.
+         */
+        fun isPermanent(status: Int): Boolean =
+            status in 400..499 && status != 401 && status != 408 && status != 429
+    }
 }
 
 /**

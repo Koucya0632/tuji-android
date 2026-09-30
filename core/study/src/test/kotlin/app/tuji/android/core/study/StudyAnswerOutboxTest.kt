@@ -205,4 +205,37 @@ class StudyAnswerOutboxTest {
         val restored = outbox(f).pending.single()
         assertEquals(rich.copy(ownerUserId = null), restored.copy(ownerUserId = null))
     }
+
+    @Test
+    fun `a refused answer is dropped and the replay carries on`() = runTest {
+        val f = file()
+        val box = outbox(f)
+        box.add(answer("gone"))
+        box.add(answer("b"))
+
+        val sent = mutableListOf<String>()
+        box.replay { payload ->
+            sent += payload.cardId
+            if (payload.cardId == "gone") throw AnswerRejected(404)
+            StudyAnswerResponse(ok = true)
+        }
+
+        assertEquals(listOf("gone", "b"), sent)
+        assertEquals(0, box.count)
+        assertEquals(0, outbox(f).count)
+    }
+
+    @Test
+    fun `a transient failure after a refusal still stops the pass`() = runTest {
+        val box = outbox()
+        box.add(answer("gone"))
+        box.add(answer("b"))
+
+        box.replay { payload ->
+            if (payload.cardId == "gone") throw AnswerRejected(402)
+            throw java.io.IOException("offline")
+        }
+
+        assertEquals(listOf("b"), box.pending.map { it.cardId })
+    }
 }

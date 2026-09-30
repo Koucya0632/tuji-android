@@ -106,4 +106,30 @@ class DurableAnswerWriterTest {
 
         assertEquals(1, StudyAnswerOutbox(f, account).count)
     }
+
+    @Test
+    fun `a permanent refusal is neither retried nor parked`() = runTest {
+        // One parked 402 used to sit at the head of the outbox and hold back
+        // every answer queued after it.
+        val box = outbox()
+        var attempts = 0
+        val submit = AnswerSubmitting {
+            attempts++
+            throw AnswerRejected(402)
+        }
+
+        val outcome = writer(submit, box).submitAnswer(payload)
+
+        assertEquals(StudyWriteOutcome.Rejected, outcome)
+        assertEquals(1, attempts)
+        assertEquals(0, box.count)
+    }
+
+    @Test
+    fun `which statuses count as permanent`() {
+        listOf(400, 402, 403, 404, 409, 422).forEach { assertTrue("$it", AnswerRejected.isPermanent(it)) }
+        // 401 carries a fresh token next time; 408 and 429 are the server
+        // asking for later; 5xx is the server's own trouble.
+        listOf(401, 408, 429, 500, 503).forEach { assertTrue("$it", !AnswerRejected.isPermanent(it)) }
+    }
 }

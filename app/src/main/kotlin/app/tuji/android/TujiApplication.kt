@@ -4,10 +4,12 @@ import android.app.Application
 import app.tuji.android.core.auth.AuthService
 import app.tuji.android.core.auth.GoogleCredentialBridge
 import app.tuji.android.core.auth.SupabaseProvider
+import app.tuji.android.core.network.ApiError
 import app.tuji.android.core.network.CatalogRepository
 import app.tuji.android.core.network.StudyRepository
 import app.tuji.android.core.network.TujiApiClient
 import app.tuji.android.core.study.ActiveAccount
+import app.tuji.android.core.study.AnswerRejected
 import app.tuji.android.core.study.AnswerSubmitting
 import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.StudyAnswerOutbox
@@ -189,7 +191,14 @@ class TujiApplication : Application() {
      * live in a pure-JVM module: nothing there knows what HTTP is.
      */
     val answerSubmitting: AnswerSubmitting by lazy {
-        AnswerSubmitting { study.submitAnswer(it) }
+        AnswerSubmitting { payload ->
+            try {
+                study.submitAnswer(payload)
+            } catch (e: ApiError.Http) {
+                // The verdict belongs to `core:study`; the status is only known here.
+                if (AnswerRejected.isPermanent(e.status)) throw AnswerRejected(e.status, e) else throw e
+            }
+        }
     }
 
     /**
