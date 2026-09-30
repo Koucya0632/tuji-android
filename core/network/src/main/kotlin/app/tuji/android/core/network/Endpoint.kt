@@ -153,6 +153,22 @@ interface Endpoint {
         )
     }
 
+    /** 個人筆記 — every note this account has written, in one read. */
+    data object UsersWordNotes : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-notes",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** One word's note: POST writes it, DELETE removes it. */
+    data class UsersWordNote(val wordId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-notes/$wordId",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /**
      * 書籤 — read, and written on the same path with a different verb.
      *

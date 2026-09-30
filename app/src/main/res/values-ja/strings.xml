@@ -289,6 +289,14 @@
     <string name="gloss_base_form">原形</string>
     <string name="gloss_see_detail">詳細を見る</string>
     <string name="word_examples_title">例文 · EXAMPLE</string>
+    <string name="word_note_title">マイメモ</string>
+    <string name="word_note_locked">メンバーは単語ごとに自分のメモを残せます</string>
+    <string name="word_note_member_to_edit">編集はメンバー限定です</string>
+    <string name="word_note_delete">メモを削除</string>
+    <string name="word_note_placeholder">自分なりの覚え方や例文、メモを書きましょう…</string>
+    <string name="word_note_delete_confirm">このメモを削除しますか？</string>
+    <string name="word_note_field">メモ</string>
+    <string name="word_note_at_limit">上限に達しました</string>
     <string name="word_insights_confusables">混同しやすい語</string>
     <string name="word_insights_mistakes">よくある誤用</string>
     <string name="word_insights_usage">使い方の補足</string>
@@ -619,6 +627,7 @@
     <string name="membership_benefit_slots_20">マイ図鑑 20枠</string>
     <string name="membership_benefit_ai_10">AI認識 月10回</string>
     <string name="membership_benefit_community">物見の保存・学習・投稿</string>
+    <string name="membership_benefit_notes">単語ごとに自分のメモを残せます</string>
     <string name="membership_benefit_slots_300">マイ図鑑の容量が300枠に拡張</string>
     <string name="membership_benefit_ai_200">AI認識が月200回に増加</string>
     <string name="membership_benefit_ai_500">AI認識が月500回に増加</string>

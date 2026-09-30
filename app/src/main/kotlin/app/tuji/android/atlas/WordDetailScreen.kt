@@ -117,6 +117,8 @@ fun WordDetailScreen(
     canOpenWord: (String) -> Boolean = { false },
     /** Where an insight's lock leads. */
     onLocked: (() -> Unit)? = null,
+    /** 我的筆記, under the mastery bar. Handed in: it reads the account, this page does not. */
+    note: @Composable (Modifier) -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -183,6 +185,8 @@ fun WordDetailScreen(
                 nextReview = scores.nextReview(word.id)?.let { nextReviewLabel(it) },
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
+
+            note(Modifier.padding(horizontal = TujiSpace.S4))
 
             WordDetailSections(
                 word = word,

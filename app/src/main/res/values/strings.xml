@@ -289,6 +289,14 @@
     <string name="gloss_base_form">Base form</string>
     <string name="gloss_see_detail">View full details</string>
     <string name="word_examples_title">Examples</string>
+    <string name="word_note_title">My note</string>
+    <string name="word_note_locked">Members can keep their own note on every word</string>
+    <string name="word_note_member_to_edit">Become a member to edit</string>
+    <string name="word_note_delete">Delete note</string>
+    <string name="word_note_placeholder">Write your own way to remember it, an example, a reminder…</string>
+    <string name="word_note_delete_confirm">Delete this note?</string>
+    <string name="word_note_field">Note</string>
+    <string name="word_note_at_limit">Limit reached</string>
     <string name="word_insights_confusables">Easily confused</string>
     <string name="word_insights_mistakes">Common mistakes</string>
     <string name="word_insights_usage">Usage note</string>
@@ -619,6 +627,7 @@
     <string name="membership_benefit_slots_20">20 slots in your custom atlas</string>
     <string name="membership_benefit_ai_10">10 AI recognitions per month</string>
     <string name="membership_benefit_community">Save, study and share on Sightings</string>
+    <string name="membership_benefit_notes">Your own note on every word</string>
     <string name="membership_benefit_slots_300">Custom atlas capacity boosted to 300 slots</string>
     <string name="membership_benefit_ai_200">AI recognition boosted to 200/month</string>
     <string name="membership_benefit_ai_500">AI recognition boosted to 500/month</string>

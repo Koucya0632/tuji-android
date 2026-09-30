@@ -10,9 +10,9 @@ import app.tuji.android.core.model.MembershipTier
  * the purchase: this build cannot take money yet (ADR-0001, Play Billing not
  * set up), so the page says what each plan gives and where it can be bought.
  *
- * The numbers must match docs/MEMBERSHIP_PUBLIC_COPY.md §1. 詞表 and 筆記 are
- * iOS's rows too, but this app has neither screen yet, so they are not listed
- * here — a page must not promise what the app it sits in cannot do.
+ * The numbers must match docs/MEMBERSHIP_PUBLIC_COPY.md §1. 詞表 is iOS's row
+ * too, but this app has no 詞表 screen yet, so it is not listed here — a page
+ * must not promise what the app it sits in cannot do.
  */
 data class MembershipOffer(
     /** The 永久會員 card exists only under policy v2: before that it bought nothing. */
@@ -47,6 +47,7 @@ data class MembershipOffer(
             R.string.membership_benefit_slots_20,
             R.string.membership_benefit_ai_10,
             R.string.membership_benefit_community,
+            R.string.membership_benefit_notes,
         )
 
         fun from(entitlement: Entitlement?): MembershipOffer {
