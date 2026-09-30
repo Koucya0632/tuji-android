@@ -56,7 +56,7 @@ class TujiApplication : Application() {
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
             accountScopedStores = {
-                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue)
+                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue, wordInsightsStore)
             },
         )
     }
@@ -76,6 +76,11 @@ class TujiApplication : Application() {
     /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
     val catalog: app.tuji.android.atlas.CatalogStore by lazy {
         app.tuji.android.atlas.CatalogStore(catalogReading)
+    }
+
+    /** 詞條延伸內容, per word, for the session. Dropped at sign-out: it is per tier. */
+    val wordInsightsStore: app.tuji.android.atlas.WordInsightsStore by lazy {
+        app.tuji.android.atlas.WordInsightsStore(catalogReading)
     }
 
     /**

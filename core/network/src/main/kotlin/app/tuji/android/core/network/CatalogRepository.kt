@@ -4,6 +4,7 @@ import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.CategoriesResponse
 import app.tuji.android.core.model.SearchResponse
 import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.model.WordInsightsResponse
 import app.tuji.android.core.model.WordsListResponse
 
 /**
@@ -39,7 +40,17 @@ interface WordSearching {
     suspend fun search(query: String, lang: String, learning: LearningDirection): SearchResponse
 }
 
-class CatalogRepository(private val api: TujiApiClient) : CatalogReading, WordSearching {
+/**
+ * 詞條延伸內容 for one word — 容易混淆, 常見誤用, 用法補充.
+ *
+ * Its own role because it is the one catalogue read that depends on who is
+ * asking: a non-member is sent counts where a member is sent text.
+ */
+interface WordInsightsReading {
+    suspend fun insights(id: String, lang: String, learning: LearningDirection): WordInsightsResponse
+}
+
+class CatalogRepository(private val api: TujiApiClient) : CatalogReading, WordSearching, WordInsightsReading {
     override suspend fun words(lang: String, learning: LearningDirection): WordsListResponse =
         api.get(Endpoint.Words(lang = lang, learning = learning))
 
@@ -54,4 +65,10 @@ class CatalogRepository(private val api: TujiApiClient) : CatalogReading, WordSe
         lang: String,
         learning: LearningDirection,
     ): SearchResponse = api.get(Endpoint.Search(q = query, lang = lang, learning = learning))
+
+    override suspend fun insights(
+        id: String,
+        lang: String,
+        learning: LearningDirection,
+    ): WordInsightsResponse = api.get(Endpoint.WordInsights(id = id, lang = lang, learning = learning))
 }

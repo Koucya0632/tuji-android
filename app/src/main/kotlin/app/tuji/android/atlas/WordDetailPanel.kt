@@ -17,6 +17,7 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.model.ClipPlaying
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.model.WordInsights
 import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.network.AtlasRepository
 import app.tuji.android.core.network.CatalogReading
@@ -46,6 +47,11 @@ internal fun WordDetailPanel(
     accent: String,
     showChinese: Boolean,
     session: TargetLanguage,
+    /**
+     * 容易混淆 and the rest, as on the word page — but with no links and no way
+     * through a lock: either would take the reader out of the session.
+     */
+    insights: WordInsights? = null,
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(wordId) {
@@ -77,6 +83,13 @@ internal fun WordDetailPanel(
                 showChinese = showChinese,
                 session = session,
                 modifier = Modifier.fillMaxWidth(),
+            )
+            WordInsightsSection(
+                insights = insights,
+                onOpenWord = null,
+                canOpen = { false },
+                onLocked = null,
+                modifier = Modifier.padding(top = TujiSpace.S4),
             )
         }
         // A failure shows nothing rather than an error: the sheet's own summary

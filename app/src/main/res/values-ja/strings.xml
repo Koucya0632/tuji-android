@@ -289,6 +289,10 @@
     <string name="gloss_base_form">原形</string>
     <string name="gloss_see_detail">詳細を見る</string>
     <string name="word_examples_title">例文 · EXAMPLE</string>
+    <string name="word_insights_confusables">混同しやすい語</string>
+    <string name="word_insights_mistakes">よくある誤用</string>
+    <string name="word_insights_usage">使い方の補足</string>
+    <string name="word_insights_locked">メンバーはさらに見られます（%1$d 件）</string>
     <string name="word_tab_definition">訳語</string>
     <string name="word_tab_forms">語形</string>
     <string name="word_tab_origin">ソース</string>

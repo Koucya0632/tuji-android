@@ -289,6 +289,10 @@
     <string name="gloss_base_form">Base form</string>
     <string name="gloss_see_detail">View full details</string>
     <string name="word_examples_title">Examples</string>
+    <string name="word_insights_confusables">Easily confused</string>
+    <string name="word_insights_mistakes">Common mistakes</string>
+    <string name="word_insights_usage">Usage note</string>
+    <string name="word_insights_locked">Members can see more (%1$d)</string>
     <string name="word_tab_definition">Meaning</string>
     <string name="word_tab_forms">Word forms</string>
     <string name="word_tab_origin">Source</string>
