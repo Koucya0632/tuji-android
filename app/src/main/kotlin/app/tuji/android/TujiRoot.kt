@@ -55,6 +55,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.IntOffset
 import app.tuji.android.core.design.TujiMotion
@@ -905,24 +907,6 @@ private fun SignedInScreens(
     ) {
         Spacer(Modifier.height(insets.calculateTopPadding()))
 
-        // A pushed screen's way back is an arrow on the page margin, and its
-        // name — where it has one — is the page's own large title below it.
-        // The 「← 標題」 text link this replaces said the name twice, once in
-        // the link and once in the title under it.
-        //
-        // Not at a tab root, where the bar below already reaches every tab in
-        // one tap. Not over 主題頁's hero, which bleeds and floats its own
-        // arrow, and not on 搜尋, whose field carries its own 取消.
-        if (nav.canGoBack && hasBackBar(nav.current)) {
-            TujiNavBar(
-                onLeading = { nav = nav.pop() },
-                leading = if (nav.current == AppRoute.Capture) TujiNavLeading.Close else TujiNavLeading.Back,
-                leadingLabel = stringResource(
-                    if (nav.current == AppRoute.Capture) R.string.nav_close else R.string.atlas_back,
-                ),
-            )
-        }
-
         // The four tab roots live in the pager, not in the route `when` below.
         // A page that only exists while it is the current route cannot be
         // swiped to — the neighbour has to be composable before the finger
@@ -1069,10 +1053,50 @@ private fun SignedInScreens(
                     } else {
                         slideInHorizontally(spec) { -it / 3 } togetherWith
                             slideOutHorizontally(spec) { it }
+                    }.using(
+                        // The tab bar leaves and returns in the same beat, and
+                        // an animated size lagged behind the box it sits in —
+                        // taller than its room, the pages were centred in it
+                        // and the whole page rode up and down during the slide.
+                        SizeTransform { _, _ -> snap() },
+                    ).apply {
+                        // The page on top is always the deeper one: the one
+                        // arriving on a push, the one leaving on a pop. The
+                        // default puts whatever arrives on top, so a pop hid
+                        // the leaving page under the one it was uncovering.
+                        targetContentZIndex = if (forward) 1f else -1f
                     }
                 },
                 label = "route",
             ) { shown ->
+            // Every page paints its own paper. Most screens draw nothing
+            // behind their content, and while two slide past each other the
+            // one underneath showed through the one on top — the 殘影.
+            Column(Modifier.fillMaxSize().background(TujiColor.Paper)) {
+            // A pushed screen's way back is an arrow on the page margin, and its
+            // name — where it has one — is the page's own large title below it.
+            // The 「← 標題」 text link this replaces said the name twice, once in
+            // the link and once in the title under it.
+            //
+            // Not at a tab root, where the bar below already reaches every tab in
+            // one tap. Not over 主題頁's hero, which bleeds and floats its own
+            // arrow, and not on 搜尋, whose field carries its own 取消.
+            //
+            // Part of the page, so it slides with it: drawn above the pages it
+            // vanished the instant 返回 was pressed and the leaving page jumped
+            // up into the gap.
+            if (shown is AppRoute && hasBackBar(shown)) {
+                TujiNavBar(
+                    // A page on its way out keeps its arrow, but only the page
+                    // on top may pop.
+                    onLeading = { if (nav.current == shown) nav = nav.pop() },
+                    leading = if (shown == AppRoute.Capture) TujiNavLeading.Close else TujiNavLeading.Back,
+                    leadingLabel = stringResource(
+                        if (shown == AppRoute.Capture) R.string.nav_close else R.string.atlas_back,
+                    ),
+                )
+            }
+            Box(Modifier.weight(1f)) {
             if (shown === TabsLayer) {
                 val atTab = nav.tab ?: AppRoute.Today
                 val pager = rememberPagerState(
@@ -1541,6 +1565,8 @@ private fun SignedInScreens(
                 }
 
                 else -> Unit
+            }
+            }
             }
             }
             }
