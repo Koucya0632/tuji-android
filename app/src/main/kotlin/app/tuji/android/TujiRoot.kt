@@ -1069,10 +1069,20 @@ private fun SignedInScreens(
                     } else {
                         slideInHorizontally(spec) { -it / 3 } togetherWith
                             slideOutHorizontally(spec) { it }
+                    }.apply {
+                        // The page on top is always the deeper one: the one
+                        // arriving on a push, the one leaving on a pop. The
+                        // default puts whatever arrives on top, so a pop hid
+                        // the leaving page under the one it was uncovering.
+                        targetContentZIndex = if (forward) 1f else -1f
                     }
                 },
                 label = "route",
             ) { shown ->
+            // Every page paints its own paper. Most screens draw nothing
+            // behind their content, and while two slide past each other the
+            // one underneath showed through the one on top — the 殘影.
+            Box(Modifier.fillMaxSize().background(TujiColor.Paper)) {
             if (shown === TabsLayer) {
                 val atTab = nav.tab ?: AppRoute.Today
                 val pager = rememberPagerState(
@@ -1541,6 +1551,7 @@ private fun SignedInScreens(
                 }
 
                 else -> Unit
+            }
             }
             }
             }
