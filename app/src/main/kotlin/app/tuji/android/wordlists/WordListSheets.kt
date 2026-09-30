@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
@@ -150,7 +151,8 @@ internal fun AddToWordListSheet(
     var creating by rememberSaveable { mutableStateOf(false) }
     var attempt by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
-    val canCreate = store.state.value.canCreate
+    val shared by store.state.collectAsStateWithLifecycle()
+    val canCreate = shared.canCreate
 
     LaunchedEffect(attempt) {
         failed = false
