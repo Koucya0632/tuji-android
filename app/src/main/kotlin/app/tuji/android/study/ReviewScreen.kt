@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
+import app.tuji.android.atlas.WordNoteLine
 import app.tuji.android.atlas.label
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.design.FuriganaHeadword
@@ -119,6 +120,8 @@ fun ReviewScreen(
      */
     fullDetail: @Composable (String) -> Unit,
     onClose: () -> Unit,
+    /** The account's own note on a word, shown under the revealed answer. */
+    noteFor: (String) -> String? = { null },
     modifier: Modifier = Modifier,
     /** Gates the 中文 line on the reveal sheet, as `showZh` does on iOS. */
     showChinese: Boolean = true,
@@ -212,6 +215,7 @@ fun ReviewScreen(
                         onRate = vm::rate,
                         onContinue = vm::continueFromReveal,
                         fullDetail = fullDetail,
+                        noteFor = noteFor,
                     )
                 }
             }
@@ -610,6 +614,7 @@ private fun RevealSheet(
     onRate: (SRSRating) -> Unit,
     onContinue: () -> Unit,
     fullDetail: @Composable (String) -> Unit,
+    noteFor: (String) -> String?,
 ) {
     val question = session.question ?: return
     // No dimming, as on iOS, where the question stays live behind the sheet:
@@ -732,6 +737,9 @@ private fun RevealSheet(
                     }
                 }
             }
+            // The person's own note rides under the answer, as on iOS: this is
+            // the moment they needed it.
+            WordNoteLine(noteFor(question.item.word.id), Modifier.padding(top = TujiSpace.S1))
         }
     }
 }

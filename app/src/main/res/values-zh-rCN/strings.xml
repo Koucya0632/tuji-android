@@ -289,6 +289,14 @@
     <string name="gloss_base_form">原形</string>
     <string name="gloss_see_detail">看完整详情</string>
     <string name="word_examples_title">例句 · EXAMPLE</string>
+    <string name="word_note_title">我的笔记</string>
+    <string name="word_note_locked">会员可以为每个字写下自己的笔记</string>
+    <string name="word_note_member_to_edit">成为会员才能编辑</string>
+    <string name="word_note_delete">删除笔记</string>
+    <string name="word_note_placeholder">写下你自己的记法、例句或提醒…</string>
+    <string name="word_note_delete_confirm">删除这则笔记？</string>
+    <string name="word_note_field">笔记</string>
+    <string name="word_note_at_limit">已达上限</string>
     <string name="word_insights_confusables">容易混淆</string>
     <string name="word_insights_mistakes">常见误用</string>
     <string name="word_insights_usage">用法补充</string>
@@ -619,6 +627,7 @@
     <string name="membership_benefit_slots_20">个人自制图鉴 20 格</string>
     <string name="membership_benefit_ai_10">AI 辨识每月 10 次</string>
     <string name="membership_benefit_community">收藏、学习与投稿物见</string>
+    <string name="membership_benefit_notes">为每个字写下自己的笔记</string>
     <string name="membership_benefit_slots_300">自制图鉴容量提升至 300 格</string>
     <string name="membership_benefit_ai_200">AI 辨识次数提升至每月 200 次</string>
     <string name="membership_benefit_ai_500">AI 辨识次数提升至每月 500 次</string>

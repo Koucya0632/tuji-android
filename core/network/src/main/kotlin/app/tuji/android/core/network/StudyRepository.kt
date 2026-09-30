@@ -8,6 +8,10 @@ import app.tuji.android.core.model.UserSettings
 import app.tuji.android.core.model.UserSettingsResponse
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.WordsListResponse
+import app.tuji.android.core.model.WordNote
+import app.tuji.android.core.model.WordNotePayload
+import app.tuji.android.core.model.WordNoteSaveResponse
+import app.tuji.android.core.model.WordNotesResponse
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueResponse
@@ -100,6 +104,18 @@ interface StudyQueueReading {
     ): StudyQueueResponse
 }
 
+/**
+ * 個人筆記. Read once for the account and written one word at a time; a
+ * refusal comes back as `ApiError.Http` — 402 for a non-member writing.
+ */
+interface WordNotesAccess {
+    suspend fun notes(): WordNotesResponse
+
+    suspend fun saveNote(wordId: String, body: String): WordNote
+
+    suspend fun deleteNote(wordId: String)
+}
+
 class StudyRepository(private val api: TujiApiClient) :
     AnswerSubmission,
     StudyQueueReading,
@@ -108,7 +124,17 @@ class StudyRepository(private val api: TujiApiClient) :
     ProgressReading,
     SettingsAccess,
     PersonalWordsAccess,
+    WordNotesAccess,
     AccountErasure {
+
+    override suspend fun notes(): WordNotesResponse = api.get(Endpoint.UsersWordNotes)
+
+    override suspend fun saveNote(wordId: String, body: String): WordNote =
+        api.post<WordNoteSaveResponse>(Endpoint.UsersWordNote(wordId), WordNotePayload(body)).note
+
+    override suspend fun deleteNote(wordId: String) {
+        api.delete<Unit>(Endpoint.UsersWordNote(wordId))
+    }
 
     override suspend fun mastery(learning: LearningDirection): MasteryListResponse =
         api.get(Endpoint.UsersMastery(learning))

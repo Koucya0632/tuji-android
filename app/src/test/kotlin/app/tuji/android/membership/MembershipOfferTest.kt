@@ -36,6 +36,7 @@ class MembershipOfferTest {
         assertFalse(offer.ownsLifetime)
         assertEquals(R.string.membership_lifetime_headline, offer.headline)
         assertTrue(R.string.membership_benefit_ai_200 in offer.proRows)
+        assertEquals(R.string.membership_benefit_notes, offer.lifetimeRows.last())
     }
 
     @Test fun `a lifetime member is shown what Pro adds`() {

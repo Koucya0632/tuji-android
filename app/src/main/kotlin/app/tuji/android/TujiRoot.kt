@@ -1,6 +1,10 @@
 package app.tuji.android
 
 import app.tuji.android.core.model.MembershipTier
+import app.tuji.android.core.model.MemberAccess
+import app.tuji.android.core.model.MemberAccessLevel
+import app.tuji.android.core.model.MemberFeature
+import app.tuji.android.atlas.WordNoteSection
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
 import androidx.compose.foundation.background
@@ -470,6 +474,15 @@ private fun SignedInScreens(
     }
     val accountState by account.state.collectAsStateWithLifecycle()
 
+    // 個人筆記, once the entitlement says the feature exists: the review reveal
+    // reads them with no request of its own. Loaded here, not on the word page,
+    // so the first review of the day already has them.
+    val wordNotes by app.wordNotesStore.notes.collectAsStateWithLifecycle()
+    val notesExist = MemberAccess.level(
+        MemberFeature.WordNote, accountState.entitlement, hasOwnData = true,
+    ) != MemberAccessLevel.Hidden
+    LaunchedEffect(notesExist) { if (notesExist) app.wordNotesStore.loadIfNeeded() }
+
     var nav by remember { mutableStateOf(NavStack()) }
 
     // Where every lock and every 402 leads. Not pushed twice: two refusals in
@@ -682,6 +695,7 @@ private fun SignedInScreens(
             }
             ReviewScreen(
                 vm = vm,
+                noteFor = { id -> if (notesExist) wordNotes.byWordId[id]?.body else null },
                 showChinese = settings.showZh,
                 fullDetail = { wordId ->
                     WordDetailPanel(
@@ -1416,6 +1430,19 @@ private fun SignedInScreens(
                             // is worse than plain text.
                             canOpenWord = { id -> catalog.words.any { it.id == id } },
                             onLocked = openMembership,
+                            note = { modifier ->
+                                // Official words only: the server refuses a
+                                // note on a 自製 or 物見 id.
+                                if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
+                                    WordNoteSection(
+                                        wordId = wordId,
+                                        store = app.wordNotesStore,
+                                        entitlement = if (isGuest) null else accountState.entitlement,
+                                        onLocked = openMembership,
+                                        modifier = modifier,
+                                    )
+                                }
+                            },
                         )
                     }
                 }
