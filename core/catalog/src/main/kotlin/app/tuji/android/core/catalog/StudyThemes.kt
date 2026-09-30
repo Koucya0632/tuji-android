@@ -52,4 +52,26 @@ object StudyThemes {
         val picked = selected.toSet()
         return words.count { it.category in picked }
     }
+
+    /**
+     * The themes that actually get studied: the pick, narrowed to what the
+     * server says this account may study (`membership.studyableCategories`).
+     *
+     * Null = no gate → the pick as-is. With a gate, pick ∩ studyable; and when
+     * nothing survives, the studyable list itself — a non-member who only
+     * ticked locked themes still studies fruits and bedroom rather than
+     * nothing. That fallback also keeps the numbers honest: an empty list means
+     * "every theme" to the queue and to 完成度, so it must never reach them for
+     * a gated account. iOS's `StudyCategoryDefaults.effective`.
+     */
+    fun effective(selected: List<String>, studyable: List<String>?): List<String> {
+        if (studyable == null) return selected
+        val allowed = studyable.toSet()
+        val kept = selected.filter { it in allowed }
+        return kept.ifEmpty { studyable.sorted() }
+    }
+
+    /** A theme this account may browse but not study. Never locked without a gate. */
+    fun isLocked(categoryId: String, studyable: List<String>?): Boolean =
+        studyable != null && categoryId !in studyable
 }

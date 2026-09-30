@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,6 +46,8 @@ class PublicItemViewModel(
      */
     private val onSaveChanged: () -> Unit = {},
     private val scope: CoroutineScope? = null,
+    /** 收藏 refused by plan (402) — 會員方案, not an error line. */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     data class State(
@@ -96,6 +99,11 @@ class PublicItemViewModel(
                 Log.w(TAG, "save toggle failed: $slug", failure)
                 // 429 `save_limit` is the one failure with something to do
                 // about it, so it gets its own sentence.
+                if (MembershipRefusal.isRefusal(failure)) {
+                    _state.value = _state.value.copy(busy = false)
+                    onNeedsMembership()
+                    return@launch
+                }
                 val limit = (failure as? ApiError.Http)?.body?.contains("save_limit") == true
                 _state.value = _state.value.copy(busy = false, error = if (limit) Error.SaveLimit else Error.Failed)
                 return@launch

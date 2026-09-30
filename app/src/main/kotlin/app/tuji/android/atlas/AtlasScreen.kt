@@ -54,6 +54,7 @@ import app.tuji.android.core.catalog.CardsListPaging
 import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.catalog.StudyThemes
 import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
@@ -118,6 +119,8 @@ fun AtlasCardsScreen(
     /** Captures still being made. Drawn at the head of 我做的. */
     captureJobs: List<AtlasCaptureQueue.Item> = emptyList(),
     onRetryCapture: (String) -> Unit = {},
+    /** Themes this account may study; null = all. The rest wear a lock. */
+    studyable: List<String>? = null,
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
     // The word a long press is holding up. Not saveable: a peek is a look, and
@@ -305,6 +308,7 @@ fun AtlasCardsScreen(
                     status = status,
                     uiLang = uiLang,
                     onClick = { onOpenTheme(shelf.category.id) },
+                    locked = StudyThemes.isLocked(shelf.category.id, studyable),
                 )
             }
         }

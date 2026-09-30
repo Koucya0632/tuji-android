@@ -74,8 +74,14 @@ enum class DeleteWarning {
     }
 }
 
-/** One photo, with the card made from it if there is one. */
-data class ShelfRow(val image: AtlasImageSummary, val item: AtlasItem?) {
+/**
+ * One photo, with the card made from it if there is one.
+ *
+ * [locked]: the card is over this account's slot cap after Pro ended — kept,
+ * deletable, but out of the study queue until Pro comes back. The server
+ * decides which (`lockedItemIds`); this only draws it.
+ */
+data class ShelfRow(val image: AtlasImageSummary, val item: AtlasItem?, val locked: Boolean = false) {
     val id: String get() = image.id
     val imageStatus: ImageStatus? get() = ImageStatus.of(image.status)
     val review: ReviewStatus? get() = item?.let { ReviewStatus.of(it.reviewStatus) }
@@ -102,14 +108,23 @@ sealed interface ShelfState {
  */
 object AtlasShelf {
 
-    fun rows(images: List<AtlasImageSummary>, items: List<AtlasItem>, language: TargetLanguage): List<ShelfRow> {
+    fun rows(
+        images: List<AtlasImageSummary>,
+        items: List<AtlasItem>,
+        language: TargetLanguage,
+        lockedItemIds: Set<String> = emptySet(),
+    ): List<ShelfRow> {
         val byImage = items.filter { it.deletedAt == null && it.imageId != null }.associateBy { it.imageId }
         return images
             .filter { it.deletedAt == null }
             .sortedByDescending { it.createdAt.orEmpty() }
             .mapNotNull { image ->
                 val item = byImage[image.id]
-                if (item != null && (item.targetLanguage ?: TargetLanguage.EN) != language) null else ShelfRow(image, item)
+                if (item != null && (item.targetLanguage ?: TargetLanguage.EN) != language) {
+                    null
+                } else {
+                    ShelfRow(image, item, locked = item != null && item.id in lockedItemIds)
+                }
             }
     }
 

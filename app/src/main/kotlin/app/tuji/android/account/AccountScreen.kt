@@ -46,6 +46,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import kotlin.math.roundToInt
+import android.text.format.DateFormat
+import androidx.compose.ui.platform.LocalConfiguration
+import app.tuji.android.core.model.MembershipTier
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * 我的 — who you are (lightest), then what you have built up.
@@ -70,6 +76,8 @@ fun AccountScreen(
     showChinese: Boolean = true,
     onOpenWord: (String) -> Unit = {},
     onRefresh: suspend () -> Unit = {},
+    /** 會員方案. Null for a guest, who has no account to be a member with. */
+    onOpenMembership: (() -> Unit)? = null,
 ) {
     TujiPullToRefresh(onRefresh = onRefresh) {
     Column(
@@ -95,7 +103,23 @@ fun AccountScreen(
             }
         }
 
-        IdentityRow(me = state.me, isGuest = isGuest, isPro = state.entitlement?.isPro == true)
+        IdentityRow(
+            me = state.me,
+            isGuest = isGuest,
+            tier = state.entitlement?.membershipTier ?: MembershipTier.Free,
+            onClick = onOpenMembership,
+        )
+        // A lifetime member inside the grace after Pro ended: over-cap 自製
+        // cards still work but lock on this date. Said once, here, with the
+        // way out.
+        val entitlement = state.entitlement
+        entitlement?.membership?.graceEndsAt?.let { graceEndsAt ->
+            GraceNotice(
+                graceEndsAt = graceEndsAt,
+                slots = entitlement.atlasSlotsLimit,
+                onOpenMembership = onOpenMembership,
+            )
+        }
 
         // 我的 is no longer a name and a plan — it *is* your progress. The
         // order is width (how far you have come) → depth (how well) → habit
@@ -131,7 +155,7 @@ fun AccountScreen(
  * on the one tab a user hands their phone to someone else to show off.
  */
 @Composable
-private fun IdentityRow(me: UserMe?, isGuest: Boolean, isPro: Boolean) {
+private fun IdentityRow(me: UserMe?, isGuest: Boolean, tier: MembershipTier, onClick: (() -> Unit)?) {
     val name = if (isGuest) stringResource(R.string.me_guest_name) else me?.displayName ?: stringResource(R.string.me_guest_name)
     // The UID, not the nickname: it is what reports, blocks and support
     // requests carry. The email's local part only for an account whose UID has
@@ -140,11 +164,12 @@ private fun IdentityRow(me: UserMe?, isGuest: Boolean, isPro: Boolean) {
         isGuest -> "guest"
         else -> me?.username?.takeIf { it.isNotBlank() } ?: me?.email?.substringBefore('@')
     }
-    val tier = if (isPro) "Pro" else "Free"
+    val badge = tier.badge
     Row(
         Modifier
             .fillMaxWidth()
-            .clearAndSetSemantics { contentDescription = "$name, $tier" },
+            .then(if (onClick != null) Modifier.tujiClickable(onClick = onClick) else Modifier)
+            .clearAndSetSemantics { contentDescription = "$name, $badge" },
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -161,7 +186,45 @@ private fun IdentityRow(me: UserMe?, isGuest: Boolean, isPro: Boolean) {
                 )
             }
         }
-        TujiStatusEdgeLabel(text = tier, edge = if (isPro) TujiColor.Accumulation else TujiColor.Ink3)
+        TujiStatusEdgeLabel(
+            text = badge,
+            edge = when (tier) {
+                MembershipTier.Pro -> TujiColor.Accumulation
+                MembershipTier.Lifetime -> TujiColor.BrandSecondary
+                MembershipTier.Free -> TujiColor.Ink3
+            },
+        )
+    }
+}
+
+/** iOS's grace notice. The date is the server's; never a constant here. */
+@Composable
+private fun GraceNotice(graceEndsAt: String, slots: Int, onOpenMembership: (() -> Unit)?) {
+    val locale = LocalConfiguration.current.locales[0]
+    val date = remember(graceEndsAt, locale) {
+        runCatching {
+            val pattern = DateFormat.getBestDateTimePattern(locale, "MMMd")
+            Instant.parse(graceEndsAt).atZone(ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern(pattern, locale))
+        }.getOrNull()
+    } ?: return
+    Column(
+        Modifier.fillMaxWidth().background(TujiColor.Paper2).padding(TujiSpace.S3),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+    ) {
+        Text(
+            stringResource(R.string.me_grace_notice, slots, date),
+            style = TujiType.bodySmStrong,
+            color = TujiColor.Ink,
+        )
+        if (onOpenMembership != null) {
+            Text(
+                stringResource(R.string.membership_view_plans),
+                style = TujiType.bodySmStrong,
+                color = TujiColor.BrandSecondary,
+                modifier = Modifier.tujiClickable(onClick = onOpenMembership),
+            )
+        }
     }
 }
 

@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,8 @@ class MyCollectionsViewModel(
     /** A public collection went away or appeared — 物見 and the author's page draw it. */
     private val onChanged: () -> Unit = {},
     private val scope: CoroutineScope? = null,
+    /** A write refused by plan (402) — 會員方案, beside the usual failure line. */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     data class State(
@@ -99,6 +102,7 @@ class MyCollectionsViewModel(
         throw cancelled
     } catch (failure: Exception) {
         Log.w(TAG, "collections call failed", failure)
+        if (MembershipRefusal.isRefusal(failure)) onNeedsMembership()
         Result.failure(failure)
     }
 

@@ -263,7 +263,14 @@ private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, onClic
                     Text(it, style = TujiType.label, color = TujiColor.Ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            Text(row.imageStatus.label(row.image.status), style = TujiType.label, color = TujiColor.Ink3)
+            if (row.locked) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1), verticalAlignment = Alignment.CenterVertically) {
+                    TujiGlyph.Lock(size = 10.dp, tint = TujiColor.Ink3)
+                    Text(stringResource(R.string.manage_status_locked), style = TujiType.label, color = TujiColor.Ink3)
+                }
+            } else {
+                Text(row.imageStatus.label(row.image.status), style = TujiType.label, color = TujiColor.Ink3)
+            }
         }
     }
 }

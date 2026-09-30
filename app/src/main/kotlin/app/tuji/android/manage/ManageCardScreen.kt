@@ -75,7 +75,10 @@ fun ManageCardScreen(
         } else {
             Text(stringResource(R.string.manage_no_card), style = TujiType.bodySm, color = TujiColor.Ink3)
         }
-        Field(stringResource(R.string.manage_field_status), row.imageStatus.label(row.image.status))
+        Field(
+            stringResource(R.string.manage_field_status),
+            if (row.locked) stringResource(R.string.manage_status_locked) else row.imageStatus.label(row.image.status),
+        )
 
         val review = row.review
         if (item != null && review != null) {

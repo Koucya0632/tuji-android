@@ -1,5 +1,7 @@
 package app.tuji.android.settings
 
+import app.tuji.android.core.model.MembershipTier
+import app.tuji.android.membership.MembershipOffer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
@@ -68,6 +70,10 @@ fun SettingsScreen(
     onOpenBlocked: (() -> Unit)?,
     readiness: SettingsReadiness,
     onRetryLoad: () -> Unit,
+    /** Null for a guest, who has no account to be a member with. */
+    onOpenMembership: (() -> Unit)? = null,
+    tier: MembershipTier = MembershipTier.Free,
+    offer: MembershipOffer = MembershipOffer.from(null),
 ) {
     // 學習 and 顯示 are the account's settings; 帳號 and below are not, and stay
     // usable while those load — signing out must never wait on a read.
@@ -185,6 +191,22 @@ fun SettingsScreen(
                 destructive = true,
                 onClick = if (busy.deleting) null else ({ confirm = Confirm.DeleteFirst }),
             )
+        }
+
+        // One row for everyone, as on iOS: the pitch belongs where a limit
+        // bites, and here it only says what this account has.
+        if (onOpenMembership != null) {
+            TujiSection(title = "Tuji Pro") {
+                TujiSettingRow(
+                    label = stringResource(R.string.membership_title),
+                    subtitle = when (tier) {
+                        MembershipTier.Pro -> stringResource(R.string.membership_subscribed)
+                        MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)
+                        MembershipTier.Free -> stringResource(offer.headline)
+                    },
+                    onClick = onOpenMembership,
+                )
+            }
         }
 
         TujiSection(title = stringResource(R.string.settings_group_other)) {
