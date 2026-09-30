@@ -695,6 +695,9 @@ private fun SignedInScreens(
                         accent = settings.accent,
                         showChinese = settings.showZh,
                         session = direction.targetLanguage,
+                        insights = rememberWordInsights(
+                            app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
+                        ),
                     )
                 },
                 bookmarked = { id -> id in personal.bookmarked },
@@ -760,6 +763,9 @@ private fun SignedInScreens(
                         accent = settings.accent,
                         showChinese = settings.showZh,
                         session = direction.targetLanguage,
+                        insights = rememberWordInsights(
+                            app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
+                        ),
                     )
                 },
                 bookmarked = { it in personal.bookmarked },
@@ -1402,6 +1408,14 @@ private fun SignedInScreens(
                                 isMarked = { it in personal.bookmarked },
                                 toggle = app.cardsSourceStore::toggle,
                             ),
+                            insights = rememberWordInsights(
+                                app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
+                            ),
+                            // A confusable whose id the catalogue does not
+                            // know is not a link: a row that opens onto a 404
+                            // is worse than plain text.
+                            canOpenWord = { id -> catalog.words.any { it.id == id } },
+                            onLocked = openMembership,
                         )
                     }
                 }
@@ -1574,3 +1588,21 @@ private const val PUSH_MS = 350
  * is already sliding.
  */
 private data object TabsLayer
+
+/**
+ * One word's 詞條延伸內容, asked for when the word is shown. The key carries the
+ * tier, so a purchase made from the lock fetches the unlocked text on return.
+ */
+@Composable
+private fun rememberWordInsights(
+    store: app.tuji.android.atlas.WordInsightsStore,
+    wordId: String,
+    direction: app.tuji.android.core.model.LearningDirection,
+    uiLang: String,
+    entitlement: app.tuji.android.core.model.Entitlement?,
+): app.tuji.android.core.model.WordInsights? {
+    val answers by store.answers.collectAsStateWithLifecycle()
+    val key = app.tuji.android.atlas.WordInsightsStore.key(wordId, direction, uiLang, entitlement)
+    LaunchedEffect(key) { store.load(wordId, direction, uiLang, entitlement) }
+    return answers[key]
+}

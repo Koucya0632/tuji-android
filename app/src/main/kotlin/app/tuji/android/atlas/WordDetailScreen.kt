@@ -62,6 +62,7 @@ import app.tuji.android.gloss.GlossBookmarks
 import app.tuji.android.gloss.GlossCardHost
 import app.tuji.android.gloss.InteractiveSentenceText
 import app.tuji.android.core.model.WordForm
+import app.tuji.android.core.model.WordInsights
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.model.language
@@ -110,6 +111,12 @@ fun WordDetailScreen(
     accent: String = "us",
     /** 書籤 from inside a 詞塊 card, for the spans that are catalogue words. */
     glossBookmarks: GlossBookmarks? = null,
+    /** 容易混淆・常見誤用・用法補充 — null until the server has answered, or when it has none. */
+    insights: WordInsights? = null,
+    /** Whether a catalogue id is one this device can open. */
+    canOpenWord: (String) -> Boolean = { false },
+    /** Where an insight's lock leads. */
+    onLocked: (() -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 

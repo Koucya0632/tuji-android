@@ -57,6 +57,19 @@ interface Endpoint {
     }
 
     /**
+     * 詞條延伸內容. Private and fresh: what it holds depends on the caller's
+     * membership. The word itself stays edge-cached; only this slice is
+     * per-caller.
+     */
+    data class WordInsights(val id: String, val lang: String, val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/words/$id/insights",
+            query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
      * The day's counts, without the cards.
      *
      * A separate route from [StudyQueue] even though that one returns `stats`
