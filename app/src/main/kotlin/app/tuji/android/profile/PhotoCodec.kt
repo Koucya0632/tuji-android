@@ -44,6 +44,27 @@ object PhotoCodec {
         }
     }
 
+    /**
+     * A camera frame, ready for `POST /api/atlas/images`: upright, at most
+     * [WORKING_SIDE] on the long edge, re-encoded at iOS's 0.88.
+     *
+     * The frame straight from `ImageCapture` is full sensor resolution — on a
+     * 40MP phone well over the 4.5MB a request may carry, which the platform
+     * refuses with a 413 before the server ever reads it. Re-encoding also
+     * drops the EXIF block, as iOS's does, so no location leaves the device.
+     */
+    suspend fun captureJpeg(bytes: ByteArray): ByteArray {
+        val bitmap = decode(bytes)
+        return withContext(Dispatchers.Default) {
+            ByteArrayOutputStream().use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, CAPTURE_QUALITY, stream)
+                stream.toByteArray()
+            }
+        }
+    }
+
+    private const val CAPTURE_QUALITY = 88
+
     suspend fun profileJpeg(bitmap: Bitmap, square: CropSquare): ByteArray = squareJpeg(bitmap, square, PROFILE_SIDE, PROFILE_QUALITY)
 
     /** iOS's `ImageIntakeEncoding.collection`: the public shelf tile draws it larger than an avatar. */

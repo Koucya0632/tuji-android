@@ -1,5 +1,6 @@
 package app.tuji.android.capture
 
+import app.tuji.android.profile.PhotoCodec
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -186,7 +187,7 @@ private fun Framing(vm: CaptureViewModel) {
                     // to takes a second to arrive.
                     haptics.firm()
                     scope.launch {
-                        runCatching { controller.takePhoto(context) }
+                        runCatching { PhotoCodec.captureJpeg(controller.takePhoto(context)) }
                             .onSuccess(vm::submit)
                     }
                 },
