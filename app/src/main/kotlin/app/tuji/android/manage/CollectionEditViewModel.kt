@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,8 @@ class CollectionEditViewModel(
     /** Something other people see changed — 物見, the author's page, 我的合集. */
     private val onChanged: () -> Unit = {},
     private val scope: CoroutineScope? = null,
+    /** A write refused by plan (402) — 會員方案, beside the usual failure line. */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     /** Which action's failure to say. */
@@ -224,6 +227,7 @@ class CollectionEditViewModel(
         throw cancelled
     } catch (failure: Exception) {
         Log.w(TAG, "collection edit call failed: $collectionId", failure)
+        if (MembershipRefusal.isRefusal(failure)) onNeedsMembership()
         Result.failure(failure)
     }
 

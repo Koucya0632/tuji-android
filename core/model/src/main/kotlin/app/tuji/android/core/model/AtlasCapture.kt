@@ -150,6 +150,11 @@ data class AtlasSyncResponse(
     val serverTime: String? = null,
     val images: List<AtlasImageSummary> = emptyList(),
     val items: List<AtlasItem> = emptyList(),
+    /**
+     * 自製 cards locked for being over the slot cap after Pro ended. The whole
+     * list every time; absent from older servers, which means nothing locked.
+     */
+    val lockedItemIds: List<String> = emptyList(),
 )
 
 /** One row of `/api/users/top-words` — 我's 需要加強. */

@@ -1,5 +1,8 @@
 package app.tuji.android
 
+import app.tuji.android.core.model.MembershipTier
+import app.tuji.android.membership.MembershipOffer
+import app.tuji.android.membership.MembershipScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
@@ -459,6 +462,30 @@ private fun SignedInScreens(
     val settingsLoadFailed by app.settingsStore.loadFailed.collectAsStateWithLifecycle()
     val settingsReadiness = SettingsReadiness.of(isGuest, settingsLoaded, settingsLoadFailed)
 
+    // Also the one holder of the entitlement for the whole shell: 學習主題's
+    // locks, 今日's numbers and 會員方案 read it from here, so a purchase seen
+    // on one screen is seen on all of them.
+    val account = remember {
+        AccountViewModel(accounts = app.atlas, entitlements = app.atlas, weakWords = app.atlas)
+    }
+    val accountState by account.state.collectAsStateWithLifecycle()
+
+    var nav by remember { mutableStateOf(NavStack()) }
+
+    // Where every lock and every 402 leads. Not pushed twice: two refusals in
+    // a row would otherwise stack two copies of the same page.
+    val openMembership: () -> Unit = {
+        if (nav.current != AppRoute.Membership) nav = nav.push(AppRoute.Membership)
+    }
+
+    // The themes that actually get studied: the pick, narrowed to what this
+    // account may study. The pick itself stays as chosen — 設定 shows it, and
+    // it comes back whole the day the account becomes a member.
+    val studyable = accountState.entitlement?.membership?.studyableCategories
+    val studyCategories = remember(settings.studyCategories, studyable) {
+        StudyThemes.effective(settings.studyCategories, studyable)
+    }
+
     // Every word the 學習主題 selection can reach. 自定義 and 物見 are themes
     // with nothing in the catalogue — their words are the user's own and
     // taken-in cards — so a strip, a theme page or a 完成度 built from the
@@ -471,12 +498,12 @@ private fun SignedInScreens(
     }
     // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
     // numbers for one account read as a server bug for a week.
-    val completion = remember(isGuest, settingsLoaded, settings.studyCategories, progress.categories, studyWords) {
+    val completion = remember(isGuest, settingsLoaded, studyCategories, progress.categories, studyWords) {
         CompletionReadout(
             CompletionReadout.Inputs.from(
                 isGuest = isGuest,
                 settingsLoaded = settingsLoaded,
-                studyCategories = settings.studyCategories,
+                studyCategories = studyCategories,
                 progress = progress.categories,
                 words = studyWords,
             ),
@@ -533,6 +560,7 @@ private fun SignedInScreens(
                 savedTick++
                 refreshTick++
             },
+            onNeedsMembership = { openMembership() },
         )
     }
     val manageState by manage.state.collectAsStateWithLifecycle()
@@ -543,15 +571,11 @@ private fun SignedInScreens(
             // A public collection came or went: 物見's shelves and the
             // author's own row count it.
             onChanged = { community.load() },
+            onNeedsMembership = { openMembership() },
         )
     }
     val myCollectionsState by myCollections.state.collectAsStateWithLifecycle()
     val communityReported by community.reported.collectAsStateWithLifecycle()
-
-    val account = remember {
-        AccountViewModel(accounts = app.atlas, entitlements = app.atlas, weakWords = app.atlas)
-    }
-    val accountState by account.state.collectAsStateWithLifecycle()
 
     // What a pull re-reads is [LearningRefreshCause]'s to say; this only
     // knows which store answers each target. Written once, because the two
@@ -596,7 +620,6 @@ private fun SignedInScreens(
         )
     }
 
-    var nav by remember { mutableStateOf(NavStack()) }
     var showSpike by remember { mutableStateOf(false) }
 
     // A 已收進 card belongs to somebody else, and its page has an author, a
@@ -715,7 +738,7 @@ private fun SignedInScreens(
                         StudyQuotas.newQueue(
                             goal = settings.dailyGoal,
                             due = todayInputs.stats?.due ?: 0,
-                            categories = settings.studyCategories,
+                            categories = studyCategories,
                         ),
                     )
                 }
@@ -767,6 +790,9 @@ private fun SignedInScreens(
         }
         if (nav.current == AppRoute.Today) {
             today.refresh()
+            // 學習主題's gate and the numbers built on it. Here rather than only
+            // on 我的, which a new account may never open.
+            if (!isGuest) account.refreshEntitlement()
             // 主題進度 and the streak chip read it now, and both move without
             // the user doing anything here — a session elsewhere, or midnight.
             app.progressStore.load(direction)
@@ -784,6 +810,10 @@ private fun SignedInScreens(
         // an entitlement that only loads on 我的 would hide the entry from
         // anyone who never opened that tab.
         if (nav.current == AppRoute.Community) account.refresh()
+        // A purchase made on another device shows the moment the page opens.
+        if (nav.current == AppRoute.Membership || nav.current == AppRoute.StudyThemes) {
+            if (!isGuest) account.refreshEntitlement()
+        }
     }
     // The row at the top of 物見 is this account's public page, and it needs
     // the UID to find it — which arrives with 我的's account read.
@@ -854,8 +884,8 @@ private fun SignedInScreens(
                     onCreateAccount = { app.auth.exitGuestMode() },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
-                    shelves = remember(studyShelves, settings.studyCategories, isGuest) {
-                        StudyThemes.todayShelves(studyShelves, settings.studyCategories, isGuest)
+                    shelves = remember(studyShelves, studyCategories, isGuest) {
+                        StudyThemes.todayShelves(studyShelves, studyCategories, isGuest)
                     },
                     themeStatus = themeStatus,
                     uiLang = uiLang,
@@ -899,6 +929,7 @@ private fun SignedInScreens(
                     onBookmark = app.cardsSourceStore::toggle,
                     captureJobs = captureJobs,
                     onRetryCapture = { app.captureQueue.retry(it) },
+                    studyable = studyable,
                 )
 
                 AppRoute.Community -> CommunityScreen(
@@ -936,6 +967,7 @@ private fun SignedInScreens(
                         // which no learning store holds.
                         if (!isGuest) account.reload()
                     },
+                    onOpenMembership = if (isGuest) null else openMembership,
                 )
 
             }
@@ -1038,6 +1070,7 @@ private fun SignedInScreens(
                                 myCollections.load()
                                 community.load()
                             },
+                            onNeedsMembership = { openMembership() },
                         ).also { it.load() }
                     }
                     val editState by vm.state.collectAsStateWithLifecycle()
@@ -1109,7 +1142,12 @@ private fun SignedInScreens(
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onEditProfile = if (isGuest) null else ({ nav = nav.push(AppRoute.EditProfile) }),
                     onOpenBlocked = if (isGuest) null else ({ nav = nav.push(AppRoute.BlockedAuthors) }),
+                    onOpenMembership = if (isGuest) null else openMembership,
+                    tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
+                    offer = MembershipOffer.from(accountState.entitlement),
                 )
+
+                AppRoute.Membership -> MembershipScreen(MembershipOffer.from(accountState.entitlement))
 
                 AppRoute.EditProfile -> {
                     val vm = remember {
@@ -1161,6 +1199,8 @@ private fun SignedInScreens(
                     categories = catalog.categories,
                     uiLang = uiLang,
                     onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
+                    studyable = studyable,
+                    onLocked = openMembership,
                 )
 
                 is AppRoute.PublicItem -> {
@@ -1182,6 +1222,7 @@ private fun SignedInScreens(
                                 savedTick++
                                 refreshTick++
                             },
+                            onNeedsMembership = { openMembership() },
                         ).also { it.open() }
                     }
                     val itemState by vm.state.collectAsStateWithLifecycle()
@@ -1232,6 +1273,7 @@ private fun SignedInScreens(
                                 savedTick++
                                 refreshTick++
                             },
+                            onNeedsMembership = { openMembership() },
                         ).also { it.open() }
                     }
                     val collectionState by vm.state.collectAsStateWithLifecycle()
@@ -1279,12 +1321,14 @@ private fun SignedInScreens(
                             authoring = app.atlas,
                             direction = direction,
                             enqueue = app.captureQueue::enqueue,
+                            onNeedsMembership = { openMembership() },
                         )
                     }
                     CaptureScreen(
                         vm = vm,
                         bottomPadding = 0.dp,
                         onDone = { nav = nav.pop() },
+                        onOpenMembership = openMembership,
                     )
                 }
 
@@ -1441,7 +1485,7 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
     // whose bar carries 更多.
     is AppRoute.PublicItem,
-    AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors,
+    AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors, AppRoute.Membership,
     is AppRoute.ManageCard -> true
     else -> false
 }

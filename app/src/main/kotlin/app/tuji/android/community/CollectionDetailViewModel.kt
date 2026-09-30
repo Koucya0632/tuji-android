@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,6 +42,8 @@ class CollectionDetailViewModel(
     /** Members went into the queue — 今日 and 圖鑑 count them. */
     private val onLearned: () -> Unit = {},
     private val scope: CoroutineScope? = null,
+    /** 收藏 or 加入學習 refused by plan (402) — 會員方案, not an error line. */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     data class State(
@@ -112,7 +115,12 @@ class CollectionDetailViewModel(
                     // about it — remove some saved words — so it gets its own
                     // sentence.
                     val limit = (failure as? ApiError.Http)?.body?.contains("save_limit") == true
-                    _state.value.copy(learningBusy = false, error = if (limit) Error.LearnLimit else Error.Learn)
+                    val error = when {
+                        MembershipRefusal.isRefusal(failure) -> null
+                        limit -> Error.LearnLimit
+                        else -> Error.Learn
+                    }
+                    _state.value.copy(learningBusy = false, error = error)
                 },
             )
         }
@@ -127,10 +135,11 @@ class CollectionDetailViewModel(
         if (now.bookmarkBusy || now.isOwner) return
         _state.value = now.copy(bookmarkBusy = true, error = null)
         work.launch {
-            val result = attempt { if (save) bookmarks.saveCollection(slug) else bookmarks.unsaveCollection(slug) }
-                .getOrNull()
+            val outcome = attempt { if (save) bookmarks.saveCollection(slug) else bookmarks.unsaveCollection(slug) }
+            val result = outcome.getOrNull()
             if (result == null) {
-                _state.value = _state.value.copy(bookmarkBusy = false, error = Error.Bookmark)
+                val refused = MembershipRefusal.isRefusal(outcome.exceptionOrNull())
+                _state.value = _state.value.copy(bookmarkBusy = false, error = if (refused) null else Error.Bookmark)
                 return@launch
             }
             val lockChanged = _state.value.unlocked != result.saved
@@ -201,6 +210,7 @@ class CollectionDetailViewModel(
         throw cancelled
     } catch (failure: Exception) {
         Log.w(TAG, "collection action failed: $slug", failure)
+        if (MembershipRefusal.isRefusal(failure)) onNeedsMembership()
         Result.failure(failure)
     }
 

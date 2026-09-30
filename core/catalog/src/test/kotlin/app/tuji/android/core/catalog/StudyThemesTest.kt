@@ -78,4 +78,32 @@ class StudyThemesTest {
         assertEquals(3, StudyThemes.countIn(words, listOf("kitchen", "custom")))
         assertEquals(0, StudyThemes.countIn(words, emptyList()))
     }
+
+    @Test
+    fun `no gate studies the pick as it is`() {
+        assertEquals(listOf("kitchen", "custom"), StudyThemes.effective(listOf("kitchen", "custom"), studyable = null))
+        assertEquals(emptyList<String>(), StudyThemes.effective(emptyList(), studyable = null))
+    }
+
+    @Test
+    fun `a gate keeps only the studyable part of the pick`() {
+        val studyable = listOf("fruits", "bedroom")
+        assertEquals(listOf("fruits"), StudyThemes.effective(listOf("kitchen", "fruits", "custom"), studyable))
+    }
+
+    @Test
+    fun `a gated pick with nothing studyable falls back to the studyable list, never to empty`() {
+        // Empty means "every theme" to the queue and to 完成度.
+        val studyable = listOf("fruits", "bedroom")
+        assertEquals(listOf("bedroom", "fruits"), StudyThemes.effective(listOf("kitchen"), studyable))
+        assertEquals(listOf("bedroom", "fruits"), StudyThemes.effective(emptyList(), studyable))
+    }
+
+    @Test
+    fun `only a gate locks a theme`() {
+        assertEquals(false, StudyThemes.isLocked("kitchen", studyable = null))
+        assertEquals(true, StudyThemes.isLocked("kitchen", listOf("fruits")))
+        assertEquals(true, StudyThemes.isLocked("custom", listOf("fruits")))
+        assertEquals(false, StudyThemes.isLocked("fruits", listOf("fruits")))
+    }
 }

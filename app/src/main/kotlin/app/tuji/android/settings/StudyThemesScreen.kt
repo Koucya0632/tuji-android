@@ -28,6 +28,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.catalog.StudyThemes
+import app.tuji.android.core.design.TujiGlyph
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.stateDescription
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiPageLoading
@@ -56,6 +60,12 @@ fun StudyThemesScreen(
     onChange: (List<String>) -> Unit,
     readiness: SettingsReadiness,
     onRetryLoad: () -> Unit,
+    /**
+     * The themes this account may study (`membership.studyableCategories`);
+     * null = all. The rest are drawn locked and open 會員方案 instead.
+     */
+    studyable: List<String>? = null,
+    onLocked: () -> Unit = {},
 ) {
     val picked = selected.toSet()
     LazyVerticalGrid(
@@ -72,6 +82,17 @@ fun StudyThemesScreen(
                 color = TujiColor.Ink3,
                 modifier = Modifier.padding(bottom = TujiSpace.S2),
             )
+        }
+        // Only while something is locked: a member never reads about locks.
+        if (studyable != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    stringResource(R.string.study_themes_locked_note),
+                    style = TujiType.label,
+                    color = TujiColor.Ink3,
+                    modifier = Modifier.padding(bottom = TujiSpace.S2),
+                )
+            }
         }
 
         // The grid computes each new selection from the one on screen, so a
@@ -97,7 +118,8 @@ fun StudyThemesScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextAction(stringResource(R.string.study_themes_select_all)) {
-                    onChange(SettingsRules.selection(categories.map { it.id }))
+                    // Only what may be studied: a locked theme counts toward nothing.
+                    onChange(SettingsRules.selection(categories.map { it.id }.filterNot { StudyThemes.isLocked(it, studyable) }))
                 }
                 TextAction(stringResource(R.string.study_themes_clear)) { onChange(emptyList()) }
                 Spacer(Modifier.weight(1f))
@@ -110,11 +132,17 @@ fun StudyThemesScreen(
         }
 
         items(categories, key = { it.id }) { category ->
+            val locked = StudyThemes.isLocked(category.id, studyable)
             ThemeTile(
                 label = CategoryShelf.title(category, uiLang),
-                selected = category.id in picked,
+                selected = !locked && category.id in picked,
+                locked = locked,
                 onClick = {
-                    onChange(SettingsRules.selection(SettingsRules.toggleCategory(selected, category.id)))
+                    if (locked) {
+                        onLocked()
+                    } else {
+                        onChange(SettingsRules.selection(SettingsRules.toggleCategory(selected, category.id)))
+                    }
                 },
             )
         }
@@ -130,7 +158,15 @@ fun StudyThemesScreen(
  * within a minute of each other — which, on a first launch, they are.
  */
 @Composable
-fun ThemeTile(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ThemeTile(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Browsable but not studyable: a lock, dimmed, and the tap opens 會員方案. */
+    locked: Boolean = false,
+) {
+    val lockedLabel = stringResource(R.string.theme_locked)
     Box(
         modifier
             .fillMaxWidth()
@@ -143,17 +179,22 @@ fun ThemeTile(label: String, selected: Boolean, onClick: () -> Unit, modifier: M
             .semantics {
                 role = Role.Checkbox
                 this.selected = selected
+                if (locked) stateDescription = lockedLabel
             }
+            .alpha(if (locked) 0.55f else 1f)
             .padding(horizontal = TujiSpace.S1, vertical = TujiSpace.S4),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            label,
-            style = TujiType.label,
-            color = TujiColor.Ink2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1), verticalAlignment = Alignment.CenterVertically) {
+            if (locked) TujiGlyph.Lock(size = 10.dp, tint = TujiColor.Ink3)
+            Text(
+                label,
+                style = TujiType.label,
+                color = TujiColor.Ink2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

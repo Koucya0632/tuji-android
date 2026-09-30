@@ -49,6 +49,9 @@ sealed interface AppRoute {
     /** 學習主題, reached from 設定 and from 今日's theme strip. */
     data object StudyThemes : AppRoute
 
+    /** 會員方案 — where every lock and every 402 leads. */
+    data object Membership : AppRoute
+
     /** One theme's page: its hero, its description, its words. */
     data class Shelf(val categoryId: String, val title: String) : AppRoute
 
@@ -138,6 +141,8 @@ object TabShell {
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
         if (current in focused || current is AppRoute.Word) return false
+        // A page read to the end — its last lines are the ones a bar would cover.
+        if (current == AppRoute.Membership) return false
         if (current is AppRoute.Tab) return true
         return when (nav.tab) {
             AppRoute.Community, AppRoute.Me -> false

@@ -106,6 +106,20 @@ class AccountViewModel(
     }
 
     /**
+     * The entitlement alone, for the screens outside 我的 that gate on it —
+     * 學習主題's locks, 今日's numbers, 物見's entry. Cheaper than [refresh],
+     * which re-reads the account too. A failure keeps the previous answer, for
+     * the reason [reload] gives.
+     */
+    fun refreshEntitlement() {
+        work.launch {
+            runCatching { entitlements.entitlement() }
+                .onSuccess { _state.value = _state.value.copy(entitlement = it) }
+                .onFailure { Log.w(TAG, "entitlement failed", it) }
+        }
+    }
+
+    /**
      * 需要加強. A failure keeps the last list: it is a nudge, and a section
      * that blinks out on a timeout says the words got better.
      */

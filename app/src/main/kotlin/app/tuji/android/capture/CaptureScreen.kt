@@ -1,5 +1,6 @@
 package app.tuji.android.capture
 
+import app.tuji.android.profile.PhotoCodec
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -71,6 +72,7 @@ fun CaptureScreen(
     vm: CaptureViewModel,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onDone: () -> Unit,
+    onOpenMembership: () -> Unit = {},
 ) {
     val step by vm.step.collectAsStateWithLifecycle()
 
@@ -101,6 +103,21 @@ fun CaptureScreen(
             )
             Spacer(Modifier.height(TujiSpace.S3))
             TujiButton(text = stringResource(R.string.capture_retake), onClick = vm::reset)
+        }
+
+        is CaptureViewModel.Step.NeedsMembership -> Column(
+            Modifier.fillMaxSize().padding(TujiSpace.S4),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                s.message ?: stringResource(R.string.membership_limit_reached),
+                style = TujiType.body,
+                color = TujiColor.Ink2,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(TujiSpace.S3))
+            TujiButton(text = stringResource(R.string.membership_view_plans), onClick = onOpenMembership)
         }
 
         is CaptureViewModel.Step.Naming -> Naming(s, vm, bottomPadding)
@@ -170,7 +187,7 @@ private fun Framing(vm: CaptureViewModel) {
                     // to takes a second to arrive.
                     haptics.firm()
                     scope.launch {
-                        runCatching { controller.takePhoto(context) }
+                        runCatching { PhotoCodec.captureJpeg(controller.takePhoto(context)) }
                             .onSuccess(vm::submit)
                     }
                 },

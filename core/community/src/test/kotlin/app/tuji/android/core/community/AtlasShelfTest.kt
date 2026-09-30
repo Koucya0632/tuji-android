@@ -59,4 +59,11 @@ class AtlasShelfTest {
         assertEquals(ReviewStatus.Draft, ReviewStatus.of(null))
         assertEquals(ReviewStatus.Pending, ReviewStatus.of("pending_review"))
     }
+
+    /** The server names cards by item id; a photo with no card can never be locked. */
+    @Test fun `locked cards are marked by item id`() {
+        val rows = AtlasShelf.rows(images, items, TargetLanguage.JA, lockedItemIds = setOf("ia", "ib"))
+        assertEquals(listOf("c" to false, "a" to true), rows.map { it.id to it.locked })
+        assertFalse(AtlasShelf.rows(images, items, TargetLanguage.JA).any { it.locked })
+    }
 }

@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +32,8 @@ class AtlasManageViewModel(
     /** A card or its public copy is gone — 我做的, 今日 and 物見 draw them. */
     private val onChanged: () -> Unit = {},
     private val scope: CoroutineScope? = null,
+    /** 發佈到物見 refused by plan (402). */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     data class State(
@@ -46,8 +49,10 @@ class AtlasManageViewModel(
         /** The last delete or withdraw failed. */
         val actionFailed: Boolean = false,
         val language: TargetLanguage = TargetLanguage.EN,
+        /** Over the slot cap after Pro ended; the server's whole list, every sync. */
+        val lockedItemIds: Set<String> = emptySet(),
     ) {
-        val rows: List<ShelfRow> get() = AtlasShelf.rows(images, items, language)
+        val rows: List<ShelfRow> get() = AtlasShelf.rows(images, items, language, lockedItemIds)
         val hidden: Int get() = AtlasShelf.hiddenCount(images, rows)
         val shelf: ShelfState get() = AtlasShelf.state(rows, hidden, loading, failed)
         val selectionWarning: DeleteWarning get() = AtlasShelf.warning(rows, selected)
@@ -72,7 +77,13 @@ class AtlasManageViewModel(
                 return@launch
             }
             val now = _state.value
-            val next = now.copy(images = bundle.images, items = bundle.items, loading = false, failed = false)
+            val next = now.copy(
+                images = bundle.images,
+                items = bundle.items,
+                lockedItemIds = bundle.lockedItemIds.toSet(),
+                loading = false,
+                failed = false,
+            )
             // A selection that went off the shelf is not a selection.
             _state.value = next.copy(selected = now.selected intersect next.rows.map { it.id }.toSet())
         }
@@ -140,6 +151,11 @@ class AtlasManageViewModel(
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "publish failed: $itemId", failure)
+                if (MembershipRefusal.isRefusal(failure)) {
+                    _state.value = _state.value.copy(publishing = false)
+                    onNeedsMembership()
+                    return@launch
+                }
                 false
             }
             _state.value = _state.value.copy(publishing = false, actionFailed = !ok)

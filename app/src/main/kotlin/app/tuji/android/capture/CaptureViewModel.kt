@@ -1,5 +1,6 @@
 package app.tuji.android.capture
 
+import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -29,6 +30,11 @@ class CaptureViewModel(
     /** Where a confirmed capture goes. See [confirm]. */
     private val enqueue: (imageId: String, payload: AtlasConfirmPayload, thumbUrl: String?) -> Unit =
         { _, _, _ -> },
+    /**
+     * A recognition the plan does not cover (402) — 高精度 for a non-Pro, or
+     * the month's quota spent. 會員方案 rather than an empty candidate list.
+     */
+    private val onNeedsMembership: () -> Unit = {},
 ) : ViewModel() {
 
     sealed interface Step {
@@ -66,6 +72,13 @@ class CaptureViewModel(
         data object Queued : Step
 
         data class Failed(val message: String) : Step
+
+        /**
+         * The upload was refused before anything was stored (402): a
+         * non-member, or a member out of slots or recognitions. [message] is
+         * the server's sentence, when it wrote one.
+         */
+        data class NeedsMembership(val message: String?) : Step
     }
 
     private val _step = MutableStateFlow<Step>(Step.Framing)
@@ -86,7 +99,11 @@ class CaptureViewModel(
                 )
             }.getOrElse {
                 Log.e(TAG, "upload failed", it)
-                _step.value = Step.Failed(it.message ?: "upload failed")
+                _step.value = if (MembershipRefusal.isRefusal(it)) {
+                    Step.NeedsMembership(MembershipRefusal.message(it))
+                } else {
+                    Step.Failed(it.message ?: "upload failed")
+                }
                 return@launch
             }
 
@@ -119,6 +136,13 @@ class CaptureViewModel(
                 authoring.recognize(now.image.id, mode).candidates
             }.getOrElse {
                 Log.w(TAG, "recognize failed", it)
+                if (MembershipRefusal.isRefusal(it)) {
+                    // Back to the form as it was: nothing was recognised, and
+                    // "found nothing" must not be recorded for this mode.
+                    _step.value = now.copy(busy = null)
+                    onNeedsMembership()
+                    return@launch
+                }
                 emptyList()
             }
             var draft = now.draft.withCandidates(mode, candidates)

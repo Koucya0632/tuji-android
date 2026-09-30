@@ -24,6 +24,9 @@ import app.tuji.android.core.design.frameWidth
 import app.tuji.android.core.design.onAccent
 import coil3.compose.AsyncImage
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -94,14 +97,21 @@ fun ThemeCoverTile(
     uiLang: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Browsable, not studyable by this account. Only marked, never blocked:
+     * definitions, examples and audio stay open to everyone.
+     */
+    locked: Boolean = false,
 ) {
+    val lockedLabel = stringResource(R.string.theme_locked)
     Box(modifier) {
         Column(
             Modifier
                 .fillMaxWidth()
                 .background(TujiColor.Paper)
                 .border(status.frameWidth, status.accent)
-                .tujiClickable(onClick = onClick),
+                .tujiClickable(onClick = onClick)
+                .semantics { if (locked) stateDescription = lockedLabel },
         ) {
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(TujiColor.Paper2)) {
                 // A theme with no cover (`imageUrl` is an empty string for a
@@ -136,6 +146,17 @@ fun ThemeCoverTile(
             }
         }
         ThemeStatusBadge(status, Modifier.align(Alignment.TopEnd))
+        if (locked) {
+            Box(
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(5.dp)
+                    .background(TujiColor.Paper)
+                    .padding(5.dp),
+            ) {
+                TujiGlyph.Lock(size = 12.dp, tint = TujiColor.Ink2)
+            }
+        }
     }
 }
 

@@ -13,6 +13,7 @@ import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.RecognitionMode
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.network.AtlasAuthoring
+import app.tuji.android.core.network.ApiError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -48,6 +49,8 @@ class CaptureViewModelTest {
         val failCards: Boolean = false,
         val failPublish: Boolean = false,
         val publishGoesLive: Boolean = true,
+        val uploadError: Throwable? = null,
+        val recognizeError: Throwable? = null,
     ) : AtlasAuthoring {
         var publishes = 0
         var uploads = 0
@@ -61,6 +64,7 @@ class CaptureViewModelTest {
         ): AtlasUploadResponse {
             uploads += 1
             if (failUpload) throw IOException("no")
+            uploadError?.let { throw it }
             return AtlasUploadResponse(
                 image = AtlasImageSummary(id = "img1"),
                 candidates = uploadCandidates,
@@ -68,8 +72,11 @@ class CaptureViewModelTest {
             )
         }
 
-        override suspend fun recognize(imageId: String, mode: RecognitionMode) =
-            AtlasRecognitionResponse(candidates = escalateCandidates).also { recognitions += 1 }
+        override suspend fun recognize(imageId: String, mode: RecognitionMode): AtlasRecognitionResponse {
+            recognitions += 1
+            recognizeError?.let { throw it }
+            return AtlasRecognitionResponse(candidates = escalateCandidates)
+        }
 
         override suspend fun confirm(imageId: String, payload: AtlasConfirmPayload): AtlasItem {
             confirms += 1
@@ -96,11 +103,14 @@ class CaptureViewModelTest {
     /** What `confirm` handed to 生成佇列, which is now all it does. */
     private val enqueued = mutableListOf<Triple<String, AtlasConfirmPayload, String?>>()
 
+    private var membershipPrompts = 0
+
     private fun vm(fake: AtlasAuthoring) = CaptureViewModel(
         authoring = fake,
         direction = LearningDirection.ZH_JA,
         scope = TestScope(dispatcher),
         enqueue = { imageId, payload, thumb -> enqueued += Triple(imageId, payload, thumb) },
+        onNeedsMembership = { membershipPrompts++ },
     )
 
     private fun CaptureViewModel.naming() = step.value as CaptureViewModel.Step.Naming
@@ -197,5 +207,25 @@ class CaptureViewModelTest {
         advanceUntilIdle()
         // The first tap leaves `Naming`, so the second has nothing to confirm.
         assertEquals(1, enqueued.size)
+    }
+
+    @Test fun `an upload the plan does not cover says what the server said`() = runTest(dispatcher) {
+        val refusal = ApiError.Http(402, """{"error":"quota_exceeded","scope":"capacity","message":"自製圖鑑已達上限（20）"}""")
+        val vm = vm(Fake(uploadError = refusal))
+        vm.submit(ByteArray(4)); advanceUntilIdle()
+        assertEquals(CaptureViewModel.Step.NeedsMembership("自製圖鑑已達上限（20）"), vm.step.value)
+    }
+
+    @Test fun `a recognition the plan does not cover opens the plans and keeps the form`() = runTest(dispatcher) {
+        val fake = Fake(uploadCandidates = listOf(candidate("a")), recognizeError = ApiError.Http(402, null))
+        val vm = vm(fake)
+        vm.submit(ByteArray(4)); advanceUntilIdle()
+        vm.setMode(RecognitionMode.Escalate); advanceUntilIdle()
+
+        assertEquals(1, membershipPrompts)
+        val naming = vm.naming()
+        assertNull(naming.busy)
+        // Not recorded as "found nothing": the next tap may ask again.
+        assertTrue(naming.draft.needsFetch(RecognitionMode.Escalate))
     }
 }
