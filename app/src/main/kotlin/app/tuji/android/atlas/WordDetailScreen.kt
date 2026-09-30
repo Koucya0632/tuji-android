@@ -78,8 +78,8 @@ import app.tuji.android.core.study.MasteryLevel
  * The pronunciation button plays the same pre-generated clip 聽句 plays, through
  * the same [app.tuji.android.core.model.ClipPlaying] seam.
  *
- * Two things here iOS does not have, kept on purpose: the 下次複習 line under
- * the mastery bar, and 相關的詞 at the foot.
+ * One thing here iOS does not have, kept on purpose: the 下次複習 line under
+ * the mastery bar.
  */
 @Composable
 fun WordDetailScreen(
@@ -89,14 +89,6 @@ fun WordDetailScreen(
     session: TargetLanguage,
     uiLang: String,
     showChinese: Boolean,
-    /**
-     * A catalogue id → the row, from the copy already in memory.
-     *
-     * The payload gives 相關的詞 as bare ids, and an id is not a word: 「oven」
-     * under a Japanese entry tells a learner nothing and looks like a bug. The
-     * catalogue is right there, so the row is resolved rather than fetched.
-     */
-    resolve: (String) -> app.tuji.android.core.model.Word?,
     /** Whether this word carries a 書籤 — held by `CardsSourceStore`, because
      *  the grid draws the same answer and two copies would disagree. */
     bookmarked: Boolean,
@@ -111,7 +103,8 @@ fun WordDetailScreen(
     onBookmark: (() -> Unit)?,
     scores: MasteryStore.Scores,
     onBack: () -> Unit,
-    onOpenRelated: (String) -> Unit,
+    /** Opens a catalogue word tapped inside a 詞塊 card. */
+    onOpenWord: (String) -> Unit,
     /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
     speech: WordSpeaking? = null,
     accent: String = "us",
@@ -124,7 +117,7 @@ fun WordDetailScreen(
         partOfSpeech = { WordDetailContent.partOfSpeech(it, uiLang) },
         speech = speech,
         accent = accent,
-        onOpenWord = onOpenRelated,
+        onOpenWord = onOpenWord,
         bookmarks = glossBookmarks,
     ) {
     when (val s = state) {
@@ -191,33 +184,6 @@ fun WordDetailScreen(
                 session = session,
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
-
-            val related = word.relatedWords.mapNotNull(resolve)
-            if (related.isNotEmpty()) {
-                Column(
-                    Modifier.padding(horizontal = TujiSpace.S4),
-                    verticalArrangement = Arrangement.spacedBy(TujiSpace.S1),
-                ) {
-                    SectionTitle(stringResource(R.string.word_related))
-                    // An id the catalogue does not know is dropped, not drawn as
-                    // itself: a row that opens onto a 404 is worse than one
-                    // fewer row.
-                    related.forEach { row ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .tujiClickable { onOpenRelated(row.id) }
-                                .padding(vertical = TujiSpace.S1),
-                            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-                        ) {
-                            Text(row.word, style = TujiType.bodySmStrong, color = TujiColor.Accumulation)
-                            if (showChinese) {
-                                row.chinese?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink3) }
-                            }
-                        }
-                    }
-                }
-            }
 
             Spacer(Modifier.height(bottomPadding + TujiSpace.S5))
         }

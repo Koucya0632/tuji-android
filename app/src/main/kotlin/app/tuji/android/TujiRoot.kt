@@ -1388,7 +1388,6 @@ private fun SignedInScreens(
                             uiLang = uiLang,
                             showChinese = settings.showZh,
                             onBack = { nav = nav.pop() },
-                            resolve = { id -> catalog.words.firstOrNull { it.id == id } },
                             bookmarked = wordId in personal.bookmarked,
                             // 書籤 filters the *catalogue* by marked id, so a
                             // mark on a card the catalogue never had would go
@@ -1396,7 +1395,7 @@ private fun SignedInScreens(
                             onBookmark = if (CardsSourceRules.isCustom(wordId)) null
                             else ({ app.cardsSourceStore.toggle(wordId) }),
                             scores = scores,
-                            onOpenRelated = { nav = nav.push(AppRoute.Word(it)) },
+                            onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
                             speech = app.speech,
                             accent = settings.accent,
                             glossBookmarks = GlossBookmarks(
