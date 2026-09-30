@@ -22,5 +22,6 @@ fun AuthFailure.messageRes(): Int = when (this) {
     AuthFailure.ProviderNotEnabled -> R.string.auth_error_provider_disabled
     AuthFailure.PasswordTooShort -> R.string.auth_error_password_too_short
     AuthFailure.InvalidEmail -> R.string.auth_error_invalid_email
+    AuthFailure.GoogleUnavailable -> R.string.auth_error_google_unavailable
     AuthFailure.Unknown -> R.string.auth_error_unknown
 }

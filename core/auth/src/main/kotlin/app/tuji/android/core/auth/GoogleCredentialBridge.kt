@@ -1,6 +1,7 @@
 package app.tuji.android.core.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -34,7 +35,7 @@ class GoogleCredentialBridge(private val serverClientId: String) {
     sealed interface Outcome {
         data class Token(val idToken: String, val nonce: String) : Outcome
 
-        /** The user dismissed the sheet. Not success, and **not** an error. */
+        /** The sheet closed without a token — by the user, or by the provider. */
         data object Cancelled : Outcome
 
         data class Failed(val cause: Throwable) : Outcome
@@ -65,9 +66,13 @@ class GoogleCredentialBridge(private val serverClientId: String) {
             val token = GoogleIdTokenCredential.createFrom(credential.data).idToken
             Outcome.Token(token, nonce)
         } catch (e: GetCredentialCancellationException) {
-            // Backing out of the sheet must not leave a red line under the
-            // button. Apple states the same fact differently: its button
-            // filters cancellation out before anyone is told.
+            // A cancellation is not always the user's: an unregistered signing
+            // certificate comes back as `[16] Account reauth failed`, and
+            // microG (Huawei, GBox) closes its own sheet with the same
+            // "cancelled by the user" a real back press gets. Logged so the
+            // two can be told apart after the fact; [AuthService] shows a
+            // line either way.
+            Log.w(TAG, "google credential cancelled: ${e.type} ${e.errorMessage}")
             Outcome.Cancelled
         } catch (e: NoCredentialException) {
             // No Google account on the device at all. A distinct case worth its
@@ -94,5 +99,10 @@ class GoogleCredentialBridge(private val serverClientId: String) {
         return buildString(length) {
             repeat(length) { append(charset[random.nextInt(charset.length)]) }
         }
+    }
+
+    private companion object {
+        /** [AuthService]'s tag: one filter shows the whole sign-in. */
+        const val TAG = "TujiAuth"
     }
 }

@@ -2,6 +2,7 @@ package app.tuji.android.core.auth
 
 import android.content.Context
 import android.util.Log
+import androidx.credentials.exceptions.NoCredentialException
 import app.tuji.android.core.network.AccessTokenProvider
 import app.tuji.android.core.network.ApiError
 import io.github.jan.supabase.SupabaseClient
@@ -183,10 +184,14 @@ class AuthService(
      */
     suspend fun signInWithGoogle(activityContext: Context): AuthAttempt =
         when (val outcome = google.requestIdToken(activityContext)) {
-            is GoogleCredentialBridge.Outcome.Cancelled -> AuthAttempt.Cancelled
+            // Not [AuthAttempt.Cancelled]: see [AuthFailure.GoogleUnavailable].
+            is GoogleCredentialBridge.Outcome.Cancelled -> AuthAttempt.Failed(AuthFailure.GoogleUnavailable)
             is GoogleCredentialBridge.Outcome.Failed -> {
                 Log.e(TAG, "google credential failed", outcome.cause)
-                AuthAttempt.Failed(AuthFailure.from(outcome.cause))
+                AuthAttempt.Failed(
+                    if (outcome.cause is NoCredentialException) AuthFailure.GoogleUnavailable
+                    else AuthFailure.from(outcome.cause),
+                )
             }
             is GoogleCredentialBridge.Outcome.Token -> try {
                 supabase.auth.signInWith(IDToken) {
