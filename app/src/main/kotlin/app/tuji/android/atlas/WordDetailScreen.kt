@@ -119,6 +119,8 @@ fun WordDetailScreen(
     onLocked: (() -> Unit)? = null,
     /** 我的筆記, under the mastery bar. Handed in: it reads the account, this page does not. */
     note: @Composable (Modifier) -> Unit = {},
+    /** 加入詞表, beside 書籤 over the picture. */
+    wordListButton: @Composable () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -161,7 +163,7 @@ fun WordDetailScreen(
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
         ) {
             val word = s.word
-            Hero(word = word, bookmarked = bookmarked, onBack = onBack, onBookmark = onBookmark)
+            Hero(word = word, bookmarked = bookmarked, onBack = onBack, onBookmark = onBookmark, extra = wordListButton)
 
             TitleRow(
                 word = word,
@@ -208,7 +210,13 @@ fun WordDetailScreen(
  * given over to one word never shows less of it than the tile you tapped.
  */
 @Composable
-private fun Hero(word: WordDetail, bookmarked: Boolean, onBack: () -> Unit, onBookmark: (() -> Unit)?) {
+private fun Hero(
+    word: WordDetail,
+    bookmarked: Boolean,
+    onBack: () -> Unit,
+    onBookmark: (() -> Unit)?,
+    extra: @Composable () -> Unit,
+) {
     Box(Modifier.fillMaxWidth().aspectRatio(1f).background(TujiColor.Paper2)) {
         WordPicture(
             url = word.imageUrl,
@@ -217,13 +225,18 @@ private fun Hero(word: WordDetail, bookmarked: Boolean, onBack: () -> Unit, onBo
             ground = TujiColor.Paper2,
             modifier = Modifier.fillMaxSize(),
         )
-        FloatingBar(bookmarked = bookmarked, onBack = onBack, onBookmark = onBookmark)
+        FloatingBar(bookmarked = bookmarked, onBack = onBack, onBookmark = onBookmark, extra = extra)
     }
 }
 
 /** 返回 and 書籤 over the artwork: a transparent bar, so the page starts with the picture. */
 @Composable
-private fun FloatingBar(bookmarked: Boolean, onBack: () -> Unit, onBookmark: (() -> Unit)?) {
+private fun FloatingBar(
+    bookmarked: Boolean,
+    onBack: () -> Unit,
+    onBookmark: (() -> Unit)?,
+    extra: @Composable () -> Unit = {},
+) {
     Row(
         Modifier.fillMaxWidth().height(56.dp).padding(horizontal = TujiSpace.S1),
         verticalAlignment = Alignment.CenterVertically,
@@ -232,6 +245,7 @@ private fun FloatingBar(bookmarked: Boolean, onBack: () -> Unit, onBookmark: (()
             TujiGlyph.ArrowLeft(tint = TujiColor.Ink)
         }
         Spacer(Modifier.weight(1f))
+        extra()
         // The mark is **passive**: it changes nothing about what is scheduled
         // for review. That is the whole difference between 書籤 and 學習主題.
         if (onBookmark != null) {

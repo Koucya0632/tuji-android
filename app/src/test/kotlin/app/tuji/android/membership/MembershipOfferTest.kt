@@ -26,6 +26,8 @@ class MembershipOfferTest {
     @Test fun `before the cutover there is no lifetime card and Pro keeps its old quota`() {
         val offer = MembershipOffer.from(entitlement("free", policy = "v1"))
         assertFalse(offer.showsLifetime)
+        // 詞表 does not exist under v1.
+        assertFalse(R.string.membership_benefit_lists_100 in offer.proRows)
         assertTrue(R.string.membership_benefit_ai_500 in offer.proRows)
         assertEquals(R.string.membership_pro_headline, offer.headline)
     }
@@ -37,6 +39,8 @@ class MembershipOfferTest {
         assertEquals(R.string.membership_lifetime_headline, offer.headline)
         assertTrue(R.string.membership_benefit_ai_200 in offer.proRows)
         assertEquals(R.string.membership_benefit_notes, offer.lifetimeRows.last())
+        assertTrue(R.string.membership_benefit_lists_20 in offer.lifetimeRows)
+        assertTrue(R.string.membership_benefit_lists_100 in offer.proRows)
     }
 
     @Test fun `a lifetime member is shown what Pro adds`() {

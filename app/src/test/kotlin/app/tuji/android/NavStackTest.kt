@@ -92,7 +92,10 @@ class NavStackTest {
     }
 
     @Test fun `a focused screen hides the bar whichever tab it was opened from`() {
-        listOf(AppRoute.Review, AppRoute.LearnNew, AppRoute.Search, AppRoute.Capture, word).forEach { route ->
+        listOf(
+            AppRoute.Review, AppRoute.LearnNew, AppRoute.Search, AppRoute.Capture, word,
+            AppRoute.WordListStudy("l1", app.tuji.android.core.model.StudyMode.Review),
+        ).forEach { route ->
             assertFalse("$route from 今天", TabShell.tabBarVisible(NavStack().push(route)))
             assertFalse("$route from 圖鑑", TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(route)))
         }

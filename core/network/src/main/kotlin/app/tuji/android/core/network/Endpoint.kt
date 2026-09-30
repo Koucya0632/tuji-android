@@ -153,6 +153,72 @@ interface Endpoint {
         )
     }
 
+    /**
+     * 個人詞表 in one learning language: GET lists them, POST creates one.
+     * [word] asks the server to mark which lists already hold that word.
+     *
+     * Every 詞表 route is private and fresh: a word added a moment ago must be
+     * in the very next read and the very next session.
+     */
+    data class UsersWordLists(val learning: LearningDirection, val word: String? = null) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-lists",
+            query = listOf("learning" to learning.wire) + listOfNotNull(word?.let { "word" to it }),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** One 詞表: GET reads it, PATCH renames it, DELETE removes it. */
+    data class UsersWordList(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-lists/$id",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** Adding a word to a 詞表, or taking it out. */
+    data class UsersWordListWords(val id: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-lists/$id/words",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /** The lists' order — which also decides which stay usable after a downgrade. */
+    data class UsersWordListOrder(val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/word-lists/order",
+            query = listOf("learning" to learning.wire),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
+     * A study queue drawn from one 詞表. `list` replaces the theme filter — a
+     * list is its own selection — and it is never served from a cache built for
+     * 今日's queue.
+     */
+    data class StudyWordListQueue(
+        val listId: String,
+        val mode: StudyMode,
+        val limit: Int,
+        val lang: String,
+        val learning: LearningDirection,
+    ) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/queue",
+            query = listOf(
+                "mode" to mode.wire,
+                "limit" to limit.toString(),
+                "new" to limit.toString(),
+                "list" to listId,
+                "lang" to lang,
+                "learning" to learning.wire,
+            ),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** 個人筆記 — every note this account has written, in one read. */
     data object UsersWordNotes : Endpoint {
         override val descriptor get() = EndpointDescriptor(

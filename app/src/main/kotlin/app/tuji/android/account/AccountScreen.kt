@@ -78,6 +78,8 @@ fun AccountScreen(
     onRefresh: suspend () -> Unit = {},
     /** 會員方案. Null for a guest, who has no account to be a member with. */
     onOpenMembership: (() -> Unit)? = null,
+    /** 詞表's way in. Handed in: whether it shows is the account's, not this screen's. */
+    wordLists: @Composable () -> Unit = {},
 ) {
     TujiPullToRefresh(onRefresh = onRefresh) {
     Column(
@@ -140,6 +142,7 @@ fun AccountScreen(
                 )
             },
         )
+        wordLists()
         // Where you are weakest comes last: it is the one section here that
         // asks for something, and it reads as a next step after the record.
         if (!isGuest && state.weak.isNotEmpty()) {

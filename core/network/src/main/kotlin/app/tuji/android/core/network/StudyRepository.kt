@@ -8,6 +8,13 @@ import app.tuji.android.core.model.UserSettings
 import app.tuji.android.core.model.UserSettingsResponse
 import app.tuji.android.core.model.StudyAnswerPayload
 import app.tuji.android.core.model.WordsListResponse
+import app.tuji.android.core.model.WordList
+import app.tuji.android.core.model.WordListCreateResponse
+import app.tuji.android.core.model.WordListDetailResponse
+import app.tuji.android.core.model.WordListNamePayload
+import app.tuji.android.core.model.WordListOrderPayload
+import app.tuji.android.core.model.WordListWordPayload
+import app.tuji.android.core.model.WordListsResponse
 import app.tuji.android.core.model.WordNote
 import app.tuji.android.core.model.WordNotePayload
 import app.tuji.android.core.model.WordNoteSaveResponse
@@ -116,6 +123,35 @@ interface WordNotesAccess {
     suspend fun deleteNote(wordId: String)
 }
 
+/**
+ * 個人詞表 over the wire. Scoped to a learning direction like the other
+ * direction-owned reads: the server keeps English and Japanese lists apart.
+ */
+interface WordListsAccess {
+    /** [containing] asks the server to mark which lists already hold that word. */
+    suspend fun wordLists(learning: LearningDirection, containing: String? = null): WordListsResponse
+
+    suspend fun wordList(id: String): WordListDetailResponse
+
+    suspend fun createWordList(learning: LearningDirection, name: String): WordList
+
+    suspend fun renameWordList(id: String, name: String)
+
+    suspend fun deleteWordList(id: String)
+
+    suspend fun reorderWordLists(learning: LearningDirection, ids: List<String>)
+
+    suspend fun setWordInList(listId: String, wordId: String, present: Boolean)
+
+    suspend fun wordListQueue(
+        listId: String,
+        mode: StudyMode,
+        limit: Int,
+        lang: String,
+        learning: LearningDirection,
+    ): StudyQueueResponse
+}
+
 class StudyRepository(private val api: TujiApiClient) :
     AnswerSubmission,
     StudyQueueReading,
@@ -125,7 +161,42 @@ class StudyRepository(private val api: TujiApiClient) :
     SettingsAccess,
     PersonalWordsAccess,
     WordNotesAccess,
+    WordListsAccess,
     AccountErasure {
+
+    override suspend fun wordLists(learning: LearningDirection, containing: String?): WordListsResponse =
+        api.get(Endpoint.UsersWordLists(learning, containing))
+
+    override suspend fun wordList(id: String): WordListDetailResponse = api.get(Endpoint.UsersWordList(id))
+
+    override suspend fun createWordList(learning: LearningDirection, name: String): WordList =
+        api.post<WordListCreateResponse>(Endpoint.UsersWordLists(learning), WordListNamePayload(name)).list
+
+    override suspend fun renameWordList(id: String, name: String) {
+        api.patch<Unit>(Endpoint.UsersWordList(id), WordListNamePayload(name))
+    }
+
+    override suspend fun deleteWordList(id: String) {
+        api.delete<Unit>(Endpoint.UsersWordList(id))
+    }
+
+    override suspend fun reorderWordLists(learning: LearningDirection, ids: List<String>) {
+        api.post<Unit>(Endpoint.UsersWordListOrder(learning), WordListOrderPayload(ids))
+    }
+
+    override suspend fun setWordInList(listId: String, wordId: String, present: Boolean) {
+        api.post<Unit>(Endpoint.UsersWordListWords(listId), WordListWordPayload(wordId, present))
+    }
+
+    override suspend fun wordListQueue(
+        listId: String,
+        mode: StudyMode,
+        limit: Int,
+        lang: String,
+        learning: LearningDirection,
+    ): StudyQueueResponse = api.get(
+        Endpoint.StudyWordListQueue(listId = listId, mode = mode, limit = limit, lang = lang, learning = learning),
+    )
 
     override suspend fun notes(): WordNotesResponse = api.get(Endpoint.UsersWordNotes)
 

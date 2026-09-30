@@ -5,6 +5,13 @@ import app.tuji.android.core.model.MemberAccess
 import app.tuji.android.core.model.MemberAccessLevel
 import app.tuji.android.core.model.MemberFeature
 import app.tuji.android.atlas.WordNoteSection
+import app.tuji.android.wordlists.AddToWordListSheet
+import app.tuji.android.wordlists.MeWordListsRow
+import app.tuji.android.wordlists.WordListButton
+import app.tuji.android.wordlists.WordListDetailScreen
+import app.tuji.android.wordlists.WordListDetailViewModel
+import app.tuji.android.wordlists.WordListQueue
+import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
 import androidx.compose.foundation.background
@@ -34,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.pager.rememberPagerState
@@ -483,6 +491,17 @@ private fun SignedInScreens(
     ) != MemberAccessLevel.Hidden
     LaunchedEffect(notesExist) { if (notesExist) app.wordNotesStore.loadIfNeeded() }
 
+    // 個人詞表: whether a non-member still has lists decides between the lock
+    // and the way in, so they are read whenever the feature exists at all —
+    // and again when the learning language changes, since lists are per
+    // language.
+    val wordLists by app.wordListsStore.state.collectAsStateWithLifecycle()
+    val memberEntitlement = if (isGuest) null else accountState.entitlement
+    val listsExist = MemberAccess.level(
+        MemberFeature.WordListBrowse, memberEntitlement, hasOwnData = true,
+    ) != MemberAccessLevel.Hidden
+    LaunchedEffect(listsExist, direction) { if (listsExist) app.wordListsStore.loadIfNeeded() }
+
     var nav by remember { mutableStateOf(NavStack()) }
 
     // Where every lock and every 402 leads. Not pushed twice: two refusals in
@@ -675,12 +694,19 @@ private fun SignedInScreens(
     // The study flows own the whole screen — no tab bar, no account row: a
     // session that can be left by tapping a tab is a session that gets left by
     // accident.
-    when (nav.current) {
+    // A session from a 詞表 is the same flow with a different source of cards.
+    val listStudy = nav.current as? AppRoute.WordListStudy
+    val studyFlow: AppRoute = when (listStudy?.mode) {
+        StudyMode.New -> AppRoute.LearnNew
+        StudyMode.Review -> AppRoute.Review
+        null -> nav.current
+    }
+    when (studyFlow) {
         AppRoute.Review -> {
             val haptics = rememberTujiHaptics()
-            val vm = remember {
+            val vm = remember(nav.current) {
                 ReviewViewModel(
-                    queues = app.study,
+                    queues = listStudy?.let { WordListQueue(app.study, it.listId) } ?: app.study,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -691,7 +717,9 @@ private fun SignedInScreens(
                     online = { app.isOnline() },
                     hints = app.onboarding,
                     haptics = haptics,
-                ).also { it.load(StudyMode.Review) }
+                ).also {
+                    if (listStudy != null) it.load(StudyMode.Review, limit = WordListQueue.REVIEW_LIMIT) else it.load(StudyMode.Review)
+                }
             }
             ReviewScreen(
                 vm = vm,
@@ -734,9 +762,9 @@ private fun SignedInScreens(
         }
         AppRoute.LearnNew -> {
             val haptics = rememberTujiHaptics()
-            val vm = remember {
+            val vm = remember(nav.current) {
                 NewFlowViewModel(
-                    queues = app.study,
+                    queues = listStudy?.let { WordListQueue(app.study, it.listId) } ?: app.study,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -752,11 +780,17 @@ private fun SignedInScreens(
                     // themes 設定 picked — the same numbers 今日 printed on
                     // the button that opened this.
                     it.load(
-                        StudyQuotas.newQueue(
-                            goal = settings.dailyGoal,
-                            due = todayInputs.stats?.due ?: 0,
-                            categories = studyCategories,
-                        ),
+                        // A list's new words follow the daily goal, as on
+                        // iOS; the list is its own selection, so no themes.
+                        if (listStudy != null) {
+                            StudyQuotas.NewQueue(limit = settings.dailyGoal.coerceAtLeast(1), categories = emptyList())
+                        } else {
+                            StudyQuotas.newQueue(
+                                goal = settings.dailyGoal,
+                                due = todayInputs.stats?.due ?: 0,
+                                categories = studyCategories,
+                            )
+                        },
                     )
                 }
             }
@@ -988,6 +1022,18 @@ private fun SignedInScreens(
                         if (!isGuest) account.reload()
                     },
                     onOpenMembership = if (isGuest) null else openMembership,
+                    wordLists = {
+                        when (MemberAccess.level(MemberFeature.WordListBrowse, memberEntitlement, wordLists.lists.isNotEmpty())) {
+                            MemberAccessLevel.Hidden -> Unit
+                            MemberAccessLevel.Locked -> MeWordListsRow(locked = true, listCount = 0, onClick = openMembership)
+                            // A refund keeps the lists: open them read-only.
+                            MemberAccessLevel.ReadOnly, MemberAccessLevel.Open -> MeWordListsRow(
+                                locked = false,
+                                listCount = wordLists.lists.size,
+                                onClick = { nav = nav.push(AppRoute.WordLists) },
+                            )
+                        }
+                    },
                 )
 
             }
@@ -1168,6 +1214,32 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Membership -> MembershipScreen(MembershipOffer.from(accountState.entitlement))
+
+                AppRoute.WordLists -> WordListsScreen(
+                    store = app.wordListsStore,
+                    tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
+                    bottomPadding = 0.dp,
+                    onBack = { nav = nav.pop() },
+                    onOpenList = { nav = nav.push(AppRoute.WordList(it)) },
+                    onNeedsMembership = openMembership,
+                )
+
+                is AppRoute.WordList -> {
+                    val vm = remember(route.listId) {
+                        WordListDetailViewModel(route.listId, app.study).also { it.load() }
+                    }
+                    WordListDetailScreen(
+                        vm = vm,
+                        store = app.wordListsStore,
+                        resolve = { id -> catalog.words.firstOrNull { it.id == id } },
+                        showChinese = settings.showZh,
+                        bottomPadding = 0.dp,
+                        onBack = { nav = nav.pop() },
+                        onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
+                        onStudy = { mode -> nav = nav.push(AppRoute.WordListStudy(route.listId, mode)) },
+                        onNeedsMembership = openMembership,
+                    )
+                }
 
                 AppRoute.EditProfile -> {
                     val vm = remember {
@@ -1430,6 +1502,27 @@ private fun SignedInScreens(
                             // is worse than plain text.
                             canOpenWord = { id -> catalog.words.any { it.id == id } },
                             onLocked = openMembership,
+                            wordListButton = {
+                                if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
+                                    var adding by rememberSaveable(wordId) { mutableStateOf(false) }
+                                    WordListButton(
+                                        level = MemberAccess.level(MemberFeature.WordListAdd, memberEntitlement),
+                                        onOpen = { adding = true },
+                                        onLocked = openMembership,
+                                    )
+                                    if (adding) {
+                                        AddToWordListSheet(
+                                            wordId = wordId,
+                                            store = app.wordListsStore,
+                                            onDismiss = { adding = false },
+                                            onNeedsUpgrade = {
+                                                adding = false
+                                                openMembership()
+                                            },
+                                        )
+                                    }
+                                }
+                            },
                             note = { modifier ->
                                 // Official words only: the server refuses a
                                 // note on a 自製 or 物見 id.
