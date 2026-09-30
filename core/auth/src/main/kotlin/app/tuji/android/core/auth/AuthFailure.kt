@@ -36,6 +36,16 @@ enum class AuthFailure {
     PasswordTooShort,
     InvalidEmail,
 
+    /**
+     * Google's sheet closed without a token: the user backed out, the phone
+     * has no Google account, or — on Huawei, through GBox and microG — the
+     * substitute Play services shut its own sheet. The app cannot tell these
+     * apart (microG reports the same "cancelled by the user" a back press
+     * does), and saying nothing read as a dead button, so all of them get a
+     * line that points at the other two ways in.
+     */
+    GoogleUnavailable,
+
     /** Anything else. The UI shows its own sentence; the server's never appears. */
     Unknown,
     ;

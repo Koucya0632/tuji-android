@@ -52,6 +52,7 @@
     <string name="auth_error_provider_disabled">这个登录方式尚未启用，请稍后再试</string>
     <string name="auth_error_password_too_short">密码太短（至少 8 字）</string>
     <string name="auth_error_invalid_email">Email 格式或网域不被接受</string>
+    <string name="auth_error_google_unavailable">Google 登录无法使用，请改用 Email 或 Apple 登录</string>
     <string name="auth_error_unknown">登录没有成功，请稍后再试</string>
     <string name="study_start_review">开始复习</string>
     <string name="study_loading">加载中…</string>

@@ -52,6 +52,7 @@
     <string name="auth_error_provider_disabled">このログイン方法はまだ利用できません。しばらくしてからお試しください。</string>
     <string name="auth_error_password_too_short">パスワードが短すぎます（8文字以上）</string>
     <string name="auth_error_invalid_email">メールアドレスの形式またはドメインが受け付けられません</string>
+    <string name="auth_error_google_unavailable">Google でログインできません。メールまたは Apple でログインしてください。</string>
     <string name="auth_error_unknown">サインインできませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="study_start_review">復習を始める</string>
     <string name="study_loading">読み込み中…</string>

@@ -52,6 +52,7 @@
     <string name="auth_error_provider_disabled">That sign-in method isn’t available yet. Please try again later.</string>
     <string name="auth_error_password_too_short">Password too short (at least 8 characters)</string>
     <string name="auth_error_invalid_email">Email format or domain not accepted</string>
+    <string name="auth_error_google_unavailable">Google sign-in isn’t available. Please sign in with Email or Apple instead.</string>
     <string name="auth_error_unknown">Sign-in didn’t go through. Please try again later.</string>
     <string name="study_start_review">Start review</string>
     <string name="study_loading">Loading…</string>
