@@ -4,7 +4,7 @@ M4 的完成定義是「用測試帳號完成一次真實購買，權益在 iOS 
 **那句話裡沒有一個字是程式碼做得到的** —— 它需要一個通過驗證的 Play 開發者
 帳號、一個建好的訂閱商品、以及設定好的授權測試者。
 
-2026-09-09 的狀態：**開發者帳號申請中／等驗證。** 所以下面第 1 節之後全部卡住。
+2026-09-30 的狀態：**開發者帳號（個人）已驗證，應用程式 `app.tuji.android` 已建立，上傳金鑰已設定。** 下一步是第 3 節。
 
 App 這側已經做好的部分見最後一節。
 
@@ -18,7 +18,7 @@ App 這側已經做好的部分見最後一節。
 
 ---
 
-## 1. 開發者帳號（進行中）
+## 1. 開發者帳號（已完成，個人帳號）
 
 - Google Play Console 註冊，付一次性費用
 - 身分驗證；若以個人身分註冊還要地址驗證
@@ -37,6 +37,27 @@ App 這側已經做好的部分見最後一節。
 （debug 版的 `.debug` 尾綴只用於本機，不上架）。
 
 ## 3. 上傳一個版本到測試軌道
+
+### 上傳金鑰
+
+release 版用**上傳金鑰**簽章；使用者裝到的版本由 Play App Signing 用 Google
+保管的另一把金鑰重簽。
+
+- 金鑰：`~/.tuji-android/upload-keystore.jks`（alias `upload`，RSA 4096）
+- 密碼與路徑：repo 根目錄的 `keystore.properties`（已在 `.gitignore`，權限 600）
+- 沒有這個檔案時 release 版不簽章，其餘一切照常 —— CI 就是這樣
+
+**兩個都要備份**（例如密碼管理器）。遺失上傳金鑰不會失去 App，可以在 Play
+Console 申請重設，但要等 Google 處理。
+
+產出上傳用的 AAB：
+
+```sh
+./gradlew :app:bundleRelease
+# → app/build/outputs/bundle/release/app-release.aab
+```
+
+每次上傳 `versionCode` 都要比上一次大。
 
 訂閱商品必須在**已上傳過含 Billing 函式庫的 APK/AAB** 之後才能建立。
 先上內部測試軌道即可，不需要送審。
