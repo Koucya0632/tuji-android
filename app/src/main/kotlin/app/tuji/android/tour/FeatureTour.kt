@@ -4,13 +4,13 @@ import app.tuji.android.AppRoute
 
 /** What a step points at. Screens mark themselves with `Modifier.tourAnchor`. */
 enum class TourTarget {
-    /** The whole hero card on 今日 — the guest fallback, who has no CTA pair. */
+    /** The whole hero card on 今日 — the fallback when the CTA pair is not in the tree. */
     Hero,
 
-    /** The 複習/學新字 pair inside the hero. Signed in only. */
+    /** The 複習/學新字 pair inside the hero. */
     HeroCtas,
 
-    /** The daily-goal block inside the hero. Signed in only. */
+    /** The daily-goal block inside the hero. */
     DailyGoal,
 
     /** The streak chip in 今日's top row. */
@@ -62,22 +62,22 @@ sealed interface TourAdvance {
  * and the one branch worth testing — "the next step lives on another tab" — is
  * exactly the one that is hardest to reach that way.
  */
-class FeatureTourFlow(isGuest: Boolean) {
+class FeatureTourFlow {
 
     val steps: List<TourStep> = listOf(
         TourStep(
             id = 0,
             tab = AppRoute.Today,
-            target = if (isGuest) TourTarget.Hero else TourTarget.HeroCtas,
+            target = TourTarget.HeroCtas,
             fallback = TourTarget.Hero,
-            shape = if (isGuest) TourCutoutShape.Square else TourCutoutShape.Pill,
+            shape = TourCutoutShape.Pill,
         ),
         TourStep(
             id = 1,
             tab = AppRoute.Today,
-            target = if (isGuest) TourTarget.Streak else TourTarget.DailyGoal,
+            target = TourTarget.DailyGoal,
             fallback = TourTarget.Streak,
-            shape = if (isGuest) TourCutoutShape.Pill else TourCutoutShape.Square,
+            shape = TourCutoutShape.Square,
         ),
         TourStep(
             id = 2,

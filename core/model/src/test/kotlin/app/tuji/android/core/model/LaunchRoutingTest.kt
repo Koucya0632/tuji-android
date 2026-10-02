@@ -41,7 +41,6 @@ class LaunchRoutingTest {
         // resolve and therefore the one that loses the entrance entirely.
         for (account in listOf(
             LaunchAccountState.SignedOut,
-            LaunchAccountState.Guest,
             LaunchAccountState.SignedIn("u", setupDone = true),
         )) {
             assertEquals(
@@ -78,14 +77,6 @@ class LaunchRoutingTest {
     }
 
     @Test
-    fun `no direction sends a guest to pick one`() {
-        assertEquals(
-            LaunchDestination.LearningDirection,
-            route(LaunchAccountState.Guest, directionSelected = false),
-        )
-    }
-
-    @Test
     fun `no direction sends even a signed-in user to pick one`() {
         // The surprising arm, and the reason this is worth pinning: every
         // screen past this point is scoped to a language, so an account
@@ -106,10 +97,11 @@ class LaunchRoutingTest {
     }
 
     @Test
-    fun `a guest waits on the splash until the catalogue is there`() {
+    fun `a signed-in user waits on the splash until the catalogue is there`() {
         // Landing on an empty 首頁 reads as broken rather than loading.
-        assertEquals(LaunchDestination.Splash, route(LaunchAccountState.Guest, catalogReady = false))
-        assertEquals(LaunchDestination.Main, route(LaunchAccountState.Guest, catalogReady = true))
+        val alice = LaunchAccountState.SignedIn("u1", setupDone = true)
+        assertEquals(LaunchDestination.Splash, route(alice, catalogReady = false))
+        assertEquals(LaunchDestination.Main, route(alice, catalogReady = true))
     }
 
     @Test
@@ -125,10 +117,8 @@ class LaunchRoutingTest {
     }
 
     @Test
-    fun `the intro does not block a guest or a signed-in user`() {
-        // introDone only gates the signed-out branch. A guest arrived by
-        // choosing to browse; re-pitching the product at them is noise.
-        assertEquals(LaunchDestination.Main, route(LaunchAccountState.Guest, introDone = false))
+    fun `the intro does not block a signed-in user`() {
+        // introDone only gates the signed-out branch.
         assertEquals(
             LaunchDestination.Main,
             route(LaunchAccountState.SignedIn("u1", setupDone = true), introDone = false),

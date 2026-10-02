@@ -35,17 +35,6 @@ enum class CardsSource {
     /** 書籤 — dictionary words marked to look at again. Passive: marking one
      *  changes nothing about what is scheduled for review. */
     Bookmarked,
-    ;
-
-    companion object {
-        /**
-         * The chips a viewer is offered. A guest can neither photograph nor
-         * take anything in, so two of the four could only ever say "nothing
-         * here" — and a filter that can only answer that is worse than none.
-         */
-        fun available(isGuest: Boolean): List<CardsSource> =
-            if (isGuest) listOf(Official, Bookmarked) else entries
-    }
 }
 
 /**

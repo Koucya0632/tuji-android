@@ -17,14 +17,14 @@ package app.tuji.android.core.study
  * against an empty grid *is* "replace twelve themes with 廚房", however late it
  * is sent. The change itself is wrong, not just its timing.
  *
- * A guest has no server row to overwrite and no token to save with; their
- * settings live on this device, as they always have.
+ * With nobody signed in there is no server row to overwrite and no token to
+ * save with; the change lives on this device.
  */
 enum class SettingsWrite {
     /** The account's settings are on screen: apply, then save. */
     ApplyAndSave,
 
-    /** A guest: apply on this device. There is nothing to save to. */
+    /** Nobody signed in: apply on this device. There is nothing to save to. */
     ApplyLocally,
 
     /** Signed in, and the account's settings have not arrived. Drop it. */

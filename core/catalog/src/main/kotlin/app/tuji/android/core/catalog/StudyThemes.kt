@@ -13,9 +13,6 @@ import app.tuji.android.core.model.Word
  */
 object StudyThemes {
 
-    /** How many catalogue shelves a guest is shown: they have picked nothing, so this is a preview. */
-    const val GUEST_PREVIEW = 4
-
     /**
      * The catalogue plus the user's own and taken-in cards, as iOS's
      * `WordsStore.merge` builds it: public < custom < saved, a later source
@@ -32,17 +29,14 @@ object StudyThemes {
     /**
      * The shelves 今日's strip shows.
      *
-     * A signed-in user sees exactly their picked themes, in the server's
-     * category order, minus the empty ones; nothing picked is nothing shown
-     * (今日 asks them to pick instead). A guest has no selection to honour and
-     * gets the first few shelves as a taste.
+     * Exactly the picked themes, in the server's category order, minus the
+     * empty ones; nothing picked is nothing shown (今日 asks them to pick
+     * instead).
      */
     fun todayShelves(
         shelves: List<CategoryShelf.Shelf>,
         selected: List<String>,
-        isGuest: Boolean,
     ): List<CategoryShelf.Shelf> {
-        if (isGuest) return shelves.take(GUEST_PREVIEW)
         val picked = selected.toSet()
         return shelves.filter { it.category.id in picked }
     }

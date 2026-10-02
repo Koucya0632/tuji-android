@@ -51,7 +51,7 @@ class WordInsightsStoreTest {
         assertEquals(listOf("oven", "oven"), server.asked)
     }
 
-    @Test fun `policy v1, a guest, 自製 and 物見 cost no request`() = runTest {
+    @Test fun `policy v1, no entitlement, 自製 and 物見 cost no request`() = runTest {
         val server = Server(sample)
         val store = WordInsightsStore(server)
         store.load("oven", direction, "zh-Hant", v1)

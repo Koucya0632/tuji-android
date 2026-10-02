@@ -113,9 +113,4 @@ class CardsSourceRulesTest {
             CardsSource.entries,
         )
     }
-
-    @Test fun `a guest is offered only the chips that can hold something`() {
-        assertEquals(listOf(CardsSource.Official, CardsSource.Bookmarked), CardsSource.available(isGuest = true))
-        assertEquals(CardsSource.entries, CardsSource.available(isGuest = false))
-    }
 }

@@ -56,8 +56,8 @@ enum class CachePolicy {
  * `isPublic` answered *two* questions that part company on exactly one
  * endpoint: 「attach no bearer」 and 「never retry a 401」. The public collection
  * route is [OptionalToken], so a signed-in caller *does* send a token — and its
- * 401 was the one 401 never retried, leaving the user looking at the guest view
- * of a collection they had saved.
+ * 401 was the one 401 never retried, leaving the user looking at the signed-out
+ * view of a collection they had saved.
  */
 enum class EndpointAccess {
     /** A bearer token is required; the request cannot be made without one. */

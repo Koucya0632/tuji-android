@@ -14,25 +14,18 @@ import org.junit.Test
 class FeatureTourFlowTest {
 
     @Test fun `it is five steps`() {
-        assertEquals(5, FeatureTourFlow(isGuest = false).steps.size)
-        assertEquals(5, FeatureTourFlow(isGuest = true).steps.size)
+        assertEquals(5, FeatureTourFlow().steps.size)
     }
 
-    @Test fun `a guest is pointed at what a guest actually has`() {
-        // No CTA pair and no goal bar until there is an account, so pointing at
-        // them cuts a hole over nothing.
-        val guest = FeatureTourFlow(isGuest = true).steps
-        assertEquals(TourTarget.Hero, guest[0].target)
-        assertEquals(TourTarget.Streak, guest[1].target)
-
-        val user = FeatureTourFlow(isGuest = false).steps
-        assertEquals(TourTarget.HeroCtas, user[0].target)
-        assertEquals(TourTarget.DailyGoal, user[1].target)
+    @Test fun `the first two steps point at the hero's buttons and goal`() {
+        val steps = FeatureTourFlow().steps
+        assertEquals(TourTarget.HeroCtas, steps[0].target)
+        assertEquals(TourTarget.DailyGoal, steps[1].target)
     }
 
     @Test fun `every step that points at content has somewhere to fall back to`() {
         // Except the two that point at the bar, which is always there.
-        FeatureTourFlow(isGuest = false).steps.forEach { step ->
+        FeatureTourFlow().steps.forEach { step ->
             if (step.target != null && step.target !in setOf(TourTarget.TabBar, TourTarget.Capture)) {
                 assert(step.fallback != null) { "step ${step.id} has no fallback" }
             }
@@ -40,27 +33,27 @@ class FeatureTourFlowTest {
     }
 
     @Test fun `the closing step has no hole to cut`() {
-        val last = FeatureTourFlow(isGuest = false).steps.last()
+        val last = FeatureTourFlow().steps.last()
         assertNull(last.target)
         assertNull(last.fallback)
     }
 
     @Test fun `capture is framed round and the bar is framed square`() {
         // The eye is the one circle in the app; the bar is a slab.
-        val steps = FeatureTourFlow(isGuest = false).steps
+        val steps = FeatureTourFlow().steps
         assertEquals(TourCutoutShape.Pill, steps.single { it.target == TourTarget.Capture }.shape)
         assertEquals(TourCutoutShape.Square, steps.single { it.target == TourTarget.TabBar }.shape)
     }
 
     @Test fun `advancing within a tab does not switch tabs`() {
-        val flow = FeatureTourFlow(isGuest = false)
+        val flow = FeatureTourFlow()
         assertEquals(TourAdvance.Show(1), flow.advance(from = 0, showing = AppRoute.Today))
     }
 
     @Test fun `the last step lives on another tab and says so`() {
         // The branch that can only be reached by launching the app, which is
         // why it is the one worth a test.
-        val flow = FeatureTourFlow(isGuest = false)
+        val flow = FeatureTourFlow()
         assertEquals(
             TourAdvance.CrossTab(AppRoute.Atlas, 4),
             flow.advance(from = 3, showing = AppRoute.Today),
@@ -68,13 +61,13 @@ class FeatureTourFlowTest {
     }
 
     @Test fun `a step already on the showing tab is not a cross-tab`() {
-        val flow = FeatureTourFlow(isGuest = false)
+        val flow = FeatureTourFlow()
         // Somebody who tapped 圖鑑 mid-tour is already there.
         assertEquals(TourAdvance.Show(4), flow.advance(from = 3, showing = AppRoute.Atlas))
     }
 
     @Test fun `advancing past the end finishes`() {
-        val flow = FeatureTourFlow(isGuest = false)
+        val flow = FeatureTourFlow()
         assertEquals(TourAdvance.Finish, flow.advance(from = 4, showing = AppRoute.Atlas))
     }
 

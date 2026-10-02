@@ -253,8 +253,8 @@ internal fun TextAction(text: String, onClick: () -> Unit) {
 }
 
 /**
- * 我 → 詞表 — iOS's `MeWordListsRow`. Absent under membership v1 and for
- * guests; a lock for a non-member with nothing yet; otherwise the way in.
+ * 我 → 詞表 — iOS's `MeWordListsRow`. Absent under membership v1 and before
+ * the entitlement loads; a lock for a non-member with nothing yet; otherwise the way in.
  */
 @Composable
 fun MeWordListsRow(locked: Boolean, listCount: Int, onClick: () -> Unit) {

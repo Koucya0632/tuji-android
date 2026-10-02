@@ -44,7 +44,7 @@ object MemberAccess {
     /**
      * The whole rule. [hasOwnData] is whether the account already has something
      * in this feature — lists to browse, a note on this word. A null
-     * [entitlement] is a guest or one not loaded yet, and hides everything.
+     * [entitlement] is one not loaded yet, and hides everything.
      */
     fun level(feature: MemberFeature, entitlement: Entitlement?, hasOwnData: Boolean = false): MemberAccessLevel {
         if (entitlement?.isPolicyV2 != true) return MemberAccessLevel.Hidden

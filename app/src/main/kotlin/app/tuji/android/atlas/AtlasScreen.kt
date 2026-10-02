@@ -109,8 +109,7 @@ fun AtlasCardsScreen(
     onRetry: () -> Unit,
     onOpen: (String) -> Unit,
     onSearch: () -> Unit = {},
-    isGuest: Boolean = false,
-    /** 管理 → on 我做的. Null for a guest, who has made nothing. */
+    /** 管理 → on 我做的. */
     onOpenManage: (() -> Unit)? = null,
     /** 當前圖鑑語言, for the reading line a peek draws. */
     session: TargetLanguage = TargetLanguage.EN,
@@ -208,7 +207,7 @@ fun AtlasCardsScreen(
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            SourceRow(selected = source, isGuest = isGuest, onSelect = { source = it })
+            SourceRow(selected = source, onSelect = { source = it })
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -351,7 +350,7 @@ fun AtlasCardsScreen(
  * available-but-not-chosen control in the app sits on.
  */
 @Composable
-private fun SourceRow(selected: CardsSource, isGuest: Boolean, onSelect: (CardsSource) -> Unit) {
+private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -359,7 +358,7 @@ private fun SourceRow(selected: CardsSource, isGuest: Boolean, onSelect: (CardsS
             .padding(bottom = TujiSpace.S2),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
     ) {
-        CardsSource.available(isGuest).forEach { source ->
+        CardsSource.entries.forEach { source ->
             val lit = source == selected
             Text(
                 stringResource(

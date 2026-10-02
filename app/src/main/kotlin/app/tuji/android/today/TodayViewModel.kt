@@ -28,11 +28,10 @@ import kotlinx.coroutines.launch
 class TodayViewModel(
     private val stats: StudyStatsReading,
     private val direction: LearningDirection,
-    private val isGuest: () -> Boolean,
     private val scope: CoroutineScope? = null,
 ) : ViewModel() {
 
-    private val _inputs = MutableStateFlow(TodayInputs(isGuest = isGuest()))
+    private val _inputs = MutableStateFlow(TodayInputs())
     val inputs: StateFlow<TodayInputs> = _inputs.asStateFlow()
 
     private val work: CoroutineScope get() = scope ?: viewModelScope
@@ -43,7 +42,7 @@ class TodayViewModel(
                 Log.w(TAG, "stats refresh failed", it)
                 return@launch
             }
-            _inputs.value = _inputs.value.copy(isGuest = isGuest(), stats = loaded)
+            _inputs.value = _inputs.value.copy(stats = loaded)
         }
     }
 

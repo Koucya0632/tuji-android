@@ -7,10 +7,7 @@ package app.tuji.android.core.auth
  *      └─ resolveSession() ──► SignedIn  if a persisted session exists
  *                          └─► SignedOut otherwise
  *   SignedOut
- *      ├─ enterGuest() ──► Guest
  *      └─ signIn()     ──► SignedIn
- *   Guest
- *      └─ exitGuest()  ──► SignedOut
  *   SignedIn
  *      └─ signOut()    ──► SignedOut
  */
@@ -19,9 +16,6 @@ sealed interface AuthState {
     data object Checking : AuthState
 
     data object SignedOut : AuthState
-
-    /** Browsing without an account. */
-    data object Guest : AuthState
 
     data class SignedIn(val user: SessionUser) : AuthState
 }

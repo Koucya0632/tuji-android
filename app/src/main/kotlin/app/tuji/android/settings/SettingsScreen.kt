@@ -65,13 +65,11 @@ fun SettingsScreen(
     onDeleteAccount: () -> Unit,
     onSignOut: () -> Unit,
     onOpenStudyThemes: () -> Unit,
-    /** Null for a guest, who has no public profile and nobody to have blocked. */
-    onEditProfile: (() -> Unit)?,
-    onOpenBlocked: (() -> Unit)?,
+    onEditProfile: () -> Unit,
+    onOpenBlocked: () -> Unit,
     readiness: SettingsReadiness,
     onRetryLoad: () -> Unit,
-    /** Null for a guest, who has no account to be a member with. */
-    onOpenMembership: (() -> Unit)? = null,
+    onOpenMembership: () -> Unit,
     tier: MembershipTier = MembershipTier.Free,
     offer: MembershipOffer = MembershipOffer.from(null),
 ) {
@@ -155,16 +153,12 @@ fun SettingsScreen(
         }
 
         TujiSection(title = stringResource(R.string.settings_group_account)) {
-            if (onEditProfile != null) {
-                TujiSettingRow(label = stringResource(R.string.profile_title), onClick = onEditProfile)
-                TujiRowDivider()
-            }
+            TujiSettingRow(label = stringResource(R.string.profile_title), onClick = onEditProfile)
+            TujiRowDivider()
             // A block has to be undoable somewhere that does not require
             // finding the person again — which is what blocking them made hard.
-            if (onOpenBlocked != null) {
-                TujiSettingRow(label = stringResource(R.string.blocked_title), onClick = onOpenBlocked)
-                TujiRowDivider()
-            }
+            TujiSettingRow(label = stringResource(R.string.blocked_title), onClick = onOpenBlocked)
+            TujiRowDivider()
             TujiSettingRow(
                 label = stringResource(R.string.me_sign_out),
                 showsArrow = false,
@@ -195,18 +189,16 @@ fun SettingsScreen(
 
         // One row for everyone, as on iOS: the pitch belongs where a limit
         // bites, and here it only says what this account has.
-        if (onOpenMembership != null) {
-            TujiSection(title = "Tuji Pro") {
-                TujiSettingRow(
-                    label = stringResource(R.string.membership_title),
-                    subtitle = when (tier) {
-                        MembershipTier.Pro -> stringResource(R.string.membership_subscribed)
-                        MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)
-                        MembershipTier.Free -> stringResource(offer.headline)
-                    },
-                    onClick = onOpenMembership,
-                )
-            }
+        TujiSection(title = "Tuji Pro") {
+            TujiSettingRow(
+                label = stringResource(R.string.membership_title),
+                subtitle = when (tier) {
+                    MembershipTier.Pro -> stringResource(R.string.membership_subscribed)
+                    MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)
+                    MembershipTier.Free -> stringResource(offer.headline)
+                },
+                onClick = onOpenMembership,
+            )
         }
 
         TujiSection(title = stringResource(R.string.settings_group_other)) {

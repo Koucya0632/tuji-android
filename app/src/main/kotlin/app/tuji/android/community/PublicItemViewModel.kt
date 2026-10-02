@@ -35,7 +35,6 @@ class PublicItemViewModel(
     private val audio: ClipPlaying,
     private val direction: LearningDirection,
     private val uiLang: String,
-    private val signedIn: Boolean,
     /** The saved 發音口音, for [SpokenVoice]. */
     private val accent: String = "us",
     /** The system voice, for the many 物見 words that have no recording. */
@@ -75,8 +74,7 @@ class PublicItemViewModel(
     fun open() {
         _state.value = State()
         work.launch { loadDetail() }
-        // A guest has no 圖鑑 to have saved it into, and the route answers 401.
-        if (signedIn) work.launch { loadSaveState() }
+        work.launch { loadSaveState() }
     }
 
     /**

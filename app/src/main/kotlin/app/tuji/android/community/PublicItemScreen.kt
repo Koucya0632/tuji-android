@@ -79,7 +79,6 @@ fun PublicItemScreen(
     showChinese: Boolean,
     scores: MasteryStore.Scores,
     onRetry: () -> Unit,
-    onSignIn: () -> Unit,
     onToggleSave: () -> Unit,
     onPlay: () -> Unit,
     onOpenAuthor: (String) -> Unit,
@@ -112,7 +111,6 @@ fun PublicItemScreen(
         return
     }
 
-    var askSignIn by remember { mutableStateOf(false) }
     var askStop by remember { mutableStateOf(false) }
     var askBlock by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -192,11 +190,7 @@ fun PublicItemScreen(
             isMine = relationship == ViewerRelationship.Mine,
             onOpenAuthor = onOpenAuthor,
             onPill = {
-                when {
-                    relationship == ViewerRelationship.Guest -> askSignIn = true
-                    state.saved -> askStop = true
-                    else -> onToggleSave()
-                }
+                if (state.saved) askStop = true else onToggleSave()
             },
         )
 
@@ -256,16 +250,6 @@ fun PublicItemScreen(
     }
     }
 
-    if (askSignIn) {
-        TujiPrompt(
-            title = stringResource(R.string.item_sign_in_title),
-            message = null,
-            confirm = stringResource(R.string.auth_sign_in),
-            cancel = stringResource(R.string.cancel),
-            onConfirm = { askSignIn = false; onSignIn() },
-            onCancel = { askSignIn = false },
-        )
-    }
     if (askStop) {
         TujiPrompt(
             title = stringResource(R.string.item_stop_title),
@@ -315,8 +299,8 @@ private fun SocialRow(
                 Text(author.name, style = TujiType.label, color = TujiColor.BrandSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        // Unknown until the save route answers — and never for a guest, who
-        // cannot ask it. A 0 there would be a claim, not a count.
+        // Unknown until the save route answers. A 0 there would be a claim,
+        // not a count.
         state.saveCount?.let {
             Text(stringResource(R.string.item_learning_count, it), style = TujiType.label, color = TujiColor.Ink3, maxLines = 1)
         }

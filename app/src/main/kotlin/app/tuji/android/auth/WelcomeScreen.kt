@@ -118,28 +118,6 @@ private fun WelcomeContent(
     ) {
         Spacer(Modifier.height(insets.calculateTopPadding()))
 
-        // Reached from inside guest mode this screen is a root swap, not a
-        // push — without an explicit way back it is a dead end for an
-        // accidental tap.
-        if (auth.cameFromGuest) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3)
-            ) {
-                Box(
-                    Modifier
-                        .size(44.dp)
-                        .background(TujiColor.Paper, CircleShape)
-                        .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f), CircleShape)
-                        .tujiClickable { auth.enterGuestMode() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("✕", style = type.bodyStrong, color = TujiColor.Ink2)
-                }
-            }
-        }
-
         Spacer(Modifier.weight(1f))
         TujiBrandLockup(Modifier.align(Alignment.CenterHorizontally), scale = 0.88f)
         Spacer(Modifier.weight(1f))
@@ -195,21 +173,6 @@ private fun WelcomeContent(
                     .fillMaxWidth()
                     .padding(top = TujiSpace.S2)
                     .tujiClickable(enabled = !busy) { onEmailRoute(EmailRoute.SignIn) },
-            )
-
-            Text(
-                // Someone who *left* guest mode to get here is not choosing a
-                // mode — they are going back.
-                stringResource(
-                    if (auth.cameFromGuest) R.string.welcome_back_to_guest
-                    else R.string.welcome_browse_as_guest
-                ),
-                style = type.label,
-                color = TujiColor.Ink3,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .tujiClickable(enabled = !busy) { auth.enterGuestMode() },
             )
         }
     }

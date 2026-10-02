@@ -193,7 +193,6 @@ fun TujiRoot(app: TujiApplication) {
     val account = when (val s = session.state) {
         is AuthState.Checking -> LaunchAccountState.Checking
         is AuthState.SignedOut -> LaunchAccountState.SignedOut
-        is AuthState.Guest -> LaunchAccountState.Guest
         is AuthState.SignedIn ->
             LaunchAccountState.SignedIn(s.user.id, setupDone = setupDone.contains(s.user.id))
     }
@@ -471,10 +470,9 @@ private fun SignedInScreens(
     }
     val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
     val session by app.auth.session.collectAsStateWithLifecycle()
-    val isGuest = session.state is AuthState.Guest
     val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
     val settingsLoadFailed by app.settingsStore.loadFailed.collectAsStateWithLifecycle()
-    val settingsReadiness = SettingsReadiness.of(isGuest, settingsLoaded, settingsLoadFailed)
+    val settingsReadiness = SettingsReadiness.of(settingsLoaded, settingsLoadFailed)
 
     // Also the one holder of the entitlement for the whole shell: 學習主題's
     // locks, 今日's numbers and 會員方案 read it from here, so a purchase seen
@@ -498,9 +496,8 @@ private fun SignedInScreens(
     // and again when the learning language changes, since lists are per
     // language.
     val wordLists by app.wordListsStore.state.collectAsStateWithLifecycle()
-    val memberEntitlement = if (isGuest) null else accountState.entitlement
     val listsExist = MemberAccess.level(
-        MemberFeature.WordListBrowse, memberEntitlement, hasOwnData = true,
+        MemberFeature.WordListBrowse, accountState.entitlement, hasOwnData = true,
     ) != MemberAccessLevel.Hidden
     LaunchedEffect(listsExist, direction) { if (listsExist) app.wordListsStore.loadIfNeeded() }
 
@@ -532,10 +529,9 @@ private fun SignedInScreens(
     }
     // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
     // numbers for one account read as a server bug for a week.
-    val completion = remember(isGuest, settingsLoaded, studyCategories, progress.categories, studyWords) {
+    val completion = remember(settingsLoaded, studyCategories, progress.categories, studyWords) {
         CompletionReadout(
             CompletionReadout.Inputs.from(
-                isGuest = isGuest,
                 settingsLoaded = settingsLoaded,
                 studyCategories = studyCategories,
                 progress = progress.categories,
@@ -631,7 +627,6 @@ private fun SignedInScreens(
         TodayViewModel(
             stats = app.study,
             direction = direction,
-            isGuest = { app.auth.session.value.state is AuthState.Guest },
         )
     }
     val todayInputs by today.inputs.collectAsStateWithLifecycle()
@@ -841,21 +836,21 @@ private fun SignedInScreens(
         // 設定 and 學習主題 stay inert until the account's settings are here.
         // A launch whose read failed asks nowhere else, so arriving asks again.
         val editsSettings = nav.current == AppRoute.Settings || nav.current == AppRoute.StudyThemes
-        if (editsSettings && !isGuest && !app.settingsStore.loaded.value) {
+        if (editsSettings && !app.settingsStore.loaded.value) {
             app.settingsStore.load(deviceLanguage)
         }
         if (nav.current == AppRoute.Today) {
             today.refresh()
             // 學習主題's gate and the numbers built on it. Here rather than only
             // on 我的, which a new account may never open.
-            if (!isGuest) account.refreshEntitlement()
+            account.refreshEntitlement()
             // 主題進度 and the streak chip read it now, and both move without
             // the user doing anything here — a session elsewhere, or midnight.
             app.progressStore.load(direction)
         }
         if (nav.current == AppRoute.Me) {
             account.refresh()
-            if (!isGuest) account.loadWeakWords()
+            account.loadWeakWords()
             // Unlike a score, the streak and the heatmap move on their own —
             // 「目前連勝 5 天」 left over from yesterday is a claim about today
             // that nobody made. So this one asks again on arrival rather than
@@ -868,19 +863,19 @@ private fun SignedInScreens(
         if (nav.current == AppRoute.Community) account.refresh()
         // A purchase made on another device shows the moment the page opens.
         if (nav.current == AppRoute.Membership || nav.current == AppRoute.StudyThemes) {
-            if (!isGuest) account.refreshEntitlement()
+            account.refreshEntitlement()
         }
     }
     // The row at the top of 物見 is this account's public page, and it needs
     // the UID to find it — which arrives with 我的's account read.
     val myUid = accountState.me?.username
-    LaunchedEffect(myUid) { if (!isGuest && myUid != null) community.loadMe(myUid) }
+    LaunchedEffect(myUid) { if (myUid != null) community.loadMe(myUid) }
 
     // The five-step tour, on the first launch only. The marked composables
     // below report where they are; the overlay reads that and nothing else in
     // the shell knows the tour exists.
     val anchors = rememberTourAnchors()
-    val tour = remember(isGuest) { FeatureTourFlow(isGuest) }
+    val tour = remember { FeatureTourFlow() }
     var tourStep by remember { mutableStateOf<Int?>(null) }
     var tourCrossing by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -919,11 +914,10 @@ private fun SignedInScreens(
                     onReview = { nav = nav.push(AppRoute.Review) },
                     onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
                     onSearch = { nav = nav.push(AppRoute.Search) },
-                    onCreateAccount = { app.auth.exitGuestMode() },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
-                    shelves = remember(studyShelves, studyCategories, isGuest) {
-                        StudyThemes.todayShelves(studyShelves, studyCategories, isGuest)
+                    shelves = remember(studyShelves, studyCategories) {
+                        StudyThemes.todayShelves(studyShelves, studyCategories)
                     },
                     themeStatus = themeStatus,
                     uiLang = uiLang,
@@ -936,7 +930,7 @@ private fun SignedInScreens(
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
                     onRefresh = {
-                        val cause = LearningRefreshCause.PulledToday(isGuest = isGuest)
+                        val cause = LearningRefreshCause.PulledToday
                         if (RefreshTarget.Stats in cause.targets) today.refresh()
                         refreshLearning(cause)
                     },
@@ -944,7 +938,6 @@ private fun SignedInScreens(
 
                 AppRoute.Atlas -> AtlasCardsScreen(
                     words = catalog.words,
-                    isGuest = isGuest,
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     personal = personal,
                     scores = scores,
@@ -961,7 +954,7 @@ private fun SignedInScreens(
                     },
                     onRetry = { scope.launch { app.catalog.load(direction, force = true) } },
                     onOpen = openCard,
-                    onOpenManage = if (isGuest) null else ({ nav = nav.push(AppRoute.AtlasManage) }),
+                    onOpenManage = { nav = nav.push(AppRoute.AtlasManage) },
                     session = direction.targetLanguage,
                     showChinese = settings.showZh,
                     onBookmark = app.cardsSourceStore::toggle,
@@ -973,22 +966,19 @@ private fun SignedInScreens(
                 AppRoute.Community -> CommunityScreen(
                     explore = communityExplore,
                     saved = communitySaved,
-                    me = communityMe.takeIf { !isGuest },
-                    isGuest = isGuest,
+                    me = communityMe,
                     language = direction.targetLanguage,
                     onShowSaved = community::loadSaved,
                     onRetry = community::load,
-                    onSignIn = { app.auth.exitGuestMode() },
                     onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
                     onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
                     // Not the learning policy: 物見 is other people's shelves,
                     // and none of the numbers this table is about are on it.
-                    onRefresh = { community.reload(withSaved = !isGuest) },
+                    onRefresh = { community.reload(withSaved = true) },
                 )
 
                 AppRoute.Me -> AccountScreen(
                     state = accountState,
-                    isGuest = isGuest,
                     // The same readout 今日's 主題進度 prints.
                     completion = completion,
                     progress = progress,
@@ -1000,14 +990,14 @@ private fun SignedInScreens(
                     showChinese = settings.showZh,
                     onOpenWord = openCard,
                     onRefresh = {
-                        refreshLearning(LearningRefreshCause.PulledMe(isGuest = isGuest))
+                        refreshLearning(LearningRefreshCause.PulledMe)
                         // 我's own payload — the weakest words and the plan —
                         // which no learning store holds.
-                        if (!isGuest) account.reload()
+                        account.reload()
                     },
-                    onOpenMembership = if (isGuest) null else openMembership,
+                    onOpenMembership = openMembership,
                     wordLists = {
-                        when (MemberAccess.level(MemberFeature.WordListBrowse, memberEntitlement, wordLists.lists.isNotEmpty())) {
+                        when (MemberAccess.level(MemberFeature.WordListBrowse, accountState.entitlement, wordLists.lists.isNotEmpty())) {
                             MemberAccessLevel.Hidden -> Unit
                             MemberAccessLevel.Locked -> MeWordListsRow(locked = true, listCount = 0, onClick = openMembership)
                             // A refund keeps the lists: open them read-only.
@@ -1230,9 +1220,9 @@ private fun SignedInScreens(
                     },
                     onSignOut = { scope.launch { app.auth.signOut() } },
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
-                    onEditProfile = if (isGuest) null else ({ nav = nav.push(AppRoute.EditProfile) }),
-                    onOpenBlocked = if (isGuest) null else ({ nav = nav.push(AppRoute.BlockedAuthors) }),
-                    onOpenMembership = if (isGuest) null else openMembership,
+                    onEditProfile = { nav = nav.push(AppRoute.EditProfile) },
+                    onOpenBlocked = { nav = nav.push(AppRoute.BlockedAuthors) },
+                    onOpenMembership = openMembership,
                     tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
                     offer = MembershipOffer.from(accountState.entitlement),
                 )
@@ -1320,7 +1310,7 @@ private fun SignedInScreens(
                 )
 
                 is AppRoute.PublicItem -> {
-                    val vm = remember(route.slug, isGuest) {
+                    val vm = remember(route.slug) {
                         PublicItemViewModel(
                             slug = route.slug,
                             atlas = app.atlas,
@@ -1328,7 +1318,6 @@ private fun SignedInScreens(
                             audio = app.clipPlayer,
                             direction = direction,
                             uiLang = uiLang,
-                            signedIn = !isGuest,
                             accent = settings.accent,
                             speech = app.speech,
                             // The card went into, or out of, the reader's own
@@ -1345,7 +1334,7 @@ private fun SignedInScreens(
                     val authorHandle = itemState.item?.author?.handle
                     PublicItemScreen(
                         state = itemState,
-                        relationship = ViewerRelationship.of(authorHandle, viewerHandle = myUid, isGuest = isGuest),
+                        relationship = ViewerRelationship.of(authorHandle, viewerHandle = myUid),
                         authorBlocked = communityBlocked.hides(authorHandle),
                         reported = communityReported == ReportTarget.Item(route.slug),
                         canPlay = vm.canPlay(),
@@ -1354,7 +1343,6 @@ private fun SignedInScreens(
                         showChinese = settings.showZh,
                         scores = scores,
                         onRetry = vm::open,
-                        onSignIn = { app.auth.exitGuestMode() },
                         onToggleSave = vm::toggleSave,
                         onPlay = vm::play,
                         onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
@@ -1373,14 +1361,13 @@ private fun SignedInScreens(
                 }
 
                 is AppRoute.Collection -> {
-                    val vm = remember(route.slug, myUid, isGuest) {
+                    val vm = remember(route.slug, myUid) {
                         CollectionDetailViewModel(
                             slug = route.slug,
                             atlas = app.atlas,
                             bookmarks = app.atlas,
                             learning = app.atlas,
                             viewerHandle = myUid,
-                            signedIn = !isGuest,
                             blocked = { community.blockList },
                             onBookmarkChanged = community::loadSaved,
                             // Members went into the study queue: 已收進 and the
@@ -1395,11 +1382,9 @@ private fun SignedInScreens(
                     val collectionState by vm.state.collectAsStateWithLifecycle()
                     CollectionScreen(
                         state = collectionState,
-                        isGuest = isGuest,
                         reported = communityReported == ReportTarget.Collection(route.slug),
                         onBack = { nav = nav.pop() },
                         onRetry = vm::open,
-                        onSignIn = { app.auth.exitGuestMode() },
                         onSave = vm::save,
                         onUnsave = vm::unsave,
                         onLearn = vm::learnRemaining,
@@ -1417,7 +1402,7 @@ private fun SignedInScreens(
                     val authorState by vm.state.collectAsStateWithLifecycle()
                     AuthorScreen(
                         state = authorState,
-                        relationship = ViewerRelationship.of(route.handle, viewerHandle = myUid, isGuest = isGuest)
+                        relationship = ViewerRelationship.of(route.handle, viewerHandle = myUid)
                             ?: ViewerRelationship.Theirs,
                         blocked = communityBlocked.hides(route.handle),
                         reported = communityReported == ReportTarget.Author(route.handle),
@@ -1530,7 +1515,7 @@ private fun SignedInScreens(
                                 if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
                                     var adding by rememberSaveable(wordId) { mutableStateOf(false) }
                                     WordListButton(
-                                        level = MemberAccess.level(MemberFeature.WordListAdd, memberEntitlement),
+                                        level = MemberAccess.level(MemberFeature.WordListAdd, accountState.entitlement),
                                         onOpen = { adding = true },
                                         onLocked = openMembership,
                                     )
@@ -1554,7 +1539,7 @@ private fun SignedInScreens(
                                     WordNoteSection(
                                         wordId = wordId,
                                         store = app.wordNotesStore,
-                                        entitlement = if (isGuest) null else accountState.entitlement,
+                                        entitlement = accountState.entitlement,
                                         onLocked = openMembership,
                                         modifier = modifier,
                                     )
@@ -1604,7 +1589,7 @@ private fun SignedInScreens(
         }
         FeatureTourOverlay(
             step = step,
-            copy = TourCopy.of(step, isGuest),
+            copy = TourCopy.of(step),
             anchors = anchors,
             transitioning = tourCrossing,
             isLast = index == tour.steps.lastIndex,
@@ -1657,7 +1642,6 @@ private fun TodayColumn(
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
-    onCreateAccount: () -> Unit,
     completion: CompletionReadout,
     streak: Int,
     shelves: List<CategoryShelf.Shelf>,
@@ -1686,7 +1670,6 @@ private fun TodayColumn(
             onReview = onReview,
             onLearnNew = onLearnNew,
             onSearch = onSearch,
-            onCreateAccount = onCreateAccount,
             completion = completion,
             streak = streak,
             shelves = shelves,

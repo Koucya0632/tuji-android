@@ -9,12 +9,6 @@ package app.tuji.android.core.auth
  * them a fact a caller must know and none of them stated by a type, were
  * verified by nobody:
  *
- *  - [enterGuest] only works from [AuthState.SignedOut] and [exitGuest] only
- *    from [AuthState.Guest]. From anywhere else they are **silent no-ops** —
- *    no throw, no signal, nothing happens.
- *  - [cameFromGuest] is what stops the Welcome screen being an exit-less dead
- *    end for someone who tapped 登入 by accident. It is set by *leaving* guest
- *    mode and cleared by signing out.
  *  - **A failed session refresh does not mean signed out.** If a session is
  *    still cached and the error is anything other than "no session at all",
  *    the likely cause is a flat network, and bouncing an authenticated user to
@@ -30,11 +24,6 @@ package app.tuji.android.core.auth
  */
 data class AuthSession(
     val state: AuthState = AuthState.Checking,
-    /**
-     * True when Welcome was reached by *leaving* guest mode rather than at
-     * first launch, so Welcome can offer a way back to browsing.
-     */
-    val cameFromGuest: Boolean = false,
 ) {
     val signedInUser: SessionUser?
         get() = (state as? AuthState.SignedIn)?.user
@@ -64,33 +53,17 @@ data class AuthSession(
     fun refreshRetrying(cached: SessionUser?): AuthSession =
         if (state is AuthState.Checking && cached != null) copy(state = AuthState.SignedIn(cached)) else this
 
-    // Guest
-
-    /** No-op unless signed out. Stated here because the type cannot say it. */
-    fun enterGuest(): AuthSession =
-        if (state is AuthState.SignedOut) copy(state = AuthState.Guest, cameFromGuest = false) else this
-
-    /** No-op unless in guest mode. */
-    fun exitGuest(): AuthSession =
-        if (state is AuthState.Guest) copy(state = AuthState.SignedOut, cameFromGuest = true) else this
-
     // Sign in / out
 
     fun signedIn(user: SessionUser) = copy(state = AuthState.SignedIn(user))
 
     /**
-     * The client reported "no session".
-     *
-     * Distinct from [signedOut], which is the user's own act. Guest is a
-     * deliberate signed-out state, and the auth client emits "not
-     * authenticated" continuously while in it — folding that straight into
-     * [AuthState.SignedOut] would throw a guest back to Welcome for no reason,
-     * repeatedly, with nothing on screen to explain it.
+     * The client reported "no session". Distinct from [signedOut], which is
+     * the user's own act; both land on Welcome.
      */
-    fun observedNoSession(): AuthSession =
-        if (state is AuthState.Guest) this else copy(state = AuthState.SignedOut)
+    fun observedNoSession(): AuthSession = copy(state = AuthState.SignedOut)
 
-    fun signedOut() = copy(state = AuthState.SignedOut, cameFromGuest = false)
+    fun signedOut() = copy(state = AuthState.SignedOut)
 
     // Profile mirror
 

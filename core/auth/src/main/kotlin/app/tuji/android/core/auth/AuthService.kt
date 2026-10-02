@@ -54,10 +54,8 @@ class AuthService(
     val state: AuthState get() = _session.value.state
 
     init {
-        // The auth client publishes a stream, where iOS resolves once. Folding
-        // it through the state machine is what keeps guest mode alive across
-        // the NotAuthenticated the client emits continuously — see
-        // AuthSession.observedNoSession.
+        // The auth client publishes a stream, where iOS resolves once; each
+        // status is folded through the state machine.
         scope.launch {
             supabase.auth.sessionStatus.collect { status -> apply(status) }
         }
@@ -129,19 +127,6 @@ class AuthService(
             }
         }
     }
-
-    // Guest mode
-
-    fun enterGuestMode() {
-        _session.value = _session.value.enterGuest()
-    }
-
-    /** So a guest can land on Welcome and pick a flow. */
-    fun exitGuestMode() {
-        _session.value = _session.value.exitGuest()
-    }
-
-    val cameFromGuest: Boolean get() = _session.value.cameFromGuest
 
     // Email
 

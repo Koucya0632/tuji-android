@@ -45,7 +45,7 @@ class SettingsStore(
      */
     private val local: OnboardingStore,
     private val scope: CoroutineScope,
-    /** Whether an account is signed in — a guest's settings are this device's alone. */
+    /** Whether an account is signed in — signed out, settings are this device's alone. */
     private val signedIn: () -> Boolean,
 ) : AccountScopedStore {
     // Not the bare defaults: the direction the user picked during onboarding is

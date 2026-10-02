@@ -14,32 +14,20 @@ import org.junit.Test
 class CompletionReadoutTest {
 
     private fun inputs(
-        isGuest: Boolean = false,
         settingsLoaded: Boolean = true,
         studyCategories: List<String> = listOf("kitchen"),
-        guestLearnedCount: Int = 0,
         seenInSelection: Int = 40,
         totalInSelection: Int = 120,
         dictionaryCount: Int = 480,
         dictionaryCountInSelection: Int = 60,
     ) = CompletionReadout.Inputs(
-        isGuest = isGuest,
         settingsLoaded = settingsLoaded,
         studyCategories = studyCategories,
-        guestLearnedCount = guestLearnedCount,
         seenInSelection = seenInSelection,
         totalInSelection = totalInSelection,
         dictionaryCount = dictionaryCount,
         dictionaryCountInSelection = dictionaryCountInSelection,
     )
-
-    @Test fun `a guest's progress is the local learned set, not the empty server rows`() {
-        val readout = CompletionReadout(
-            inputs(isGuest = true, studyCategories = emptyList(), guestLearnedCount = 37, seenInSelection = 0, totalInSelection = 0),
-        )
-        assertEquals(37, readout.seen)
-        assertEquals(480, readout.total)
-    }
 
     /** 自定義 and 物見 have no published cards, so the server has no rows and the fallback runs. */
     @Test fun `the denominator describes the selection, not the whole dictionary`() {
@@ -100,15 +88,10 @@ class CompletionReadoutTest {
         assertTrue(CompletionReadout(inputs(settingsLoaded = true, studyCategories = emptyList())).showsThemePrompt)
     }
 
-    @Test fun `a guest is never prompted to pick themes`() {
-        assertFalse(CompletionReadout(inputs(isGuest = true, studyCategories = emptyList())).showsThemePrompt)
-    }
-
     // The mapping — what the app holds → the facts above.
 
     @Test fun `every scoped number is measured against the same selection`() {
         val inputs = CompletionReadout.Inputs.from(
-            isGuest = false,
             settingsLoaded = true,
             studyCategories = listOf("kitchen"),
             progress = listOf(CategoryProgress("kitchen", total = 30, seen = 12), CategoryProgress("office", total = 50, seen = 40)),
@@ -124,7 +107,6 @@ class CompletionReadoutTest {
     /** Before settings arrive, an empty list is not a pick, and the server's whole count stands. */
     @Test fun `an empty selection sums every server row`() {
         val inputs = CompletionReadout.Inputs.from(
-            isGuest = false,
             settingsLoaded = false,
             studyCategories = emptyList(),
             progress = listOf(CategoryProgress("kitchen", total = 30, seen = 12), CategoryProgress("office", total = 50, seen = 40)),

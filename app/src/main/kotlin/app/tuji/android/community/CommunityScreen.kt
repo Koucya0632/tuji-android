@@ -56,11 +56,9 @@ fun CommunityScreen(
     explore: CommunityViewModel.Shelf,
     saved: CommunityViewModel.Shelf,
     me: AtlasAuthor?,
-    isGuest: Boolean,
     language: TargetLanguage,
     onShowSaved: () -> Unit,
     onRetry: () -> Unit,
-    onSignIn: () -> Unit,
     onOpenCollection: (String) -> Unit,
     onOpenMyPage: (String) -> Unit,
     onRefresh: suspend () -> Unit = {},
@@ -68,13 +66,13 @@ fun CommunityScreen(
     var shelf by rememberSaveable { mutableStateOf(CommunityShelf.Explore) }
     // Asked for the first time 已收藏 is opened, and again on each return to
     // it: a collection saved in a detail screen belongs on it by then.
-    LaunchedEffect(shelf, isGuest) {
-        if (shelf == CommunityShelf.Saved && !isGuest) onShowSaved()
+    LaunchedEffect(shelf) {
+        if (shelf == CommunityShelf.Saved) onShowSaved()
     }
 
     Column(Modifier.fillMaxSize().padding(top = TujiSpace.S3)) {
-        // Guests have no public page, and a row that fails to load is simply
-        // not there — the list below must not pay for it.
+        // A row that fails to load is simply not there — the list below must
+        // not pay for it.
         me?.let { author ->
             MyPageRow(author) { onOpenMyPage(author.handle) }
             RowRule()
@@ -101,25 +99,14 @@ fun CommunityScreen(
                     onRetry = onRetry,
                     onOpenCollection = onOpenCollection,
                 )
-                CommunityShelf.Saved -> if (isGuest) {
-                    Column(
-                        Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
-                        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(stringResource(R.string.community_saved_guest), style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center)
-                        TujiButton(text = stringResource(R.string.auth_sign_in), onClick = onSignIn)
-                    }
-                } else {
-                    ShelfList(
-                        state = saved,
-                        empty = stringResource(
-                            if (language == TargetLanguage.JA) R.string.community_saved_empty_ja else R.string.community_saved_empty_en,
-                        ),
-                        onRetry = onShowSaved,
-                        onOpenCollection = onOpenCollection,
-                    )
-                }
+                CommunityShelf.Saved -> ShelfList(
+                    state = saved,
+                    empty = stringResource(
+                        if (language == TargetLanguage.JA) R.string.community_saved_empty_ja else R.string.community_saved_empty_en,
+                    ),
+                    onRetry = onShowSaved,
+                    onOpenCollection = onOpenCollection,
+                )
             }
         }
     }

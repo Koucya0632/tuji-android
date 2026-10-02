@@ -19,8 +19,6 @@
     <string name="welcome_google_signing_in">Googleでログイン中...</string>
     <string name="welcome_use_email">メールアドレスを使う</string>
     <string name="welcome_have_account">アカウントをお持ちの方はログイン</string>
-    <string name="welcome_browse_as_guest">見てまわる → ゲストモード</string>
-    <string name="welcome_back_to_guest">ゲストモードに戻る</string>
     <string name="welcome_close">閉じる</string>
     <string name="welcome_opening_browser">Appleでサインインを開いています…</string>
     <string name="auth_create_account">アカウント作成</string>
@@ -105,8 +103,7 @@
     <string name="today_greeting_morning">おはよう、%1$s。</string>
     <string name="today_greeting_afternoon">こんにちは、%1$s。</string>
     <string name="today_greeting_evening">こんばんは、%1$s。</string>
-    <string name="today_guest_name">探検家</string>
-    <string name="today_sub_guest">ゲストモード · 図鑑を見て、また見たい単語にブックマークを</string>
+    <string name="today_fallback_name">探検家</string>
     <string name="today_sub_unknown">今日は何を学びましょうか？</string>
     <string name="today_sub_review_due">今日は%1$d語の復習があります</string>
     <string name="today_sub_goal_reached">今日の目標達成！また明日</string>
@@ -177,7 +174,7 @@
     <string name="me_completion_selected">選択テーマの完成度</string>
     <string name="me_completion_detail">学習済み %1$d / 全%2$d語</string>
     <string name="me_completion_selected_detail">学習済み %1$d / 選択テーマ全%2$d語</string>
-    <string name="me_guest_name">Tuji探検家</string>
+    <string name="me_fallback_name">Tuji探検家</string>
     <string name="me_mastery">習熟度</string>
     <string name="me_no_records">まだ学習記録がありません</string>
     <string name="me_unit_words">語</string>
@@ -207,19 +204,14 @@
     <string name="tour_start">はじめる</string>
     <string name="tour_1_title">毎日ここから</string>
     <string name="tour_1_text">「新しい単語」で覚えて、「復習」で忘れかけた単語を思い出します。</string>
-    <string name="tour_1_guest">ここが学習の拠点です。アカウントを作ると新しい単語も復習も使えます。</string>
     <string name="tour_2_title">1日の目標と連続日数</string>
     <string name="tour_2_text">今日の目標を達成すると、炎が1日ずつ積み上がります。</string>
-    <string name="tour_2_guest">毎日戻ってくると、炎が連続日数を数えてくれます。</string>
     <string name="tour_3_title">下のこの並び</string>
     <string name="tour_3_text">今日は学習、図鑑は単語集め、物見はみんなの収集、自分は成果とアカウント。黄色いボタンはいつでも撮影できます。</string>
     <string name="tour_4_title">撮って覚える</string>
     <string name="tour_4_text">Tuji の看板機能。身のまわりのものを撮ると、AI がカードにしてくれます。</string>
-    <string name="tour_4_guest">Tuji の看板機能。アカウントを作ったら、身のまわりのものを撮るだけで AI がカードにしてくれます。</string>
     <string name="tour_5_title">最初のレッスンへ</string>
     <string name="tour_5_text">準備はできました。今日の学習をはじめましょう！</string>
-    <string name="tour_5_guest_title">アカウントを作ってはじめる</string>
-    <string name="tour_5_guest">無料登録で新しい単語も復習も使えます。進捗はクラウドに保存されます</string>
     <string name="intro_skip">スキップ</string>
     <string name="intro_next">次へ</string>
     <string name="intro_start">はじめる</string>
@@ -314,7 +306,6 @@
     <string name="community_failed">物見を読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="community_shelf_explore">探す</string>
     <string name="community_shelf_saved">保存済み</string>
-    <string name="community_saved_guest">保存したコレクションを見るにはログインしてください</string>
     <string name="community_saved_empty_ja">保存した日本語コレクションはありません</string>
     <string name="community_saved_empty_en">保存した英語コレクションはありません</string>
     <string name="community_explore_empty">この言語の公開コレクションはまだありません</string>
@@ -327,7 +318,6 @@
     <string name="item_learning_count">%1$d人が学習中</string>
     <string name="item_yours">自分のシェア</string>
     <string name="item_stop_title">この単語の学習をやめますか？</string>
-    <string name="item_sign_in_title">ログインすると学習に追加できます</string>
     <string name="item_action_failed">操作を完了できませんでした。しばらくしてからもう一度お試しください</string>
     <string name="item_report">この項目を通報</string>
     <string name="item_not_found">項目が見つかりません</string>
@@ -514,7 +504,6 @@
     <string name="collection_about_empty">この作者はまだ自己紹介を書いていません。</string>
     <string name="collection_report">このコレクションを報告</string>
     <string name="collection_report_received">通報を受け付けました</string>
-    <string name="collection_sign_in_title">コレクションを保存するにはログインしてください</string>
     <string name="collection_unsave_title">このコレクションの保存を解除しますか？</string>
     <string name="collection_confirm">確定</string>
     <string name="collection_action_failed">操作に失敗しました</string>
@@ -571,8 +560,6 @@
     <string name="capture_publish">物見に公開する</string>
     <string name="capture_publishing">公開しています…</string>
     <string name="today_theme_progress">テーマ進捗</string>
-    <string name="today_guest_cta">アカウントを作成して学習を始める</string>
-    <string name="today_guest_why">無料登録で新しい単語の学習と復習ができ、進捗はクラウドに保存されます</string>
     <string name="today_review">復習</string>
     <string name="today_learn_new">新出単語</string>
     <string name="search_open">検索</string>
@@ -612,7 +599,6 @@
     <string name="rating_easy">熟練</string>
     <string name="signed_in_as">ログイン中</string>
     <string name="sign_out">ログアウト</string>
-    <string name="guest_mode">ゲストとして閲覧中</string>
     <string name="sign_in_or_up">ログイン / 登録</string>
     <string name="membership_title">メンバーシップ</string>
     <string name="membership_lifetime">永久会員</string>

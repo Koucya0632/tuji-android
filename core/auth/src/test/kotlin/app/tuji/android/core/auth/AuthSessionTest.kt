@@ -1,10 +1,8 @@
 package app.tuji.android.core.auth
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -70,82 +68,13 @@ class AuthSessionTest {
     @Test
     fun `a retried refresh changes nothing once past the splash`() {
         // The client emits the same event for a mid-session refresh that fails.
-        // It must not sign a guest in, or swap the account on screen.
-        val guest = signedOut.enterGuest()
-        assertSame(guest, guest.refreshRetrying(cached = alice))
+        // It must not sign anyone in, or swap the account on screen.
         assertSame(signedOut, signedOut.refreshRetrying(cached = alice))
         val bobIn = AuthSession().signedIn(bob)
         assertSame(bobIn, bobIn.refreshRetrying(cached = alice))
     }
 
-    // Guest mode — the silent no-ops.
-
-    @Test
-    fun `guest mode is enterable only from signed out`() {
-        assertEquals(AuthState.Guest, signedOut.enterGuest().state)
-    }
-
-    @Test
-    fun `entering guest from anywhere else does nothing at all`() {
-        val checking = AuthSession()
-        assertSame(checking, checking.enterGuest())
-
-        val inSession = AuthSession().signedIn(alice)
-        assertSame(inSession, inSession.enterGuest())
-
-        val guest = signedOut.enterGuest()
-        assertSame(guest, guest.enterGuest())
-    }
-
-    @Test
-    fun `leaving guest from anywhere else does nothing at all`() {
-        assertSame(signedOut, signedOut.exitGuest())
-
-        val inSession = AuthSession().signedIn(alice)
-        assertSame(inSession, inSession.exitGuest())
-    }
-
-    @Test
-    fun `leaving guest marks Welcome as reachable from browsing`() {
-        // Without this flag Welcome is an exit-less dead end for someone who
-        // tapped 登入 by accident.
-        val s = signedOut.enterGuest().exitGuest()
-        assertEquals(AuthState.SignedOut, s.state)
-        assertTrue(s.cameFromGuest)
-    }
-
-    @Test
-    fun `entering guest clears the flag`() {
-        val s = signedOut.enterGuest().exitGuest().enterGuest()
-        assertFalse(s.cameFromGuest)
-    }
-
-    @Test
-    fun `signing out clears the flag`() {
-        val s = signedOut.enterGuest().exitGuest().signedIn(alice).signedOut()
-        assertEquals(AuthState.SignedOut, s.state)
-        assertFalse(s.cameFromGuest)
-    }
-
-    @Test
-    fun `a first launch has not come from guest`() {
-        assertFalse(AuthSession().cameFromGuest)
-        assertFalse(signedOut.cameFromGuest)
-    }
-
     // Observed "no session" — the shape Android has and iOS does not.
-
-    @Test
-    fun `a guest survives the client reporting no session`() {
-        // supabase-kt emits NotAuthenticated continuously, including all the
-        // way through guest browsing. Folding that into SignedOut would throw
-        // the guest back to Welcome, repeatedly, with nothing on screen to say
-        // why. iOS never had to answer this — its resolve is a one-shot call,
-        // not a stream.
-        val guest = signedOut.enterGuest()
-        assertSame(guest, guest.observedNoSession())
-        assertSame(guest, guest.observedNoSession().observedNoSession())
-    }
 
     @Test
     fun `a signed-in session ending signs out`() {
@@ -219,6 +148,5 @@ class AuthSessionTest {
     fun `signedInUser is null in every state that is not signed in`() {
         assertNull(AuthSession().signedInUser)
         assertNull(signedOut.signedInUser)
-        assertNull(signedOut.enterGuest().signedInUser)
     }
 }

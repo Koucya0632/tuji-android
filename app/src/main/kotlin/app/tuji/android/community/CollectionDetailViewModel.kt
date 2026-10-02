@@ -35,7 +35,6 @@ class CollectionDetailViewModel(
     private val learning: CollectionLearning,
     /** Who is looking, so an author opening their own collection sees 你的合集 rather than 收藏. */
     private val viewerHandle: String?,
-    private val signedIn: Boolean,
     private val blocked: () -> BlockList = { BlockList.none },
     /** A bookmark landed — 物見's 已收藏 shelf is drawn from the same answer. */
     private val onBookmarkChanged: () -> Unit = {},
@@ -83,12 +82,11 @@ class CollectionDetailViewModel(
             if (!reload()) return@launch
             // Older responses carry no `access`; ask the bookmark route itself
             // rather than draw a 收藏 button that may be wrong.
-            if (signedIn && !_state.value.bookmarkKnown && !_state.value.isOwner) readSaveState()
-            if (!signedIn) _state.value = _state.value.copy(bookmarkKnown = true)
+            if (!_state.value.bookmarkKnown && !_state.value.isOwner) readSaveState()
         }
     }
 
-    /** 收藏. Guests are turned away by the screen before this is reached. */
+    /** 收藏. */
     fun save() = changeBookmark(save = true)
 
     /** 取消收藏 — the screen asks first. */
