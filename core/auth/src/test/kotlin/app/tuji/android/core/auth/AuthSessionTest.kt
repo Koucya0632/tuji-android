@@ -16,7 +16,6 @@ class AuthSessionTest {
     private val bob = SessionUser(id = "u-bob", email = "b@example.test", username = "TJ00000002")
 
     private val signedOut = AuthSession().failedRefresh(SessionRefreshFailure.NoSession, cached = null)
-    private val guest = AuthSession(state = AuthState.Guest)
 
     @Test
     fun `a launch starts by checking, not signed out`() {
@@ -69,40 +68,13 @@ class AuthSessionTest {
     @Test
     fun `a retried refresh changes nothing once past the splash`() {
         // The client emits the same event for a mid-session refresh that fails.
-        // It must not sign a guest in, or swap the account on screen.
-        assertSame(guest, guest.refreshRetrying(cached = alice))
+        // It must not sign anyone in, or swap the account on screen.
         assertSame(signedOut, signedOut.refreshRetrying(cached = alice))
         val bobIn = AuthSession().signedIn(bob)
         assertSame(bobIn, bobIn.refreshRetrying(cached = alice))
     }
 
-    // Guest mode — the silent no-op. Welcome no longer offers a way in.
-
-    @Test
-    fun `leaving guest lands on signed out`() {
-        assertEquals(AuthState.SignedOut, guest.exitGuest().state)
-    }
-
-    @Test
-    fun `leaving guest from anywhere else does nothing at all`() {
-        assertSame(signedOut, signedOut.exitGuest())
-
-        val inSession = AuthSession().signedIn(alice)
-        assertSame(inSession, inSession.exitGuest())
-    }
-
     // Observed "no session" — the shape Android has and iOS does not.
-
-    @Test
-    fun `a guest survives the client reporting no session`() {
-        // supabase-kt emits NotAuthenticated continuously, including all the
-        // way through guest browsing. Folding that into SignedOut would throw
-        // the guest back to Welcome, repeatedly, with nothing on screen to say
-        // why. iOS never had to answer this — its resolve is a one-shot call,
-        // not a stream.
-        assertSame(guest, guest.observedNoSession())
-        assertSame(guest, guest.observedNoSession().observedNoSession())
-    }
 
     @Test
     fun `a signed-in session ending signs out`() {
@@ -176,6 +148,5 @@ class AuthSessionTest {
     fun `signedInUser is null in every state that is not signed in`() {
         assertNull(AuthSession().signedInUser)
         assertNull(signedOut.signedInUser)
-        assertNull(guest.signedInUser)
     }
 }

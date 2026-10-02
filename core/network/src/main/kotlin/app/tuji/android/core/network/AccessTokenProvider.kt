@@ -38,12 +38,12 @@ interface AccessTokenProvider {
     /**
      * Whether to *attempt* a token on an optional-auth endpoint. Distinct from
      * "a token is available": an optional-auth request must stay usable for
-     * signed-out guests, so this only decides whether to try.
+     * a signed-out caller, so this only decides whether to try.
      */
     val isSignedIn: Boolean
 }
 
-/** The signed-out case, spelled out so guest-only builds need no auth module. */
+/** The signed-out case, spelled out so signed-out callers need no auth module. */
 object NoAccessToken : AccessTokenProvider {
     override suspend fun validAccessToken(): String = throw ApiError.NotAuthenticated
     override suspend fun refreshedAccessToken(rejected: String?): String = throw ApiError.NotAuthenticated

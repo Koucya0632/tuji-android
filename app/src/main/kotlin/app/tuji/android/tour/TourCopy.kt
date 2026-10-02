@@ -25,34 +25,12 @@ data class TourCopy(
     @StringRes val text: Int,
 ) {
     companion object {
-        fun of(step: TourStep, isGuest: Boolean): TourCopy = when (step.id) {
-            0 -> TourCopy(
-                MascotPose.Wave,
-                R.string.tour_1_title,
-                if (isGuest) R.string.tour_1_guest else R.string.tour_1_text,
-            )
-            1 -> TourCopy(
-                MascotPose.Think,
-                R.string.tour_2_title,
-                if (isGuest) R.string.tour_2_guest else R.string.tour_2_text,
-            )
+        fun of(step: TourStep): TourCopy = when (step.id) {
+            0 -> TourCopy(MascotPose.Wave, R.string.tour_1_title, R.string.tour_1_text)
+            1 -> TourCopy(MascotPose.Think, R.string.tour_2_title, R.string.tour_2_text)
             2 -> TourCopy(MascotPose.Face, R.string.tour_3_title, R.string.tour_3_text)
-            3 -> TourCopy(
-                MascotPose.Peek,
-                R.string.tour_4_title,
-                // 拍照 needs an account — the upload is authenticated — so the
-                // guest line says when it becomes theirs rather than telling
-                // them to go and do it now.
-                if (isGuest) R.string.tour_4_guest else R.string.tour_4_text,
-            )
-            else -> TourCopy(
-                MascotPose.Cheer,
-                // The closing card used to send guests off to 「開始今天的學習」
-                // — the one thing a guest cannot do. Their hero button is
-                // 建立帳號，開始學習, so the tour ends on the same ask.
-                if (isGuest) R.string.tour_5_guest_title else R.string.tour_5_title,
-                if (isGuest) R.string.tour_5_guest else R.string.tour_5_text,
-            )
+            3 -> TourCopy(MascotPose.Peek, R.string.tour_4_title, R.string.tour_4_text)
+            else -> TourCopy(MascotPose.Cheer, R.string.tour_5_title, R.string.tour_5_text)
         }
     }
 }

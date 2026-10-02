@@ -14,21 +14,17 @@ class BlockActionTest {
     }
 
     @Test fun `the reader's own work is theirs to share, not to block`() {
-        assertEquals(ViewerRelationship.Mine, ViewerRelationship.of("TJ1", viewerHandle = "tj1", isGuest = false))
-        assertEquals(ViewerRelationship.Theirs, ViewerRelationship.of("TJ2", viewerHandle = "TJ1", isGuest = false))
-    }
-
-    @Test fun `a guest has no account to moderate with`() {
-        assertEquals(ViewerRelationship.Guest, ViewerRelationship.of("TJ2", viewerHandle = null, isGuest = true))
+        assertEquals(ViewerRelationship.Mine, ViewerRelationship.of("TJ1", viewerHandle = "tj1"))
+        assertEquals(ViewerRelationship.Theirs, ViewerRelationship.of("TJ2", viewerHandle = "TJ1"))
     }
 
     /** 物見's 我的主頁 row opens the page before the account's own UID may have loaded. */
     @Test fun `a page opened as the reader's own is theirs whatever the UID says`() {
-        assertEquals(ViewerRelationship.Mine, ViewerRelationship.of("TJ1", viewerHandle = null, isGuest = false, isSelf = true))
+        assertEquals(ViewerRelationship.Mine, ViewerRelationship.of("TJ1", viewerHandle = null, isSelf = true))
     }
 
     @Test fun `work with no author relates to no one`() {
-        assertNull(ViewerRelationship.of(null, viewerHandle = "TJ1", isGuest = false))
+        assertNull(ViewerRelationship.of(null, viewerHandle = "TJ1"))
     }
 
     @Test fun `adding and removing a block ignore how the UID was spelled`() {

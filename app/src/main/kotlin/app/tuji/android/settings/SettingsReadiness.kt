@@ -32,8 +32,8 @@ enum class SettingsReadiness {
     ;
 
     companion object {
-        fun of(isGuest: Boolean, loaded: Boolean, loadFailed: Boolean): SettingsReadiness = when {
-            isGuest || loaded -> Ready
+        fun of(loaded: Boolean, loadFailed: Boolean): SettingsReadiness = when {
+            loaded -> Ready
             loadFailed -> Failed
             else -> Loading
         }

@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 class AccountViewModel(
     private val accounts: AccountReading,
     private val entitlements: EntitlementReading,
-    /** 需要加強. Null reads nothing — a guest has no review history to be weak at. */
+    /** 需要加強. Null reads nothing. */
     private val weakWords: WeakWordsReading? = null,
     /**
      * Whether this build can actually take money.

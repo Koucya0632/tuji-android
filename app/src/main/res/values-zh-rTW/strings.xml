@@ -103,8 +103,7 @@
     <string name="today_greeting_morning">早安，%1$s。</string>
     <string name="today_greeting_afternoon">午安，%1$s。</string>
     <string name="today_greeting_evening">晚安，%1$s。</string>
-    <string name="today_guest_name">探險者</string>
-    <string name="today_sub_guest">訪客模式 · 先逛逛圖鑑，想再看的字加書籤</string>
+    <string name="today_fallback_name">探險者</string>
     <string name="today_sub_unknown">今天想學點什麼呢？</string>
     <string name="today_sub_review_due">今天有 %1$d 個字要複習</string>
     <string name="today_sub_goal_reached">今天目標達成，明天再來</string>
@@ -175,7 +174,7 @@
     <string name="me_completion_selected">所選主題完成度</string>
     <string name="me_completion_detail">已學 %1$d / 共 %2$d 字</string>
     <string name="me_completion_selected_detail">已學 %1$d / 所選主題共 %2$d 字</string>
-    <string name="me_guest_name">Tuji 探險者</string>
+    <string name="me_fallback_name">Tuji 探險者</string>
     <string name="me_mastery">熟練度</string>
     <string name="me_no_records">還沒有學習紀錄</string>
     <string name="me_unit_words">字</string>
@@ -205,19 +204,14 @@
     <string name="tour_start">開始</string>
     <string name="tour_1_title">每天從這裡開始</string>
     <string name="tour_1_text">點「學新字」認識新單字，用「複習」複習快忘記的字。</string>
-    <string name="tour_1_guest">這裡是你的學習基地，建立帳號後就能學新字、排複習。</string>
     <string name="tour_2_title">每日目標與連續天數</string>
     <string name="tour_2_text">完成今日目標，連續學習的火焰就會一天天累積。</string>
-    <string name="tour_2_guest">每天回來學習，火焰會記錄你的連續天數。</string>
     <string name="tour_3_title">底下這一排</string>
     <string name="tour_3_text">今天開始學習、圖鑑收集單字、物見看大家收的東西、我查看成果與帳號，黃色按鈕隨時可以拍照收字。</string>
     <string name="tour_4_title">拍照收字</string>
     <string name="tour_4_text">Tuji 的招牌功能！對準身邊的物品拍一張，AI 幫你把它變成單字卡。</string>
-    <string name="tour_4_guest">Tuji 的招牌功能！建立帳號後，對準身邊的物品拍一張，AI 幫你把它變成單字卡。</string>
     <string name="tour_5_title">開始你的第一課吧</string>
     <string name="tour_5_text">都準備好了，現在就開始今天的學習！</string>
-    <string name="tour_5_guest_title">建立帳號，開始學習</string>
-    <string name="tour_5_guest">免費註冊就能學新字、排複習，進度存在雲端</string>
     <string name="intro_skip">跳過</string>
     <string name="intro_next">下一步</string>
     <string name="intro_start">開始使用</string>
@@ -312,7 +306,6 @@
     <string name="community_failed">拿不到物見的內容，請稍後再試</string>
     <string name="community_shelf_explore">探索</string>
     <string name="community_shelf_saved">已收藏</string>
-    <string name="community_saved_guest">登入後才能查看已收藏的合集</string>
     <string name="community_saved_empty_ja">目前沒有收藏的日文合集</string>
     <string name="community_saved_empty_en">目前沒有收藏的英文合集</string>
     <string name="community_explore_empty">這個語言還沒有公開合集</string>
@@ -325,7 +318,6 @@
     <string name="item_learning_count">%1$d 人學習中</string>
     <string name="item_yours">你的分享</string>
     <string name="item_stop_title">停止學習這個單詞？</string>
-    <string name="item_sign_in_title">登入後才能加入學習</string>
     <string name="item_action_failed">操作沒有完成，請稍後再試</string>
     <string name="item_report">檢舉這個項目</string>
     <string name="item_not_found">找不到這個項目</string>
@@ -512,7 +504,6 @@
     <string name="collection_about_empty">作者還沒有填寫簡介。</string>
     <string name="collection_report">檢舉這個合集</string>
     <string name="collection_report_received">已收到檢舉</string>
-    <string name="collection_sign_in_title">登入後才能收藏合集</string>
     <string name="collection_unsave_title">取消收藏這個合集？</string>
     <string name="collection_confirm">確定</string>
     <string name="collection_action_failed">操作失敗</string>
@@ -569,8 +560,6 @@
     <string name="capture_publish">發布到物見</string>
     <string name="capture_publishing">發布中…</string>
     <string name="today_theme_progress">主題進度</string>
-    <string name="today_guest_cta">建立帳號，開始學習</string>
-    <string name="today_guest_why">免費註冊就能學新字、排複習，進度存在雲端</string>
     <string name="today_review">複習</string>
     <string name="today_learn_new">學新字</string>
     <string name="search_open">搜尋</string>
@@ -610,7 +599,6 @@
     <string name="rating_easy">熟練</string>
     <string name="signed_in_as">已登入</string>
     <string name="sign_out">登出</string>
-    <string name="guest_mode">訪客瀏覽中</string>
     <string name="sign_in_or_up">登入 / 註冊</string>
     <string name="membership_title">會員方案</string>
     <string name="membership_lifetime">永久會員</string>

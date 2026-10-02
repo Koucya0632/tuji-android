@@ -103,8 +103,7 @@
     <string name="today_greeting_morning">Good morning, %1$s.</string>
     <string name="today_greeting_afternoon">Good afternoon, %1$s.</string>
     <string name="today_greeting_evening">Good evening, %1$s.</string>
-    <string name="today_guest_name">Explorer</string>
-    <string name="today_sub_guest">Guest mode · Browse the atlas and bookmark words to revisit</string>
+    <string name="today_fallback_name">Explorer</string>
     <string name="today_sub_unknown">What would you like to learn today?</string>
     <string name="today_sub_review_due">%1$d words to review today</string>
     <string name="today_sub_goal_reached">Today\'s goal reached — see you tomorrow</string>
@@ -175,7 +174,7 @@
     <string name="me_completion_selected">Chosen topics completion</string>
     <string name="me_completion_detail">Learned %1$d of %2$d words</string>
     <string name="me_completion_selected_detail">Learned %1$d of %2$d words in chosen topics</string>
-    <string name="me_guest_name">Tuji Explorer</string>
+    <string name="me_fallback_name">Tuji Explorer</string>
     <string name="me_mastery">Mastery</string>
     <string name="me_no_records">No study history yet</string>
     <string name="me_unit_words">words</string>
@@ -205,19 +204,14 @@
     <string name="tour_start">Start</string>
     <string name="tour_1_title">Every day starts here</string>
     <string name="tour_1_text">Tap Learn for new words, Review for the ones you’re about to forget.</string>
-    <string name="tour_1_guest">This is your base. Create an account and you can learn new words and schedule reviews.</string>
     <string name="tour_2_title">Daily goal and streak</string>
     <string name="tour_2_text">Finish today’s goal and the flame keeps counting up, a day at a time.</string>
-    <string name="tour_2_guest">Come back each day and the flame keeps count of your streak.</string>
     <string name="tour_3_title">The row along the bottom</string>
     <string name="tour_3_text">Today to study, Atlas to collect words, Sightings to see what others collected, Me for your progress and account. The yellow button takes a photo any time.</string>
     <string name="tour_4_title">Snap a word</string>
     <string name="tour_4_text">Tuji’s party trick. Point at something near you and the AI turns it into a card.</string>
-    <string name="tour_4_guest">Tuji’s party trick. Create an account, then point at something near you and the AI turns it into a card.</string>
     <string name="tour_5_title">Start your first lesson</string>
     <string name="tour_5_text">That’s everything — go and study today’s words.</string>
-    <string name="tour_5_guest_title">Create an account and start</string>
-    <string name="tour_5_guest">Signing up is free: learn new words, schedule reviews, and keep your progress in the cloud.</string>
     <string name="intro_skip">Skip</string>
     <string name="intro_next">Next</string>
     <string name="intro_start">Get started</string>
@@ -312,7 +306,6 @@
     <string name="community_failed">Couldn’t load Sightings. Please try again later.</string>
     <string name="community_shelf_explore">Explore</string>
     <string name="community_shelf_saved">Saved</string>
-    <string name="community_saved_guest">Sign in to view saved collections</string>
     <string name="community_saved_empty_ja">No saved Japanese collections</string>
     <string name="community_saved_empty_en">No saved English collections</string>
     <string name="community_explore_empty">No public collections in this language yet</string>
@@ -325,7 +318,6 @@
     <string name="item_learning_count">%1$d learning</string>
     <string name="item_yours">Your share</string>
     <string name="item_stop_title">Stop learning this word?</string>
-    <string name="item_sign_in_title">Sign in to add this to learning</string>
     <string name="item_action_failed">Couldn\'t finish that. Please try again later.</string>
     <string name="item_report">Report this item</string>
     <string name="item_not_found">Item not found</string>
@@ -512,7 +504,6 @@
     <string name="collection_about_empty">This author hasn’t written a bio yet.</string>
     <string name="collection_report">Report this collection</string>
     <string name="collection_report_received">Report received</string>
-    <string name="collection_sign_in_title">Sign in to save collections</string>
     <string name="collection_unsave_title">Remove this saved collection?</string>
     <string name="collection_confirm">Confirm</string>
     <string name="collection_action_failed">Action failed</string>
@@ -569,8 +560,6 @@
     <string name="capture_publish">Publish to Sightings</string>
     <string name="capture_publishing">Publishing…</string>
     <string name="today_theme_progress">Topic progress</string>
-    <string name="today_guest_cta">Create an account to start learning</string>
-    <string name="today_guest_why">Sign up free to learn new words, schedule reviews, and keep progress in the cloud</string>
     <string name="today_review">Review</string>
     <string name="today_learn_new">New words</string>
     <string name="search_open">Search</string>
@@ -610,7 +599,6 @@
     <string name="rating_easy">Proficient</string>
     <string name="signed_in_as">Signed in</string>
     <string name="sign_out">Sign out</string>
-    <string name="guest_mode">Browsing as a guest</string>
     <string name="sign_in_or_up">Sign in / Sign up</string>
     <string name="membership_title">Membership</string>
     <string name="membership_lifetime">Lifetime Membership</string>

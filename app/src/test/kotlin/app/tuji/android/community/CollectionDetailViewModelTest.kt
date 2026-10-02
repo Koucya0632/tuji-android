@@ -73,14 +73,12 @@ class CollectionDetailViewModelTest {
         bookmarks: Bookmarks = Bookmarks(),
         learning: CollectionLearning = CollectionLearning { AtlasCollectionLearnResult(learningCount = 12, totalCount = 12) },
         viewer: String? = "TJ1",
-        signedIn: Boolean = true,
     ) = CollectionDetailViewModel(
         slug = "kitchen-set",
         atlas = reader,
         bookmarks = bookmarks,
         learning = learning,
         viewerHandle = viewer,
-        signedIn = signedIn,
         scope = TestScope(dispatcher),
     )
 
@@ -165,7 +163,7 @@ class CollectionDetailViewModelTest {
         val vm = CollectionDetailViewModel(
             slug = "kitchen-set", atlas = Reader { detail }, bookmarks = Bookmarks(),
             learning = { AtlasCollectionLearnResult(addedCount = 4, learningCount = 12, totalCount = 12) },
-            viewerHandle = "TJ1", signedIn = true, onLearned = { learned = true }, scope = TestScope(dispatcher),
+            viewerHandle = "TJ1", onLearned = { learned = true }, scope = TestScope(dispatcher),
         )
         vm.open(); advanceUntilIdle()
         assertEquals(CollectionLearnAction.AddRemaining(4), vm.state.value.learnAction)

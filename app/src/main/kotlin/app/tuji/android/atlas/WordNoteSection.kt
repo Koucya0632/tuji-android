@@ -55,8 +55,9 @@ import kotlinx.coroutines.launch
 /**
  * 我的筆記 on the word page — iOS's `WordNoteSection`.
  *
- * Hidden under membership v1 and for guests (a null [entitlement]); a lock for
- * a non-member; read-only for a non-member who already wrote one.
+ * Hidden under membership v1 and before the entitlement loads (a null
+ * [entitlement]); a lock for a non-member; read-only for a non-member who
+ * already wrote one.
  */
 @Composable
 internal fun WordNoteSection(

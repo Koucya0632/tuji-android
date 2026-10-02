@@ -90,12 +90,11 @@ fun TodayScreen(
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
-    onCreateAccount: () -> Unit,
     /** 主題進度, answered the way 我 answers 完成度. */
     completion: CompletionReadout? = null,
     /** 目前連勝, or 0 before the progress readout lands. */
     streak: Int = 0,
-    /** The strip: the picked themes for a signed-in user, a preview for a guest. */
+    /** The strip: the picked themes. */
     shelves: List<CategoryShelf.Shelf> = emptyList(),
     themeStatus: (String) -> ThemeStatus = { ThemeStatus.None },
     uiLang: String = "zh-Hant",
@@ -120,7 +119,6 @@ fun TodayScreen(
             completion = completion,
             onReview = onReview,
             onLearnNew = onLearnNew,
-            onCreateAccount = onCreateAccount,
         )
         when {
             completion?.showsThemePrompt == true -> ThemePrompt(onOpenStudyThemes)
@@ -266,13 +264,13 @@ private fun Greeting(
         // One string with the name inside it, so the whole greeting wraps as
         // one line. The name is the only part in full ink.
         //
-        // A guest has no name and is still greeted by one: 「晚安，」 followed by
-        // nothing reads as the name failing to load. The fallback is this
-        // screen's copy, as on iOS.
+        // An account with no nickname is still greeted by name: 「晚安，」
+        // followed by nothing reads as the name failing to load. The fallback
+        // is this screen's copy, as on iOS.
         Text(
             run {
                 val shown = name?.takeIf { it.isNotBlank() }
-                    ?: stringResource(R.string.today_guest_name)
+                    ?: stringResource(R.string.today_fallback_name)
                 val whole = stringResource(greetingPrefix(), shown)
                 val at = whole.indexOf(shown)
                 buildAnnotatedString {
@@ -353,7 +351,6 @@ private fun Hero(
     completion: CompletionReadout?,
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
-    onCreateAccount: () -> Unit,
 ) {
     Box(Modifier.fillMaxWidth().tourAnchor(TourTarget.Hero)) {
         Column(
@@ -369,63 +366,44 @@ private fun Hero(
                 Modifier.padding(end = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
             ) {
-                if (!inputs.isGuest) {
-                    Box(Modifier.tourAnchor(TourTarget.DailyGoal)) { DailyGoal(decisions, inputs) }
-                }
+                Box(Modifier.tourAnchor(TourTarget.DailyGoal)) { DailyGoal(decisions, inputs) }
                 ThemeProgress(completion)
             }
 
-            if (inputs.isGuest) {
-                // A guest cannot study — the SRS is account-scoped — so instead
-                // of two permanently dead buttons the hero offers the one
-                // action that works.
+            // One control, so one height. 複習 is two characters in every
+            // language and its neighbour is not; the moment the longer
+            // label wraps, an unconstrained row draws a short button beside
+            // a tall one and the pair reads as two unrelated things.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .tourAnchor(TourTarget.HeroCtas),
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+            ) {
                 HeroPill(
-                    text = stringResource(R.string.today_guest_cta),
-                    role = HeroPillRole.Primary,
-                    onClick = onCreateAccount,
-                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.today_review),
+                    role = if (decisions.reviewDisabled) HeroPillRole.Secondary else HeroPillRole.Primary,
+                    enabled = !decisions.reviewDisabled,
+                    onClick = onReview,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
-                Text(
-                    stringResource(R.string.today_guest_why),
-                    style = TujiType.label,
-                    color = TujiColor.Paper.copy(alpha = 0.6f),
+                HeroPill(
+                    text = stringResource(R.string.today_learn_new),
+                    // 瞳 marks the recommended action: when there is nothing
+                    // to review, learning new words is the thing to do.
+                    role = if (decisions.reviewDisabled && !decisions.newDisabled) {
+                        HeroPillRole.Primary
+                    } else {
+                        HeroPillRole.Secondary
+                    },
+                    enabled = !decisions.newDisabled,
+                    onClick = onLearnNew,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
-            } else {
-                // One control, so one height. 複習 is two characters in every
-                // language and its neighbour is not; the moment the longer
-                // label wraps, an unconstrained row draws a short button beside
-                // a tall one and the pair reads as two unrelated things.
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min)
-                        .tourAnchor(TourTarget.HeroCtas),
-                    horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-                ) {
-                    HeroPill(
-                        text = stringResource(R.string.today_review),
-                        role = if (decisions.reviewDisabled) HeroPillRole.Secondary else HeroPillRole.Primary,
-                        enabled = !decisions.reviewDisabled,
-                        onClick = onReview,
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                    )
-                    HeroPill(
-                        text = stringResource(R.string.today_learn_new),
-                        // 瞳 marks the recommended action: when there is nothing
-                        // to review, learning new words is the thing to do.
-                        role = if (decisions.reviewDisabled && !decisions.newDisabled) {
-                            HeroPillRole.Primary
-                        } else {
-                            HeroPillRole.Secondary
-                        },
-                        enabled = !decisions.newDisabled,
-                        onClick = onLearnNew,
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                    )
-                }
-                heroHintText(decisions, inputs.stats)?.let {
-                    Text(it, style = TujiType.label, color = TujiColor.Paper.copy(alpha = 0.6f))
-                }
+            }
+            heroHintText(decisions, inputs.stats)?.let {
+                Text(it, style = TujiType.label, color = TujiColor.Paper.copy(alpha = 0.6f))
             }
         }
 
@@ -519,7 +497,6 @@ private fun HeroMeter(
 @Composable
 private fun subtitleText(decisions: TodayDecisions, stats: StudyStats?): String =
     when (decisions.subtitle) {
-        TodaySubtitle.GuestBrowsing -> stringResource(R.string.today_sub_guest)
         TodaySubtitle.Unknown -> stringResource(R.string.today_sub_unknown)
         TodaySubtitle.ReviewDue -> stringResource(R.string.today_sub_review_due, stats?.due ?: 0)
         TodaySubtitle.GoalReached -> stringResource(R.string.today_sub_goal_reached)

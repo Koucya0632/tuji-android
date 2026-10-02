@@ -25,7 +25,7 @@ import coil3.compose.AsyncImage
  * A person's avatar: their picture in a circle, or the black cat's face.
  *
  * iOS's `ProfileAvatar`. **Only an https URL is a picture** — every other
- * stored value (an old preset key, an empty string, a signed-out guest)
+ * stored value (an old preset key, an empty string, nobody signed in)
  * collapses to the one built-in default, and a failed download does too, so a
  * broken link never shows as an empty grey disc.
  */

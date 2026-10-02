@@ -87,7 +87,6 @@ class PublicItemViewModelTest {
     private fun vm(
         saver: Saver = Saver(),
         reader: Reader = Reader { detail },
-        signedIn: Boolean = true,
         onSaveChanged: () -> Unit = {},
     ) = PublicItemViewModel(
         slug = "bag",
@@ -96,7 +95,6 @@ class PublicItemViewModelTest {
         audio = Silent,
         direction = LearningDirection.ZH_JA,
         uiLang = "zh-Hant",
-        signedIn = signedIn,
         onSaveChanged = onSaveChanged,
         scope = TestScope(dispatcher),
     )
@@ -109,15 +107,6 @@ class PublicItemViewModelTest {
         assertEquals(5, vm.state.value.saveCount)
         assertEquals(detail, vm.state.value.item)
         assertFalse(vm.state.value.busy)
-    }
-
-    @Test fun `a guest is never asked, so no count is claimed`() = runTest(dispatcher) {
-        val saver = Saver(saved = true, count = 5)
-        val vm = vm(saver, signedIn = false)
-        vm.open(); advanceUntilIdle()
-        assertEquals(0, saver.stateReads)
-        assertNull(vm.state.value.saveCount)
-        assertFalse(vm.state.value.saved)
     }
 
     @Test fun `the toggle goes both ways and tells the other tabs each time`() = runTest(dispatcher) {

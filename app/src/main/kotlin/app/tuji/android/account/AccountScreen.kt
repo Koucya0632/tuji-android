@@ -65,7 +65,6 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AccountScreen(
     state: AccountViewModel.State,
-    isGuest: Boolean,
     completion: CompletionReadout,
     progress: ProgressStore.Snapshot,
     spread: MasteryDistribution,
@@ -76,8 +75,8 @@ fun AccountScreen(
     showChinese: Boolean = true,
     onOpenWord: (String) -> Unit = {},
     onRefresh: suspend () -> Unit = {},
-    /** 會員方案. Null for a guest, who has no account to be a member with. */
-    onOpenMembership: (() -> Unit)? = null,
+    /** 會員方案. */
+    onOpenMembership: () -> Unit,
     /** 詞表's way in. Handed in: whether it shows is the account's, not this screen's. */
     wordLists: @Composable () -> Unit = {},
 ) {
@@ -107,7 +106,6 @@ fun AccountScreen(
 
         IdentityRow(
             me = state.me,
-            isGuest = isGuest,
             tier = state.entitlement?.membershipTier ?: MembershipTier.Free,
             onClick = onOpenMembership,
         )
@@ -145,7 +143,7 @@ fun AccountScreen(
         wordLists()
         // Where you are weakest comes last: it is the one section here that
         // asks for something, and it reads as a next step after the record.
-        if (!isGuest && state.weak.isNotEmpty()) {
+        if (state.weak.isNotEmpty()) {
             WeakWords(state.weak, showChinese, onOpenWord)
         }
         Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
@@ -158,25 +156,22 @@ fun AccountScreen(
  * on the one tab a user hands their phone to someone else to show off.
  */
 @Composable
-private fun IdentityRow(me: UserMe?, isGuest: Boolean, tier: MembershipTier, onClick: (() -> Unit)?) {
-    val name = if (isGuest) stringResource(R.string.me_guest_name) else me?.displayName ?: stringResource(R.string.me_guest_name)
+private fun IdentityRow(me: UserMe?, tier: MembershipTier, onClick: () -> Unit) {
+    val name = me?.displayName ?: stringResource(R.string.me_fallback_name)
     // The UID, not the nickname: it is what reports, blocks and support
     // requests carry. The email's local part only for an account whose UID has
     // not mirrored yet.
-    val handle = when {
-        isGuest -> "guest"
-        else -> me?.username?.takeIf { it.isNotBlank() } ?: me?.email?.substringBefore('@')
-    }
+    val handle = me?.username?.takeIf { it.isNotBlank() } ?: me?.email?.substringBefore('@')
     val badge = tier.badge
     Row(
         Modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.tujiClickable(onClick = onClick) else Modifier)
+            .tujiClickable(onClick = onClick)
             .clearAndSetSemantics { contentDescription = "$name, $badge" },
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProfileAvatar(avatar = if (isGuest) null else me?.avatar, size = 48.dp)
+        ProfileAvatar(avatar = me?.avatar, size = 48.dp)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(name, style = TujiType.h3, color = TujiColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             handle?.let {
@@ -202,7 +197,7 @@ private fun IdentityRow(me: UserMe?, isGuest: Boolean, tier: MembershipTier, onC
 
 /** iOS's grace notice. The date is the server's; never a constant here. */
 @Composable
-private fun GraceNotice(graceEndsAt: String, slots: Int, onOpenMembership: (() -> Unit)?) {
+private fun GraceNotice(graceEndsAt: String, slots: Int, onOpenMembership: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     val date = remember(graceEndsAt, locale) {
         runCatching {
@@ -220,14 +215,12 @@ private fun GraceNotice(graceEndsAt: String, slots: Int, onOpenMembership: (() -
             style = TujiType.bodySmStrong,
             color = TujiColor.Ink,
         )
-        if (onOpenMembership != null) {
-            Text(
-                stringResource(R.string.membership_view_plans),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.BrandSecondary,
-                modifier = Modifier.tujiClickable(onClick = onOpenMembership),
-            )
-        }
+        Text(
+            stringResource(R.string.membership_view_plans),
+            style = TujiType.bodySmStrong,
+            color = TujiColor.BrandSecondary,
+            modifier = Modifier.tujiClickable(onClick = onOpenMembership),
+        )
     }
 }
 

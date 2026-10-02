@@ -11,7 +11,7 @@ import org.junit.Test
  * theoretical: `isPublic` answered both 「attach no bearer」 and 「never retry a
  * 401」, which part company on exactly one endpoint — the public collection
  * route, whose signed-in caller *does* send a token. Its 401 was the one 401
- * never retried, and the user saw the guest view of a collection they had
+ * never retried, and the user saw the signed-out view of a collection they had
  * saved.
  */
 class EndpointPolicyTest {

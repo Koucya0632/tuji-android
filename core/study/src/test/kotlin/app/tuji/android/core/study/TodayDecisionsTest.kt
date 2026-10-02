@@ -13,10 +13,9 @@ class TodayDecisionsTest {
         StudyStats(total = total, seen = seen, due = due, new = new, todayNew = todayNew)
 
     private fun today(
-        isGuest: Boolean = false,
         stats: StudyStats? = stats(),
         dailyGoal: Int = 10,
-    ) = TodayDecisions(TodayInputs(isGuest = isGuest, stats = stats, dailyGoal = dailyGoal))
+    ) = TodayDecisions(TodayInputs(stats = stats, dailyGoal = dailyGoal))
 
     // Before the numbers exist
 
@@ -57,24 +56,11 @@ class TodayDecisionsTest {
         assertEquals(TodaySubtitle.AllLearned, today(stats = stats(new = 0, todayNew = 0)).subtitle)
     }
 
-    @Test fun `a guest is told they are browsing, whatever the numbers say`() {
-        assertEquals(
-            TodaySubtitle.GuestBrowsing,
-            today(isGuest = true, stats = stats(due = 9)).subtitle,
-        )
-    }
-
     // What is offered
 
     @Test fun `複習 is dead when nothing is due`() {
         assertTrue(today(stats = stats(due = 0)).reviewDisabled)
         assertFalse(today(stats = stats(due = 1)).reviewDisabled)
-    }
-
-    @Test fun `a guest is offered neither`() {
-        val t = today(isGuest = true, stats = stats(due = 5, new = 100))
-        assertTrue(t.reviewDisabled)
-        assertTrue(t.newDisabled)
     }
 
     @Test fun `an empty catalogue blocks 學新字 with a reason`() {

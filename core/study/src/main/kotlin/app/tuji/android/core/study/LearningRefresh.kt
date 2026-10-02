@@ -14,14 +14,11 @@ package app.tuji.android.core.study
  * moving those call sites would be a second, quieter copy of the same rule.
  */
 sealed interface LearningRefreshCause {
-    /** Whether the reader has no account, and so no account-scoped anything. */
-    val isGuest: Boolean
-
     /** 今日 pulled down. */
-    data class PulledToday(override val isGuest: Boolean) : LearningRefreshCause
+    data object PulledToday : LearningRefreshCause
 
     /** 我 pulled down. */
-    data class PulledMe(override val isGuest: Boolean) : LearningRefreshCause
+    data object PulledMe : LearningRefreshCause
 }
 
 /**
@@ -45,30 +42,19 @@ enum class RefreshTarget {
     Catalogue,
 }
 
-/**
- * The whole policy, in one place.
- *
- * A guest has no account-scoped stores, so 我 refreshes **nothing** — the page
- * has nothing on it that came from a server. 今日 still re-reads the catalogue,
- * because the word list and themes are public and a guest reads them too.
- */
+/** The whole policy, in one place. */
 val LearningRefreshCause.targets: Set<RefreshTarget>
     get() = when (this) {
-        is LearningRefreshCause.PulledToday ->
-            if (isGuest) {
-                setOf(RefreshTarget.Catalogue)
-            } else {
-                setOf(
-                    RefreshTarget.Progress,
-                    RefreshTarget.Stats,
-                    RefreshTarget.Mastery,
-                    RefreshTarget.Catalogue,
-                )
-            }
+        LearningRefreshCause.PulledToday -> setOf(
+            RefreshTarget.Progress,
+            RefreshTarget.Stats,
+            RefreshTarget.Mastery,
+            RefreshTarget.Catalogue,
+        )
 
-        is LearningRefreshCause.PulledMe ->
+        LearningRefreshCause.PulledMe ->
             // No stats: nothing on 我 reads 待複習 or 今天學了幾個. Mastery,
             // because 我 · 熟練度 is a whole section of that page — the exact
             // line iOS had wrong.
-            if (isGuest) emptySet() else setOf(RefreshTarget.Progress, RefreshTarget.Mastery)
+            setOf(RefreshTarget.Progress, RefreshTarget.Mastery)
     }

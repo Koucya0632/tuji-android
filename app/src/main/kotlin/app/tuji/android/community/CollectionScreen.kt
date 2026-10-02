@@ -63,11 +63,9 @@ private enum class CollectionTab { Contents, About }
 @Composable
 fun CollectionScreen(
     state: CollectionDetailViewModel.State,
-    isGuest: Boolean,
     reported: Boolean,
     onBack: () -> Unit,
     onRetry: () -> Unit,
-    onSignIn: () -> Unit,
     onSave: () -> Unit,
     onUnsave: () -> Unit,
     onLearn: () -> Unit,
@@ -77,7 +75,6 @@ fun CollectionScreen(
     onReport: (ReportReason) -> Unit,
 ) {
     var tab by rememberSaveable { mutableStateOf(CollectionTab.Contents) }
-    var askSignIn by remember { mutableStateOf(false) }
     var askUnsave by remember { mutableStateOf(false) }
     var askLearn by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -91,11 +88,7 @@ fun CollectionScreen(
                     collection = collection,
                     state = state,
                     onBookmark = {
-                        when {
-                            isGuest -> askSignIn = true
-                            state.saved -> askUnsave = true
-                            else -> onSave()
-                        }
+                        if (state.saved) askUnsave = true else onSave()
                     },
                 )
                 Spacer(Modifier.height(TujiSpace.S4))
@@ -163,16 +156,6 @@ fun CollectionScreen(
         )
     }
 
-    if (askSignIn) {
-        TujiPrompt(
-            title = stringResource(R.string.collection_sign_in_title),
-            message = null,
-            confirm = stringResource(R.string.auth_sign_in),
-            cancel = stringResource(R.string.cancel),
-            onConfirm = { askSignIn = false; onSignIn() },
-            onCancel = { askSignIn = false },
-        )
-    }
     if (askUnsave) {
         TujiPrompt(
             title = stringResource(R.string.collection_unsave_title),

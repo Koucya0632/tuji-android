@@ -16,7 +16,6 @@ import app.tuji.android.core.model.StudyStats
  * case that can never be returned is worse than a missing one: it looks handled.
  */
 data class TodayInputs(
-    val isGuest: Boolean = false,
     /** Null until the first fetch lands. */
     val stats: StudyStats? = null,
     val dailyGoal: Int = DEFAULT_DAILY_GOAL,
@@ -32,8 +31,6 @@ data class TodayInputs(
  * say, in the order the rules resolve.
  */
 enum class TodaySubtitle {
-    GuestBrowsing,
-
     /**
      * Stats have not arrived. A neutral line beats a wrong verdict —
      * 「都學過了」 flashing on a brand-new account while the first fetch is in
@@ -70,19 +67,16 @@ class TodayDecisions(private val inputs: TodayInputs) {
     private val goal: Int get() = maxOf(1, inputs.dailyGoal)
 
     val goalReached: Boolean
-        get() = !inputs.isGuest && (inputs.stats?.todayNew ?: 0) >= goal
+        get() = (inputs.stats?.todayNew ?: 0) >= goal
 
     /** New words still to learn. Zero until stats land, so nothing claims otherwise. */
     val newAvailable: Int get() = inputs.stats?.new ?: 0
 
     val reviewDisabled: Boolean
-        get() = inputs.isGuest || (inputs.stats?.due ?: 0) == 0
+        get() = (inputs.stats?.due ?: 0) == 0
 
     val newBlock: TodayNewBlock
         get() {
-            // A guest cannot study new words at all; the prompt to sign in is
-            // a different message from a dead end, so this stays None.
-            if (inputs.isGuest) return TodayNewBlock.None
             val stats = inputs.stats ?: return TodayNewBlock.None
             if (newAvailable == 0) return TodayNewBlock.AllLearned
             // Grey the button rather than let the user in only to bounce back
@@ -94,11 +88,10 @@ class TodayDecisions(private val inputs: TodayInputs) {
         }
 
     val newDisabled: Boolean
-        get() = inputs.isGuest || newBlock != TodayNewBlock.None
+        get() = newBlock != TodayNewBlock.None
 
     val subtitle: TodaySubtitle
         get() {
-            if (inputs.isGuest) return TodaySubtitle.GuestBrowsing
             val stats = inputs.stats ?: return TodaySubtitle.Unknown
             if (stats.due > 0) return TodaySubtitle.ReviewDue
             // Goal reached wins over everything below, so this line can never
@@ -116,7 +109,6 @@ class TodayDecisions(private val inputs: TodayInputs) {
      */
     val quotaAdjustment: Pair<Int, Int>?
         get() {
-            if (inputs.isGuest) return null
             val stats = inputs.stats ?: return null
             if ((stats.todayNew ?: 0) >= goal) return null
             if (newAvailable <= 0) return null

@@ -35,11 +35,9 @@ class TodayViewModelTest {
 
     private fun vm(
         source: StudyStatsReading,
-        isGuest: () -> Boolean = { false },
     ) = TodayViewModel(
         stats = source,
         direction = LearningDirection.ZH_JA,
-        isGuest = isGuest,
         scope = TestScope(dispatcher),
     )
 
@@ -75,15 +73,4 @@ class TodayViewModelTest {
             assertNull(vm.inputs.value.stats)
             assertEquals(TodaySubtitle.Unknown, TodayDecisions(vm.inputs.value).subtitle)
         }
-
-    @Test fun `signing out between refreshes is picked up`() = runTest(dispatcher) {
-        var guest = false
-        val vm = vm(reader { StudyStatsResponse(stats = good) }, isGuest = { guest })
-        vm.refresh(); advanceUntilIdle()
-        assertEquals(TodaySubtitle.ReviewDue, TodayDecisions(vm.inputs.value).subtitle)
-
-        guest = true
-        vm.refresh(); advanceUntilIdle()
-        assertEquals(TodaySubtitle.GuestBrowsing, TodayDecisions(vm.inputs.value).subtitle)
-    }
 }

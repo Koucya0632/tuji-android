@@ -18,10 +18,10 @@ class SettingsWriteTest {
     }
 
     /**
-     * A guest's read never succeeds — there is no account to read — so gating
-     * on it would lock a guest out of 設定 for good.
+     * A signed-out read never succeeds — there is no account to read — so
+     * gating on it would refuse every change for good.
      */
-    @Test fun `a guest's change is applied on the device and never saved`() {
+    @Test fun `a signed-out change is applied on the device and never saved`() {
         assertEquals(SettingsWrite.ApplyLocally, SettingsWrite.decide(signedIn = false, loaded = false))
         assertEquals(SettingsWrite.ApplyLocally, SettingsWrite.decide(signedIn = false, loaded = true))
     }

@@ -30,8 +30,6 @@ enum class BlockAction {
 enum class ViewerRelationship {
     Mine,
     Theirs,
-    /** Signed out: there is no account to report or block with. */
-    Guest,
     ;
 
     companion object {
@@ -44,12 +42,10 @@ enum class ViewerRelationship {
         fun of(
             authorHandle: String?,
             viewerHandle: String?,
-            isGuest: Boolean,
             isSelf: Boolean = false,
         ): ViewerRelationship? = when {
             isSelf -> Mine
             authorHandle.isNullOrBlank() -> null
-            isGuest -> Guest
             // The UID is server-assigned and immutable, so the compare is safe;
             // the worst a not-yet-loaded viewer can do is show the menu.
             viewerHandle != null && viewerHandle.equals(authorHandle, ignoreCase = true) -> Mine

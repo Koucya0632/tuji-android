@@ -12,7 +12,7 @@ enum class CompletionScope {
     WholeDictionary,
 
     /**
-     * Nothing to describe yet: signed in, settings loaded, no themes picked.
+     * Nothing to describe yet: settings loaded, no themes picked.
      * Reads 0 / 0 rather than inventing a denominator.
      */
     Pending,
@@ -31,12 +31,9 @@ data class CompletionReadout(val inputs: Inputs) {
 
     /** Every fact the rule depends on. Assembled by the screen; nothing in here is fetched. */
     data class Inputs(
-        val isGuest: Boolean,
         /** An empty theme list means nothing until settings have actually arrived. */
         val settingsLoaded: Boolean,
         val studyCategories: List<String>,
-        /** Guests have no SRS state; their progress is the local learned set. */
-        val guestLearnedCount: Int = 0,
         /** The server's per-theme `seen`, summed over the selection. */
         val seenInSelection: Int,
         /** The server's per-theme `total`, summed over the selection. */
@@ -63,7 +60,6 @@ data class CompletionReadout(val inputs: Inputs) {
              *   plus the user's own and taken-in cards.
              */
             fun from(
-                isGuest: Boolean,
                 settingsLoaded: Boolean,
                 studyCategories: List<String>,
                 progress: List<CategoryProgress>,
@@ -72,7 +68,6 @@ data class CompletionReadout(val inputs: Inputs) {
                 val picked = studyCategories.toSet()
                 val rows = if (picked.isEmpty()) progress else progress.filter { it.category in picked }
                 return Inputs(
-                    isGuest = isGuest,
                     settingsLoaded = settingsLoaded,
                     studyCategories = studyCategories,
                     seenInSelection = rows.sumOf { it.seen },
@@ -85,12 +80,12 @@ data class CompletionReadout(val inputs: Inputs) {
     }
 
     /**
-     * Signed in, settings have arrived, and no themes are picked. 今日 branches
+     * Settings have arrived and no themes are picked. 今日 branches
      * on this to show its 選擇主題 prompt; 我 to avoid labelling an
      * all-category number as a scoped one.
      */
     val showsThemePrompt: Boolean
-        get() = !inputs.isGuest && inputs.settingsLoaded && inputs.studyCategories.isEmpty()
+        get() = inputs.settingsLoaded && inputs.studyCategories.isEmpty()
 
     val scope: CompletionScope
         get() = when {
@@ -101,17 +96,12 @@ data class CompletionReadout(val inputs: Inputs) {
 
     /** Words studied at least once. With no themes picked it reads 0, matching the prompt. */
     val seen: Int
-        get() = when {
-            inputs.isGuest -> inputs.guestLearnedCount
-            showsThemePrompt -> 0
-            else -> inputs.seenInSelection
-        }
+        get() = if (showsThemePrompt) 0 else inputs.seenInSelection
 
     /**
      * Published words in the selection: the server's count when it has one,
      * else the local dictionary — **scoped the same way**. The fallback fires
-     * for guests, always, but also whenever the picked themes hold nothing on
-     * the server (自定義 and 物見), and an unscoped fallback there prints a
+     * whenever the picked themes hold nothing on the server (自定義 and 物見), and an unscoped fallback there prints a
      * denominator describing a selection nobody made.
      */
     val total: Int

@@ -38,29 +38,22 @@ class StudyThemesTest {
         val shelves = StudyThemes.todayShelves(
             CategoryShelf.shelves(categories, words),
             selected = listOf("custom", "community", "kitchen"),
-            isGuest = false,
         )
         assertEquals(listOf("custom" to 2, "community" to 1, "kitchen" to 2), shelves.map { it.category.id to it.count })
     }
 
-    @Test fun `a signed-in user sees exactly their picks, in the server's order`() {
+    @Test fun `the strip is exactly the picks, in the server's order`() {
         val shelves = StudyThemes.todayShelves(
             CategoryShelf.shelves(categories, catalogue),
             selected = listOf("office", "kitchen"),
-            isGuest = false,
         )
         assertEquals(listOf("kitchen", "office"), shelves.map { it.category.id })
     }
 
     /** Nothing picked is nothing shown: 今日 draws its 選擇主題 prompt instead. */
     @Test fun `no picks shows no shelves`() {
-        val shelves = StudyThemes.todayShelves(CategoryShelf.shelves(categories, catalogue), emptyList(), isGuest = false)
+        val shelves = StudyThemes.todayShelves(CategoryShelf.shelves(categories, catalogue), emptyList())
         assertEquals(emptyList<String>(), shelves.map { it.category.id })
-    }
-
-    @Test fun `a guest gets the first few shelves as a preview`() {
-        val shelves = StudyThemes.todayShelves(CategoryShelf.shelves(categories, catalogue), emptyList(), isGuest = true)
-        assertEquals(listOf("kitchen", "bathroom", "bedroom", "office"), shelves.map { it.category.id })
     }
 
     /** iOS's merge order: public < custom < saved, the later source winning. */

@@ -124,7 +124,7 @@ class CommunityViewModel(
         if (withSaved) reloadSaved()
     }
 
-    /** 已收藏. Only for a signed-in account; the screen shows guests a way to sign in instead. */
+    /** 已收藏. */
     fun loadSaved() {
         work.launch { reloadSaved() }
     }
