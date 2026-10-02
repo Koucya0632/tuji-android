@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
         // one in onNewIntent — both have to be handled or the user lands back
         // in Tuji still signed out, with nothing on screen to say why.
         app.supabase.handleDeeplinks(intent)
+        app.analytics.appOpened()
 
         setContent {
             // The face for everything before the account is known: the

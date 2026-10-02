@@ -70,6 +70,10 @@ class TujiApplication : Application() {
         TujiApiClient(baseUrl = BuildConfig.TUJI_BASE_URL, tokens = auth)
     }
 
+    val analytics: app.tuji.android.core.network.AppAnalytics by lazy {
+        app.tuji.android.core.network.AppAnalytics(api, appScope)
+    }
+
     /** The transport. [catalog] is the store that holds what it fetched. */
     val catalogReading: CatalogRepository by lazy { CatalogRepository(api) }
 
