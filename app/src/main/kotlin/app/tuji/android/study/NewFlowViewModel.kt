@@ -26,6 +26,8 @@ import app.tuji.android.core.study.SpellSubject
 import app.tuji.android.core.study.SpokenVoice
 import app.tuji.android.core.study.StudyLadder
 import app.tuji.android.core.study.StudyQuotas
+import app.tuji.android.core.study.StudyReportSubject
+import app.tuji.android.core.study.StudyReports
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.TileBoard
 import app.tuji.android.core.study.StudyChoiceSession
@@ -572,4 +574,17 @@ class NewFlowViewModel(
     private companion object {
         const val TAG = "TujiNew"
     }
+}
+
+/**
+ * 報錯: the stage on screen, and what the user chose on it — the self-rating in
+ * 認識, the pick in 選字, whatever is on the board in 拼字.
+ */
+internal fun NewFlowViewModel.Stage.reportSubject(): StudyReportSubject = when (this) {
+    is NewFlowViewModel.Stage.Recognize ->
+        StudyReportSubject(item, NewTaskKind.Recognize.wire, rated?.wire)
+    is NewFlowViewModel.Stage.Identify ->
+        StudyReportSubject(item, NewTaskKind.Identify.wire, picked)
+    is NewFlowViewModel.Stage.Spell ->
+        StudyReportSubject(item, NewTaskKind.Spell.wire, StudyReports.spellAttempt(form, chosen))
 }

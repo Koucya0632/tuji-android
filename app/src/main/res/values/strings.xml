@@ -661,4 +661,23 @@
     <string name="wordlist_name">Name</string>
     <string name="wordlist_name_footer">Up to 40 characters</string>
     <string name="wordlist_name_placeholder">e.g. Kitchen things</string>
+    <string name="study_more">More</string>
+    <string name="study_report">Report error</string>
+    <string name="study_report_title">Report a study problem</string>
+    <string name="study_report_question">What went wrong in this session?</string>
+    <string name="study_report_issue_image">Image is wrong or unclear</string>
+    <string name="study_report_issue_content">Word, translation, or explanation is wrong</string>
+    <string name="study_report_issue_audio">Pronunciation or audio problem</string>
+    <string name="study_report_issue_answer">Question or answer is wrong</string>
+    <string name="study_report_issue_ui">Display or interaction problem</string>
+    <string name="study_report_issue_other">Other issue</string>
+    <string name="study_report_detail">Tell us what could be better (required)</string>
+    <string name="study_report_placeholder">Describe the problem and the correct content…</string>
+    <string name="study_report_submitting">Submitting…</string>
+    <string name="study_report_submit">Submit error report</string>
+    <string name="study_report_thanks">Thanks for the report! We\'ll check and fix it soon.</string>
+    <string name="study_report_failed">Submission failed — your input is kept. Please try again.</string>
+    <string name="study_report_custom_title">Error reports aren\'t available for custom cards</string>
+    <string name="study_report_custom_message">Error reports only cover official word content. For a custom card, delete and retake it in My Atlas, or tell us via Feedback on the Me tab.</string>
+    <string name="study_report_custom_ok">Got it</string>
 </resources>

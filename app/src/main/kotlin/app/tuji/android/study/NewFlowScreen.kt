@@ -81,6 +81,7 @@ import app.tuji.android.core.design.WordPicture
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.SRSRating
+import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordDetail
@@ -126,8 +127,11 @@ fun NewFlowScreen(
     /** Says a tapped 詞塊 out loud. Always synthesised — a 詞塊 has no clip. */
     speech: WordSpeaking? = null,
     accent: String = "us",
+    /** Where 報錯 goes. Null draws no ⋯. */
+    reporter: StudyReporter? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val report = remember { StudyReportState() }
     val milestone by vm.milestone.collectAsStateWithLifecycle()
     var started by rememberSaveable { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
@@ -187,6 +191,7 @@ fun NewFlowScreen(
                         progress = s.ladder.progress,
                         unsynced = s.unsynced,
                         onClose = { leaving = true },
+                        onMore = reporter?.let { { report.menuOpen = true } },
                     )
                     StagePips(s.steps)
                     Spacer(Modifier.height(TujiSpace.S3))
@@ -236,6 +241,15 @@ fun NewFlowScreen(
                     onClose()
                 },
                 onCancel = { leaving = false },
+            )
+        }
+
+        reporter?.let {
+            StudyReportLayer(
+                state = report,
+                mode = StudyMode.New,
+                reporter = it,
+                subject = { (state as? NewFlowViewModel.State.Studying)?.stage?.reportSubject() },
             )
         }
     }

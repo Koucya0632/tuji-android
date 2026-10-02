@@ -661,4 +661,23 @@
     <string name="wordlist_name">名稱</string>
     <string name="wordlist_name_footer">最多 40 個字</string>
     <string name="wordlist_name_placeholder">例如：廚房用品</string>
+    <string name="study_more">更多</string>
+    <string name="study_report">報錯</string>
+    <string name="study_report_title">回報學習問題</string>
+    <string name="study_report_question">當前學習遇到什麼問題呢？</string>
+    <string name="study_report_issue_image">圖片不正確或不清楚</string>
+    <string name="study_report_issue_content">單字、翻譯或解釋有誤</string>
+    <string name="study_report_issue_audio">發音或音訊有問題</string>
+    <string name="study_report_issue_answer">題目或答案有誤</string>
+    <string name="study_report_issue_ui">頁面顯示或操作異常</string>
+    <string name="study_report_issue_other">其他問題</string>
+    <string name="study_report_detail">請詳細說說哪裡需要改進呢？（必填）</string>
+    <string name="study_report_placeholder">請描述你看到的問題與正確內容…</string>
+    <string name="study_report_submitting">提交中…</string>
+    <string name="study_report_submit">提交報錯</string>
+    <string name="study_report_thanks">謝謝你的回報！我們會盡快確認並改進。</string>
+    <string name="study_report_failed">提交失敗，內容已保留，請再試一次。</string>
+    <string name="study_report_custom_title">自制卡片暫不支援報錯</string>
+    <string name="study_report_custom_message">報錯僅適用於官方單字內容。自制卡片如有問題，可以到自制圖鑑刪除重拍，或透過「我的」頁的意見收集告訴我們。</string>
+    <string name="study_report_custom_ok">知道了</string>
 </resources>

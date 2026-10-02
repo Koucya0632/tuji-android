@@ -22,6 +22,7 @@ import app.tuji.android.core.model.WordNotesResponse
 import app.tuji.android.core.model.StudyAnswerResponse
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyQueueResponse
+import app.tuji.android.core.model.StudyReportPayload
 import app.tuji.android.core.model.StudyStatsResponse
 
 /**
@@ -34,6 +35,14 @@ import app.tuji.android.core.model.StudyStatsResponse
  */
 interface AnswerSubmission {
     suspend fun submitAnswer(payload: StudyAnswerPayload): StudyAnswerResponse
+}
+
+/**
+ * Filing a study 報錯, as a role. Throws on anything the server did not accept,
+ * so the form only says 謝謝 for a report that actually landed.
+ */
+interface StudyReportSubmitting {
+    suspend fun submitReport(payload: StudyReportPayload)
 }
 
 /** Reading the day's counts, as a role. */
@@ -162,7 +171,12 @@ class StudyRepository(private val api: TujiApiClient) :
     PersonalWordsAccess,
     WordNotesAccess,
     WordListsAccess,
+    StudyReportSubmitting,
     AccountErasure {
+
+    override suspend fun submitReport(payload: StudyReportPayload) {
+        api.post<Unit>(Endpoint.StudyReports, payload)
+    }
 
     override suspend fun wordLists(learning: LearningDirection, containing: String?): WordListsResponse =
         api.get(Endpoint.UsersWordLists(learning, containing))
