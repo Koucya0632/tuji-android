@@ -116,12 +116,19 @@ fun TodayScreen(
 ) {
     val decisions = TodayDecisions(inputs)
     val density = LocalDensity.current
-    // One tile's height, scaled with the text size — iOS's `themeTileHeight`.
-    val stripFloor = 68.dp * density.fontScale * 2 + TujiSpace.S2
+    // One tile's height: measured once a tile is drawn, until then iOS's
+    // `themeTileHeight` scaled with the text size.
+    var tileHeight by remember { mutableStateOf<Dp?>(null) }
+    val tile = tileHeight ?: (68.dp * density.fontScale)
+    val stripFloor = tile * 2 + TujiSpace.S2
+    // No taller than the rows need: four themes in a window sized for twenty
+    // leave a screen of empty paper under them.
+    val rows = (shelves.size + 1) / 2
+    val stripContent = tile * rows + TujiSpace.S2 * (rows - 1).coerceAtLeast(0)
     // What the page's measurement left for the grid. A new page height drops it
     // back to the floor so the grid re-measures from scratch.
     var stripSpace by remember(pageHeight) { mutableStateOf<Dp?>(null) }
-    val stripHeight = maxOf(stripSpace ?: 0.dp, stripFloor)
+    val stripHeight = minOf(maxOf(stripSpace ?: 0.dp, stripFloor), stripContent)
 
     // Measured rather than weighted: inside a vertical scroll the proposal is
     // unbounded, so a flexible grid would take its whole height and the page
@@ -137,8 +144,13 @@ fun TodayScreen(
         }
     }
 
-    Column(measure, verticalArrangement = Arrangement.spacedBy(TujiSpace.S5)) {
-        Spacer(Modifier.height(TujiSpace.S3))
+    // Padding, not spacers: a spacer is a child, so the column's gap lands on
+    // either side of it as well — 16dp at the top read as 56, and the bottom as
+    // 104 under the themes. iOS pads the stack: s3 above, s4 below.
+    Column(
+        measure.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S5),
+    ) {
         Greeting(
             decisions = decisions,
             stats = inputs.stats,
@@ -163,9 +175,9 @@ fun TodayScreen(
                 onOpenShelf = onOpenShelf,
                 onOpenStudyThemes = onOpenStudyThemes,
                 height = stripHeight,
+                onTileHeight = { tileHeight = it },
             )
         }
-        Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
 
@@ -192,7 +204,9 @@ private fun Themes(
     onOpenShelf: (String) -> Unit,
     onOpenStudyThemes: () -> Unit,
     height: Dp,
+    onTileHeight: (Dp) -> Unit,
 ) {
+    val density = LocalDensity.current
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
@@ -225,6 +239,7 @@ private fun Themes(
                     status = themeStatus(shelf.category.id),
                     uiLang = uiLang,
                     onClick = { onOpenShelf(shelf.category.id) },
+                    modifier = Modifier.onSizeChanged { onTileHeight(with(density) { it.height.toDp() }) },
                 )
             }
         }
