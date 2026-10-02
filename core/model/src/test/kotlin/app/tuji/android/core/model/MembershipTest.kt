@@ -31,6 +31,15 @@ class MembershipTest {
         assertEquals(listOf("fruits", "bedroom"), e.membership?.studyableCategories)
     }
 
+    @Test fun `a manual lifetime grant has membership access without a store purchase`() {
+        val e = decode("""{"plan":"free","membership":{"tier":"lifetime","lifetime":{"source":"grant","acquiredAt":"2026-10-01T00:00:00Z"},"policy":"v2","canPurchaseLifetime":false,"canPurchasePro":true,"studyableCategories":null}}""")
+        assertEquals(MembershipTier.Lifetime, e.membershipTier)
+        assertTrue(e.membershipTier.isMember)
+        assertEquals("grant", e.membership?.lifetime?.source)
+        assertFalse(e.membership!!.canPurchaseLifetime)
+        assertNull(e.membership.studyableCategories)
+    }
+
     @Test fun `a server without membership falls back to plan`() {
         assertEquals(MembershipTier.Pro, decode("""{"plan":"pro"}""").membershipTier)
         assertEquals(MembershipTier.Free, decode("""{"plan":"free"}""").membershipTier)
