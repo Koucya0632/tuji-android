@@ -132,16 +132,10 @@ class AuthService(
 
     // Guest mode
 
-    fun enterGuestMode() {
-        _session.value = _session.value.enterGuest()
-    }
-
     /** So a guest can land on Welcome and pick a flow. */
     fun exitGuestMode() {
         _session.value = _session.value.exitGuest()
     }
-
-    val cameFromGuest: Boolean get() = _session.value.cameFromGuest
 
     // Email
 

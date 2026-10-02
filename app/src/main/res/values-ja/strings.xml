@@ -19,8 +19,6 @@
     <string name="welcome_google_signing_in">Googleでログイン中...</string>
     <string name="welcome_use_email">メールアドレスを使う</string>
     <string name="welcome_have_account">アカウントをお持ちの方はログイン</string>
-    <string name="welcome_browse_as_guest">見てまわる → ゲストモード</string>
-    <string name="welcome_back_to_guest">ゲストモードに戻る</string>
     <string name="welcome_close">閉じる</string>
     <string name="welcome_opening_browser">Appleでサインインを開いています…</string>
     <string name="auth_create_account">アカウント作成</string>

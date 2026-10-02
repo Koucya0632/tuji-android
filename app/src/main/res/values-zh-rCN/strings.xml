@@ -19,8 +19,6 @@
     <string name="welcome_google_signing_in">Google 登录中...</string>
     <string name="welcome_use_email">使用 Email</string>
     <string name="welcome_have_account">已有账号？登录</string>
-    <string name="welcome_browse_as_guest">先逛逛 → 访客模式</string>
-    <string name="welcome_back_to_guest">返回访客模式</string>
     <string name="welcome_close">关闭</string>
     <string name="welcome_opening_browser">正在打开 Apple 登录…</string>
     <string name="auth_create_account">创建账号</string>

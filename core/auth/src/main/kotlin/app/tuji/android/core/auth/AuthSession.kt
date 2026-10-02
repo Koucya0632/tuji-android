@@ -9,12 +9,9 @@ package app.tuji.android.core.auth
  * them a fact a caller must know and none of them stated by a type, were
  * verified by nobody:
  *
- *  - [enterGuest] only works from [AuthState.SignedOut] and [exitGuest] only
- *    from [AuthState.Guest]. From anywhere else they are **silent no-ops** —
- *    no throw, no signal, nothing happens.
- *  - [cameFromGuest] is what stops the Welcome screen being an exit-less dead
- *    end for someone who tapped 登入 by accident. It is set by *leaving* guest
- *    mode and cleared by signing out.
+ *  - [exitGuest] only works from [AuthState.Guest]. From anywhere else it is
+ *    a **silent no-op** — no throw, no signal, nothing happens. (Welcome no
+ *    longer offers a way *into* guest mode.)
  *  - **A failed session refresh does not mean signed out.** If a session is
  *    still cached and the error is anything other than "no session at all",
  *    the likely cause is a flat network, and bouncing an authenticated user to
@@ -30,11 +27,6 @@ package app.tuji.android.core.auth
  */
 data class AuthSession(
     val state: AuthState = AuthState.Checking,
-    /**
-     * True when Welcome was reached by *leaving* guest mode rather than at
-     * first launch, so Welcome can offer a way back to browsing.
-     */
-    val cameFromGuest: Boolean = false,
 ) {
     val signedInUser: SessionUser?
         get() = (state as? AuthState.SignedIn)?.user
@@ -66,13 +58,9 @@ data class AuthSession(
 
     // Guest
 
-    /** No-op unless signed out. Stated here because the type cannot say it. */
-    fun enterGuest(): AuthSession =
-        if (state is AuthState.SignedOut) copy(state = AuthState.Guest, cameFromGuest = false) else this
-
     /** No-op unless in guest mode. */
     fun exitGuest(): AuthSession =
-        if (state is AuthState.Guest) copy(state = AuthState.SignedOut, cameFromGuest = true) else this
+        if (state is AuthState.Guest) copy(state = AuthState.SignedOut) else this
 
     // Sign in / out
 
@@ -90,7 +78,7 @@ data class AuthSession(
     fun observedNoSession(): AuthSession =
         if (state is AuthState.Guest) this else copy(state = AuthState.SignedOut)
 
-    fun signedOut() = copy(state = AuthState.SignedOut, cameFromGuest = false)
+    fun signedOut() = copy(state = AuthState.SignedOut)
 
     // Profile mirror
 

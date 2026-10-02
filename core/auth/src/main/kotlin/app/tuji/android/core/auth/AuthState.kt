@@ -7,7 +7,6 @@ package app.tuji.android.core.auth
  *      └─ resolveSession() ──► SignedIn  if a persisted session exists
  *                          └─► SignedOut otherwise
  *   SignedOut
- *      ├─ enterGuest() ──► Guest
  *      └─ signIn()     ──► SignedIn
  *   Guest
  *      └─ exitGuest()  ──► SignedOut
