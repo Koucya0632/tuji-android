@@ -661,4 +661,23 @@
     <string name="wordlist_name">名前</string>
     <string name="wordlist_name_footer">40文字まで</string>
     <string name="wordlist_name_placeholder">例：キッチン用品</string>
+    <string name="study_more">その他</string>
+    <string name="study_report">誤りを報告</string>
+    <string name="study_report_title">学習の問題を報告</string>
+    <string name="study_report_question">学習で何か問題がありましたか？</string>
+    <string name="study_report_issue_image">画像が正しくない、または不鮮明</string>
+    <string name="study_report_issue_content">単語・翻訳・解説に誤りがある</string>
+    <string name="study_report_issue_audio">発音・音声に問題がある</string>
+    <string name="study_report_issue_answer">問題・答えに誤りがある</string>
+    <string name="study_report_issue_ui">画面表示・操作の不具合</string>
+    <string name="study_report_issue_other">その他の問題</string>
+    <string name="study_report_detail">改善してほしい点を詳しく教えてください（必須）</string>
+    <string name="study_report_placeholder">見つけた問題と正しい内容を教えてください…</string>
+    <string name="study_report_submitting">送信中…</string>
+    <string name="study_report_submit">誤り報告を送信</string>
+    <string name="study_report_thanks">ご報告ありがとうございます！早急に確認して改善します。</string>
+    <string name="study_report_failed">送信に失敗しました。内容は保存されています。もう一度お試しください。</string>
+    <string name="study_report_custom_title">自作カードは誤り報告に対応していません</string>
+    <string name="study_report_custom_message">誤り報告は公式の単語コンテンツのみ対象です。自作カードに問題がある場合は、マイ図鑑で削除して撮り直すか、「マイページ」のフィードバックからお知らせください。</string>
+    <string name="study_report_custom_ok">わかった</string>
 </resources>

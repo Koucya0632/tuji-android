@@ -1,7 +1,10 @@
 package app.tuji.android.core.design
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -22,6 +25,12 @@ import androidx.compose.ui.window.DialogWindowProvider
  */
 @Composable
 fun TujiWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    // A dialog is a view of its own, and every Compose view provides its own
+    // context and configuration at the root — which drops the app's chosen
+    // language (`ProvideAppLanguage`) and draws a `stringResource` inside
+    // the window in the *device's* language. Carried across by hand.
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
@@ -31,6 +40,10 @@ fun TujiWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
             window?.setDimAmount(0f)
             window?.setWindowAnimations(0)
         }
-        content()
+        CompositionLocalProvider(
+            LocalContext provides context,
+            LocalConfiguration provides configuration,
+            content = content,
+        )
     }
 }

@@ -28,8 +28,8 @@ import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
 
 /**
- * The bar every study session wears: 先離開, the unsynced count, which session
- * this is, and how far along it is.
+ * The bar every study session wears: 先離開, the unsynced count, ⋯ for 報錯,
+ * which session this is, and how far along it is.
  *
  * Named for what it is rather than for 複習, which is where it started — the
  * next flow that needs it has to be able to find it.
@@ -45,6 +45,8 @@ internal fun StudyHeader(
     progress: Double,
     unsynced: Int,
     onClose: () -> Unit,
+    /** ⋯ — the 報錯 menu. Null draws nothing, as before a session starts. */
+    onMore: (() -> Unit)? = null,
 ) {
     Column(Modifier.padding(bottom = TujiSpace.S3)) {
         Row(
@@ -67,15 +69,29 @@ internal fun StudyHeader(
             ) {
                 TujiGlyph.Close(tint = TujiColor.Ink)
             }
-            if (unsynced > 0) {
-                // Said out loud rather than swallowed: these answers are on
-                // disk and will replay, and a silent count is how iOS's
-                // predecessor lost them.
-                Text(
-                    stringResource(R.string.study_unsynced, unsynced),
-                    style = TujiType.label,
-                    color = TujiColor.Ink3,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (unsynced > 0) {
+                    // Said out loud rather than swallowed: these answers are on
+                    // disk and will replay, and a silent count is how iOS's
+                    // predecessor lost them.
+                    Text(
+                        stringResource(R.string.study_unsynced, unsynced),
+                        style = TujiType.label,
+                        color = TujiColor.Ink3,
+                    )
+                }
+                if (onMore != null) {
+                    val moreLabel = stringResource(R.string.study_more)
+                    Box(
+                        Modifier
+                            .size(44.dp)
+                            .semantics { contentDescription = moreLabel }
+                            .tujiClickable(onClick = onMore),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        TujiGlyph.More(tint = TujiColor.Ink)
+                    }
+                }
             }
         }
         // Which session this is, and how much of it is left. 墨3 for the mode

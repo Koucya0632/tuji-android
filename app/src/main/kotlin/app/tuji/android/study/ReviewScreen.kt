@@ -85,6 +85,7 @@ import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.MasteryDelta
 import app.tuji.android.core.model.ReviewQuestionKind
 import app.tuji.android.core.model.SRSRating
+import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyExample
 import app.tuji.android.core.model.StudyQueueItem
 import app.tuji.android.core.model.TargetLanguage
@@ -100,6 +101,7 @@ import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
 import app.tuji.android.core.study.SentenceHighlight
 import app.tuji.android.core.study.StudyOptionState
+import app.tuji.android.core.study.StudyReports
 import kotlinx.coroutines.delay
 
 /**
@@ -134,8 +136,11 @@ fun ReviewScreen(
      * the shell has not read it yet, which the line says rather than guessing.
      */
     streak: Int? = null,
+    /** Where 報錯 goes. Null draws no ⋯. */
+    reporter: StudyReporter? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val report = remember { StudyReportState() }
     val milestone by vm.milestone.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
     // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
@@ -188,6 +193,7 @@ fun ReviewScreen(
                         // the answer buttons, and one mis-tap would otherwise
                         // end a session the user was halfway through.
                         onClose = { leaving = true },
+                        onMore = reporter?.let { { report.menuOpen = true } },
                     )
                     QuestionBody(
                         state = s,
@@ -255,6 +261,15 @@ fun ReviewScreen(
                     onClose()
                 },
                 onCancel = { leaving = false },
+            )
+        }
+
+        reporter?.let {
+            StudyReportLayer(
+                state = report,
+                mode = StudyMode.Review,
+                reporter = it,
+                subject = { StudyReports.review((state as? ReviewViewModel.State.Studying)?.session?.question) },
             )
         }
     }

@@ -660,6 +660,14 @@ interface Endpoint {
         )
     }
 
+    /** A 報錯 filed from inside a study session. A write, so nothing to cache. */
+    data object StudyReports : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/reports",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /**
      * Technically anonymous-friendly (returns null), but kept authed so a debug
      * button actually exercises the Bearer path. The backend tolerates either.

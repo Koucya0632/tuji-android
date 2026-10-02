@@ -163,6 +163,7 @@ import app.tuji.android.today.TodayViewModel
 import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
+import app.tuji.android.study.StudyReporter
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
 import kotlinx.coroutines.launch
@@ -699,6 +700,15 @@ private fun SignedInScreens(
         StudyMode.Review -> AppRoute.Review
         null -> nav.current
     }
+    // 報錯 from inside either session. Built once here so both screens send
+    // the same version string and the same interface language.
+    val studyReporter = remember(uiLang) {
+        StudyReporter(
+            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            uiLang = uiLang,
+            submit = app.study::submitReport,
+        )
+    }
     when (studyFlow) {
         AppRoute.Review -> {
             val haptics = rememberTujiHaptics()
@@ -746,6 +756,7 @@ private fun SignedInScreens(
                 // session, because the reload that follows it belongs to the
                 // shell — this screen only prints the number it is handed.
                 streak = progress.streak?.current,
+                reporter = studyReporter,
                 onClose = {
                     // A session just moved the scores every badge in 圖鑑
                     // draws. Without this the user finishes twenty cards,
@@ -818,6 +829,7 @@ private fun SignedInScreens(
                 onBookmark = app.cardsSourceStore::toggle,
                 speech = app.speech,
                 accent = settings.accent,
+                reporter = studyReporter,
                 onClose = {
                     refreshTick++
                     nav = nav.pop()
