@@ -564,7 +564,7 @@
     <string name="today_learn_new">學新字</string>
     <string name="search_open">搜尋</string>
     <string name="today_themes">主題</string>
-    <string name="today_themes_all">學習主題 →</string>
+    <string name="today_themes_all">更換學習主題</string>
     <string name="today_theme_prompt_title">還沒選學習主題</string>
     <string name="today_theme_prompt_body">選幾個你想學的主題，這裡會顯示它們，學新字也會從中出題。</string>
     <string name="today_theme_prompt_cta">選擇主題</string>
