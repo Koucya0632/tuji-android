@@ -564,7 +564,7 @@
     <string name="today_learn_new">New words</string>
     <string name="search_open">Search</string>
     <string name="today_themes">Topics</string>
-    <string name="today_themes_all">Study topics →</string>
+    <string name="today_themes_all">Change topics</string>
     <string name="today_theme_prompt_title">No study topics chosen yet</string>
     <string name="today_theme_prompt_body">Pick a few topics — they’ll show here and new words will come from them.</string>
     <string name="today_theme_prompt_cta">Choose topics</string>

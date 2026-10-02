@@ -564,7 +564,7 @@
     <string name="today_learn_new">新出単語</string>
     <string name="search_open">検索</string>
     <string name="today_themes">テーマ</string>
-    <string name="today_themes_all">学習テーマ →</string>
+    <string name="today_themes_all">テーマを変更</string>
     <string name="today_theme_prompt_title">学習テーマが未選択です</string>
     <string name="today_theme_prompt_body">学びたいテーマをいくつか選ぶと、ここに表示され、新出単語もそこから出題されます。</string>
     <string name="today_theme_prompt_cta">テーマを選ぶ</string>

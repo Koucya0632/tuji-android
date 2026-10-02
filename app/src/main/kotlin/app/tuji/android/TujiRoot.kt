@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import app.tuji.android.core.design.TujiGlyph
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -1662,6 +1663,8 @@ private fun TodayColumn(
         Modifier
     }
     TujiPullToRefresh(onRefresh = onRefresh) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val pageHeight = maxHeight
     Column(Modifier.fillMaxSize().then(spikeDoor).verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
@@ -1677,7 +1680,9 @@ private fun TodayColumn(
             uiLang = uiLang,
             onOpenShelf = onOpenShelf,
             onOpenStudyThemes = onOpenStudyThemes,
+            pageHeight = pageHeight,
         )
+    }
     }
     }
 }

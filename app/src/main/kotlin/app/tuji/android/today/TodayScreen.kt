@@ -34,8 +34,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import app.tuji.android.core.design.TujiGlyph
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import app.tuji.android.core.catalog.CategoryShelf
@@ -100,11 +107,50 @@ fun TodayScreen(
     uiLang: String = "zh-Hant",
     onOpenShelf: (String) -> Unit = {},
     onOpenStudyThemes: () -> Unit = {},
+    /**
+     * The height the page scrolls in. The themes grid takes whatever of it the
+     * rest of the page leaves, so the page comes out one screen tall; null
+     * leaves the grid at its two-row floor.
+     */
+    pageHeight: Dp? = null,
 ) {
     val decisions = TodayDecisions(inputs)
+    val density = LocalDensity.current
+    // One tile's height: measured once a tile is drawn, until then iOS's
+    // `themeTileHeight` scaled with the text size.
+    var tileHeight by remember { mutableStateOf<Dp?>(null) }
+    val tile = tileHeight ?: (68.dp * density.fontScale)
+    val stripFloor = tile * 2 + TujiSpace.S2
+    // No taller than the rows need: four themes in a window sized for twenty
+    // leave a screen of empty paper under them.
+    val rows = (shelves.size + 1) / 2
+    val stripContent = tile * rows + TujiSpace.S2 * (rows - 1).coerceAtLeast(0)
+    // What the page's measurement left for the grid. A new page height drops it
+    // back to the floor so the grid re-measures from scratch.
+    var stripSpace by remember(pageHeight) { mutableStateOf<Dp?>(null) }
+    val stripHeight = minOf(maxOf(stripSpace ?: 0.dp, stripFloor), stripContent)
 
-    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S5)) {
-        Spacer(Modifier.height(TujiSpace.S3))
+    // Measured rather than weighted: inside a vertical scroll the proposal is
+    // unbounded, so a flexible grid would take its whole height and the page
+    // would grow instead. Everything that is not the grid is `total - grid`,
+    // and what is left of the page after that is the grid's. It settles in one
+    // extra pass and re-settles whenever the text size moves it.
+    val measure = if (pageHeight == null) {
+        Modifier
+    } else {
+        Modifier.onSizeChanged { size ->
+            val total = with(density) { size.height.toDp() }
+            stripSpace = pageHeight - (total - stripHeight)
+        }
+    }
+
+    // Padding, not spacers: a spacer is a child, so the column's gap lands on
+    // either side of it as well — 16dp at the top read as 56, and the bottom as
+    // 104 under the themes. iOS pads the stack: s3 above, s4 below.
+    Column(
+        measure.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S5),
+    ) {
         Greeting(
             decisions = decisions,
             stats = inputs.stats,
@@ -128,22 +174,26 @@ fun TodayScreen(
                 uiLang = uiLang,
                 onOpenShelf = onOpenShelf,
                 onOpenStudyThemes = onOpenStudyThemes,
+                height = stripHeight,
+                onTileHeight = { tileHeight = it },
             )
         }
-        Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
     }
 }
 
 /**
  * The themes strip.
  *
- * **Horizontal, not a grid.** Three tiles fill a row and the screen simply
- * stops; scrolling says "there is more" and hands the vertical space back to
- * the ink block above it.
+ * **Two across, in a window that scrolls on its own** and takes whatever the
+ * page has left — iOS's shape. A horizontal strip hid every theme past the
+ * third behind a sideways swipe; letting the page grow instead would push
+ * everything below twenty themes off the bottom. The section keeps its height
+ * and the tiles move inside it.
  *
- * The link is named for **where it goes**: the strip shows the themes you
- * picked, so the action beside it changes that pick. iOS's once said 「全部 →」,
- * promising the whole catalogue and delivering a multi-select; browsing every
+ * The link is named for **what it does**: the strip shows the themes you
+ * picked, so the action beside it changes that pick. It once said 「全部 →」,
+ * promising the whole catalogue and delivering a multi-select, then
+ * 「學習主題 →」, which names the destination but not the verb; browsing every
  * theme is 主題's job, on 圖鑑.
  */
 @Composable
@@ -153,7 +203,10 @@ private fun Themes(
     uiLang: String,
     onOpenShelf: (String) -> Unit,
     onOpenStudyThemes: () -> Unit,
+    height: Dp,
+    onTileHeight: (Dp) -> Unit,
 ) {
+    val density = LocalDensity.current
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
@@ -173,9 +226,12 @@ private fun Themes(
                 modifier = Modifier.tujiClickable(onClick = onOpenStudyThemes),
             )
         }
-        LazyRow(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             contentPadding = PaddingValues(horizontal = TujiSpace.S4),
             horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            modifier = Modifier.fillMaxWidth().height(height),
         ) {
             items(shelves, key = { it.category.id }) { shelf ->
                 ThemeTile(
@@ -183,7 +239,7 @@ private fun Themes(
                     status = themeStatus(shelf.category.id),
                     uiLang = uiLang,
                     onClick = { onOpenShelf(shelf.category.id) },
-                    modifier = Modifier.width(160.dp),
+                    modifier = Modifier.onSizeChanged { onTileHeight(with(density) { it.height.toDp() }) },
                 )
             }
         }
