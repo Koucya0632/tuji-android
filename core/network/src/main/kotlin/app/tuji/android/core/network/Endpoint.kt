@@ -20,6 +20,14 @@ import app.tuji.android.core.model.StudyMode
 interface Endpoint {
     val descriptor: EndpointDescriptor
 
+    /** Anonymous usage events; never attach an account token. */
+    data object Events : Endpoint {
+        override val descriptor = EndpointDescriptor(
+            path = "/api/events",
+            policy = EndpointPolicy.PublicFresh,
+        )
+    }
+
     /** The catalogue for one UI language and one learning direction. */
     data class Words(val lang: String, val learning: LearningDirection) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
