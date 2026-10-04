@@ -129,6 +129,7 @@ import app.tuji.android.profile.BlockedAuthorsScreen
 import app.tuji.android.manage.AtlasManageScreen
 import app.tuji.android.manage.AtlasManageViewModel
 import app.tuji.android.manage.CollectionEditScreen
+import app.tuji.android.manage.CreateCollectionSheet
 import app.tuji.android.manage.CollectionEditViewModel
 import app.tuji.android.manage.MyCollectionsViewModel
 import app.tuji.android.core.community.DeleteWarning
@@ -1175,7 +1176,8 @@ private fun SignedInScreens(
                         onRetry = vm::load,
                         onTitle = vm::setTitle,
                         onDescription = vm::setDescription,
-                        onSaveMeta = vm::saveMeta,
+                        onSaveMeta = { vm.saveMeta() },
+                        onSaveThenLeave = { vm.saveMeta { if (nav.current == route) nav = nav.pop() } },
                         onAvatar = vm::uploadAvatar,
                         onOpenPicker = vm::loadCandidates,
                         onAdd = vm::addMember,
@@ -1409,6 +1411,7 @@ private fun SignedInScreens(
                 }
 
                 is AppRoute.Author -> {
+                    var creatingCollection by remember { mutableStateOf(false) }
                     val vm = remember(route.handle) {
                         AuthorViewModel(handle = route.handle, atlas = app.atlas).also { it.load() }
                     }
@@ -1426,7 +1429,32 @@ private fun SignedInScreens(
                         onReport = { reason -> community.report(ReportTarget.Author(route.handle), reason) },
                         onBlock = { community.block(route.handle) { if (nav.current == route) nav = nav.pop() } },
                         onUnblock = { community.unblock(route.handle) },
+                        onEditProfile = { nav = nav.push(AppRoute.EditProfile) },
+                        onCreateCollection = {
+                            // A non-member's 合集 would be refused (402), so the
+                            // button goes where that answer would have sent them.
+                            if (MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked) {
+                                openMembership()
+                            } else {
+                                creatingCollection = true
+                            }
+                        },
                     )
+                    // A new 合集 is a draft, and this page shows only what is
+                    // public — so the editor opens, which is also where its cards
+                    // and 公開合集 are.
+                    if (creatingCollection) {
+                        CreateCollectionSheet(
+                            state = myCollectionsState,
+                            onCreate = { title, description ->
+                                myCollections.create(title, description) { created ->
+                                    creatingCollection = false
+                                    if (nav.current == route) nav = nav.push(AppRoute.CollectionEdit(created.id))
+                                }
+                            },
+                            onDismiss = { creatingCollection = false; myCollections.dismissCreateError() },
+                        )
+                    }
                 }
 
                 AppRoute.Capture -> {

@@ -204,7 +204,9 @@ fun CollectionScreen(
 
 @Composable
 private fun Cover(collection: AtlasPublicCollection, onOpenAuthor: (String) -> Unit) {
-    Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f)) {
+    // 16:9, the crop every other hero in the app uses — at 4:3 more than half
+    // the page went by before the first card, the thing the reader came for.
+    Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
         CollectionIdentityTile(collection, Modifier.fillMaxSize())
         // One-way scrim for legibility, not decoration.
         Box(

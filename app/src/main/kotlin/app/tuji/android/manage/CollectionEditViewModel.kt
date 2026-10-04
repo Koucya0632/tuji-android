@@ -57,7 +57,11 @@ class CollectionEditViewModel(
         val added: Set<String> = emptySet(),
     ) {
         val review: ReviewStatus get() = ReviewStatus.of(collection?.reviewStatus)
-        val canSaveMeta: Boolean get() = !savingMeta && CollectionAuthoringRules.titleValid(title)
+        /** The words differ from what the server holds — what 儲存 lights up for, and what leaving asks about. */
+        val isMetaDirty: Boolean
+            get() = collection != null &&
+                (title.trim() != collection.title.trim() || description.trim() != collection.description.orEmpty().trim())
+        val canSaveMeta: Boolean get() = !savingMeta && CollectionAuthoringRules.titleValid(title) && isMetaDirty
         val canSubmit: Boolean get() = CollectionAuthoringRules.canSubmit(review, members, submitting)
         val canWithdraw: Boolean get() = !withdrawing && review.canWithdraw
         val unpublishedCount: Int get() = CollectionAuthoringRules.unpublishedCount(members)
@@ -83,14 +87,28 @@ class CollectionEditViewModel(
         _state.value = _state.value.copy(description = value, metaSaved = false)
     }
 
-    fun saveMeta() {
+    /** @param onSaved only after the server took it — 儲存並離開 leaves on this. */
+    fun saveMeta(onSaved: () -> Unit = {}) {
         val now = _state.value
         if (!now.canSaveMeta) return
         _state.value = now.copy(savingMeta = true, metaSaved = false, failure = null)
         work.launch {
             val ok = attempt { writeMeta(now) }.isSuccess
-            _state.value = _state.value.copy(savingMeta = false, metaSaved = ok, failure = if (ok) null else Failure.Save)
-            if (ok) onChanged()
+            _state.value = _state.value.copy(
+                savingMeta = false,
+                metaSaved = ok,
+                failure = if (ok) null else Failure.Save,
+                // What was written is now what the server holds, so 儲存 goes dark.
+                collection = if (ok) {
+                    _state.value.collection?.copy(title = now.title.trim(), description = now.description.trim().ifEmpty { null })
+                } else {
+                    _state.value.collection
+                },
+            )
+            if (ok) {
+                onChanged()
+                onSaved()
+            }
         }
     }
 
@@ -197,14 +215,17 @@ class CollectionEditViewModel(
         attempt { authoring.collectionForEdit(collectionId) }
             .onSuccess { r ->
                 val now = _state.value
+                // Typed-but-unsaved words survive a reload, as on iOS — a
+                // publish or withdraw must not wipe what is in the fields.
+                val keepsTypedMeta = now.isMetaDirty
                 _state.value = if (full) {
                     now.copy(
                         collection = r.collection,
                         members = r.items,
                         loading = false,
                         failed = false,
-                        title = r.collection.title,
-                        description = r.collection.description.orEmpty(),
+                        title = if (keepsTypedMeta) now.title else r.collection.title,
+                        description = if (keepsTypedMeta) now.description else r.collection.description.orEmpty(),
                         coverId = r.collection.coverPublicItemId ?: r.items.firstOrNull()?.publicItemId,
                         avatarPreviewUrl = r.collection.avatarPreviewUrl,
                     )

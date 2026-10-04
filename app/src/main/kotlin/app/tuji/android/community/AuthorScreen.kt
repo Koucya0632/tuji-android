@@ -51,13 +51,15 @@ import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.AtlasAuthor
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.manage.WideAction
 
 /**
  * One author's public work — iOS's `AtlasAuthorProfileView`.
  *
  * The same page for everyone, because its value is that it *is* the page other
- * people see. What changes with the reader is only the bar: someone else's
- * page has 更多 (檢舉這位作者, 封鎖); your own has nothing to protect you from.
+ * people see. What changes with the reader is the bar — someone else's page
+ * has 更多 (檢舉這位作者, 封鎖), your own has 編輯 — and, on your own, a
+ * 建立合集 below the work: seeing the gap and filling it happen in one place.
  *
  * A 檢舉 here targets the **identity**, not one word — which is why it carries
  * the TJ UID rather than a slug: a slug moves with a rename and a UID does not.
@@ -75,6 +77,8 @@ fun AuthorScreen(
     onReport: (ReportReason) -> Unit,
     onBlock: () -> Unit,
     onUnblock: () -> Unit,
+    onEditProfile: () -> Unit = {},
+    onCreateCollection: () -> Unit = {},
 ) {
     var showMore by remember { mutableStateOf(false) }
     var reporting by remember { mutableStateOf(false) }
@@ -90,14 +94,28 @@ fun AuthorScreen(
         TujiNavBar(
             onLeading = onBack,
             leadingLabel = stringResource(R.string.atlas_back),
-            trailing = if (relationship == ViewerRelationship.Theirs) {
-                {
-                    TujiNavIcon(label = stringResource(R.string.author_more), onClick = { showMore = true }) {
-                        TujiGlyph.More(size = 20.dp, tint = TujiColor.Ink2)
+            trailing = when (relationship) {
+                ViewerRelationship.Theirs -> {
+                    {
+                        TujiNavIcon(label = stringResource(R.string.author_more), onClick = { showMore = true }) {
+                            TujiGlyph.More(size = 20.dp, tint = TujiColor.Ink2)
+                        }
                     }
                 }
-            } else {
-                null
+                // Pushes 編輯個人資料, the one place the profile is edited.
+                ViewerRelationship.Mine -> {
+                    {
+                        Text(
+                            stringResource(R.string.author_edit),
+                            style = TujiType.bodyStrong,
+                            color = TujiColor.Ink,
+                            modifier = Modifier
+                                .tujiClickable(onClick = onEditProfile)
+                                .padding(horizontal = TujiSpace.S2, vertical = TujiSpace.S3),
+                        )
+                    }
+                }
+                else -> null
             },
         )
 
@@ -127,21 +145,26 @@ fun AuthorScreen(
                     }
                     AuthorSegment.Items -> Items(state, isMine, onOpenItem)
                 }
+                if (isMine) CreateCollectionEntry(onCreateCollection)
                 Spacer(Modifier.height(TujiSpace.S6))
             }
             state.phase == AuthorViewModel.Phase.Loading ->
                 TujiPageLoading(label = stringResource(R.string.community_loading))
-            // Your own page with no public identity behind it yet: the way
-            // forward, not "not found".
-            state.phase == AuthorViewModel.Phase.NotFound && isMine -> Box(
-                Modifier.fillMaxSize().padding(horizontal = TujiSpace.S4),
-                contentAlignment = Alignment.Center,
+            // Your own page with nothing published yet: the way forward, not
+            // "not found" — and the author who most needs 建立合集 is this one.
+            state.phase == AuthorViewModel.Phase.NotFound && isMine -> Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 MascotEmptyState(
                     title = stringResource(R.string.author_empty_self),
                     message = stringResource(R.string.author_empty_self_message),
                     pose = MascotPose.Think,
+                    modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S5),
                 )
+                CreateCollectionEntry(onCreateCollection)
+                Spacer(Modifier.height(TujiSpace.S6))
             }
             state.phase == AuthorViewModel.Phase.NotFound -> Centered(stringResource(R.string.author_not_found))
             else -> Column(
@@ -175,6 +198,29 @@ fun AuthorScreen(
             blocked = blocked,
             onConfirm = { askBlock = false; if (blocked) onUnblock() else onBlock() },
             onCancel = { askBlock = false },
+        )
+    }
+}
+
+/**
+ * 建立合集 on your own page. The quiet ground rather than the brand fill, and no
+ * heading: this page is a portfolio, so the loudest thing on it stays the work.
+ * Not in the bar either — 編輯 is already the bar's one text action.
+ */
+@Composable
+private fun CreateCollectionEntry(onCreate: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S2),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+    ) {
+        Text(stringResource(R.string.author_create_collection_hint), style = TujiType.label, color = TujiColor.Ink3)
+        WideAction(
+            text = stringResource(R.string.collections_create),
+            ground = TujiColor.Paper2,
+            ink = TujiColor.Ink,
+            enabled = true,
+            onClick = onCreate,
+            leading = { TujiGlyph.Plus(size = 12.dp, tint = TujiColor.Ink) },
         )
     }
 }
