@@ -1407,6 +1407,7 @@ private fun SignedInScreens(
                         onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
                         onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
                         onReport = { reason -> community.report(ReportTarget.Collection(route.slug), reason) },
+                        onEdit = { nav = nav.push(AppRoute.CollectionEdit(it)) },
                     )
                 }
 

@@ -502,7 +502,6 @@
     <string name="cancel">取消</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">发布者的笔记</string>
-    <string name="collection_yours">你的合集</string>
     <string name="collection_save">收藏</string>
     <string name="collection_saved">已收藏</string>
     <string name="collection_tab_contents">目录</string>
