@@ -25,6 +25,9 @@ enum class MemberFeature {
      * to know whether to ask.
      */
     WordInsights,
+
+    /** 物見 writes — 建立合集 and the like. The server refuses a non-member's with 402. */
+    CommunityWrite,
 }
 
 enum class MemberAccessLevel {
@@ -54,6 +57,7 @@ object MemberAccess {
             MemberFeature.WordListAdd -> MemberAccessLevel.Locked
             MemberFeature.WordNote -> if (hasOwnData) MemberAccessLevel.ReadOnly else MemberAccessLevel.Locked
             MemberFeature.WordInsights -> MemberAccessLevel.Open
+            MemberFeature.CommunityWrite -> MemberAccessLevel.Locked
         }
     }
 }

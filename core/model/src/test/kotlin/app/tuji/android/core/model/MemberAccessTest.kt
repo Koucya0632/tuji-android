@@ -36,6 +36,7 @@ class MemberAccessTest {
         assertEquals(MemberAccessLevel.Locked, MemberAccess.level(MemberFeature.WordListAdd, free, hasOwnData = true))
         assertEquals(MemberAccessLevel.Locked, MemberAccess.level(MemberFeature.WordNote, free))
         assertEquals(MemberAccessLevel.ReadOnly, MemberAccess.level(MemberFeature.WordNote, free, hasOwnData = true))
+        assertEquals(MemberAccessLevel.Locked, MemberAccess.level(MemberFeature.CommunityWrite, free))
     }
 
     @Test fun `insights are asked for by everyone - the server trims them`() {
