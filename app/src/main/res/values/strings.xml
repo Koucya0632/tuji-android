@@ -502,7 +502,6 @@
     <string name="cancel">Cancel</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">The publisher’s note</string>
-    <string name="collection_yours">Your collection</string>
     <string name="collection_save">Save</string>
     <string name="collection_saved">Saved</string>
     <string name="collection_tab_contents">Contents</string>

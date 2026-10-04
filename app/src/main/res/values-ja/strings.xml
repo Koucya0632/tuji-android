@@ -502,7 +502,6 @@
     <string name="cancel">キャンセル</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="community_note">投稿者のメモ</string>
-    <string name="collection_yours">自分のコレクション</string>
     <string name="collection_save">保存</string>
     <string name="collection_saved">保存済み</string>
     <string name="collection_tab_contents">目次</string>

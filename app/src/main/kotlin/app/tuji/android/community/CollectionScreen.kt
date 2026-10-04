@@ -73,6 +73,7 @@ fun CollectionScreen(
     onOpenItem: (String) -> Unit,
     onOpenAuthor: (String) -> Unit,
     onReport: (ReportReason) -> Unit,
+    onEdit: (String) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableStateOf(CollectionTab.Contents) }
     var askUnsave by remember { mutableStateOf(false) }
@@ -90,6 +91,7 @@ fun CollectionScreen(
                     onBookmark = {
                         if (state.saved) askUnsave = true else onSave()
                     },
+                    onEdit = { onEdit(collection.id) },
                 )
                 Spacer(Modifier.height(TujiSpace.S4))
                 TujiSegmented(
@@ -243,7 +245,12 @@ private fun Cover(collection: AtlasPublicCollection, onOpenAuthor: (String) -> U
 }
 
 @Composable
-private fun ActionBar(collection: AtlasPublicCollection, state: CollectionDetailViewModel.State, onBookmark: () -> Unit) {
+private fun ActionBar(
+    collection: AtlasPublicCollection,
+    state: CollectionDetailViewModel.State,
+    onBookmark: () -> Unit,
+    onEdit: () -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().height(72.dp).background(TujiColor.Ink).padding(horizontal = TujiSpace.S4),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S5),
@@ -253,7 +260,21 @@ private fun ActionBar(collection: AtlasPublicCollection, state: CollectionDetail
         TujiInkStat(stringResource(R.string.community_stat_saves), collection.saveCount)
         Spacer(Modifier.weight(1f))
         if (state.isOwner) {
-            Text(stringResource(R.string.collection_yours), style = TujiType.label, color = TujiColor.Paper.copy(alpha = 0.6f))
+            // iOS's editAction: 「你的合集」 used to be a flat label here — true,
+            // and dead. What an author wants from their own 合集 page is to
+            // change it, and the button's name already says whose it is. The
+            // public id is the owner-side id 編輯合集 loads.
+            Box(
+                Modifier
+                    .widthIn(min = 96.dp)
+                    .heightIn(min = 44.dp)
+                    .background(TujiColor.Paper.copy(alpha = 0.2f))
+                    .tujiClickable(onClick = onEdit)
+                    .padding(horizontal = TujiSpace.S3),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.collections_edit_title), style = TujiType.h3, color = TujiColor.Paper)
+            }
         } else {
             // 「收藏」, not 「收進圖鑑」: saving a collection unlocks it and counts
             // toward its author, and puts nothing in your 圖鑑.
