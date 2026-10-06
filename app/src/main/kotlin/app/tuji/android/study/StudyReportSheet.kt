@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -32,18 +33,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.design.FuriganaHeadword
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
-import app.tuji.android.core.design.TujiNavBar
-import app.tuji.android.core.design.TujiNavLeading
+import app.tuji.android.core.design.TujiHeadwordSize
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
@@ -58,6 +63,11 @@ import app.tuji.android.core.model.headwordDisplay
 import app.tuji.android.core.study.StudyReportIssue
 import app.tuji.android.core.study.StudyReportSubject
 import app.tuji.android.core.study.StudyReports
+import app.tuji.android.form.FormChoices
+import app.tuji.android.form.FormDetailField
+import app.tuji.android.form.FormSubmit
+import app.tuji.android.form.FormSuccess
+import app.tuji.android.form.TujiFormSheet
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -100,14 +110,7 @@ internal fun StudyReportLayer(
     state: StudyReportState,
     mode: StudyMode,
     reporter: StudyReporter,
-    subject: () -> StudyReportSubject?,
 ) {
-    if (state.menuOpen) {
-        StudyMoreSheet(
-            onReport = { state.report(subject()) },
-            onDismiss = { state.menuOpen = false },
-        )
-    }
     if (state.customCardNotice) {
         TujiPrompt(
             title = stringResource(R.string.study_report_custom_title),
@@ -128,41 +131,37 @@ internal fun StudyReportLayer(
     }
 }
 
-/** ⋯ — one row today, a menu so the next item has somewhere to go. */
+/**
+ * ⋯'s menu, dropped from the ⋯ itself — iOS's `Menu`, which opens where it was
+ * tapped rather than rising from the bottom edge. Draw it inside the box that
+ * holds ⋯ so it anchors there.
+ */
 @Composable
-private fun StudyMoreSheet(onReport: () -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TujiColor.Scrim)
-            .tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
+internal fun StudyReportMenu(state: StudyReportState, subject: () -> StudyReportSubject?) {
+    if (!state.menuOpen) return
+    // Resolved out here: a popup is a view of its own and would read the
+    // device's language rather than the app's (see `TujiWindow`).
+    val label = stringResource(R.string.study_report)
+    val density = LocalDensity.current
+    Popup(
+        alignment = Alignment.TopEnd,
+        offset = with(density) { IntOffset(0, 44.dp.roundToPx()) },
+        onDismissRequest = { state.menuOpen = false },
+        properties = PopupProperties(focusable = true),
     ) {
         Column(
             Modifier
-                .fillMaxWidth()
+                .widthIn(min = 200.dp)
                 .background(TujiColor.Paper)
-                // Swallows taps, so touching the sheet does not dismiss it
-                // through the scrim underneath.
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+                .border(TujiBorder.Bw1, TujiColor.Rule),
         ) {
             Text(
-                stringResource(R.string.study_report),
+                label,
                 style = TujiType.body,
                 color = TujiColor.Ink,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .tujiClickable(onClick = onReport)
-                    .padding(vertical = TujiSpace.S2),
-            )
-            TujiButton(
-                text = stringResource(R.string.cancel),
-                style = TujiButtonStyle.Secondary,
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
+                    .tujiClickable { state.report(subject()) }
+                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
             )
         }
     }
@@ -189,178 +188,75 @@ private fun StudyReportSheet(
     var failed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    val close = { if (!submitting) onDismiss() }
-
-    TujiWindow(onDismiss = close) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .background(TujiColor.Paper)
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .imePadding(),
-        ) {
-            TujiNavBar(
-                onLeading = close,
-                leading = TujiNavLeading.Close,
-                leadingLabel = stringResource(R.string.study_close_label),
-                title = stringResource(R.string.study_report_title),
-            )
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(TujiSpace.S4),
-                verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
-            ) {
-                if (submitted) {
-                    Success(onDone = onDismiss)
-                    return@Column
-                }
-
-                // With its reading: this is the screen a reader uses to say
-                // the reading is wrong.
-                ReportHeadword(subject.item)
-
-                Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-                    Text(stringResource(R.string.study_report_question), style = TujiType.bodySmStrong, color = TujiColor.Ink)
-                    StudyReportIssue.entries.forEach { type ->
-                        IssueRow(
-                            label = stringResource(type.label()),
-                            selected = issue == type,
-                            onClick = { issue = type },
-                        )
-                    }
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                    Text(stringResource(R.string.study_report_detail), style = TujiType.bodySmStrong, color = TujiColor.Ink)
-                    BasicTextField(
-                        value = detail,
-                        onValueChange = { detail = it.take(StudyReports.DETAIL_LIMIT) },
-                        enabled = !submitting,
-                        textStyle = TujiType.bodySm.copy(color = TujiColor.Ink),
-                        cursorBrush = SolidColor(TujiColor.Current),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 140.dp)
-                            .background(TujiColor.Paper2)
-                            .border(TujiBorder.Bw1, TujiColor.Rule)
-                            .padding(TujiSpace.S3),
-                        decorationBox = { inner ->
-                            Box {
-                                if (detail.isEmpty()) {
-                                    Text(
-                                        stringResource(R.string.study_report_placeholder),
-                                        style = TujiType.bodySm,
-                                        color = TujiColor.Ink3,
-                                    )
-                                }
-                                inner()
-                            }
-                        },
-                    )
-                    Text(
-                        "${detail.length}/${StudyReports.DETAIL_LIMIT}",
-                        style = TujiType.label,
-                        color = TujiColor.Ink3,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-
-                if (failed) {
-                    Text(stringResource(R.string.study_report_failed), style = TujiType.label, color = TujiColor.Alert)
-                }
-
-                TujiButton(
-                    text = stringResource(if (submitting) R.string.study_report_submitting else R.string.study_report_submit),
-                    enabled = StudyReports.canSubmit(issue, detail, submitting),
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        val type = issue ?: return@TujiButton
-                        submitting = true
-                        failed = false
-                        scope.launch {
-                            val payload = StudyReports.payload(
-                                requestId = requestId,
-                                subject = subject,
-                                mode = mode,
-                                issue = type,
-                                detail = detail,
-                                appVersion = reporter.appVersion,
-                                uiLang = reporter.uiLang,
-                            )
-                            submitted = runCatching { reporter.submit(payload) }.isSuccess
-                            failed = !submitted
-                            submitting = false
-                        }
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun IssueRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(if (selected) TujiColor.Current.copy(alpha = 0.18f) else TujiColor.Paper)
-            .border(TujiBorder.Bw1, if (selected) TujiColor.Current else TujiColor.Rule)
-            .tujiClickable(onClick = onClick)
-            .padding(TujiSpace.S3),
-        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-        verticalAlignment = Alignment.CenterVertically,
+    TujiFormSheet(
+        title = stringResource(R.string.study_report_title),
+        closeEnabled = !submitting,
+        onClose = onDismiss,
     ) {
-        Box(
-            Modifier
-                .size(20.dp)
-                .border(TujiBorder.Bw1 * 2, if (selected) TujiColor.Ink else TujiColor.Ink3, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (selected) Box(Modifier.size(10.dp).background(TujiColor.Ink, CircleShape))
+        if (submitted) {
+            FormSuccess(stringResource(R.string.study_report_thanks), onDone = onDismiss)
+            return@TujiFormSheet
         }
-        Text(label, style = TujiType.bodySm, color = TujiColor.Ink)
+
+        // With its reading: this is the screen a reader uses to say the
+        // reading is wrong.
+        ReportHeadword(subject.item)
+
+        val issues = StudyReportIssue.entries
+        FormChoices(
+            question = stringResource(R.string.study_report_question),
+            options = issues.map { stringResource(it.label()) },
+            selected = issue?.let(issues::indexOf),
+            onSelect = { issue = issues[it] },
+        )
+        FormDetailField(
+            label = stringResource(R.string.study_report_detail),
+            placeholder = stringResource(R.string.study_report_placeholder),
+            value = detail,
+            onValueChange = { detail = it },
+            enabled = !submitting,
+            limit = StudyReports.DETAIL_LIMIT,
+        )
+        FormSubmit(
+            title = stringResource(R.string.study_report_submit),
+            submittingTitle = stringResource(R.string.study_report_submitting),
+            submitting = submitting,
+            enabled = StudyReports.canSubmit(issue, detail, submitting),
+            error = if (failed) stringResource(R.string.study_report_failed) else null,
+            onSubmit = {
+                val type = issue ?: return@FormSubmit
+                submitting = true
+                failed = false
+                scope.launch {
+                    val payload = StudyReports.payload(
+                        requestId = requestId,
+                        subject = subject,
+                        mode = mode,
+                        issue = type,
+                        detail = detail,
+                        appVersion = reporter.appVersion,
+                        uiLang = reporter.uiLang,
+                    )
+                    submitted = runCatching { reporter.submit(payload) }.isSuccess
+                    failed = !submitted
+                    submitting = false
+                }
+            },
+        )
     }
 }
 
+/** iOS's `TujiHeadword`: ruby when there is a reading to set, else the word alone. */
 @Composable
 private fun ReportHeadword(item: StudyQueueItem) {
-    when (val display = item.word.headwordDisplay(item.word.targetLanguage ?: TargetLanguage.EN)) {
+    val language = item.word.targetLanguage ?: TargetLanguage.EN
+    when (val display = item.word.headwordDisplay(language)) {
         is HeadwordDisplay.Ruby -> FuriganaHeadword(display.segments)
-        is HeadwordDisplay.Line -> Column {
-            Text(item.word.word, style = TujiType.h1, color = TujiColor.Ink)
-            Text(display.text, style = TujiType.bodySm, color = TujiColor.Ink2)
-        }
-        HeadwordDisplay.Plain -> Text(item.word.word, style = TujiType.h1, color = TujiColor.Ink)
-    }
-}
-
-@Composable
-private fun Success(onDone: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(top = TujiSpace.S5),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
-    ) {
-        Box(
-            Modifier.size(64.dp).background(TujiColor.Accumulation, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            TujiGlyph.Check(size = 28.dp, tint = TujiColor.Paper)
-        }
-        Text(
-            stringResource(R.string.study_report_thanks),
-            style = TujiType.bodySmStrong,
+        else -> Text(
+            item.word.word,
+            style = TujiType.headword(TujiHeadwordSize.Base),
             color = TujiColor.Ink,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier)
-        TujiButton(
-            text = stringResource(R.string.manage_done),
-            onClick = onDone,
-            modifier = Modifier.fillMaxWidth(),
+            maxLines = if (language == TargetLanguage.JA) 1 else 2,
         )
     }
 }

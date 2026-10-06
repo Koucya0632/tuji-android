@@ -14,6 +14,7 @@ import app.tuji.android.wordlists.WordListQueue
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
+import app.tuji.android.credits.CreditsScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +42,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -165,6 +167,8 @@ import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.study.StudyReporter
+import app.tuji.android.settings.FeedbackSender
+import app.tuji.android.settings.shareApp
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
 import kotlinx.coroutines.launch
@@ -710,6 +714,15 @@ private fun SignedInScreens(
             submit = app.study::submitReport,
         )
     }
+    // 意見收集 in 設定 sends the same version string.
+    val feedbackSender = remember(uiLang) {
+        FeedbackSender(
+            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            uiLang = uiLang,
+            submit = app.study::submitFeedback,
+        )
+    }
+    val context = LocalContext.current
     when (studyFlow) {
         AppRoute.Review -> {
             val haptics = rememberTujiHaptics()
@@ -1240,9 +1253,20 @@ private fun SignedInScreens(
                     onOpenMembership = openMembership,
                     tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
                     offer = MembershipOffer.from(accountState.entitlement),
+                    feedback = feedbackSender,
+                    onShareApp = {
+                        app.analytics.shareApp()
+                        shareApp(context)
+                    },
                 )
 
-                AppRoute.Membership -> MembershipScreen(MembershipOffer.from(accountState.entitlement))
+                AppRoute.Membership -> {
+                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    if (accountState.entitlement?.billingMode == "credits" && owner != null) {
+                        CreditsScreen(app.api, app.atlas, owner,
+                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id }, direction, capture = false)
+                    } else MembershipScreen(MembershipOffer.from(accountState.entitlement))
+                }
 
                 AppRoute.WordLists -> WordListsScreen(
                     store = app.wordListsStore,
@@ -1459,6 +1483,11 @@ private fun SignedInScreens(
                 }
 
                 AppRoute.Capture -> {
+                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    if (accountState.entitlement?.billingMode == "credits" && owner != null) {
+                        CreditsScreen(app.api, app.atlas, owner,
+                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id }, direction, capture = true)
+                    } else {
                     val vm = remember {
                         CaptureViewModel(
                             authoring = app.atlas,
@@ -1473,6 +1502,7 @@ private fun SignedInScreens(
                         onDone = { nav = nav.pop() },
                         onOpenMembership = openMembership,
                     )
+                    }
                 }
 
                 AppRoute.Search -> AtlasSearchScreen(

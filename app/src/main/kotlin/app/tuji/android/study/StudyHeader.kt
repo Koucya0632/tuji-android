@@ -47,6 +47,8 @@ internal fun StudyHeader(
     onClose: () -> Unit,
     /** ⋯ — the 報錯 menu. Null draws nothing, as before a session starts. */
     onMore: (() -> Unit)? = null,
+    /** What ⋯ drops down, drawn in ⋯'s own box so it anchors there. */
+    moreMenu: @Composable () -> Unit = {},
 ) {
     Column(Modifier.padding(bottom = TujiSpace.S3)) {
         Row(
@@ -90,6 +92,7 @@ internal fun StudyHeader(
                         contentAlignment = Alignment.Center,
                     ) {
                         TujiGlyph.More(tint = TujiColor.Ink)
+                        moreMenu()
                     }
                 }
             }

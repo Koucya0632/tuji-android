@@ -58,7 +58,7 @@ fun MembershipScreen(offer: MembershipOffer) {
                     owned = stringResource(R.string.membership_owns_lifetime).takeIf { offer.ownsLifetime },
                 )
             }
-            PlanCard(
+            if (offer.ownsPro) PlanCard(
                 title = "Tuji Pro",
                 // Under v2 Pro contains 永久會員, and says so before listing
                 // only what it adds.
@@ -67,6 +67,7 @@ fun MembershipScreen(offer: MembershipOffer) {
                 owned = stringResource(R.string.membership_owns_pro).takeIf { offer.ownsPro },
             )
 
+            Text(stringResource(R.string.credit_pro_closed), style = TujiType.bodySm, color = TujiColor.Ink2)
             if (!offer.ownsPro) {
                 Text(
                     stringResource(R.string.membership_android_soon),

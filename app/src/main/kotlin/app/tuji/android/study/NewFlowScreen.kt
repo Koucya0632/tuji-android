@@ -132,6 +132,7 @@ fun NewFlowScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val report = remember { StudyReportState() }
+    val reportSubject = { (state as? NewFlowViewModel.State.Studying)?.stage?.reportSubject() }
     val milestone by vm.milestone.collectAsStateWithLifecycle()
     var started by rememberSaveable { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
@@ -192,6 +193,7 @@ fun NewFlowScreen(
                         unsynced = s.unsynced,
                         onClose = { leaving = true },
                         onMore = reporter?.let { { report.menuOpen = true } },
+                        moreMenu = { StudyReportMenu(report, reportSubject) },
                     )
                     StagePips(s.steps)
                     Spacer(Modifier.height(TujiSpace.S3))
@@ -249,7 +251,6 @@ fun NewFlowScreen(
                 state = report,
                 mode = StudyMode.New,
                 reporter = it,
-                subject = { (state as? NewFlowViewModel.State.Studying)?.stage?.reportSubject() },
             )
         }
     }

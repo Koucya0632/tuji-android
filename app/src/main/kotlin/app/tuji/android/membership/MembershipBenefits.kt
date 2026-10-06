@@ -19,8 +19,11 @@ data class MembershipOffer(
     val ownsPro: Boolean,
     /** Pro's AI line follows the limits in force (500 under v1, 200 under v2). */
     val isV2: Boolean,
+    val credits: Boolean = false,
 ) {
-    val lifetimeRows: List<Int> get() = LIFETIME
+    val lifetimeRows: List<Int> get() = if (credits) listOf(
+        R.string.membership_benefit_all_series, R.string.credit_slots, R.string.credit_ai_points,
+    ) else LIFETIME
 
     val proRows: List<Int>
         get() = buildList {
@@ -59,6 +62,7 @@ data class MembershipOffer(
                 ownsLifetime = tier == MembershipTier.Lifetime || entitlement?.membership?.lifetime != null,
                 ownsPro = tier == MembershipTier.Pro,
                 isV2 = v2,
+                credits = entitlement?.billingMode == "credits",
             )
         }
     }

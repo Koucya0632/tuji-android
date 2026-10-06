@@ -62,6 +62,13 @@ class TujiApiClient(
     suspend inline fun <reified T> post(endpoint: Endpoint, body: Any?): T =
         call(endpoint, HttpMethod.Post, body)
 
+    suspend inline fun <reified T> postIdempotent(endpoint: Endpoint, body: Any?, key: String): T {
+        val response = send(endpoint, HttpMethod.Post, body, mapOf("Idempotency-Key" to key))
+        return try { response.body<T>() }
+        catch (e: CancellationException) { throw e }
+        catch (e: Throwable) { throw ApiError.Decoding(e) }
+    }
+
     suspend inline fun <reified T> patch(endpoint: Endpoint, body: Any?): T =
         call(endpoint, HttpMethod.Patch, body)
 
@@ -86,7 +93,7 @@ class TujiApiClient(
 
     /** Builds, authenticates, sends, retries once on 401, and checks the status. */
     @PublishedApi
-    internal suspend fun send(endpoint: Endpoint, method: HttpMethod, body: Any?): HttpResponse {
+    internal suspend fun send(endpoint: Endpoint, method: HttpMethod, body: Any?, extraHeaders: Map<String, String> = emptyMap()): HttpResponse {
         val descriptor = endpoint.descriptor
         val policy = descriptor.policy
 
@@ -95,6 +102,7 @@ class TujiApiClient(
             url(baseUrl.trimEnd('/') + descriptor.path)
             descriptor.query.forEach { (name, value) -> url.parameters.append(name, value) }
             accept(ContentType.Application.Json)
+            extraHeaders.forEach { (name, value) -> header(name, value) }
             // **Both**, not just the request timeout. Ktor counts them
             // separately: `requestTimeoutMillis` bounds the whole call, while
             // `socketTimeoutMillis` bounds the gap *between packets* — and a

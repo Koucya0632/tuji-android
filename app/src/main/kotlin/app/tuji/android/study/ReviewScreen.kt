@@ -141,6 +141,7 @@ fun ReviewScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val report = remember { StudyReportState() }
+    val reportSubject = { StudyReports.review((state as? ReviewViewModel.State.Studying)?.session?.question) }
     val milestone by vm.milestone.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
     // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
@@ -194,6 +195,7 @@ fun ReviewScreen(
                         // end a session the user was halfway through.
                         onClose = { leaving = true },
                         onMore = reporter?.let { { report.menuOpen = true } },
+                        moreMenu = { StudyReportMenu(report, reportSubject) },
                     )
                     QuestionBody(
                         state = s,
@@ -269,7 +271,6 @@ fun ReviewScreen(
                 state = report,
                 mode = StudyMode.Review,
                 reporter = it,
-                subject = { StudyReports.review((state as? ReviewViewModel.State.Studying)?.session?.question) },
             )
         }
     }
