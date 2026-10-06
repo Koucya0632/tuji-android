@@ -2,6 +2,7 @@ package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.FavoritesResponse
+import app.tuji.android.core.model.FeedbackPayload
 import app.tuji.android.core.model.MasteryListResponse
 import app.tuji.android.core.model.ProgressResponse
 import app.tuji.android.core.model.UserSettings
@@ -43,6 +44,11 @@ interface AnswerSubmission {
  */
 interface StudyReportSubmitting {
     suspend fun submitReport(payload: StudyReportPayload)
+}
+
+/** 意見收集, as a role. Throws on anything the server did not accept. */
+interface FeedbackSubmitting {
+    suspend fun submitFeedback(payload: FeedbackPayload)
 }
 
 /** Reading the day's counts, as a role. */
@@ -172,7 +178,12 @@ class StudyRepository(private val api: TujiApiClient) :
     WordNotesAccess,
     WordListsAccess,
     StudyReportSubmitting,
+    FeedbackSubmitting,
     AccountErasure {
+
+    override suspend fun submitFeedback(payload: FeedbackPayload) {
+        api.post<Unit>(Endpoint.UsersFeedback, payload)
+    }
 
     override suspend fun submitReport(payload: StudyReportPayload) {
         api.post<Unit>(Endpoint.StudyReports, payload)

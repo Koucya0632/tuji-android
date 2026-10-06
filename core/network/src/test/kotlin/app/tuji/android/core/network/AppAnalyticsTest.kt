@@ -58,4 +58,23 @@ class AppAnalyticsTest {
         coroutineContext.job.children.toList().joinAll()
         assertEquals(1, calls)
     }
+
+    @Test fun `each share tap is its own event in the same session`() = runTest {
+        // The engine answers the concurrent sends on several threads; a plain
+        // list loses writes and made this test flaky.
+        val bodies = java.util.concurrent.ConcurrentLinkedQueue<Map<String, String>>()
+        val engine = MockEngine { request ->
+            val body = Json.parseToJsonElement((request.body as TextContent).text).jsonObject
+            bodies += body.mapValues { it.value.jsonPrimitive.content }
+            respond("""{"ok":true}""", HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+        }
+        val analytics = AppAnalytics(TujiApiClient("https://example.test", engine = engine), this)
+        analytics.appOpened()
+        analytics.shareApp()
+        analytics.shareApp()
+        coroutineContext.job.children.toList().joinAll()
+        // Sent concurrently, so the order they land in is not part of the contract.
+        assertEquals(listOf("app_open", "share_app", "share_app"), bodies.map { it["type"] }.sortedBy { it })
+        assertEquals(1, bodies.map { it["sessionId"] }.toSet().size)
+    }
 }

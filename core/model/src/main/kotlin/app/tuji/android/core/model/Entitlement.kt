@@ -34,6 +34,7 @@ data class Entitlement(
      * rollout — [membershipTier] then falls back to [plan].
      */
     val membership: Membership? = null,
+    val billingMode: String? = null,
 ) {
     /**
      * `plan` keeps its pre-membership meaning: "pro" only while Pro is live. A

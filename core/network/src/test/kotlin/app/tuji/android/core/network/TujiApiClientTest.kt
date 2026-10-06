@@ -23,6 +23,19 @@ import org.junit.Test
  */
 class TujiApiClientTest {
 
+    @Test
+    fun `paid operation retry keeps the same idempotency key across token refresh`() = runTest {
+        val keys = mutableListOf<String?>()
+        val engine = MockEngine { request ->
+            keys += request.headers["Idempotency-Key"]
+            if (keys.size == 1) respondError(HttpStatusCode.Unauthorized)
+            else respond("""{"ok":true}""", HttpStatusCode.OK, jsonHeaders)
+        }
+        val api = TujiApiClient("https://example.test", FakeTokens(mutableListOf("stale", "fresh")), engine)
+        api.postIdempotent<Map<String, Boolean>>(CreditEndpoint.Operations, mapOf("quoteId" to "quote"), "same-paid-request")
+        assertEquals(listOf("same-paid-request", "same-paid-request"), keys)
+    }
+
     private val wordsJson = """
         {"words":[{"id":"bath-ladle","word":"手おけ","reading":"ておけ",
                    "readingSegments":[{"ruby":"て","text":"手"},{"ruby":null,"text":"おけ"}],

@@ -72,6 +72,10 @@ fun SettingsScreen(
     onOpenMembership: () -> Unit,
     tier: MembershipTier = MembershipTier.Free,
     offer: MembershipOffer = MembershipOffer.from(null),
+    /** Where 意見收集 goes. Null draws no row — what a test or preview wants. */
+    feedback: FeedbackSender? = null,
+    /** 分享 App. Null draws no row. */
+    onShareApp: (() -> Unit)? = null,
 ) {
     // 學習 and 顯示 are the account's settings; 帳號 and below are not, and stay
     // usable while those load — signing out must never wait on a read.
@@ -201,7 +205,19 @@ fun SettingsScreen(
             )
         }
 
+        // iOS's order: 意見收集, 分享 App, 關於.
         TujiSection(title = stringResource(R.string.settings_group_other)) {
+            if (feedback != null) {
+                TujiSettingRow(
+                    label = stringResource(R.string.settings_feedback),
+                    onClick = { picker = Picker.Feedback },
+                )
+                TujiRowDivider()
+            }
+            onShareApp?.let {
+                TujiSettingRow(label = stringResource(R.string.settings_share), onClick = it)
+                TujiRowDivider()
+            }
             TujiSettingRow(
                 label = stringResource(R.string.settings_about),
                 onClick = { picker = Picker.About },
@@ -272,6 +288,7 @@ fun SettingsScreen(
         )
 
         Picker.About -> AboutSheet(onDismiss = { picker = null })
+        Picker.Feedback -> feedback?.let { FeedbackSheet(sender = it, onDismiss = { picker = null }) }
         null -> Unit
     }
 
@@ -330,7 +347,7 @@ fun SettingsScreen(
 /** Whether one of the two irreversible calls is in flight. */
 data class SettingsBusy(val clearing: Boolean = false, val deleting: Boolean = false)
 
-private enum class Picker { Direction, Language, Accent, DailyGoal, About }
+private enum class Picker { Direction, Language, Accent, DailyGoal, About, Feedback }
 
 private enum class Confirm { SignOut, Clear, DeleteFirst, DeleteSecond }
 

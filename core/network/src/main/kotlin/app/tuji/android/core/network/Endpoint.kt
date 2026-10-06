@@ -660,6 +660,14 @@ interface Endpoint {
         )
     }
 
+    /** 意見收集 from 設定. A write, so nothing to cache. */
+    data object UsersFeedback : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/feedback",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** A 報錯 filed from inside a study session. A write, so nothing to cache. */
     data object StudyReports : Endpoint {
         override val descriptor get() = EndpointDescriptor(
