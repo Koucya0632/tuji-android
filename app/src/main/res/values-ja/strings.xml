@@ -712,7 +712,7 @@
     <string name="credit_monthly">今月の1,000ポイントを受け取る</string>
     <string name="credit_checked_in">今日は受取済み</string>
     <string name="credit_check_in">毎日チェックイン</string>
-    <string name="credit_check_in_note">毎日のチェックインで10ポイント、月最大300ポイント。日付はUTC基準です。</string>
+    <string name="credit_check_in_note">学習後のチェックインで毎日10ポイント、月最大300ポイント。日付は端末のタイムゾーン基準です。</string>
     <string name="credit_retry">同期を再試行</string>
     <string name="credit_upload_note">カード未作成の写真は7日間保存されます。アップロードにポイントは使いません。</string>
     <string name="credit_precision_quote">高精度認識の見積もり</string>
@@ -749,7 +749,7 @@
     <string name="credit_free_balance">無料分残高 %1$d ポイント · チェックイン分 %2$d ポイント</string>
     <string name="credit_monthly_reset_note">無料分は毎月自動で補充され、繰り越しません。チェックイン分と購入分に有効期限はありません。</string>
 
-    <!-- 打卡 on the study finish screens -->
+    <!-- 打卡: the sheet from 今日's streak chip, and the study finish screens -->
     <string name="checkin_done_title">今日はチェックイン済み</string>
     <string name="checkin_streak_days">%1$d日連続</string>
     <string name="checkin_claimable">缶詰ポイント%1$dポイントを受け取れます</string>
@@ -757,4 +757,21 @@
     <string name="checkin_capped">毎月最大%1$dポイント。また来月</string>
     <string name="checkin_claim">受け取る +%1$d</string>
     <string name="checkin_claim_failed">受け取れませんでした。もう一度お試しください。</string>
+    <string name="checkin_title">チェックイン</string>
+    <string name="checkin_streak_label">連続学習</string>
+    <string name="checkin_streak_unit">日</string>
+    <string name="checkin_reward_title">毎日のチェックインポイント</string>
+    <string name="checkin_needs_study_title">今日はまだ学習していません</string>
+    <string name="checkin_capped_title">今月のポイントは受け取り済みです</string>
+    <string name="checkin_locked_detail">永久会員は学習した日ごとに缶詰ポイントを%1$dポイント受け取れます</string>
+    <string name="checkin_needs_study_detail">1問学習すればチェックイン完了、%1$dポイント受け取れます</string>
+    <string name="checkin_upgrade">アップグレード</string>
+    <string name="checkin_study">学習する</string>
+    <string name="checkin_claimed_mark">受け取り済み</string>
+    <string name="checkin_prev_month">前の月</string>
+    <string name="checkin_next_month">次の月</string>
+    <string name="checkin_calendar_failed">カレンダーを読み込めませんでした</string>
+    <string name="checkin_retry">再試行</string>
+    <string name="checkin_studied_day">学習済み</string>
+    <string name="checkin_badge_hint">受け取れるポイントがあります</string>
 </resources>

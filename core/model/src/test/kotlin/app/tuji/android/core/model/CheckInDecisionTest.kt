@@ -74,3 +74,56 @@ class CheckInDecisionTest {
         assertEquals(null, json.decodeFromString<CreditBenefits>("{$base}").studiedToday)
     }
 }
+
+class CheckInChipAndMonthGridTest {
+    @Test fun `the chip's dot means points to collect, and nothing else`() {
+        org.junit.Assert.assertTrue(CheckInDecision.chipBadge(Reward.Claimable(10)))
+        listOf(Reward.Hidden, Reward.Locked(10), Reward.NeedsStudy(10), Reward.Claimed, Reward.Capped(300)).forEach {
+            org.junit.Assert.assertFalse(CheckInDecision.chipBadge(it))
+        }
+    }
+
+    @Test fun `October 2026 starts on a Thursday`() {
+        val sunday = MonthGrid.of("2026-10", java.time.DayOfWeek.SUNDAY)!!
+        assertEquals(listOf(null, null, null, null, 1), sunday.cells.take(5))
+        assertEquals(31, sunday.cells.filterNotNull().size)
+        val monday = MonthGrid.of("2026-10", java.time.DayOfWeek.MONDAY)!!
+        assertEquals(listOf(null, null, null, 1), monday.cells.take(4))
+    }
+
+    @Test fun `a month that starts on the first weekday has no blanks`() {
+        // 2026-11-01 is a Sunday.
+        assertEquals(1, MonthGrid.of("2026-11", java.time.DayOfWeek.SUNDAY)!!.cells.first())
+    }
+
+    @Test fun `February knows about leap years`() {
+        assertEquals(29, MonthGrid.of("2028-02", java.time.DayOfWeek.SUNDAY)!!.cells.filterNotNull().size)
+        assertEquals(28, MonthGrid.of("2026-02", java.time.DayOfWeek.SUNDAY)!!.cells.filterNotNull().size)
+    }
+
+    @Test fun `dates are zero-padded`() {
+        assertEquals("2026-10-07", MonthGrid.of("2026-10", java.time.DayOfWeek.SUNDAY)!!.date(7))
+    }
+
+    @Test fun `month arithmetic crosses years`() {
+        assertEquals("2025-12", MonthGrid.shift("2026-01", -1))
+        assertEquals("2027-01", MonthGrid.shift("2026-12", 1))
+        assertEquals(13, MonthGrid.monthsBefore("2025-09", "2026-10"))
+        assertEquals(0, MonthGrid.monthsBefore("2026-10", "2026-10"))
+    }
+
+    @Test fun `a malformed month is refused`() {
+        assertEquals(null, MonthGrid.of("2026-13", java.time.DayOfWeek.SUNDAY))
+        assertEquals(null, MonthGrid.parse("nope"))
+    }
+
+    @Test fun `a calendar month decodes`() {
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        val month = json.decodeFromString<StudyCalendarMonth>(
+            """{"month":"2026-10","timezone":"Asia/Taipei","today":"2026-10-07","studiedDays":["2026-10-01","2026-10-07"],
+               "streak":{"current":1,"longest":4,"totalDays":9,"todayCount":3,"lastStudyDate":"2026-10-07"}}""",
+        )
+        assertEquals(listOf("2026-10-01", "2026-10-07"), month.studiedDays)
+        assertEquals(3, month.streak.todayCount)
+    }
+}

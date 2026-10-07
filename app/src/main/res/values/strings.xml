@@ -712,7 +712,7 @@
     <string name="credit_monthly">Claim this month’s 1,000 credits</string>
     <string name="credit_checked_in">Checked in today</string>
     <string name="credit_check_in">Daily check-in</string>
-    <string name="credit_check_in_note">Check in for 10 credits a day, up to 300 a month. Dates follow UTC.</string>
+    <string name="credit_check_in_note">Study, then check in for 10 credits a day, up to 300 a month. Days follow your phone\'s time zone.</string>
     <string name="credit_retry">Retry sync</string>
     <string name="credit_upload_note">Photos without cards are kept for 7 days. Uploads do not use credits.</string>
     <string name="credit_precision_quote">Quote for precision recognition</string>
@@ -749,7 +749,7 @@
     <string name="credit_free_balance">Free allowance: %1$d credits · Check-in: %2$d credits</string>
     <string name="credit_monthly_reset_note">The free allowance resets automatically each month and does not carry over. Check-in and purchased credits never expire.</string>
 
-    <!-- 打卡 on the study finish screens -->
+    <!-- 打卡: the sheet from 今日's streak chip, and the study finish screens -->
     <string name="checkin_done_title">Checked in today</string>
     <string name="checkin_streak_days">%1$d-day streak</string>
     <string name="checkin_claimable">%1$d Can Credits ready to claim</string>
@@ -757,4 +757,21 @@
     <string name="checkin_capped">Up to %1$d credits a month. Back next month</string>
     <string name="checkin_claim">Claim +%1$d</string>
     <string name="checkin_claim_failed">Couldn\'t claim. Tap to try again.</string>
+    <string name="checkin_title">Check-in</string>
+    <string name="checkin_streak_label">Study streak</string>
+    <string name="checkin_streak_unit">days</string>
+    <string name="checkin_reward_title">Daily check-in credits</string>
+    <string name="checkin_needs_study_title">Not studied yet today</string>
+    <string name="checkin_capped_title">All of this month\'s credits claimed</string>
+    <string name="checkin_locked_detail">Lifetime members earn %1$d Can Credits each day they study</string>
+    <string name="checkin_needs_study_detail">Answer one question to check in and earn %1$d credits</string>
+    <string name="checkin_upgrade">Upgrade</string>
+    <string name="checkin_study">Study</string>
+    <string name="checkin_claimed_mark">Claimed</string>
+    <string name="checkin_prev_month">Previous month</string>
+    <string name="checkin_next_month">Next month</string>
+    <string name="checkin_calendar_failed">Couldn\'t load the calendar</string>
+    <string name="checkin_retry">Retry</string>
+    <string name="checkin_studied_day">Studied</string>
+    <string name="checkin_badge_hint">Credits ready to claim</string>
 </resources>

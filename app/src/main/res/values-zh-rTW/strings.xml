@@ -712,7 +712,7 @@
     <string name="credit_monthly">領取本月 1,000 點</string>
     <string name="credit_checked_in">今天已簽到</string>
     <string name="credit_check_in">每日簽到</string>
-    <string name="credit_check_in_note">每天簽到 10 點，每月最多 300 點。日期依 UTC 計算。</string>
+    <string name="credit_check_in_note">學習後簽到每天 10 點，每月最多 300 點。日期依手機時區計算。</string>
     <string name="credit_retry">重試同步</string>
     <string name="credit_upload_note">未建卡照片保留 7 天，上傳不扣點。</string>
     <string name="credit_precision_quote">高精度辨識報價</string>
@@ -749,7 +749,7 @@
     <string name="credit_free_balance">免費額度剩餘 %1$d 點 · 簽到點 %2$d 點</string>
     <string name="credit_monthly_reset_note">每月自動補滿，不累積。簽到點與購買點數不過期。</string>
 
-    <!-- 打卡 on the study finish screens -->
+    <!-- 打卡: the sheet from 今日's streak chip, and the study finish screens -->
     <string name="checkin_done_title">今天已打卡</string>
     <string name="checkin_streak_days">連續 %1$d 天</string>
     <string name="checkin_claimable">%1$d 點罐頭點數等你領取</string>
@@ -757,4 +757,21 @@
     <string name="checkin_capped">每月最多 %1$d 點，下個月再來</string>
     <string name="checkin_claim">領取 +%1$d</string>
     <string name="checkin_claim_failed">沒有領到，再按一次試試</string>
+    <string name="checkin_title">打卡</string>
+    <string name="checkin_streak_label">連續學習</string>
+    <string name="checkin_streak_unit">天</string>
+    <string name="checkin_reward_title">每日打卡點數</string>
+    <string name="checkin_needs_study_title">今天還沒學習</string>
+    <string name="checkin_capped_title">本月點數已領滿</string>
+    <string name="checkin_locked_detail">永久會員每天學習可領 %1$d 點罐頭點數</string>
+    <string name="checkin_needs_study_detail">學一題就算打卡，可領 %1$d 點</string>
+    <string name="checkin_upgrade">升級</string>
+    <string name="checkin_study">去學習</string>
+    <string name="checkin_claimed_mark">已領取</string>
+    <string name="checkin_prev_month">上個月</string>
+    <string name="checkin_next_month">下個月</string>
+    <string name="checkin_calendar_failed">月曆暫時載入不了</string>
+    <string name="checkin_retry">重試</string>
+    <string name="checkin_studied_day">已學習</string>
+    <string name="checkin_badge_hint">有點數可以領取</string>
 </resources>

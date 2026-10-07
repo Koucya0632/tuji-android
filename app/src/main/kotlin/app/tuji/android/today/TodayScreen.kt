@@ -1,5 +1,8 @@
 package app.tuji.android.today
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,6 +104,10 @@ fun TodayScreen(
     completion: CompletionReadout? = null,
     /** 目前連勝, or 0 before the progress readout lands. */
     streak: Int = 0,
+    /** The chip opens 打卡. */
+    onStreak: () -> Unit = {},
+    /** The chip's dot: points a tap would collect, and nothing else. */
+    streakBadge: Boolean = false,
     /** The strip: the picked themes. */
     shelves: List<CategoryShelf.Shelf> = emptyList(),
     themeStatus: (String) -> ThemeStatus = { ThemeStatus.None },
@@ -156,6 +163,8 @@ fun TodayScreen(
             stats = inputs.stats,
             name = name,
             streak = streak,
+            onStreak = onStreak,
+            streakBadge = streakBadge,
             onSearch = onSearch,
             modifier = Modifier.padding(horizontal = TujiSpace.S4),
         )
@@ -286,6 +295,8 @@ private fun Greeting(
     stats: StudyStats?,
     name: String?,
     streak: Int,
+    onStreak: () -> Unit,
+    streakBadge: Boolean,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -314,7 +325,7 @@ private fun Greeting(
                 TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
             }
             Spacer(Modifier.width(TujiSpace.S3))
-            StreakChip(streak, Modifier.tourAnchor(TourTarget.Streak))
+            StreakChip(streak, streakBadge, onStreak, Modifier.tourAnchor(TourTarget.Streak))
         }
 
         // One string with the name inside it, so the whole greeting wraps as
@@ -375,21 +386,42 @@ private fun dateLabel(): String {
 /**
  * 連勝, beside 搜尋 on the date line. The flame is 積累 once there is a run and
  * 墨3 at zero — a lit flame over a 0 would be congratulating nothing.
+ *
+ * It opens 打卡. Its dot means exactly one thing — points a tap would collect —
+ * so it is never decoration and never a nag to study.
  */
 @Composable
-private fun StreakChip(days: Int, modifier: Modifier = Modifier) {
-    val label = stringResource(R.string.today_streak, days)
-    Row(
-        modifier
-            .background(TujiColor.Paper)
-            .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f))
-            .clearAndSetSemantics { contentDescription = label }
-            .padding(horizontal = TujiSpace.S3, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TujiGlyph.Flame(size = 12.dp, tint = if (days > 0) TujiColor.Accumulation else TujiColor.Ink3)
-        TujiRollingNumber("$days", style = TujiType.bodySmStrong, color = TujiColor.Ink)
+private fun StreakChip(days: Int, badge: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val title = stringResource(R.string.checkin_title)
+    val value = stringResource(R.string.today_streak, days)
+    val hint = if (badge) stringResource(R.string.checkin_badge_hint) else null
+    Box(modifier) {
+        Row(
+            Modifier
+                .background(TujiColor.Paper)
+                .border(TujiBorder.Bw1, TujiColor.Rule.copy(alpha = 0.3f))
+                .tujiClickable(onClick = onClick)
+                .clearAndSetSemantics {
+                    contentDescription = listOfNotNull(title, value, hint).joinToString(", ")
+                    role = Role.Button
+                }
+                .padding(horizontal = TujiSpace.S3, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TujiGlyph.Flame(size = 12.dp, tint = if (days > 0) TujiColor.Accumulation else TujiColor.Ink3)
+            TujiRollingNumber("$days", style = TujiType.bodySmStrong, color = TujiColor.Ink)
+        }
+        if (badge) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 3.dp, y = (-3).dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(TujiColor.Alert),
+            )
+        }
     }
 }
 

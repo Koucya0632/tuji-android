@@ -115,13 +115,15 @@ class TujiApplication : Application() {
         app.tuji.android.account.ProgressStore(study)
     }
 
-    /** 打卡's catalog and wallet, read by the study finish screens. */
+    /** 打卡: the catalog, the wallet and the calendar — 今日's chip, its sheet, and the study finish screens. */
     val checkInStore: app.tuji.android.account.CheckInStore by lazy {
         val credits = app.tuji.android.core.network.CreditRepository(api)
         app.tuji.android.account.CheckInStore(
             loadCatalog = credits::catalog,
             loadWallet = credits::wallet,
             checkIn = { credits.claim(monthly = false) },
+            // Per learning direction, like the streak beside it; read at call time.
+            loadCalendar = { month -> study.studyCalendar(settingsStore.current.value.direction, month) },
         )
     }
 

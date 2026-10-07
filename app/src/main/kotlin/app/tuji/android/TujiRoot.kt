@@ -168,6 +168,8 @@ import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.study.StudyReporter
 import app.tuji.android.study.SessionCheckInCard
+import app.tuji.android.checkin.CheckInSheet
+import app.tuji.android.core.study.TodayDecisions
 import app.tuji.android.core.model.CheckInDecision
 import app.tuji.android.settings.FeedbackSender
 import app.tuji.android.settings.shareApp
@@ -660,6 +662,20 @@ private fun SignedInScreens(
 
     var showSpike by remember { mutableStateOf(false) }
 
+    // 打卡, from 今日's streak chip. The store is the app's, so the chip's dot,
+    // this sheet and the study finish screens read one wallet.
+    var showCheckIn by remember { mutableStateOf(false) }
+    val checkInState by app.checkInStore.snapshot.collectAsStateWithLifecycle()
+    // A new answer today re-reads the wallet regardless of age: the first one
+    // is what makes the points claimable, and the dot should say so.
+    val todayCount = progress.streak?.todayCount
+    var seenTodayCount by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(todayCount) {
+        val before = seenTodayCount
+        seenTodayCount = todayCount
+        if (before != null && todayCount != null && todayCount > before) app.checkInStore.loadReward()
+    }
+
     // A 已收進 card belongs to somebody else, and its page has an author, a
     // 取消收藏 and a 檢舉 that the dictionary's entry has none of. The id says
     // which — for 圖鑑's grid and for a theme page alike.
@@ -695,6 +711,23 @@ private fun SignedInScreens(
     if (showSpike) {
         FuriganaSpikeScreen(catalog = app.catalogReading)
         return
+    }
+
+    if (showCheckIn && nav.current == AppRoute.Today) {
+        CheckInSheet(
+            store = app.checkInStore,
+            fallbackStreak = progress.streak,
+            onUpgrade = {
+                showCheckIn = false
+                openMembership()
+            },
+            // Take the hero's own advice: 複習 when it is lit, otherwise 學新字.
+            onStudy = {
+                showCheckIn = false
+                nav = nav.push(if (TodayDecisions(todayInputs).reviewDisabled) AppRoute.LearnNew else AppRoute.Review)
+            },
+            onDismiss = { showCheckIn = false },
+        )
     }
 
     // The study flows own the whole screen — no tab bar, no account row: a
@@ -874,6 +907,8 @@ private fun SignedInScreens(
             // 主題進度 and the streak chip read it now, and both move without
             // the user doing anything here — a session elsewhere, or midnight.
             app.progressStore.load(direction)
+            // The chip's dot. Only when stale: tab swaps should not each ask.
+            app.checkInStore.loadRewardIfStale()
         }
         if (nav.current == AppRoute.Me) {
             account.refresh()
@@ -943,6 +978,10 @@ private fun SignedInScreens(
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
+                    onStreak = { showCheckIn = true },
+                    streakBadge = CheckInDecision.chipBadge(
+                        checkInState.reward(fallbackStudiedToday = (progress.streak?.todayCount ?: 0) > 0),
+                    ),
                     shelves = remember(studyShelves, studyCategories) {
                         StudyThemes.todayShelves(studyShelves, studyCategories)
                     },
@@ -1716,6 +1755,8 @@ private fun TodayColumn(
     onSearch: () -> Unit,
     completion: CompletionReadout,
     streak: Int,
+    onStreak: () -> Unit,
+    streakBadge: Boolean,
     shelves: List<CategoryShelf.Shelf>,
     themeStatus: (String) -> ThemeStatus,
     uiLang: String,
@@ -1746,6 +1787,8 @@ private fun TodayColumn(
             onSearch = onSearch,
             completion = completion,
             streak = streak,
+            onStreak = onStreak,
+            streakBadge = streakBadge,
             shelves = shelves,
             themeStatus = themeStatus,
             uiLang = uiLang,
