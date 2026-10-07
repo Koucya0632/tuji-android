@@ -618,7 +618,7 @@
     <string name="membership_owns_pro">你已經是 Tuji Pro，感謝支持！</string>
     <string name="membership_lifetime_note">永久會員為一次性購買，不會自動續訂；Pro 到期後仍保留永久會員權益。</string>
     <string name="membership_android_soon">Android 版即將開放購買。已在 iPhone 購買的會員，登入同一個帳號就會生效。</string>
-    <string name="membership_benefit_all_series">解鎖全部官方圖鑑系列</string>
+    <string name="membership_benefit_all_series">永久解鎖全部官方圖鑑</string>
     <string name="membership_benefit_slots_20">個人自製圖鑑 20 格</string>
     <string name="membership_benefit_ai_10">AI 辨識每月 10 次</string>
     <string name="membership_benefit_community">收藏、學習與投稿物見</string>

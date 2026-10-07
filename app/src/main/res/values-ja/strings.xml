@@ -618,7 +618,7 @@
     <string name="membership_owns_pro">すでにTuji Proです。ご支援ありがとうございます！</string>
     <string name="membership_lifetime_note">永久会員は買い切りで、自動更新されません。Proが終了しても永久会員の特典は残ります。</string>
     <string name="membership_android_soon">Android版での購入はまもなく開始します。iPhoneで購入済みの方は、同じアカウントでログインすると反映されます。</string>
-    <string name="membership_benefit_all_series">公式図鑑シリーズをすべて解放</string>
+    <string name="membership_benefit_all_series">すべての公式図鑑を永久に解放</string>
     <string name="membership_benefit_slots_20">マイ図鑑 20枠</string>
     <string name="membership_benefit_ai_10">AI認識 月10回</string>
     <string name="membership_benefit_community">物見の保存・学習・投稿</string>
