@@ -34,6 +34,7 @@ import app.tuji.android.core.study.StudyChoiceSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -206,6 +207,8 @@ class NewFlowViewModel(
     private var wordJob: Job? = null
     private var total = 0
     private var unsynced = 0
+    /** Every answer write this session started; see [awaitWrites]. */
+    private val writes = mutableListOf<Job>()
 
     /** This session's words, kept for the celebration that lists them. */
     private var sessionQueue: List<StudyQueueItem> = emptyList()
@@ -436,6 +439,15 @@ class NewFlowViewModel(
         super.onCleared()
     }
 
+    /**
+     * Suspends until every answer this session sent has either landed or been
+     * parked. The finish screen's 今天已打卡 waits on it: until then the server
+     * may not count today yet.
+     */
+    suspend fun awaitWrites() {
+        writes.toList().joinAll()
+    }
+
     // Internals
 
     private fun studying(): State.Studying? = _state.value as? State.Studying
@@ -555,7 +567,7 @@ class NewFlowViewModel(
             responseMs = identifyResponseMs[item.word.id],
             activity = LearnedRating.ACTIVITY,
         )
-        work.launch {
+        writes += work.launch {
             val outcome = writer.submitAnswer(payload)
             (outcome as? StudyWriteOutcome.Synced)?.response?.milestone?.let { _milestone.value = it }
             if (outcome is StudyWriteOutcome.Parked) {

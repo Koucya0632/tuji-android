@@ -167,6 +167,8 @@ import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.study.StudyReporter
+import app.tuji.android.study.SessionCheckInCard
+import app.tuji.android.core.model.CheckInDecision
 import app.tuji.android.settings.FeedbackSender
 import app.tuji.android.settings.shareApp
 import app.tuji.android.core.model.StudyMode
@@ -766,10 +768,7 @@ private fun SignedInScreens(
                 },
                 bookmarked = { id -> id in personal.bookmarked },
                 onBookmark = app.cardsSourceStore::toggle,
-                // The same value 今日 draws. Read here rather than after the
-                // session, because the reload that follows it belongs to the
-                // shell — this screen only prints the number it is handed.
-                streak = progress.streak?.current,
+                checkIn = { FinishCheckIn(app, direction, vm::awaitWrites, it) },
                 reporter = studyReporter,
                 onClose = {
                     // A session just moved the scores every badge in 圖鑑
@@ -844,6 +843,7 @@ private fun SignedInScreens(
                 speech = app.speech,
                 accent = settings.accent,
                 reporter = studyReporter,
+                checkIn = { FinishCheckIn(app, direction, vm::awaitWrites, it) },
                 onClose = {
                     refreshTick++
                     nav = nav.pop()
@@ -1759,6 +1759,45 @@ private fun TodayColumn(
 }
 
 /** iOS's `OfflineBanner`: an alert-red pill under the status bar while the device is offline. */
+/**
+ * 今天已打卡 on a study finish screen — the refresh iOS's
+ * `refreshesFinishedSession` runs, then the card.
+ *
+ * Waits for the session's answers to land, then re-reads the streak and the
+ * wallet: before that the server may not count today, and the streak handed
+ * in at the start is yesterday's number. Draws nothing until the server says
+ * today was studied, so answers parked offline never claim a check-in.
+ */
+@Composable
+private fun FinishCheckIn(
+    app: TujiApplication,
+    direction: LearningDirection,
+    awaitWrites: suspend () -> Unit,
+    modifier: Modifier,
+) {
+    var refreshed by remember { mutableStateOf(false) }
+    val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
+    val checkIn by app.checkInStore.snapshot.collectAsStateWithLifecycle()
+    val haptics = rememberTujiHaptics()
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        awaitWrites()
+        app.progressStore.load(direction)
+        app.checkInStore.loadReward()
+        refreshed = true
+    }
+    val streak = progress.streak
+    if (!refreshed || streak == null || streak.todayCount <= 0) return
+    SessionCheckInCard(
+        streak = streak.current,
+        reward = CheckInDecision.finishReward(checkIn.reward(fallbackStudiedToday = true)),
+        claiming = checkIn.claiming,
+        claimFailed = checkIn.claimFailed,
+        onClaim = { scope.launch { if (app.checkInStore.claim()) haptics.success() } },
+        modifier = modifier,
+    )
+}
+
 @Composable
 private fun OfflineBanner(modifier: Modifier = Modifier) {
     Row(

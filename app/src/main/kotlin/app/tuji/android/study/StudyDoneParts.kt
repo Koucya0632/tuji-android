@@ -25,6 +25,8 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiStatusEdgeLabel
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.model.StudyQueueItem
+import app.tuji.android.core.model.CheckInDecision
+import app.tuji.android.core.design.tujiClickable
 import androidx.compose.ui.res.stringResource
 
 /**
@@ -136,6 +138,62 @@ fun StudyWordGrid(
                 // whole of it.
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
+        }
+    }
+}
+
+/**
+ * 今天已打卡 on both finish screens — iOS's `SessionCheckInCard`.
+ *
+ * Studying is the check-in, so finishing a session is where it gets said, and
+ * where today's points can be collected without a detour. [reward] has already
+ * been through `CheckInDecision.finishReward`: points or nothing, never an
+ * upgrade pitch on a celebration.
+ */
+@Composable
+fun SessionCheckInCard(
+    streak: Int,
+    reward: CheckInDecision.Reward,
+    claiming: Boolean,
+    claimFailed: Boolean,
+    onClaim: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .background(TujiColor.Paper2)
+            .padding(TujiSpace.S3),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.checkin_done_title), style = TujiType.bodyStrong, color = TujiColor.Ink)
+            Text(stringResource(R.string.checkin_streak_days, streak), style = TujiType.bodySm, color = TujiColor.Accumulation)
+            val detail = when (reward) {
+                is CheckInDecision.Reward.Claimable -> stringResource(R.string.checkin_claimable, reward.points)
+                CheckInDecision.Reward.Claimed -> stringResource(R.string.checkin_claimed)
+                is CheckInDecision.Reward.Capped -> stringResource(R.string.checkin_capped, reward.cap)
+                else -> null
+            }
+            detail?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink2) }
+            if (claimFailed) {
+                Text(stringResource(R.string.checkin_claim_failed), style = TujiType.label, color = TujiColor.Alert)
+            }
+        }
+        if (reward is CheckInDecision.Reward.Claimable) {
+            Text(
+                stringResource(R.string.checkin_claim, reward.points),
+                style = TujiType.bodyStrong,
+                color = TujiColor.Ink,
+                maxLines = 1,
+                modifier = Modifier
+                    .background(TujiColor.BrandPrimary)
+                    .tujiClickable(enabled = !claiming, onClick = onClaim)
+                    .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
+            )
+        } else {
+            TujiGlyph.Check(size = 18.dp, tint = TujiColor.Accumulation)
         }
     }
 }

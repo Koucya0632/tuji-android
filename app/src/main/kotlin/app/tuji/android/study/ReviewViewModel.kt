@@ -30,6 +30,7 @@ import app.tuji.android.core.study.StudyChoiceSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -145,6 +146,8 @@ class ReviewViewModel(
     private var wordJob: Job? = null
     private var playingWord = false
     private var unsynced = 0
+    /** Every answer write this session started; see [awaitWrites]. */
+    private val writes = mutableListOf<Job>()
 
     /**
      * [mode] is a parameter because the endpoint has one. Hard-coding Review
@@ -232,6 +235,15 @@ class ReviewViewModel(
         super.onCleared()
     }
 
+    /**
+     * Suspends until every answer this session sent has either landed or been
+     * parked. The finish screen's 今天已打卡 waits on it: until then the server
+     * may not count today yet.
+     */
+    suspend fun awaitWrites() {
+        writes.toList().joinAll()
+    }
+
     // Internals
 
     private fun current(): State.Studying? = _state.value as? State.Studying
@@ -296,7 +308,7 @@ class ReviewViewModel(
 
     private fun send(write: PendingWrite?) {
         val pending = write ?: return
-        work.launch {
+        writes += work.launch {
             val outcome = writer.submitAnswer(pending.payload)
             val response = (outcome as? StudyWriteOutcome.Synced)?.response
             response?.milestone?.let { _milestone.value = it }

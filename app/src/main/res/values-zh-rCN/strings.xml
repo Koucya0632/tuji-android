@@ -69,8 +69,6 @@
     <string name="study_done_finish">完成</string>
     <string name="review_done_title">复习完成！</string>
     <string name="review_done_unit">个字</string>
-    <string name="study_streak_label">连胜</string>
-    <string name="study_streak_unit">天</string>
     <string name="study_today_reviewed">今天复习</string>
     <string name="study_wrong_times">答错 %1$d 次</string>
     <string name="study_listen_replay">再听一次</string>
@@ -750,4 +748,13 @@
     <string name="credit_monthly_auto">每月免费赠送 1,000 点</string>
     <string name="credit_free_balance">免费额度剩余 %1$d 点 · 签到点 %2$d 点</string>
     <string name="credit_monthly_reset_note">每月自动补满，不累积。签到点与购买点数不过期。</string>
+
+    <!-- 打卡 on the study finish screens -->
+    <string name="checkin_done_title">今天已打卡</string>
+    <string name="checkin_streak_days">连续 %1$d 天</string>
+    <string name="checkin_claimable">%1$d 点罐头点数等你领取</string>
+    <string name="checkin_claimed">今天的点数已入账，明天再来</string>
+    <string name="checkin_capped">每月最多 %1$d 点，下个月再来</string>
+    <string name="checkin_claim">领取 +%1$d</string>
+    <string name="checkin_claim_failed">没有领到，再按一次试试</string>
 </resources>
