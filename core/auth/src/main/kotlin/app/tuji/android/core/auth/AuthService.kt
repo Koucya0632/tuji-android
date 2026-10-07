@@ -7,6 +7,7 @@ import app.tuji.android.core.network.AccessTokenProvider
 import app.tuji.android.core.network.ApiError
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.event.AuthEvent
 import io.github.jan.supabase.auth.providers.Apple
@@ -214,7 +215,10 @@ class AuthService(
     // Sign out
 
     suspend fun signOut() {
-        runCatching { supabase.auth.signOut() }
+        // LOCAL: GLOBAL revokes every session the account has, so signing out
+        // here also signed out the user's iPhone and the web, silently, until
+        // their next request needed a token.
+        runCatching { supabase.auth.signOut(SignOutScope.LOCAL) }
             .onFailure { Log.e(TAG, "supabase signOut failed; clearing locally anyway", it) }
         // Cleared even when the server call failed: a sign-out the user asked
         // for must not leave the previous account's data on the device because
