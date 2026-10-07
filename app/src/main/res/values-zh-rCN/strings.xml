@@ -371,6 +371,7 @@
     <string name="manage_select">选取</string>
     <string name="manage_done">完成</string>
     <string name="manage_cards_section">我的图鉴卡片</string>
+    <string name="manage_slots_count">%1$d / %2$d 格</string>
     <string name="manage_empty">还没有自制图鉴卡片</string>
     <string name="manage_empty_hint">点底下中间的相机，拍一张就能做卡片。</string>
     <string name="manage_hidden">另有 %1$d 张卡片属于%2$s</string>

@@ -1190,6 +1190,9 @@ private fun SignedInScreens(
             when (val route = shown) {
                 AppRoute.AtlasManage -> {
                     LaunchedEffect(Unit) { manage.load() }
+                    // The slot count in the header: on arrival, and again
+                    // whenever a delete changes how many cards there are.
+                    LaunchedEffect(manageState.rows.size) { account.refreshEntitlement() }
                     AtlasManageScreen(
                         state = manageState,
                         onBack = { nav = nav.pop() },
@@ -1204,6 +1207,7 @@ private fun SignedInScreens(
                         onCreateCollection = { title, description, onCreated -> myCollections.create(title, description) { onCreated() } },
                         onDismissCreateError = myCollections::dismissCreateError,
                         onOpenCollection = { nav = nav.push(AppRoute.CollectionEdit(it)) },
+                        slots = accountState.entitlement?.let { it.usage.atlasSlots to it.atlasSlotsLimit },
                     )
                 }
 

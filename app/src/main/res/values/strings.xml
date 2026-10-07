@@ -371,6 +371,7 @@
     <string name="manage_select">Select</string>
     <string name="manage_done">Done</string>
     <string name="manage_cards_section">My atlas cards</string>
+    <string name="manage_slots_count">%1$d / %2$d slots</string>
     <string name="manage_empty">No custom atlas cards yet</string>
     <string name="manage_empty_hint">Tap the camera in the middle of the bar below and take a photo to make a card.</string>
     <string name="manage_hidden">%1$d more cards are in %2$s</string>

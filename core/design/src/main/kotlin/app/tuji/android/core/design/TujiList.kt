@@ -42,20 +42,28 @@ fun TujiSection(
     modifier: Modifier = Modifier,
     title: String? = null,
     footer: String? = null,
+    /** Drawn at the end of the title line — a count, say. Ignored without a [title]. */
+    titleTrailing: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier.fillMaxWidth().padding(top = TujiSpace.S5)) {
         if (title != null) {
-            Text(
-                title,
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-                modifier = Modifier.padding(
+            Row(
+                Modifier.fillMaxWidth().padding(
                     start = TujiSpace.S4,
                     end = TujiSpace.S4,
                     bottom = TujiSpace.S2,
                 ),
-            )
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            ) {
+                Text(
+                    title,
+                    style = TujiType.label,
+                    color = TujiColor.Ink3,
+                    modifier = Modifier.weight(1f),
+                )
+                titleTrailing?.invoke()
+            }
         }
         content()
         if (footer != null) {

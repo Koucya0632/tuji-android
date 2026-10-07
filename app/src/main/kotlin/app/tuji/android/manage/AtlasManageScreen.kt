@@ -77,6 +77,12 @@ fun AtlasManageScreen(
     onCreateCollection: (title: String, description: String, onCreated: () -> Unit) -> Unit,
     onDismissCreateError: () -> Unit,
     onOpenCollection: (String) -> Unit,
+    /**
+     * 已用 / 上限 自製圖鑑 slots, from the server's entitlement — the numbers the
+     * capture gate reads. Account-wide, so cards in the other learning
+     * direction count too. Null until the entitlement has loaded.
+     */
+    slots: Pair<Int, Int>? = null,
 ) {
     var askDelete by remember { mutableStateOf(false) }
     var section by rememberSaveable { mutableStateOf(ManageSection.Cards) }
@@ -131,7 +137,20 @@ fun AtlasManageScreen(
                 onRefresh = onRefreshCollections,
             )
         } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            TujiSection(title = stringResource(R.string.manage_cards_section)) {
+            TujiSection(
+                title = stringResource(R.string.manage_cards_section),
+                titleTrailing = slots?.let { (used, limit) ->
+                    {
+                        // Over the cap only happens after Pro ends (the extra
+                        // cards lock), and that is worth the alert colour.
+                        Text(
+                            stringResource(R.string.manage_slots_count, used, limit),
+                            style = TujiType.label.copy(fontFeatureSettings = "tnum"),
+                            color = if (used > limit) TujiColor.Alert else TujiColor.Ink3,
+                        )
+                    }
+                },
+            ) {
                 if (state.actionFailed) {
                     Text(
                         stringResource(R.string.manage_action_failed),
