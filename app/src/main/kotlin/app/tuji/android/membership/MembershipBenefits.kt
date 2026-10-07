@@ -21,9 +21,7 @@ data class MembershipOffer(
     val isV2: Boolean,
     val credits: Boolean = false,
 ) {
-    val lifetimeRows: List<Int> get() = if (credits) listOf(
-        R.string.membership_benefit_all_series, R.string.credit_slots, R.string.credit_ai_points,
-    ) else LIFETIME
+    val lifetimeRows: List<Int> get() = if (credits) CREDITS_LIFETIME else LIFETIME
 
     val proRows: List<Int>
         get() = buildList {
@@ -52,6 +50,19 @@ data class MembershipOffer(
             R.string.membership_benefit_community,
             R.string.membership_benefit_lists_20,
             R.string.membership_benefit_notes,
+        )
+
+        /**
+         * 永久會員 once billing is on 罐頭點數: AI has no monthly quota any
+         * more — it is paid per use from the points — so the card sells what
+         * the membership itself opens. iOS's `MembershipBenefits.creditsLifetime`.
+         */
+        private val CREDITS_LIFETIME = listOf(
+            R.string.membership_benefit_all_series,
+            R.string.membership_benefit_community,
+            R.string.membership_benefit_notes,
+            R.string.membership_benefit_lists_20,
+            R.string.membership_benefit_slots_200_credits,
         )
 
         fun from(entitlement: Entitlement?): MembershipOffer {
