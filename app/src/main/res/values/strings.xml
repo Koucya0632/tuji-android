@@ -69,8 +69,6 @@
     <string name="study_done_finish">Done</string>
     <string name="review_done_title">Review complete!</string>
     <string name="review_done_unit">words</string>
-    <string name="study_streak_label">Streak</string>
-    <string name="study_streak_unit">days</string>
     <string name="study_today_reviewed">Today\'s review</string>
     <string name="study_wrong_times">Missed %1$d times</string>
     <string name="study_listen_replay">Play again</string>
@@ -750,4 +748,13 @@
     <string name="credit_monthly_auto">1,000 free credits every month</string>
     <string name="credit_free_balance">Free allowance: %1$d credits · Check-in: %2$d credits</string>
     <string name="credit_monthly_reset_note">The free allowance resets automatically each month and does not carry over. Check-in and purchased credits never expire.</string>
+
+    <!-- 打卡 on the study finish screens -->
+    <string name="checkin_done_title">Checked in today</string>
+    <string name="checkin_streak_days">%1$d-day streak</string>
+    <string name="checkin_claimable">%1$d Can Credits ready to claim</string>
+    <string name="checkin_claimed">Today\'s credits are in. See you tomorrow</string>
+    <string name="checkin_capped">Up to %1$d credits a month. Back next month</string>
+    <string name="checkin_claim">Claim +%1$d</string>
+    <string name="checkin_claim_failed">Couldn\'t claim. Tap to try again.</string>
 </resources>

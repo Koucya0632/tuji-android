@@ -56,7 +56,7 @@ class TujiApplication : Application() {
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
             accountScopedStores = {
-                listOf(settingsStore, masteryStore, progressStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore, wordListsStore)
+                listOf(settingsStore, masteryStore, progressStore, checkInStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore, wordListsStore)
             },
         )
     }
@@ -113,6 +113,16 @@ class TujiApplication : Application() {
     /** The streak, the heatmap and the per-theme rows, for 我的 and 主題. */
     val progressStore: app.tuji.android.account.ProgressStore by lazy {
         app.tuji.android.account.ProgressStore(study)
+    }
+
+    /** 打卡's catalog and wallet, read by the study finish screens. */
+    val checkInStore: app.tuji.android.account.CheckInStore by lazy {
+        val credits = app.tuji.android.core.network.CreditRepository(api)
+        app.tuji.android.account.CheckInStore(
+            loadCatalog = credits::catalog,
+            loadWallet = credits::wallet,
+            checkIn = { credits.claim(monthly = false) },
+        )
     }
 
     /**

@@ -3,7 +3,11 @@ package app.tuji.android.core.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreditBenefits(val monthlyClaimed: Boolean, val checkedInToday: Boolean, val checkInGrantedThisMonth: Int, val hasLifetime: Boolean)
+data class CreditBenefits(
+    val monthlyClaimed: Boolean, val checkedInToday: Boolean, val checkInGrantedThisMonth: Int, val hasLifetime: Boolean,
+    /** At least one study answer today (the server's day). Null from a server that predates it. */
+    val studiedToday: Boolean? = null,
+)
 @Serializable
 data class CreditWallet(
     val available: Int, val reserved: Int, val paidAvailable: Int, val giftAvailable: Int,
@@ -20,7 +24,11 @@ data class CreditPack(val productId: String, val points: Int)
 data class CreditCatalog(
     val billingMode: String, val environment: String, val purchaseEnabled: Boolean, val proNewPurchaseEnabled: Boolean,
     val operationsEnabled: Boolean, val monthlyEnabled: Boolean, val checkInEnabled: Boolean, val packs: List<CreditPack>,
+    val policy: CreditPolicy? = null,
 )
+/** The amounts the server charges and grants; only the check-in pair is read so far. */
+@Serializable
+data class CreditPolicy(val checkInDaily: Int? = null, val checkInMonthlyCap: Int? = null)
 @Serializable
 data class CreditCandidate(val id: String, val label: String, val zhHant: String, val gloss: String? = null)
 @Serializable

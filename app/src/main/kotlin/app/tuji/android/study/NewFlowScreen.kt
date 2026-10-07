@@ -119,6 +119,11 @@ fun NewFlowScreen(
     /** The deck being studied — which language an untagged card is asking for. */
     session: TargetLanguage,
     uiLang: String,
+    /**
+     * 今天已打卡, drawn under the celebration. A slot rather than data: the
+     * shell owns the stores it refreshes once the session's writes settle.
+     */
+    checkIn: @Composable (Modifier) -> Unit = {},
     onClose: () -> Unit,
     /** A word's whole entry, for the half of the wrong-answer card a drag opens. */
     fullDetail: @Composable (String) -> Unit,
@@ -172,6 +177,7 @@ fun NewFlowScreen(
                 showChinese = showChinese,
                 bottomPadding = insets.calculateBottomPadding(),
                 onClose = onClose,
+                checkIn = checkIn,
             )
 
             is NewFlowViewModel.State.Studying -> if (!started) {
@@ -1228,6 +1234,7 @@ private fun NewDoneView(
     showChinese: Boolean,
     bottomPadding: Dp,
     onClose: () -> Unit,
+    checkIn: @Composable (Modifier) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -1245,6 +1252,7 @@ private fun NewDoneView(
                     color = TujiColor.Paper.copy(alpha = 0.7f),
                 )
             }
+            checkIn(Modifier.padding(horizontal = TujiSpace.S4))
             UnsyncedAnswersNotice(unsynced, Modifier.padding(horizontal = TujiSpace.S4))
             StudyWordGrid(items = queue, showChinese = showChinese, mistakeCounts = mistakes)
             Spacer(Modifier.height(TujiSpace.S5))

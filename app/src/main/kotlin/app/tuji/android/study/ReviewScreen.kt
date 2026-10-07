@@ -132,10 +132,10 @@ fun ReviewScreen(
     /** Mark or unmark; null for a card the catalogue does not have, which draws no star. */
     onBookmark: ((String) -> Unit)? = null,
     /**
-     * 連勝, for the completion screen's one line about the account. Null while
-     * the shell has not read it yet, which the line says rather than guessing.
+     * 今天已打卡, drawn under the celebration. A slot rather than data: the
+     * shell owns the stores it refreshes once the session's writes settle.
      */
-    streak: Int? = null,
+    checkIn: @Composable (Modifier) -> Unit = {},
     /** Where 報錯 goes. Null draws no ⋯. */
     reporter: StudyReporter? = null,
 ) {
@@ -171,7 +171,7 @@ fun ReviewScreen(
                 session = s.session,
                 mastery = s.mastery,
                 unsynced = s.unsynced,
-                streak = streak,
+                checkIn = checkIn,
                 showChinese = showChinese,
                 topPadding = insets.calculateTopPadding(),
                 bottomPadding = insets.calculateBottomPadding(),
@@ -847,7 +847,7 @@ private fun SRSRating.label(): String = stringResource(
 )
 
 /**
- * 複習完成 — the cat, the count, the streak, and what moved.
+ * 複習完成 — the cat, the count, 今天已打卡 with the streak, and what moved.
  *
  * iOS's `CompleteView`. The per-word rows are the point of the screen: a review
  * session's result is not "you did twenty", it is **which words went up**, and
@@ -863,7 +863,7 @@ private fun CompleteView(
     session: ReviewSession,
     mastery: Map<String, MasteryDelta>,
     unsynced: Int,
-    streak: Int?,
+    checkIn: @Composable (Modifier) -> Unit,
     showChinese: Boolean,
     topPadding: androidx.compose.ui.unit.Dp,
     bottomPadding: androidx.compose.ui.unit.Dp,
@@ -898,7 +898,7 @@ private fun CompleteView(
                     )
                 }
             }
-            StreakLine(streak, Modifier.padding(horizontal = TujiSpace.S4))
+            checkIn(Modifier.padding(horizontal = TujiSpace.S4))
             UnsyncedAnswersNotice(unsynced, Modifier.padding(horizontal = TujiSpace.S4))
             if (session.answered.isNotEmpty()) {
                 Column(Modifier.fillMaxWidth()) {
@@ -941,24 +941,6 @@ private fun CompleteView(
                 .padding(horizontal = TujiSpace.S4)
                 .padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S3),
         )
-    }
-}
-
-/**
- * 連勝 N 天.
- *
- * **A line, not a badge.** iOS's note: the streak used to sit in a teal-tinted
- * box with a teal border and a flame — three ways of shouting a number that is
- * simply a fact about the account. It is 積累, so it is teal, and that is the
- * whole treatment.
- */
-@Composable
-private fun StreakLine(streak: Int?, modifier: Modifier = Modifier) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-        if (streak == null) return@Row
-        Text(stringResource(R.string.study_streak_label), style = TujiType.label, color = TujiColor.Ink3)
-        Text("$streak", style = TujiType.monoLabel, color = TujiColor.Accumulation)
-        Text(stringResource(R.string.study_streak_unit), style = TujiType.label, color = TujiColor.Ink3)
     }
 }
 
