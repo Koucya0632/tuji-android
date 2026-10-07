@@ -1,6 +1,7 @@
 package app.tuji.android.core.network
 
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.StudyCalendarMonth
 import app.tuji.android.core.model.FavoritesResponse
 import app.tuji.android.core.model.FeedbackPayload
 import app.tuji.android.core.model.MasteryListResponse
@@ -64,6 +65,11 @@ interface MasteryReading {
 /** The streak, the heatmap and the per-theme rows. */
 interface ProgressReading {
     suspend fun progress(learning: LearningDirection): ProgressResponse
+}
+
+/** One month of the 打卡 calendar. */
+interface StudyCalendarReading {
+    suspend fun studyCalendar(learning: LearningDirection, month: String?): StudyCalendarMonth
 }
 
 /**
@@ -172,6 +178,7 @@ class StudyRepository(private val api: TujiApiClient) :
     StudyQueueReading,
     StudyStatsReading,
     MasteryReading,
+    StudyCalendarReading,
     ProgressReading,
     SettingsAccess,
     PersonalWordsAccess,
@@ -237,6 +244,9 @@ class StudyRepository(private val api: TujiApiClient) :
 
     override suspend fun progress(learning: LearningDirection): ProgressResponse =
         api.get(Endpoint.UsersProgress(learning))
+
+    override suspend fun studyCalendar(learning: LearningDirection, month: String?): StudyCalendarMonth =
+        api.get(Endpoint.UsersStudyCalendar(learning, month))
 
     override suspend fun settings(): UserSettings =
         api.get<UserSettingsResponse>(Endpoint.UserSettingsRead).settings

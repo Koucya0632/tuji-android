@@ -50,6 +50,9 @@ object CheckInDecision {
         return Reward.Claimable(minOf(daily, left))
     }
 
+    /** The dot on 今日's streak chip: only when a tap would collect something. */
+    fun chipBadge(reward: Reward): Boolean = reward is Reward.Claimable
+
     /**
      * The points line on a study finish screen. Only what today's studying
      * earned: no upgrade pitch on a celebration, and 還沒學習 there only means

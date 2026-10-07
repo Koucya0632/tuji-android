@@ -129,6 +129,19 @@ interface Endpoint {
         )
     }
 
+    /**
+     * One month of the 打卡 calendar; [month] is YYYY-MM, null for the
+     * server's current month. Fresh: a claim decision is made from it, and the
+     * server already caches the query behind the tag study/answer busts.
+     */
+    data class UsersStudyCalendar(val learning: LearningDirection, val month: String?) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/users/study-calendar",
+            query = listOf("learning" to learning.wire) + listOfNotNull(month?.let { "month" to it }),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** The account's settings. Read on launch, written on every change. */
     data object UserSettingsRead : Endpoint {
         override val descriptor get() = EndpointDescriptor(

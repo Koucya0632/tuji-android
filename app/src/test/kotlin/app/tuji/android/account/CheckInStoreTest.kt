@@ -4,6 +4,8 @@ import app.tuji.android.core.model.CheckInDecision.Reward
 import app.tuji.android.core.model.CreditBenefits
 import app.tuji.android.core.model.CreditCatalog
 import app.tuji.android.core.model.CreditWallet
+import app.tuji.android.core.model.StudyCalendarMonth
+import app.tuji.android.core.model.StudyStreak
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -71,5 +73,67 @@ class CheckInStoreTest {
         store.loadReward()
         store.reset()
         assertEquals(Reward.Hidden, store.snapshot.value.reward(true))
+    }
+
+    private fun month(month: String, totalDays: Int = 9) =
+        StudyCalendarMonth(month, "Asia/Taipei", "2026-10-07", listOf("2026-10-01"), StudyStreak(1, 4, totalDays, 1, "2026-10-07"))
+
+    private fun calendarStore(load: suspend (String?) -> StudyCalendarMonth) = CheckInStore(
+        loadCatalog = { catalog() }, loadWallet = { wallet() }, checkIn = { wallet() }, loadCalendar = load,
+    )
+
+    @Test fun `month paging stops at the current month and a year back`() = runTest {
+        val asked = mutableListOf<String?>()
+        val store = calendarStore { asked += it; month(it ?: "2026-10") }
+        store.loadCalendar()
+        assertFalse(store.snapshot.value.canShowLater)
+        assertTrue(store.snapshot.value.canShowEarlier)
+        store.showMonth(1)
+        assertEquals(listOf<String?>(null), asked)
+        store.showMonth(-1)
+        assertEquals("2026-09", asked.last())
+        assertTrue(store.snapshot.value.canShowLater)
+        repeat(20) { store.showMonth(-1) }
+        assertEquals("2025-10", store.snapshot.value.calendar?.month)
+        assertFalse(store.snapshot.value.canShowEarlier)
+    }
+
+    @Test fun `an account that never studied has no earlier month`() = runTest {
+        val store = calendarStore { month(it ?: "2026-10", totalDays = 0) }
+        store.loadCalendar()
+        assertFalse(store.snapshot.value.canShowEarlier)
+    }
+
+    @Test fun `a month that will not load keeps the one on screen`() = runTest {
+        var fail = false
+        val store = calendarStore { if (fail) error("offline") else month(it ?: "2026-10") }
+        store.loadCalendar()
+        fail = true
+        store.showMonth(-1)
+        assertEquals("2026-10", store.snapshot.value.calendar?.month)
+        assertFalse(store.snapshot.value.calendarFailed)
+    }
+
+    @Test fun `a first calendar read that fails says so`() = runTest {
+        val store = calendarStore { error("offline") }
+        store.loadCalendar()
+        assertTrue(store.snapshot.value.calendarFailed)
+    }
+
+    @Test fun `the chip's read is skipped while fresh`() = runTest {
+        var clock = 0L
+        val fake = Fake(catalog(), wallet()) { wallet() }
+        var catalogReads = 0
+        val store = CheckInStore(
+            loadCatalog = { catalogReads++; fake.catalog }, loadWallet = { fake.wallet }, checkIn = { fake.wallet },
+            now = { clock },
+        )
+        store.loadRewardIfStale()
+        clock = 30_000
+        store.loadRewardIfStale()
+        assertEquals(1, catalogReads)
+        clock = 61_000
+        store.loadRewardIfStale()
+        assertEquals(2, catalogReads)
     }
 }

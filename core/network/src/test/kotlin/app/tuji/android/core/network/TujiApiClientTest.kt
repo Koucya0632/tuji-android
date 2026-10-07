@@ -71,6 +71,25 @@ class TujiApiClientTest {
     }
 
     @Test
+    fun `every request states the phone's time zone, including the 401 retry`() = runTest {
+        val zones = mutableListOf<String?>()
+        val engine = MockEngine { request ->
+            zones += request.headers[TIMEZONE_HEADER]
+            if (zones.size == 1) respondError(HttpStatusCode.Unauthorized)
+            else respond(
+                """{"month":"2026-10","timezone":"Europe/Berlin","today":"2026-10-07","studiedDays":[]}""",
+                HttpStatusCode.OK, jsonHeaders,
+            )
+        }
+        val api = TujiApiClient(
+            "https://example.test", FakeTokens(mutableListOf("stale", "fresh")), engine,
+            timeZone = { "Europe/Berlin" },
+        )
+        StudyRepository(api).studyCalendar(LearningDirection.ZH_EN, month = "2026-10")
+        assertEquals(listOf("Europe/Berlin", "Europe/Berlin"), zones)
+    }
+
+    @Test
     fun `a public read sends no bearer`() = runTest {
         var authorization: String? = "unset"
         val engine = MockEngine { request ->

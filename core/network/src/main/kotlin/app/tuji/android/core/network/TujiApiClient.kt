@@ -45,6 +45,8 @@ class TujiApiClient(
     private val baseUrl: String,
     @PublishedApi internal val tokens: AccessTokenProvider = NoAccessToken,
     engine: HttpClientEngine? = null,
+    /** Read per request, so a phone that changes zone mid-session follows it. */
+    private val timeZone: () -> String = { java.time.ZoneId.systemDefault().id },
 ) {
     @PublishedApi
     internal val http: HttpClient = HttpClient(engine ?: OkHttp.create()) {
@@ -102,6 +104,10 @@ class TujiApiClient(
             url(baseUrl.trimEnd('/') + descriptor.path)
             descriptor.query.forEach { (name, value) -> url.parameters.append(name, value) }
             accept(ContentType.Application.Json)
+            // The account's "today" — streak, heatmap, calendar, 今日目標 and
+            // the check-in reward — is the phone's day, as on iOS. Without it
+            // the server falls back to Asia/Taipei.
+            header(TIMEZONE_HEADER, timeZone())
             extraHeaders.forEach { (name, value) -> header(name, value) }
             // **Both**, not just the request timeout. Ktor counts them
             // separately: `requestTimeoutMillis` bounds the whole call, while
@@ -173,3 +179,6 @@ class TujiApiClient(
         throw ApiError.Http(response.status.value, runCatching { response.bodyAsText() }.getOrNull())
     }
 }
+
+/** The phone's IANA zone, on every request; see [TujiApiClient.send]. */
+const val TIMEZONE_HEADER = "X-Tuji-Timezone"
