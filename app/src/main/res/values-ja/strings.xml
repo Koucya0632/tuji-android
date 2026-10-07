@@ -624,6 +624,7 @@
     <string name="membership_benefit_community">物見の保存・学習・投稿</string>
     <string name="membership_benefit_notes">単語ごとに自分のメモを残せます</string>
     <string name="membership_benefit_lists_20">単語リスト 20 件（リストから学習）</string>
+    <string name="membership_benefit_slots_200_credits">自作図鑑200枠、AI認識は缶詰ポイントで</string>
     <string name="membership_benefit_lists_100">単語リストが 100 件まで</string>
     <string name="membership_benefit_slots_300">マイ図鑑の容量が300枠に拡張</string>
     <string name="membership_benefit_ai_200">AI認識が月200回に増加</string>
@@ -703,8 +704,6 @@
     <string name="feedback_thanks">ご意見ありがとうございます！参考にして改善を続けます。</string>
 
     <string name="credit_title">缶詰ポイント</string>
-    <string name="credit_slots">自作図鑑200枠</string>
-    <string name="credit_ai_points">必要に応じて缶詰ポイントでAIを使う</string>
     <string name="credit_pro_closed">新規Proプランの販売は終了しました。既存の特典は引き続き有効です。</string>
     <string name="credit_balances">予約 %1$d · 特典 %2$d · 購入 %3$d</string>
     <string name="credit_refund_hold">返金分のポイントを確認中です。新しいAI処理は一時停止しています。</string>

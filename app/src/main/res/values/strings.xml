@@ -624,6 +624,7 @@
     <string name="membership_benefit_community">Save, study and share on Sightings</string>
     <string name="membership_benefit_notes">Your own note on every word</string>
     <string name="membership_benefit_lists_20">20 personal word lists you can study from</string>
+    <string name="membership_benefit_slots_200_credits">200 custom atlas slots, with AI recognition paid in Can Credits</string>
     <string name="membership_benefit_lists_100">Personal word lists raised to 100</string>
     <string name="membership_benefit_slots_300">Custom atlas capacity boosted to 300 slots</string>
     <string name="membership_benefit_ai_200">AI recognition boosted to 200/month</string>
@@ -703,8 +704,6 @@
     <string name="feedback_thanks">Thanks for the feedback! We\'ll use it to keep improving.</string>
 
     <string name="credit_title">Can Credits</string>
-    <string name="credit_slots">200 custom atlas slots</string>
-    <string name="credit_ai_points">Use Can Credits for AI as needed</string>
     <string name="credit_pro_closed">New Pro plans are no longer sold. Existing benefits remain valid.</string>
     <string name="credit_balances">Reserved %1$d · Bonus %2$d · Purchased %3$d</string>
     <string name="credit_refund_hold">Refunded credits are being reconciled. New AI tasks are paused.</string>

@@ -624,6 +624,7 @@
     <string name="membership_benefit_community">收藏、學習與投稿物見</string>
     <string name="membership_benefit_notes">為每個字寫下自己的筆記</string>
     <string name="membership_benefit_lists_20">個人詞表 20 張，可以從詞表背詞</string>
+    <string name="membership_benefit_slots_200_credits">自製圖鑑 200 格，AI 辨識使用罐頭點數</string>
     <string name="membership_benefit_lists_100">個人詞表增加到 100 張</string>
     <string name="membership_benefit_slots_300">自製圖鑑容量提升至 300 格</string>
     <string name="membership_benefit_ai_200">AI 辨識次數提升至每月 200 次</string>
@@ -703,8 +704,6 @@
     <string name="feedback_thanks">謝謝你的意見！我們會參考並持續改進。</string>
 
     <string name="credit_title">罐頭點數</string>
-    <string name="credit_slots">自製圖鑑容量 200 格</string>
-    <string name="credit_ai_points">AI 依需要使用罐頭點數</string>
     <string name="credit_pro_closed">新 Pro 方案已停止販售，既有會員權益持續有效。</string>
     <string name="credit_balances">預留 %1$d 點 · 贈點 %2$d · 購買點 %3$d</string>
     <string name="credit_refund_hold">退款點數正在核對，新增 AI 工作暫停。</string>

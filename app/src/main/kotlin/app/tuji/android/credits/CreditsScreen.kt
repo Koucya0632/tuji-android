@@ -77,8 +77,7 @@ fun CreditsScreen(
             Text(stringResource(R.string.credit_title), style = TujiType.h3)
         }
         if (!capture) {
-            Text(stringResource(R.string.credit_slots))
-            Text(stringResource(R.string.credit_ai_points))
+            Text(stringResource(R.string.membership_benefit_slots_200_credits))
             Text(stringResource(R.string.credit_pro_closed))
         }
         state.wallet?.let { wallet ->
