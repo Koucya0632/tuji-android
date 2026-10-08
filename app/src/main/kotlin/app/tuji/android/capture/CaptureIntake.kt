@@ -119,7 +119,7 @@ fun CaptureIntake(
             onLibrary = ::openLibrary,
             onDismiss = onClose,
         )
-        IntakeStep.Working -> TujiWindow(onDismiss = {}) {
+        IntakeStep.Working -> TujiWindow(onDismiss = {}, darkGround = true) {
             Box(Modifier.fillMaxSize().background(TujiColor.Ink))
         }
         is IntakeStep.Cropping -> FreeformCropWindow(
@@ -144,7 +144,7 @@ fun CaptureIntake(
  */
 @Composable
 private fun CaptureCameraWindow(onPhoto: (ByteArray) -> Unit, onLibrary: () -> Unit, onDismiss: () -> Unit) =
-    TujiWindow(onDismiss = onDismiss) {
+    TujiWindow(onDismiss = onDismiss, darkGround = true) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val haptics = rememberTujiHaptics()
@@ -269,7 +269,7 @@ private fun FreeformCropWindow(
     bitmap: Bitmap,
     onConfirm: (left: Float, top: Float, right: Float, bottom: Float) -> Unit,
     onRetake: () -> Unit,
-) = TujiWindow(onDismiss = onRetake) {
+) = TujiWindow(onDismiss = onRetake, darkGround = true) {
     val image = remember(bitmap) { bitmap.asImageBitmap() }
     var crop by remember(bitmap) { mutableStateOf(Rect(0f, 0f, 1f, 1f)) }
     var working by remember { mutableStateOf(false) }

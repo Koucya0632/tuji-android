@@ -24,7 +24,16 @@ import androidx.compose.ui.window.DialogWindowProvider
  * app's motion rules.
  */
 @Composable
-fun TujiWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+fun TujiWindow(
+    onDismiss: () -> Unit,
+    /**
+     * The window is drawn on ink (a camera, a crop), so the status and
+     * navigation bar icons turn light. A dialog window keeps its own bar
+     * appearance, so the screen behind cannot decide this for it.
+     */
+    darkGround: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     // A dialog is a view of its own, and every Compose view provides its own
     // context and configuration at the root — which drops the app's chosen
     // language (`ProvideAppLanguage`) and draws a `stringResource` inside
@@ -35,15 +44,34 @@ fun TujiWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) {
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
-        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        val view = LocalView.current
+        val window = (view.parent as? DialogWindowProvider)?.window
         SideEffect {
             window?.setDimAmount(0f)
             window?.setWindowAnimations(0)
+            // Only ever turned light: every other window keeps what it inherits.
+            if (darkGround) window?.let { setLightBars(it, light = false) }
         }
         CompositionLocalProvider(
             LocalContext provides context,
             LocalConfiguration provides configuration,
             content = content,
         )
+    }
+}
+
+/** Dark bar icons on a light ground, light icons on ink. */
+private fun setLightBars(window: android.view.Window, light: Boolean) {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+        val mask = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+            android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+        window.insetsController?.setSystemBarsAppearance(if (light) mask else 0, mask)
+    } else {
+        @Suppress("DEPRECATION")
+        val decor = window.decorView
+        @Suppress("DEPRECATION")
+        val mask = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        @Suppress("DEPRECATION")
+        decor.systemUiVisibility = if (light) decor.systemUiVisibility or mask else decor.systemUiVisibility and mask.inv()
     }
 }
