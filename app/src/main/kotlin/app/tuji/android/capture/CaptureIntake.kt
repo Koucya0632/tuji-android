@@ -138,12 +138,13 @@ fun CaptureIntake(
 }
 
 /**
- * iOS's `CameraPicker`: full-bleed preview, the close mark in the safe area,
+ * iOS's `CameraPicker` — one camera for every photo the app takes (拍照新增,
+ * 頭像, 合集頭像), as iOS's `ImageIntake` shares one: full-bleed preview, the close mark in the safe area,
  * 相簿 bottom-left where the system camera keeps its roll, a square shutter,
  * 切換鏡頭 bottom-right, and pinch to zoom.
  */
 @Composable
-private fun CaptureCameraWindow(onPhoto: (ByteArray) -> Unit, onLibrary: () -> Unit, onDismiss: () -> Unit) =
+fun CaptureCameraWindow(onPhoto: (ByteArray) -> Unit, onLibrary: () -> Unit, onDismiss: () -> Unit) =
     TujiWindow(onDismiss = onDismiss, darkGround = true) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
