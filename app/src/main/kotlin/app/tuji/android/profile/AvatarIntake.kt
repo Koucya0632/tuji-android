@@ -127,7 +127,7 @@ fun AvatarIntake(
             onPhoto = { bytes -> decode { PhotoCodec.decode(bytes) } },
             onDismiss = onClose,
         )
-        Intake.Decoding -> TujiWindow(onDismiss = {}) {
+        Intake.Decoding -> TujiWindow(onDismiss = {}, darkGround = true) {
             Box(Modifier.fillMaxSize().background(TujiColor.Ink))
         }
         is Intake.Cropping -> CropWindow(
@@ -143,7 +143,7 @@ fun AvatarIntake(
             },
             onCancel = onClose,
         )
-        Intake.Failed -> TujiWindow(onDismiss = onClose) {
+        Intake.Failed -> TujiWindow(onDismiss = onClose, darkGround = true) {
             Column(
                 Modifier.fillMaxSize().background(TujiColor.Ink).padding(TujiSpace.S4),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S4, Alignment.CenterVertically),
@@ -205,7 +205,7 @@ private fun SourceSheet(
 
 /** The same viewfinder 拍照收字 uses, for one frame. */
 @Composable
-private fun CameraWindow(onPhoto: (ByteArray) -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss) {
+private fun CameraWindow(onPhoto: (ByteArray) -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss, darkGround = true) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val controller = remember { CameraController() }
@@ -258,7 +258,7 @@ private fun CameraWindow(onPhoto: (ByteArray) -> Unit, onDismiss: () -> Unit) = 
  * The circle is only the preview — the saved image is the square around it.
  */
 @Composable
-private fun CropWindow(bitmap: Bitmap, mask: CropMask, onConfirm: (CropSquare) -> Unit, onCancel: () -> Unit) = TujiWindow(onDismiss = onCancel) {
+private fun CropWindow(bitmap: Bitmap, mask: CropMask, onConfirm: (CropSquare) -> Unit, onCancel: () -> Unit) = TujiWindow(onDismiss = onCancel, darkGround = true) {
     val image: ImageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
     val w = bitmap.width.toFloat()
     val h = bitmap.height.toFloat()

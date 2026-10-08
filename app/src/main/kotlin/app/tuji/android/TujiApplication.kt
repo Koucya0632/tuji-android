@@ -165,6 +165,7 @@ class TujiApplication : Application() {
                 val settings = settingsStore.current.value
                 cardsSourceStore.load(settings.language.wire, settings.direction, force = true)
             },
+            credits = app.tuji.android.capture.LiveCreditCardConfirming(app.tuji.android.core.network.CreditRepository(api)),
         )
     }
 

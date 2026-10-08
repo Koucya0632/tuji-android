@@ -6,7 +6,7 @@ import org.junit.Test
 
 /** Pins which 打卡 reward shows — the same cases as iOS's `CheckInRewardTests`. */
 class CheckInDecisionTest {
-    private fun catalog(billingMode: String = "credits", enabled: Boolean = true, policy: CreditPolicy? = CreditPolicy(10, 300)) =
+    private fun catalog(billingMode: String = "credits", enabled: Boolean = true, policy: CreditPolicy? = CreditPolicy(checkInDaily = 10, checkInMonthlyCap = 300)) =
         CreditCatalog(billingMode, "sandbox", true, false, true, true, enabled, emptyList(), policy)
 
     private fun wallet(
@@ -55,7 +55,7 @@ class CheckInDecisionTest {
 
     @Test fun `amounts default when the catalog sends no policy`() {
         assertEquals(Reward.Claimable(CheckInDecision.DEFAULT_DAILY), reward(catalog = catalog(policy = null)))
-        assertEquals(Reward.Claimable(20), reward(catalog = catalog(policy = CreditPolicy(20, 300))))
+        assertEquals(Reward.Claimable(20), reward(catalog = catalog(policy = CreditPolicy(checkInDaily = 20, checkInMonthlyCap = 300))))
     }
 
     @Test fun `a finish screen shows what today earned, never an upgrade or a study prompt`() {
