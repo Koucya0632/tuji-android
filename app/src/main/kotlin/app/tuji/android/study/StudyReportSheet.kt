@@ -155,14 +155,21 @@ internal fun StudyReportMenu(state: StudyReportState, subject: () -> StudyReport
                 .background(TujiColor.Paper)
                 .border(TujiBorder.Bw1, TujiColor.Rule),
         ) {
-            Text(
-                label,
-                style = TujiType.body,
-                color = TujiColor.Ink,
-                modifier = Modifier
+            // Label first and the mark trailing, the way iOS lays out a menu
+            // item with `systemImage`.
+            Row(
+                Modifier
+                    .widthIn(min = 200.dp)
                     .tujiClickable { state.report(subject()) }
                     .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-            )
+                // Spread inside its 200dp floor, not across the screen: a weight
+                // here would fill all the width a popup offers.
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(label, style = TujiType.body, color = TujiColor.Ink, modifier = Modifier.padding(end = TujiSpace.S3))
+                TujiGlyph.Warning(size = 18.dp, tint = TujiColor.Ink)
+            }
         }
     }
 }
