@@ -779,8 +779,25 @@ private fun SignedInScreens(
                     if (listStudy != null) it.load(StudyMode.Review, limit = WordListQueue.REVIEW_LIMIT) else it.load(StudyMode.Review)
                 }
             }
+            // 再來一輪's count: what is still due once this round's answers have
+            // landed. Re-read every time a round finishes, so a second round's
+            // summary does not offer the first round's number.
+            val reviewState by vm.state.collectAsStateWithLifecycle()
+            val roundFinished = reviewState is ReviewViewModel.State.Done
+            var remainingDue by remember(vm) { mutableIntStateOf(0) }
+            LaunchedEffect(vm, roundFinished) {
+                remainingDue = 0
+                if (!roundFinished || listStudy != null) return@LaunchedEffect
+                vm.awaitWrites()
+                remainingDue = runCatching { app.study.stats(direction).stats?.due ?: 0 }
+                    .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+                    .getOrDefault(0)
+            }
             ReviewScreen(
                 vm = vm,
+                remainingDue = remainingDue,
+                // A 個人詞表 session's summary would count every due word, not the list's.
+                onAnotherRound = if (listStudy == null) ({ vm.anotherRound() }) else null,
                 noteFor = { id -> if (notesExist) wordNotes.byWordId[id]?.body else null },
                 showChinese = settings.showZh,
                 fullDetail = { wordId ->
@@ -1846,15 +1863,22 @@ private fun FinishCheckIn(
         refreshed = true
     }
     val streak = progress.streak
-    if (!refreshed || streak == null || streak.todayCount <= 0) return
-    SessionCheckInCard(
-        streak = streak.current,
-        reward = CheckInDecision.finishReward(checkIn.reward(fallbackStudiedToday = true)),
-        claiming = checkIn.claiming,
-        claimFailed = checkIn.claimFailed,
-        onClaim = { scope.launch { if (app.checkInStore.claim()) haptics.success() } },
+    // Fades in, as iOS's `.transition(.opacity)`: it arrives a beat after the
+    // screen, once the server counts today.
+    AnimatedVisibility(
+        visible = refreshed && streak != null && streak.todayCount > 0,
+        enter = fadeIn(TujiMotion.ease(TujiMotion.D2)),
+        exit = fadeOut(TujiMotion.ease(TujiMotion.D2)),
         modifier = modifier,
-    )
+    ) {
+        SessionCheckInCard(
+            streak = streak?.current ?: 0,
+            reward = CheckInDecision.finishReward(checkIn.reward(fallbackStudiedToday = true)),
+            claiming = checkIn.claiming,
+            claimFailed = checkIn.claimFailed,
+            onClaim = { scope.launch { if (app.checkInStore.claim()) haptics.success() } },
+        )
+    }
 }
 
 @Composable

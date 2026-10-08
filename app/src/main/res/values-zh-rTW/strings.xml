@@ -804,4 +804,8 @@
     <string name="credit_price_changed">價格已更新，請確認後再開始。</string>
     <string name="credit_poll_failed">暫時無法連線，請重試同步。</string>
     <string name="credit_photo_unavailable">無法讀取這張照片，請換一張。</string>
+    <string name="review_round_done">這一輪完成</string>
+    <string name="review_another_round">再來一輪（還有 %d 字）</string>
+    <string name="review_loading_next">載入下一輪…</string>
+    <string name="review_stop_here">先到這裡，回首頁</string>
 </resources>

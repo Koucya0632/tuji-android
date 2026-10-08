@@ -804,4 +804,8 @@
     <string name="credit_price_changed">价格已更新，请确认后再开始。</string>
     <string name="credit_poll_failed">暂时无法连接，请重试同步。</string>
     <string name="credit_photo_unavailable">无法读取这张照片，请换一张。</string>
+    <string name="review_round_done">这一轮完成</string>
+    <string name="review_another_round">再来一轮（还有 %d 字）</string>
+    <string name="review_loading_next">载入下一轮…</string>
+    <string name="review_stop_here">先到这里，回首页</string>
 </resources>

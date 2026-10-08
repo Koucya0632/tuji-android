@@ -186,6 +186,41 @@ class ReviewViewModel(
         }
     }
 
+    /**
+     * 再來一輪 from the finish screen: a fresh due queue, and the session
+     * started over with it. The queue is fetched **before** anything resets, so
+     * an empty answer (cleared on another device) leaves the summary standing
+     * instead of flashing a loading screen into an empty session. Returns
+     * whether a round started.
+     */
+    suspend fun anotherRound(limit: Int = 20): Boolean {
+        val queue = runCatching {
+            queues.queue(
+                mode = StudyMode.Review,
+                limit = limit,
+                new = 0,
+                categories = emptyList(),
+                lang = uiLang,
+                learning = direction,
+            ).queue
+        }.getOrElse {
+            if (it is kotlinx.coroutines.CancellationException) throw it
+            Log.e(TAG, "another round load failed", it)
+            emptyList()
+        }
+        if (queue.isEmpty()) return false
+        // As load() does: the choice session is per round, and prepared() reads it.
+        choiceSession = StudyChoiceSession()
+        val session = prepared(ReviewSession(queue, nowMs()))
+        // What the last round's summary showed belongs to it.
+        mastery.clear()
+        _milestone.value = null
+        unsynced = 0
+        _state.value = studying(session)
+        autoPlay()
+        return true
+    }
+
     fun pick(label: String) {
         val now = current() ?: return
         if (now.revealMode != null || now.flash != null) return
