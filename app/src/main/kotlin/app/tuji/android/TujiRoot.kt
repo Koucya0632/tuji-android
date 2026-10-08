@@ -1079,6 +1079,7 @@ private fun SignedInScreens(
                     spread = remember(scores) { MasteryDistribution.of(scores.byId) },
                     masteryLoaded = scores.loaded,
                     categories = catalog.categories,
+                    studyCategories = settings.studyCategories,
                     bottomPadding = 0.dp,
                     onOpenSettings = { nav = nav.push(AppRoute.Settings) },
                     showChinese = settings.showZh,

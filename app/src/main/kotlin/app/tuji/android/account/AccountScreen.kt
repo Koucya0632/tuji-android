@@ -70,6 +70,11 @@ fun AccountScreen(
     spread: MasteryDistribution,
     masteryLoaded: Boolean,
     categories: List<Category>,
+    /**
+     * The themes being studied. 明細 lists only these, as on iOS — and every
+     * theme when none are picked, the same reading 完成度 gives it.
+     */
+    studyCategories: List<String> = emptyList(),
     bottomPadding: androidx.compose.ui.unit.Dp,
     onOpenSettings: () -> Unit,
     showChinese: Boolean = true,
@@ -133,9 +138,10 @@ fun AccountScreen(
         )
         HeatmapSection(cells = progress.heatmap, activeDays = progress.activeDays)
         CategoryBreakdown(
-            remember(progress.categories, categories) {
+            remember(progress.categories, categories, studyCategories) {
                 CategoryStat.breakdown(
                     progress = progress.categories,
+                    selected = studyCategories,
                     categoryOrder = categories,
                 )
             },
@@ -184,14 +190,18 @@ private fun IdentityRow(me: UserMe?, tier: MembershipTier, onClick: () -> Unit) 
                 )
             }
         }
-        TujiStatusEdgeLabel(
-            text = badge,
-            edge = when (tier) {
-                MembershipTier.Pro -> TujiColor.Accumulation
-                MembershipTier.Lifetime -> TujiColor.BrandSecondary
-                MembershipTier.Free -> TujiColor.Ink3
-            },
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2), verticalAlignment = Alignment.CenterVertically) {
+            TujiStatusEdgeLabel(
+                text = badge,
+                edge = when (tier) {
+                    MembershipTier.Pro -> TujiColor.Accumulation
+                    MembershipTier.Lifetime -> TujiColor.BrandSecondary
+                    MembershipTier.Free -> TujiColor.Ink3
+                },
+            )
+            // The row opens 會員方案; the arrow says so, as on iOS.
+            TujiGlyph.ArrowRight(size = 16.dp, tint = TujiColor.Ink3)
+        }
     }
 }
 
