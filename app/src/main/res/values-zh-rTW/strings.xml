@@ -824,4 +824,8 @@
     <string name="reminder_time_confirm">確定</string>
     <string name="today_sub_pick_themes">先選學習主題，開始學新字</string>
     <string name="today_hint_no_cards">這個主題目前還沒有可學的字</string>
+    <string name="collections_picker_note">未公開的卡片加入後會自動送審，通過才會出現在合集裡。</string>
+    <string name="collections_enters_review">加入後送審</string>
+    <string name="collections_enters_review_hint">加入後會自動送審</string>
+    <string name="collections_already_member">這張卡片已經在合集裡了。</string>
 </resources>

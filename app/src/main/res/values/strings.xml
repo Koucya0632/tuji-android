@@ -824,4 +824,8 @@
     <string name="reminder_time_confirm">Confirm</string>
     <string name="today_sub_pick_themes">Pick your topics to start learning new words</string>
     <string name="today_hint_no_cards">No words to learn in this topic yet</string>
+    <string name="collections_picker_note">Cards that aren\'t public yet are sent for review when you add them, and appear in the collection once they pass.</string>
+    <string name="collections_enters_review">Review on add</string>
+    <string name="collections_enters_review_hint">Sent for review when added</string>
+    <string name="collections_already_member">That card is already in this collection.</string>
 </resources>

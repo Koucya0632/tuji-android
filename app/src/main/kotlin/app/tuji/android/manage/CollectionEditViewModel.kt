@@ -1,5 +1,10 @@
 package app.tuji.android.manage
 
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import app.tuji.android.core.network.TujiJson
+import app.tuji.android.core.network.ApiError
 import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -33,6 +38,15 @@ class CollectionEditViewModel(
     /** Which action's failure to say. */
     enum class Failure { Save, Avatar, Member, Submit, Withdraw }
 
+    /**
+     * Why 加入卡片 was refused, when the server said — iOS shows its
+     * `already_member` line, else the server's own sentence, else the generic one.
+     */
+    sealed interface AddRefusal {
+        data object AlreadyMember : AddRefusal
+        data class Said(val message: String) : AddRefusal
+    }
+
     data class State(
         val collection: AtlasCollectionEdit? = null,
         val members: List<AtlasCollectionMember> = emptyList(),
@@ -55,6 +69,8 @@ class CollectionEditViewModel(
         val candidatesFailed: Boolean = false,
         /** Added from the picker in this visit, for its ✓. */
         val added: Set<String> = emptySet(),
+        /** The last add's refusal, when the server explained it. */
+        val addRefusal: AddRefusal? = null,
     ) {
         val review: ReviewStatus get() = ReviewStatus.of(collection?.reviewStatus)
         /** The words differ from what the server holds — what 儲存 lights up for, and what leaving asks about. */
@@ -143,12 +159,17 @@ class CollectionEditViewModel(
     /** Marked added at once, and unmarked if the server refuses — a tile that stays ✓ over nothing is worse than a second tap. */
     fun addMember(itemId: String) {
         if (itemId in _state.value.added) return
-        _state.value = _state.value.copy(added = _state.value.added + itemId, failure = null)
+        _state.value = _state.value.copy(added = _state.value.added + itemId, failure = null, addRefusal = null)
         work.launch {
-            if (attempt { authoring.addCollectionItem(collectionId, itemId) }.isSuccess) {
+            val result = attempt { authoring.addCollectionItem(collectionId, itemId) }
+            if (result.isSuccess) {
                 reload(full = false)
             } else {
-                _state.value = _state.value.copy(added = _state.value.added - itemId, failure = Failure.Member)
+                _state.value = _state.value.copy(
+                    added = _state.value.added - itemId,
+                    failure = Failure.Member,
+                    addRefusal = refusal(result.exceptionOrNull()),
+                )
             }
         }
     }
@@ -250,6 +271,13 @@ class CollectionEditViewModel(
         Log.w(TAG, "collection edit call failed: $collectionId", failure)
         if (MembershipRefusal.isRefusal(failure)) onNeedsMembership()
         Result.failure(failure)
+    }
+
+    private fun refusal(error: Throwable?): AddRefusal? {
+        val body = (error as? ApiError.Http)?.body ?: return null
+        val json = runCatching { TujiJson.parseToJsonElement(body).jsonObject }.getOrNull() ?: return null
+        if (json["error"]?.jsonPrimitive?.contentOrNull == "already_member") return AddRefusal.AlreadyMember
+        return json["message"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }?.let(AddRefusal::Said)
     }
 
     private companion object {

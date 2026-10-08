@@ -41,6 +41,15 @@ enum class ReviewStatus {
      */
     val canSubmit: Boolean get() = this == Draft || this == Rejected || this == Withdrawn
 
+    /**
+     * Read on a collection: whether it can still carry a card that is not
+     * public yet through review *with* it — only while it is off the shelf and
+     * not in flight. The same three states as [canSubmit] today, which is a
+     * coincidence rather than one question: iOS keeps them apart for the day
+     * either gains a state.
+     */
+    val acceptsUnpublishedMembers: Boolean get() = this == Draft || this == Rejected || this == Withdrawn
+
     companion object {
         /** Absent on items older than the field: they were never submitted. */
         fun of(wire: String?): ReviewStatus = when (wire) {

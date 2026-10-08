@@ -1,5 +1,7 @@
 package app.tuji.android.manage
 
+import androidx.compose.ui.semantics.stateDescription
+import app.tuji.android.core.community.PickerBadge
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -561,22 +563,66 @@ private fun ItemPicker(state: CollectionEditViewModel.State, onAdd: (String) -> 
                 available.isEmpty() -> Text(stringResource(R.string.collections_picker_empty), style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = TujiSpace.S6))
                 else -> {
                     if (state.failure == CollectionEditViewModel.Failure.Member) {
-                        Text(stringResource(R.string.collections_add_failed), style = TujiType.label, color = TujiColor.Alert)
+                        Text(
+                            when (val refusal = state.addRefusal) {
+                                CollectionEditViewModel.AddRefusal.AlreadyMember -> stringResource(R.string.collections_already_member)
+                                is CollectionEditViewModel.AddRefusal.Said -> refusal.message
+                                null -> stringResource(R.string.collections_add_failed)
+                            },
+                            style = TujiType.label,
+                            color = TujiColor.Alert,
+                        )
+                    }
+                    // A live or in-review 合集 takes a card that is not public
+                    // yet, but cannot carry it through review: say what will happen.
+                    if (CollectionAuthoringRules.submitsMembersOnTheirOwn(state.review)) {
+                        Text(stringResource(R.string.collections_picker_note), style = TujiType.label, color = TujiColor.Ink3)
                     }
                     available.chunked(3).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
                             row.forEach { item ->
                                 val added = item.id in state.added
+                                val badge = CollectionAuthoringRules.pickerBadge(state.review, item)
+                                val hint = if (badge == PickerBadge.EntersReviewOnAdd) stringResource(R.string.collections_enters_review_hint) else null
                                 Column(
-                                    Modifier.weight(1f).tujiClickable(enabled = !added) { onAdd(item.id) },
+                                    Modifier
+                                        .weight(1f)
+                                        .alpha(if (added) 0.6f else 1f)
+                                        .semantics { if (hint != null) stateDescription = hint }
+                                        .tujiClickable(enabled = !added) { onAdd(item.id) },
                                     verticalArrangement = Arrangement.spacedBy(2.dp),
                                 ) {
                                     Box(Modifier.fillMaxWidth().height(84.dp).background(TujiColor.Paper2)) {
-                                        AsyncImage(model = item.imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(if (added) 0.5f else 1f))
-                                        if (added) {
-                                            Box(Modifier.align(Alignment.Center).size(28.dp).background(TujiColor.Accumulation), contentAlignment = Alignment.Center) {
-                                                TujiGlyph.Check(size = 14.dp, tint = Color.White)
-                                            }
+                                        AsyncImage(model = item.imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                                        // ＋ until it is in, ✓ after — iOS's corner mark.
+                                        Box(
+                                            Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(4.dp)
+                                                .size(18.dp)
+                                                .background(if (added) TujiColor.Accumulation else Color.Black.copy(alpha = 0.5f), CircleShape),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            if (added) TujiGlyph.Check(size = 10.dp, tint = Color.White) else TujiGlyph.Plus(size = 10.dp, tint = Color.White)
+                                        }
+                                        badge?.let {
+                                            Text(
+                                                stringResource(
+                                                    when (it) {
+                                                        PickerBadge.EntersReviewOnAdd -> R.string.collections_enters_review
+                                                        PickerBadge.WithCollection -> R.string.collections_member_with_collection
+                                                        PickerBadge.InReview -> R.string.manage_review_pending
+                                                    },
+                                                ),
+                                                style = TujiType.label,
+                                                color = Color.White,
+                                                maxLines = 1,
+                                                modifier = Modifier
+                                                    .align(Alignment.BottomStart)
+                                                    .padding(4.dp)
+                                                    .background(Color.Black.copy(alpha = 0.65f))
+                                                    .padding(horizontal = 5.dp, vertical = 3.dp),
+                                            )
                                         }
                                     }
                                     Text(item.lemma, style = TujiType.label, color = TujiColor.Ink2, maxLines = 1, overflow = TextOverflow.Ellipsis)
