@@ -59,6 +59,7 @@ import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
@@ -316,8 +317,9 @@ private fun ResultList(
                     style = TujiType.label,
                     color = TujiColor.Ink3,
                 )
+                // The server's half is still on its way: iOS's moving bar, not a still mark.
                 if (searching) {
-                    Box(Modifier.width(40.dp).height(TujiBorder.Bw3).background(TujiColor.Current))
+                    TujiIndeterminateBar(modifier = Modifier.width(40.dp))
                 }
             }
         }
