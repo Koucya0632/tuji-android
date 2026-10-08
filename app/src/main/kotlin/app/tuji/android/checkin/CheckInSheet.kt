@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +28,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -44,6 +48,7 @@ import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.TujiWindow
@@ -186,8 +191,8 @@ private fun Hero(streak: StudyStreak?) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
             Text(label, style = TujiType.label.copy(letterSpacing = TujiType.label.letterSpacing * 4), color = TujiColor.Ink3)
             Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1), verticalAlignment = Alignment.Bottom) {
-                Text(
-                    "$current",
+                TujiRollingNumber(
+                    text = "$current",
                     style = TujiType.display,
                     color = if (current > 0) TujiColor.Accumulation else TujiColor.Ink3,
                 )
@@ -230,16 +235,20 @@ private fun RewardCard(
             .padding(TujiSpace.S3),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
-            androidx.compose.foundation.Image(
-                androidx.compose.ui.res.painterResource(R.drawable.credit_can),
-                contentDescription = null,
-                modifier = Modifier.size(44.dp),
-            )
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(stringResource(title), style = TujiType.bodyStrong, color = TujiColor.Ink)
-                detail?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink2) }
-            }
+        // One row while the sentence fits beside the button; the button drops
+        // underneath once it doesn't (ja / en, large type) rather than
+        // squeezing the sentence into a narrow column — iOS's ViewThatFits.
+        LabelThenAction(
+            label = {
+                Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(R.drawable.credit_can), contentDescription = null, modifier = Modifier.size(44.dp), tint = TujiColor.Ink)
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(title), style = TujiType.bodyStrong, color = TujiColor.Ink)
+                        detail?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink2) }
+                    }
+                }
+            },
+        ) {
             when (reward) {
                 is Reward.Locked -> Pill(stringResource(R.string.checkin_upgrade), primary = false, onClick = onUpgrade)
                 is Reward.NeedsStudy -> Pill(stringResource(R.string.checkin_study), primary = true, onClick = onStudy)
@@ -253,6 +262,42 @@ private fun RewardCard(
         }
         if (claimFailed) {
             Text(stringResource(R.string.checkin_claim_failed), style = TujiType.label, color = TujiColor.Alert)
+        }
+    }
+}
+
+/**
+ * [label] and [action] side by side when the label's natural width fits next
+ * to the action; otherwise stacked, action underneath and left-aligned.
+ */
+@Composable
+private fun LabelThenAction(label: @Composable () -> Unit, action: @Composable () -> Unit) {
+    val gap = TujiSpace.S3
+    val stackGap = TujiSpace.S3
+    Layout(contents = listOf(label, action)) { (labelMeasurables, actionMeasurables), constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val actions = actionMeasurables.map { it.measure(loose) }
+        val actionWidth = actions.maxOfOrNull { it.width } ?: 0
+        val actionHeight = actions.maxOfOrNull { it.height } ?: 0
+        val gapPx = if (actions.isEmpty() || actionWidth == 0) 0 else gap.roundToPx()
+        val natural = labelMeasurables.maxOfOrNull { it.maxIntrinsicWidth(constraints.maxHeight) } ?: 0
+        val width = constraints.maxWidth
+        if (natural + gapPx + actionWidth <= width) {
+            val labels = labelMeasurables.map { it.measure(loose.copy(maxWidth = width - gapPx - actionWidth)) }
+            val labelHeight = labels.maxOfOrNull { it.height } ?: 0
+            val height = maxOf(labelHeight, actionHeight)
+            layout(width, height) {
+                labels.forEach { it.placeRelative(0, (height - it.height) / 2) }
+                actions.forEach { it.placeRelative(width - it.width, (height - it.height) / 2) }
+            }
+        } else {
+            val labels = labelMeasurables.map { it.measure(loose) }
+            val labelHeight = labels.maxOfOrNull { it.height } ?: 0
+            val spacing = if (actionHeight == 0) 0 else stackGap.roundToPx()
+            layout(width, labelHeight + spacing + actionHeight) {
+                labels.forEach { it.placeRelative(0, 0) }
+                actions.forEach { it.placeRelative(0, labelHeight + spacing) }
+            }
         }
     }
 }
@@ -317,7 +362,8 @@ private fun MonthButton(left: Boolean, label: String, enabled: Boolean, onClick:
             .tujiClickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (left) TujiGlyph.ArrowLeft(size = 16.dp, tint = tint) else TujiGlyph.ArrowRight(size = 16.dp, tint = tint)
+        // iOS's chevron.left / chevron.right: paging a month, not going back.
+        TujiGlyph.ChevronUp(size = 18.dp, tint = tint, modifier = Modifier.rotate(if (left) -90f else 90f))
     }
 }
 
