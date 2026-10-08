@@ -804,4 +804,8 @@
     <string name="credit_price_changed">The price has changed. Please confirm before starting.</string>
     <string name="credit_poll_failed">Unable to connect right now. Retry sync.</string>
     <string name="credit_photo_unavailable">Couldn’t read this photo. Try another one.</string>
+    <string name="review_round_done">Round complete</string>
+    <string name="review_another_round">Another round (%d words left)</string>
+    <string name="review_loading_next">Loading next round…</string>
+    <string name="review_stop_here">Stop here and go home</string>
 </resources>

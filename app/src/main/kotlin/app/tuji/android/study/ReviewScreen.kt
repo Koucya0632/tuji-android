@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +69,7 @@ import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiDetentSheet
 import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiIconButton
 import app.tuji.android.core.design.TujiMotion
 import app.tuji.android.core.design.TujiPageLoading
@@ -81,6 +83,7 @@ import app.tuji.android.core.design.ground
 import app.tuji.android.core.design.onGround
 import app.tuji.android.core.design.rememberReduceMotion
 import app.tuji.android.core.design.tujiClickable
+import kotlinx.coroutines.launch
 import app.tuji.android.core.model.HeadwordDisplay
 import app.tuji.android.core.model.MasteryDelta
 import app.tuji.android.core.model.ReviewQuestionKind
@@ -138,6 +141,13 @@ fun ReviewScreen(
     checkIn: @Composable (Modifier) -> Unit = {},
     /** Where 報錯 goes. Null draws no ⋯. */
     reporter: StudyReporter? = null,
+    /**
+     * Words still due once this session's answers have landed — 0 until then,
+     * because before that round-trip the count is the pre-session one.
+     */
+    remainingDue: Int = 0,
+    /** 再來一輪. Null hides it (a 個人詞表 session, whose due count is not the list's). */
+    onAnotherRound: (suspend () -> Unit)? = null,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val report = remember { StudyReportState() }
@@ -175,6 +185,8 @@ fun ReviewScreen(
                 showChinese = showChinese,
                 topPadding = insets.calculateTopPadding(),
                 bottomPadding = insets.calculateBottomPadding(),
+                remainingDue = if (onAnotherRound != null) remainingDue else 0,
+                onAnotherRound = onAnotherRound,
                 onClose = onClose,
             )
 
@@ -867,8 +879,15 @@ private fun CompleteView(
     showChinese: Boolean,
     topPadding: androidx.compose.ui.unit.Dp,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    remainingDue: Int,
+    onAnotherRound: (suspend () -> Unit)?,
     onClose: () -> Unit,
 ) {
+    // The full celebration is for a queue actually cleared, so 完成 never
+    // contradicts a 複習 button still lit on 今日.
+    val hasMoreDue = remainingDue > 0 && onAnotherRound != null
+    var startingNextRound by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -878,15 +897,15 @@ private fun CompleteView(
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
         ) {
             Spacer(Modifier.height(topPadding + TujiSpace.S5))
-            MascotCelebrationCard(title = stringResource(R.string.review_done_title)) {
+            MascotCelebrationCard(title = stringResource(if (hasMoreDue) R.string.review_round_done else R.string.review_done_title)) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.Bottom,
                 ) {
                     // The pale teal step, not the deep one: 深 teal on ink is
                     // only 3.04:1, and this is the biggest number on the screen.
-                    Text(
-                        "${session.passedCount}",
+                    TujiRollingNumber(
+                        text = "${session.passedCount}",
                         style = TujiType.display,
                         color = TujiColor.AccumulationSoft,
                     )
@@ -932,15 +951,45 @@ private fun CompleteView(
             Spacer(Modifier.height(TujiSpace.S4))
         }
         // Pinned: the way out of a finished session is not below a scroll.
-        // iOS's `.safeAreaInset(edge: .bottom)`.
-        TujiButton(
-            text = stringResource(R.string.study_close),
-            onClick = onClose,
-            modifier = Modifier
+        // iOS's `.safeAreaInset(edge: .bottom)`. With words still due, the
+        // primary action chains straight into the next round, so clearing a
+        // backlog is a tap rather than a trip through 今日.
+        Column(
+            Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TujiSpace.S4)
                 .padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S3),
-        )
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (hasMoreDue && onAnotherRound != null) {
+                TujiButton(
+                    text = if (startingNextRound) {
+                        stringResource(R.string.review_loading_next)
+                    } else {
+                        stringResource(R.string.review_another_round, remainingDue)
+                    },
+                    onClick = {
+                        if (!startingNextRound) {
+                            startingNextRound = true
+                            scope.launch {
+                                try { onAnotherRound() } finally { startingNextRound = false }
+                            }
+                        }
+                    },
+                    enabled = !startingNextRound,
+                    leading = { TujiGlyph.Refresh(size = 16.dp, tint = if (startingNextRound) TujiColor.Ink3 else TujiColor.Ink) },
+                )
+                Text(
+                    stringResource(R.string.review_stop_here),
+                    style = TujiType.bodySmStrong,
+                    color = TujiColor.Ink3,
+                    modifier = Modifier.tujiClickable(onClick = onClose).padding(vertical = TujiSpace.S2),
+                )
+            } else {
+                TujiButton(text = stringResource(R.string.study_close), onClick = onClose)
+            }
+        }
     }
 }
 
