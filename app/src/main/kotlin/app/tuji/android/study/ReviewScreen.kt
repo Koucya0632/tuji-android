@@ -106,6 +106,14 @@ import app.tuji.android.core.study.SentenceHighlight
 import app.tuji.android.core.study.StudyOptionState
 import app.tuji.android.core.study.StudyReports
 import kotlinx.coroutines.delay
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.rotate
+import app.tuji.android.core.design.TujiWindow
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Color
 
 /**
  * 複習. A picture, four words, and — when the answer is not obvious — a sheet
@@ -154,6 +162,8 @@ fun ReviewScreen(
     val reportSubject = { StudyReports.review((state as? ReviewViewModel.State.Studying)?.session?.question) }
     val milestone by vm.milestone.collectAsStateWithLifecycle()
     var leaving by remember { mutableStateOf(false) }
+    // 看完整詳情 from the hint face: iOS's 單字詳情 sheet.
+    var detailFor by remember { mutableStateOf<String?>(null) }
     // System back asks too, as ✕ does. Popping straight out skipped `leave()`,
     // so a beat still in flight fired after the screen was gone.
     BackHandler(enabled = state is ReviewViewModel.State.Studying && !leaving) { leaving = true }
@@ -218,6 +228,7 @@ fun ReviewScreen(
                         onReveal = vm::revealSentence,
                         onOptOut = vm::optOutOfListening,
                         onPlayWord = vm::playWord,
+                        onOpenDetail = { detailFor = it },
                         bottomPadding = insets.calculateBottomPadding(),
                     )
                 }
@@ -259,6 +270,10 @@ fun ReviewScreen(
             lastFlash?.let {
                 FlashCapsule(flash = it, bottomPadding = insets.calculateBottomPadding())
             }
+        }
+
+        detailFor?.let { wordId ->
+            WordDetailWindow(onDismiss = { detailFor = null }) { fullDetail(wordId) }
         }
 
         if (leaving) {
@@ -306,6 +321,7 @@ private fun QuestionBody(
     onReveal: () -> Unit,
     onOptOut: () -> Unit,
     onPlayWord: () -> Unit,
+    onOpenDetail: (String) -> Unit,
     bottomPadding: androidx.compose.ui.unit.Dp,
 ) {
     val question = state.session.question ?: return
@@ -390,6 +406,7 @@ private fun QuestionBody(
                     canPlay = state.canPlayWord,
                     onPlay = onPlayWord,
                     onFlip = onToggleHint,
+                    onOpenDetail = if (!revealed) ({ onOpenDetail(item.word.id) }) else null,
                 )
 
                 Column(
@@ -474,6 +491,8 @@ private fun HeroCard(
     canPlay: Boolean,
     onPlay: () -> Unit,
     onFlip: () -> Unit,
+    /** 看完整詳情 on the hint face. Null while the reveal sheet is up, which pulls up to the same detail. */
+    onOpenDetail: (() -> Unit)?,
 ) {
     // Reduce Motion keeps the opacity swap and drops the rotation, so the turn
     // becomes a crossfade rather than nothing at all.
@@ -547,14 +566,37 @@ private fun HeroCard(
             // as a headline. Which of the two this card has is [HintFace]'s
             // decision, asked once — the same call that produced the label.
             val face = HintFace.of(item.word)
-            Text(
-                face.text,
-                style = if (face is HintFace.Definition) TujiType.body else TujiType.h2,
-                color = TujiColor.Ink,
-                textAlign = TextAlign.Center,
-                maxLines = if (face is HintFace.Definition) 6 else 4,
-                modifier = Modifier.padding(horizontal = TujiSpace.S5),
-            )
+            Column(
+                Modifier.padding(horizontal = TujiSpace.S5),
+                verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    face.text,
+                    style = if (face is HintFace.Definition) TujiType.body else TujiType.h2,
+                    color = TujiColor.Ink,
+                    textAlign = TextAlign.Center,
+                    maxLines = if (face is HintFace.Definition) 6 else 4,
+                )
+                // Only on the face that is showing: the other one is still
+                // laid out, invisible, and must not take a tap.
+                if (faceUp && onOpenDetail != null) {
+                    Row(
+                        Modifier
+                            .height(44.dp)
+                            .tujiClickable(onClick = onOpenDetail),
+                        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S1),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.gloss_see_detail),
+                            style = TujiType.label.copy(textDecoration = TextDecoration.Underline),
+                            color = TujiColor.Ink2,
+                        )
+                        TujiGlyph.ArrowRight(size = 12.dp, tint = TujiColor.Ink2, modifier = Modifier.rotate(-45f))
+                    }
+                }
+            }
         }
 
         if (canPlay) {
@@ -589,6 +631,46 @@ private fun HeroCard(
 }
 
 /**
+ * iOS's 單字詳情 sheet over a question: the full entry, without leaving the
+ * card. 520dp tall, as iOS's `tujiSheet(height: 520)`.
+ */
+@Composable
+private fun WordDetailWindow(onDismiss: () -> Unit, content: @Composable () -> Unit) = TujiWindow(onDismiss = onDismiss) {
+    Box(
+        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .height(520.dp)
+                .background(TujiColor.Paper)
+                // Swallows taps so one on the sheet does not reach the scrim.
+                .tujiClickable {}
+                .navigationBarsPadding(),
+        ) {
+            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw3).background(TujiColor.Ink))
+            Row(
+                Modifier.fillMaxWidth().padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.study_word_detail), style = TujiType.h2, color = TujiColor.Ink, modifier = Modifier.weight(1f))
+                val closeLabel = stringResource(R.string.form_close)
+                Box(
+                    Modifier
+                        .offset(x = TujiSpace.S3)
+                        .size(48.dp)
+                        .semantics { contentDescription = closeLabel }
+                        .tujiClickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center,
+                ) { TujiGlyph.Close(size = 18.dp, tint = TujiColor.Ink2) }
+            }
+            Box(Modifier.fillMaxWidth().weight(1f)) { content() }
+        }
+    }
+}
+
+/**
  * The capsule that acknowledges an answer which advanced **without** the rating
  * sheet — a fast correct answer that auto-rated, or a passed re-test.
  *
@@ -601,11 +683,16 @@ private fun HeroCard(
 private fun FlashCapsule(flash: ReviewFlash, bottomPadding: androidx.compose.ui.unit.Dp) {
     val text = when (flash) {
         is ReviewFlash.RetestPassed -> stringResource(R.string.study_retest_passed)
-        is ReviewFlash.AutoRated -> stringResource(R.string.study_auto_rated, flash.rating.label())
+        is ReviewFlash.AutoRated -> flash.rating.label()
     }
     val tint = when (flash) {
         is ReviewFlash.RetestPassed -> TujiColor.Accumulation
-        is ReviewFlash.AutoRated -> TujiColor.CurrentDeep
+        // The rating ladder's own colours, as iOS tints it.
+        is ReviewFlash.AutoRated -> when (flash.rating) {
+            SRSRating.Again -> TujiColor.Alert
+            SRSRating.Hard -> TujiColor.Current
+            SRSRating.Good, SRSRating.Easy -> TujiColor.Accumulation
+        }
     }
     Box(
         Modifier
@@ -613,14 +700,17 @@ private fun FlashCapsule(flash: ReviewFlash, bottomPadding: androidx.compose.ui.
             .padding(bottom = bottomPadding + TujiSpace.S5),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Text(
-            text,
-            style = TujiType.bodyStrong,
-            color = TujiColor.Paper,
-            modifier = Modifier
+        Row(
+            Modifier
+                .shadow(8.dp, RectangleShape, ambientColor = Color.Black.copy(alpha = 0.15f), spotColor = Color.Black.copy(alpha = 0.15f))
                 .background(tint)
                 .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-        )
+            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TujiGlyph.Check(size = 15.dp, tint = Color.White)
+            Text(text, style = TujiType.bodyStrong, color = Color.White)
+        }
     }
 }
 
@@ -681,6 +771,7 @@ private fun RevealSheet(
                         TujiButton(
                             text = stringResource(R.string.study_next),
                             onClick = onContinue,
+                            leading = { TujiGlyph.ArrowRight(size = 16.dp, tint = TujiColor.Ink) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -704,7 +795,10 @@ private fun RevealSheet(
                                 // is already this app's "this is the one", so a
                                 // 建議 caption over the label was a second,
                                 // weaker way of saying the same thing.
-                                filled = rating == question.suggested,
+                                // Once tapped, the tapped level fills for the
+                                // beat before the advance, and the rows lock.
+                                filled = question.rated == rating || (question.rated == null && rating == question.suggested),
+                                enabled = question.rated == null,
                                 onClick = { onRate(rating) },
                             )
                         }
@@ -786,7 +880,7 @@ private fun RevealSheet(
  * scale, the deeper it goes.
  */
 @Composable
-private fun RatingRow(rating: SRSRating, filled: Boolean, onClick: () -> Unit) {
+private fun RatingRow(rating: SRSRating, filled: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val ground = if (filled) TujiColor.Ink else TujiColor.Paper2
     val ink = if (filled) TujiColor.Paper else TujiColor.Ink
     val sub = if (filled) TujiColor.Paper.copy(alpha = 0.7f) else TujiColor.Ink3
@@ -806,7 +900,7 @@ private fun RatingRow(rating: SRSRating, filled: Boolean, onClick: () -> Unit) {
             .height(IntrinsicSize.Min)
             .heightIn(min = 56.dp)
             .background(ground)
-            .tujiClickable(onClick = onClick),
+            .tujiClickable(enabled = enabled, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(TujiBorder.Bw3).fillMaxHeight().background(edge))

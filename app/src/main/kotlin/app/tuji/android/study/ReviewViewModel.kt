@@ -230,10 +230,13 @@ class ReviewViewModel(
     fun rate(rating: SRSRating) {
         val now = current() ?: return
         if (now.revealMode != ReviewRevealMode.Rate) return
+        if (now.session.question?.rated != null) return
         haptics.soft()
         val step = now.session.rate(rating)
         send(step.write)
-        _state.value = studying(step.session, revealMode = null)
+        // The sheet stays up through the beat, as on iOS: the tapped row fills
+        // and the rows lock, and the advance is what takes the sheet away.
+        _state.value = studying(step.session, revealMode = now.revealMode)
         // A fixed, network-independent beat so the button fill registers.
         scheduleAdvance(after = 300)
     }

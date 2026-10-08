@@ -59,8 +59,7 @@
     <string name="study_unsynced">%1$d 笔待同步</string>
     <string name="study_unsynced_done">有 %1$d 笔评分还没送出，连上网络后会自动补送</string>
     <string name="study_next">下一题</string>
-    <string name="study_retest_passed">这次对了</string>
-    <string name="study_auto_rated">已记为 %1$s</string>
+    <string name="study_retest_passed">答对了</string>
     <string name="study_done_title">这轮结束</string>
     <string name="study_done_count">复习了 %1$d 个字</string>
     <string name="study_was_wrong">答错过</string>
@@ -808,4 +807,5 @@
     <string name="review_another_round">再来一轮（还有 %d 字）</string>
     <string name="review_loading_next">载入下一轮…</string>
     <string name="review_stop_here">先到这里，回首页</string>
+    <string name="study_word_detail">单字详情</string>
 </resources>

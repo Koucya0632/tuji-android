@@ -59,8 +59,7 @@
     <string name="study_unsynced">未送信 %1$d 件</string>
     <string name="study_unsynced_done">%1$d 件の評価が未送信です。オンラインになると自動で送信されます。</string>
     <string name="study_next">次の問題</string>
-    <string name="study_retest_passed">今度は正解</string>
-    <string name="study_auto_rated">%1$s として記録しました</string>
+    <string name="study_retest_passed">正解</string>
     <string name="study_done_title">このラウンドは終わりです</string>
     <string name="study_done_count">%1$d 語を復習しました</string>
     <string name="study_was_wrong">間違えたことあり</string>
@@ -808,4 +807,5 @@
     <string name="review_another_round">もう1ラウンド（あと%d語）</string>
     <string name="review_loading_next">次のラウンドを読み込み中…</string>
     <string name="review_stop_here">ここまでにして、ホームへ</string>
+    <string name="study_word_detail">単語の詳細</string>
 </resources>
