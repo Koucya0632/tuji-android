@@ -1259,6 +1259,11 @@ private fun SignedInScreens(
                         onDismissCreateError = myCollections::dismissCreateError,
                         onOpenCollection = { nav = nav.push(AppRoute.CollectionEdit(it)) },
                         slots = accountState.entitlement?.let { it.usage.atlasSlots to it.atlasSlotsLimit },
+                        onSwitchDirection = {
+                            val other = LearningDirection.entries.first { it != direction }
+                            app.settingsStore.update { it.copy(learningDirection = other.wire) }
+                        },
+                        inFlight = remember(captureJobs) { captureJobs.associate { it.imageId to it.progress } },
                     )
                 }
 

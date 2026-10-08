@@ -831,4 +831,5 @@
     <string name="membership_title_credits">会員と缶詰ポイント</string>
     <string name="membership_terms">利用規約</string>
     <string name="membership_privacy">プライバシーポリシー</string>
+    <string name="manage_switch">切り替え →</string>
 </resources>

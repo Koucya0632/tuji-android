@@ -1,5 +1,8 @@
 package app.tuji.android.manage
 
+import app.tuji.android.capture.label
+import app.tuji.android.core.model.CaptureProgress
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -83,6 +86,14 @@ fun AtlasManageScreen(
      * direction count too. Null until the entitlement has loaded.
      */
     slots: Pair<Int, Int>? = null,
+    /** 切換 → on the other-language band: study the other language, where those cards are. */
+    onSwitchDirection: () -> Unit = {},
+    /**
+     * 生成佇列's progress by photo. A capture still in flight knows something its
+     * row has not been written with yet, so its word wins — iOS's `inFlight`.
+     * Without it this page read 「已上傳」 off a photo the 圖鑑 grid was calling 「生成中」.
+     */
+    inFlight: Map<String, CaptureProgress> = emptyMap(),
 ) {
     var askDelete by remember { mutableStateOf(false) }
     var section by rememberSaveable { mutableStateOf(ManageSection.Cards) }
@@ -174,7 +185,7 @@ fun AtlasManageScreen(
                             modifier = Modifier.background(TujiColor.Current).tujiClickable(onClick = onRetry).padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
                         )
                     }
-                    is ShelfState.HiddenElsewhere -> HiddenRow(shelf.count, state.language)
+                    is ShelfState.HiddenElsewhere -> HiddenRow(shelf.count, state.language, onSwitchDirection)
                     ShelfState.Empty -> Column(
                         Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S2),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -189,10 +200,11 @@ fun AtlasManageScreen(
                                 row = row,
                                 selecting = state.selecting,
                                 selected = row.id in state.selected,
+                                inFlight = inFlight[row.image.id],
                                 onClick = { if (state.selecting) onToggle(row.id) else onOpen(row.id) },
                             )
                         }
-                        if (state.hidden > 0) HiddenRow(state.hidden, state.language)
+                        if (state.hidden > 0) HiddenRow(state.hidden, state.language, onSwitchDirection)
                     }
                 }
             }
@@ -257,7 +269,7 @@ fun AtlasManageScreen(
 }
 
 @Composable
-private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, inFlight: CaptureProgress?, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -288,7 +300,7 @@ private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, onClic
                     Text(stringResource(R.string.manage_status_locked), style = TujiType.label, color = TujiColor.Ink3)
                 }
             } else {
-                Text(row.imageStatus.label(row.image.status), style = TujiType.label, color = TujiColor.Ink3)
+                Text(inFlight?.label() ?: row.imageStatus.label(row.image.status), style = TujiType.label, color = TujiColor.Ink3)
             }
         }
     }
@@ -299,14 +311,32 @@ enum class ManageSection { Cards, Collections }
 
 /** Not an empty state: "nothing here" and "your cards are on the other side" are different sentences. */
 @Composable
-private fun HiddenRow(count: Int, language: TargetLanguage) {
+private fun HiddenRow(count: Int, language: TargetLanguage, onSwitch: () -> Unit) {
     val other = stringResource(if (language == TargetLanguage.JA) R.string.manage_atlas_en else R.string.manage_atlas_ja)
-    Text(
-        stringResource(R.string.manage_hidden, count, other),
-        style = TujiType.bodySm,
-        color = TujiColor.Ink2,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).background(TujiColor.Paper2).padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-    )
+    // The whole band is the button, as on iOS: saying where the cards are and
+    // then refusing to go there is the "fake link" iOS #211 made real.
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .background(TujiColor.Paper2)
+            .tujiClickable(onClick = onSwitch)
+            .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.manage_hidden, count, other),
+            style = TujiType.bodySm,
+            color = TujiColor.Ink2,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            stringResource(R.string.manage_switch),
+            style = TujiType.label.copy(textDecoration = TextDecoration.Underline),
+            color = TujiColor.Ink,
+        )
+    }
 }
 
 @Composable

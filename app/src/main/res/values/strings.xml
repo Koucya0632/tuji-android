@@ -831,4 +831,5 @@
     <string name="membership_title_credits">Membership &amp; Can Credits</string>
     <string name="membership_terms">Terms of Service</string>
     <string name="membership_privacy">Privacy Policy</string>
+    <string name="manage_switch">Switch →</string>
 </resources>

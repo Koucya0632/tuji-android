@@ -831,4 +831,5 @@
     <string name="membership_title_credits">會員與罐頭點數</string>
     <string name="membership_terms">使用條款</string>
     <string name="membership_privacy">隱私權政策</string>
+    <string name="manage_switch">切換 →</string>
 </resources>
