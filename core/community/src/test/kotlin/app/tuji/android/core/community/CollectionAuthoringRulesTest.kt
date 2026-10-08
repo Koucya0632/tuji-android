@@ -55,4 +55,20 @@ class CollectionAuthoringRulesTest {
         assertEquals(DeleteWarning.CancelsReview, CollectionAuthoringRules.deleteWarning(AtlasMyCollection(id = "a", reviewStatus = "pending_auto")))
         assertEquals(DeleteWarning.PrivateOnly, CollectionAuthoringRules.deleteWarning(AtlasMyCollection(id = "a")))
     }
+
+    @Test fun `a live or in-review collection sends unpublished cards through review on their own`() {
+        val private = member("p", "private")
+        val pending = member("q", "pending")
+        val public = member("a", "public")
+        // A draft carries them with it.
+        assertEquals(PickerBadge.WithCollection, CollectionAuthoringRules.pickerBadge(ReviewStatus.Draft, private))
+        assertEquals(PickerBadge.InReview, CollectionAuthoringRules.pickerBadge(ReviewStatus.Draft, pending))
+        assertNull(CollectionAuthoringRules.pickerBadge(ReviewStatus.Draft, public))
+        // A live one cannot re-enter the gate, so the card goes alone.
+        assertEquals(PickerBadge.EntersReviewOnAdd, CollectionAuthoringRules.pickerBadge(ReviewStatus.Approved, private))
+        assertEquals(PickerBadge.EntersReviewOnAdd, CollectionAuthoringRules.pickerBadge(ReviewStatus.Pending, pending))
+        assertNull(CollectionAuthoringRules.pickerBadge(ReviewStatus.Approved, public))
+        assertTrue(CollectionAuthoringRules.submitsMembersOnTheirOwn(ReviewStatus.Approved))
+        assertFalse(CollectionAuthoringRules.submitsMembersOnTheirOwn(ReviewStatus.Withdrawn))
+    }
 }

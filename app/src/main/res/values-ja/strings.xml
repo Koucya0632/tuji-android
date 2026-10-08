@@ -824,4 +824,8 @@
     <string name="reminder_time_confirm">確定</string>
     <string name="today_sub_pick_themes">まず学習テーマを選んで、新しい単語を学びましょう</string>
     <string name="today_hint_no_cards">このテーマにはまだ学べる単語がありません</string>
+    <string name="collections_picker_note">未公開のカードは追加すると自動で審査に出され、通過するとコレクションに表示されます。</string>
+    <string name="collections_enters_review">追加で審査へ</string>
+    <string name="collections_enters_review_hint">追加すると審査に出されます</string>
+    <string name="collections_already_member">このカードはすでにコレクションに入っています。</string>
 </resources>

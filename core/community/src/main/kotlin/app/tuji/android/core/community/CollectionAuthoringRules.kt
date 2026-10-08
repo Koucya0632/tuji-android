@@ -24,6 +24,22 @@ enum class MemberBadge {
  * 我的合集's rules — iOS's `MyCollectionsVM`, `CollectionCreateModel`,
  * `CollectionEditVM` and `CollectionCandidatesModel`, without their calls.
  */
+/**
+ * What a tile in 加入卡片 says about itself — iOS's `collectionPublicationLabel`
+ * and its 「加入後送審」. Only the exceptions are marked; a public card carries
+ * nothing, because badging every normal photo would be noise.
+ */
+enum class PickerBadge {
+    /** The collection is live or in review: this card goes through review on its own once added. */
+    EntersReviewOnAdd,
+
+    /** The collection can still carry it: it is reviewed with the collection. */
+    WithCollection,
+
+    /** Already in review. */
+    InReview,
+}
+
 object CollectionAuthoringRules {
 
     /** The route's own limit; a longer title is refused, not trimmed. */
@@ -48,4 +64,24 @@ object CollectionAuthoringRules {
     /** What 加入項目 offers: eligible, and not already in. */
     fun available(candidates: List<AtlasCollectionMember>, existing: Set<String>): List<AtlasCollectionMember> =
         candidates.filter { it.eligible != false && it.id !in existing }
+
+    /**
+     * True while the collection is public or in review: a card that is not
+     * public yet then goes through review by itself instead of riding along
+     * with the collection. Nothing is blocked by it — the server takes the
+     * card and keeps it out of sight until it passes — it is what the picker
+     * tells the author will happen. iOS's `submitsMembersOnTheirOwn`.
+     */
+    fun submitsMembersOnTheirOwn(review: ReviewStatus): Boolean = !review.acceptsUnpublishedMembers
+
+    /** Whether adding this card starts a review of its own. A payload with no state reads as public. */
+    fun entersReviewOnAdd(review: ReviewStatus, card: AtlasCollectionMember): Boolean =
+        submitsMembersOnTheirOwn(review) && card.publicationState != null && card.publicationState != "public"
+
+    fun pickerBadge(review: ReviewStatus, card: AtlasCollectionMember): PickerBadge? = when {
+        entersReviewOnAdd(review, card) -> PickerBadge.EntersReviewOnAdd
+        card.publicationState == "private" -> PickerBadge.WithCollection
+        card.publicationState == "pending" -> PickerBadge.InReview
+        else -> null
+    }
 }
