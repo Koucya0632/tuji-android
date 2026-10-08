@@ -808,4 +808,6 @@
     <string name="review_loading_next">次のラウンドを読み込み中…</string>
     <string name="review_stop_here">ここまでにして、ホームへ</string>
     <string name="study_word_detail">単語の詳細</string>
+    <string name="study_play_sentence">例文を再生</string>
+    <string name="new_spell_answer">正解 %1$s</string>
 </resources>
