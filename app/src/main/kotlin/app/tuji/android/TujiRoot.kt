@@ -14,6 +14,7 @@ import app.tuji.android.wordlists.WordListQueue
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
+import app.tuji.android.credits.CreditCaptureScreen
 import app.tuji.android.credits.CreditsScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -1150,6 +1151,7 @@ private fun SignedInScreens(
                     leadingLabel = stringResource(
                         if (shown == AppRoute.Capture) R.string.nav_close else R.string.atlas_back,
                     ),
+                    title = if (shown == AppRoute.Capture) stringResource(R.string.capture_add_title) else null,
                 )
             }
             Box(Modifier.weight(1f)) {
@@ -1307,7 +1309,7 @@ private fun SignedInScreens(
                     val owner = (session.state as? AuthState.SignedIn)?.user?.id
                     if (accountState.entitlement?.billingMode == "credits" && owner != null) {
                         CreditsScreen(app.api, app.atlas, owner,
-                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id }, direction, capture = false)
+                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id })
                     } else MembershipScreen(MembershipOffer.from(accountState.entitlement))
                 }
 
@@ -1528,8 +1530,18 @@ private fun SignedInScreens(
                 AppRoute.Capture -> {
                     val owner = (session.state as? AuthState.SignedIn)?.user?.id
                     if (accountState.entitlement?.billingMode == "credits" && owner != null) {
-                        CreditsScreen(app.api, app.atlas, owner,
-                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id }, direction, capture = true)
+                        CreditCaptureScreen(
+                            api = app.api,
+                            atlas = app.atlas,
+                            owner = owner,
+                            currentOwner = { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
+                            direction = direction,
+                            uiLanguage = uiLanguage,
+                            enqueue = { request, imageId, thumbUrl -> app.captureQueue.enqueue(request, imageId, thumbUrl) },
+                            queuedOperations = { app.captureQueue.creditOperationIds },
+                            onOpenWallet = { nav = nav.push(AppRoute.Membership) },
+                            onDone = { if (nav.current == route) nav = nav.pop() },
+                        )
                     } else {
                     val vm = remember {
                         CaptureViewModel(

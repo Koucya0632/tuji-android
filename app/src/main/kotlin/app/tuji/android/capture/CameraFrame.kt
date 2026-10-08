@@ -2,6 +2,7 @@ package app.tuji.android.capture
 
 import android.content.Context
 import android.util.Log
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -10,7 +11,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -34,8 +38,10 @@ fun CameraFrame(controller: CameraController, modifier: Modifier = Modifier) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
 
+    // Reading the lens here is what rebinds the session when 切換鏡頭 flips it.
+    val back = controller.back
     AndroidView(factory = { previewView }, modifier = modifier) {
-        controller.bind(context, lifecycleOwner, previewView)
+        controller.bind(context, lifecycleOwner, previewView, back)
     }
 }
 
@@ -49,6 +55,34 @@ fun CameraFrame(controller: CameraController, modifier: Modifier = Modifier) {
 class CameraController {
 
     private var capture: ImageCapture? = null
+    private var camera: Camera? = null
+    private var bound: Boolean? = null
+
+    /** Which lens is on. State, so the frame rebinds when it changes. */
+    var back by mutableStateOf(true)
+        private set
+
+    /** Current zoom ratio (1 = none). */
+    var zoom: Float = 1f
+        private set
+
+    fun flip() {
+        back = !back
+        zoom = 1f
+    }
+
+    /**
+     * Clamped to 5× — beyond that a phone's digital zoom is mush, and a card
+     * photo is better taken by stepping closer.
+     */
+    fun setZoom(ratio: Float) {
+        val camera = camera ?: return
+        val state = camera.cameraInfo.zoomState.value
+        val min = state?.minZoomRatio ?: 1f
+        val max = minOf(state?.maxZoomRatio ?: 1f, 5f)
+        zoom = ratio.coerceIn(min, maxOf(min, max))
+        camera.cameraControl.setZoomRatio(zoom)
+    }
 
     private companion object {
         const val TAG = "TujiCamera"
@@ -58,7 +92,10 @@ class CameraController {
         context: Context,
         lifecycleOwner: androidx.lifecycle.LifecycleOwner,
         previewView: PreviewView,
+        back: Boolean = true,
     ) {
+        if (bound == back && camera != null) return
+        bound = back
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             val provider = future.get()
@@ -77,10 +114,14 @@ class CameraController {
             // identical from the outside.
             runCatching {
                 provider.unbindAll()
-                provider.bindToLifecycle(
-                    lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture,
+                camera = provider.bindToLifecycle(
+                    lifecycleOwner,
+                    if (back) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA,
+                    preview,
+                    imageCapture,
                 )
             }.onFailure { error ->
+                bound = null
                 Log.e(TAG, "camera bind failed; available=" + runCatching {
                     provider.availableCameraInfos.map { info ->
                         CameraSelector.LENS_FACING_BACK.let { _ ->

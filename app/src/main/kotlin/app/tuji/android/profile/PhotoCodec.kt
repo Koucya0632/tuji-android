@@ -81,4 +81,33 @@ object PhotoCodec {
             stream.toByteArray()
         }
     }
+
+    /**
+     * iOS's `ImageIntakeEncoding.capture` behind the freeform crop: the backend
+     * caps stored images at 1600 and recognition only ever sees 1024, so
+     * anything larger is upload time spent on nothing. [left]…[bottom] are
+     * fractions of the bitmap, as the crop window keeps them.
+     */
+    suspend fun captureCropJpeg(bitmap: Bitmap, left: Float, top: Float, right: Float, bottom: Float): ByteArray =
+        withContext(Dispatchers.Default) {
+            val x = (left * bitmap.width).roundToInt().coerceIn(0, bitmap.width - 1)
+            val y = (top * bitmap.height).roundToInt().coerceIn(0, bitmap.height - 1)
+            val w = ((right - left) * bitmap.width).roundToInt().coerceIn(1, bitmap.width - x)
+            val h = ((bottom - top) * bitmap.height).roundToInt().coerceIn(1, bitmap.height - y)
+            val cropped = Bitmap.createBitmap(bitmap, x, y, w, h)
+            val longest = max(w, h)
+            val out = if (longest > CAPTURE_SIDE) {
+                val ratio = CAPTURE_SIDE.toFloat() / longest
+                Bitmap.createScaledBitmap(cropped, (w * ratio).roundToInt().coerceAtLeast(1), (h * ratio).roundToInt().coerceAtLeast(1), true)
+            } else {
+                cropped
+            }
+            ByteArrayOutputStream().use { stream ->
+                out.compress(Bitmap.CompressFormat.JPEG, CAPTURE_CROP_QUALITY, stream)
+                stream.toByteArray()
+            }
+        }
+
+    private const val CAPTURE_SIDE = 1600
+    private const val CAPTURE_CROP_QUALITY = 78
 }

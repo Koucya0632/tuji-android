@@ -76,7 +76,8 @@ sealed interface CaptureProgress {
 data class CaptureJobRecord(
     val id: String,
     val imageId: String,
-    val payload: AtlasConfirmPayload,
+    /** The free flow's confirm. Null for a 罐頭點數 job, which confirms through [credit]. */
+    val payload: AtlasConfirmPayload? = null,
     val lemma: String,
     /**
      * The uploaded picture, for the tile to draw.
@@ -89,4 +90,6 @@ data class CaptureJobRecord(
      */
     val thumbUrl: String? = null,
     val itemId: String? = null,
+    /** A 罐頭點數 job. Absent from records written before the kind existed, which decode as free-flow jobs. */
+    val credit: CreditConfirmRequest? = null,
 )
