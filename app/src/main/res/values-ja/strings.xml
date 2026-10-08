@@ -306,10 +306,10 @@
     <string name="community_saved_empty_ja">保存した日本語コレクションはありません</string>
     <string name="community_saved_empty_en">保存した英語コレクションはありません</string>
     <string name="community_explore_empty">この言語の公開コレクションはまだありません</string>
-    <string name="community_stat_published">公開項目</string>
+    <string name="community_stat_published">公開カード</string>
     <string name="community_stat_saves">保存数</string>
-    <string name="community_stat_items">内容</string>
-    <string name="community_count">%1$d語</string>
+    <string name="community_stat_items">カード</string>
+    <string name="community_count">カード %1$d 枚</string>
     <string name="community_save">学習に追加</string>
     <string name="community_saved">学習中</string>
     <string name="item_learning_count">%1$d人が学習中</string>
@@ -330,7 +330,7 @@
     <string name="author_segment_collections">コレクション</string>
     <string name="author_segment_items">図鑑</string>
     <string name="author_items_title">公開した図鑑</string>
-    <string name="author_empty">公開した項目はまだありません</string>
+    <string name="author_empty">公開したカードはまだありません</string>
     <string name="author_empty_self">まだ何も公開していません</string>
     <string name="author_empty_self_message">公開すると、ここが他の人に見えるあなたになります。</string>
     <string name="author_not_found">作者が見つかりません</string>
@@ -508,7 +508,7 @@
     <string name="collection_learn_remaining">残り%1$d語を追加</string>
     <string name="collection_learn_all">すべて学習に追加</string>
     <string name="collection_empty">このコレクションにはまだ項目がありません</string>
-    <string name="collection_locked">保存すると全%1$d件を表示できます</string>
+    <string name="collection_locked">コレクションを保存すると %1$d 枚すべて見られます</string>
     <string name="collection_about_empty">この作者はまだ自己紹介を書いていません。</string>
     <string name="collection_report">このコレクションを報告</string>
     <string name="collection_report_received">通報を受け付けました</string>

@@ -308,8 +308,8 @@
     <string name="community_explore_empty">No public collections in this language yet</string>
     <string name="community_stat_published">Published</string>
     <string name="community_stat_saves">Saves</string>
-    <string name="community_stat_items">Items</string>
-    <string name="community_count">%1$d words</string>
+    <string name="community_stat_items">Cards</string>
+    <string name="community_count">%1$d cards</string>
     <string name="community_save">Add to learning</string>
     <string name="community_saved">Learning</string>
     <string name="item_learning_count">%1$d learning</string>
@@ -508,7 +508,7 @@
     <string name="collection_learn_remaining">Add remaining %1$d</string>
     <string name="collection_learn_all">Add all to learning</string>
     <string name="collection_empty">This collection is empty</string>
-    <string name="collection_locked">Save the collection to view all %1$d items</string>
+    <string name="collection_locked">Save the collection to see all %1$d cards</string>
     <string name="collection_about_empty">This author hasn’t written a bio yet.</string>
     <string name="collection_report">Report this collection</string>
     <string name="collection_report_received">Report received</string>

@@ -306,10 +306,10 @@
     <string name="community_saved_empty_ja">目前没有收藏的日文合集</string>
     <string name="community_saved_empty_en">目前没有收藏的英文合集</string>
     <string name="community_explore_empty">这个语言还没有公开合集</string>
-    <string name="community_stat_published">公开项目</string>
+    <string name="community_stat_published">公开卡片</string>
     <string name="community_stat_saves">被收藏</string>
-    <string name="community_stat_items">内容</string>
-    <string name="community_count">%1$d 字</string>
+    <string name="community_stat_items">卡片</string>
+    <string name="community_count">%1$d 张卡片</string>
     <string name="community_save">加入学习</string>
     <string name="community_saved">学习中</string>
     <string name="item_learning_count">%1$d 人学习中</string>
@@ -330,7 +330,7 @@
     <string name="author_segment_collections">合集</string>
     <string name="author_segment_items">图鉴</string>
     <string name="author_items_title">公开的图鉴</string>
-    <string name="author_empty">还没有公开项目</string>
+    <string name="author_empty">还没有公开卡片</string>
     <string name="author_empty_self">你还没有公开任何图鉴</string>
     <string name="author_empty_self_message">公开之后，这里就是别人看到的你。</string>
     <string name="author_not_found">找不到这个作者</string>
@@ -508,7 +508,7 @@
     <string name="collection_learn_remaining">加入其余 %1$d 个</string>
     <string name="collection_learn_all">全部加入学习</string>
     <string name="collection_empty">这个合集还没有项目</string>
-    <string name="collection_locked">收藏合集后查看全部 %1$d 个内容</string>
+    <string name="collection_locked">收藏合集后查看全部 %1$d 张卡片</string>
     <string name="collection_about_empty">作者还没有填写简介。</string>
     <string name="collection_report">举报这个合集</string>
     <string name="collection_report_received">已收到举报</string>
