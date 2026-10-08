@@ -250,7 +250,7 @@
     <string name="settings_clear">Clear study progress</string>
     <string name="settings_clearing">Clearing…</string>
     <string name="settings_clear_title">Clear all progress?</string>
-    <string name="settings_clear_footer">Clearing your progress deletes mastery and answer history, but keeps your settings and your custom atlas.</string>
+    <string name="settings_clear_footer">Clearing your progress deletes mastery and answer history, but keeps bookmarks, settings, and your custom atlas.</string>
     <string name="settings_delete">Delete account</string>
     <string name="settings_deleting">Deleting…</string>
     <string name="settings_delete_title">Delete your account?</string>
@@ -810,4 +810,16 @@
     <string name="study_word_detail">Word details</string>
     <string name="study_play_sentence">Play sentence</string>
     <string name="new_spell_answer">Answer: %1$s</string>
+    <string name="reminder_section">Reminders</string>
+    <string name="reminder_footer">No reminder on days you’ve already studied.</string>
+    <string name="reminder_daily">Daily reminder</string>
+    <string name="reminder_daily_why">A nudge to come back and review at the time you pick</string>
+    <string name="reminder_time">Reminder time</string>
+    <string name="reminder_denied">Notifications are off</string>
+    <string name="reminder_denied_why">Allow notifications for Tuji in system settings</string>
+    <string name="reminder_title_due">%1$d words to review today</string>
+    <string name="reminder_title">Time for a little study</string>
+    <string name="reminder_body">A few minutes of review makes it stick.</string>
+    <string name="reminder_channel">Study reminders</string>
+    <string name="reminder_time_confirm">Confirm</string>
 </resources>

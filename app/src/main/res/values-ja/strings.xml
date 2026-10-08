@@ -250,7 +250,7 @@
     <string name="settings_clear">学習進捗をリセット</string>
     <string name="settings_clearing">クリア中…</string>
     <string name="settings_clear_title">すべての学習進捗をリセットしますか？</string>
-    <string name="settings_clear_footer">学習進捗を消すと、習熟度と解答履歴が削除されます。設定と自作図鑑は残ります。</string>
+    <string name="settings_clear_footer">学習進捗を消すと、習熟度と解答履歴が削除されます。ブックマーク・設定・自作図鑑は残ります。</string>
     <string name="settings_delete">アカウントを削除</string>
     <string name="settings_deleting">削除中…</string>
     <string name="settings_delete_title">アカウントを削除しますか？</string>
@@ -810,4 +810,16 @@
     <string name="study_word_detail">単語の詳細</string>
     <string name="study_play_sentence">例文を再生</string>
     <string name="new_spell_answer">正解 %1$s</string>
+    <string name="reminder_section">リマインダー</string>
+    <string name="reminder_footer">その日すでに学習していれば通知しません。</string>
+    <string name="reminder_daily">毎日のリマインダー</string>
+    <string name="reminder_daily_why">選んだ時間に復習をお知らせします</string>
+    <string name="reminder_time">通知時刻</string>
+    <string name="reminder_denied">通知がオフです</string>
+    <string name="reminder_denied_why">システムの設定で Tuji の通知を許可してください</string>
+    <string name="reminder_title_due">今日は%1$d語の復習があります</string>
+    <string name="reminder_title">今日も少し学びましょう</string>
+    <string name="reminder_body">数分の復習で、しっかり身につきます。</string>
+    <string name="reminder_channel">学習リマインダー</string>
+    <string name="reminder_time_confirm">確定</string>
 </resources>

@@ -16,6 +16,8 @@ import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
 import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.credits.CreditCaptureScreen
+import app.tuji.android.reminders.ReminderTexts
+import app.tuji.android.settings.ReminderSettingsSection
 import app.tuji.android.credits.CreditsScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -650,6 +652,22 @@ private fun SignedInScreens(
         )
     }
     val todayInputs by today.inputs.collectAsStateWithLifecycle()
+
+    // 每日學習提醒: laid out again whenever what they say could change — the
+    // due count, whether today has been studied, the language they are in —
+    // and on every return to the foreground, as iOS does.
+    val reminderTexts = ReminderTexts(
+        titleDue = stringResource(R.string.reminder_title_due),
+        titleGeneric = stringResource(R.string.reminder_title),
+        body = stringResource(R.string.reminder_body),
+    )
+    val reminderDue = todayInputs.stats?.due
+    val studiedToday = (progress.streak?.todayCount ?: 0) > 0
+    var foregrounds by remember { mutableIntStateOf(0) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) { foregrounds++ }
+    LaunchedEffect(reminderDue, studiedToday, reminderTexts, foregrounds) {
+        app.studyReminders.reschedule(reminderDue, studiedToday, reminderTexts)
+    }
 
     // Held above the routes rather than inside 搜尋's branch, so opening a
     // result and coming back finds the results still there — as it does on
@@ -1331,6 +1349,7 @@ private fun SignedInScreens(
                         app.analytics.shareApp()
                         shareApp(context)
                     },
+                    reminders = { ReminderSettingsSection(app.studyReminders) },
                 )
 
                 AppRoute.Membership -> {

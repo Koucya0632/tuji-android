@@ -250,7 +250,7 @@
     <string name="settings_clear">清除学习进度</string>
     <string name="settings_clearing">清除中…</string>
     <string name="settings_clear_title">清除所有学习进度？</string>
-    <string name="settings_clear_footer">清除学习进度会删除熟练度与答题记录，但保留设置与自制图鉴。</string>
+    <string name="settings_clear_footer">清除学习进度会删除熟练度与答题记录，但保留书签、设置与自制图鉴。</string>
     <string name="settings_delete">删除账号</string>
     <string name="settings_deleting">删除中…</string>
     <string name="settings_delete_title">删除你的账号？</string>
@@ -810,4 +810,16 @@
     <string name="study_word_detail">单字详情</string>
     <string name="study_play_sentence">播放例句</string>
     <string name="new_spell_answer">正解 %1$s</string>
+    <string name="reminder_section">提醒</string>
+    <string name="reminder_footer">今天已经学过就不会再提醒。</string>
+    <string name="reminder_daily">每日提醒</string>
+    <string name="reminder_daily_why">在你选的时间提醒你回来复习</string>
+    <string name="reminder_time">提醒时间</string>
+    <string name="reminder_denied">通知已关闭</string>
+    <string name="reminder_denied_why">到系统设置允许 Tuji 发送通知</string>
+    <string name="reminder_title_due">今天有 %1$d 个字要复习</string>
+    <string name="reminder_title">今天学一点吧</string>
+    <string name="reminder_body">花几分钟复习，记得更牢。</string>
+    <string name="reminder_channel">学习提醒</string>
+    <string name="reminder_time_confirm">确定</string>
 </resources>
