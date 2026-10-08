@@ -828,4 +828,7 @@
     <string name="collections_enters_review">Review on add</string>
     <string name="collections_enters_review_hint">Sent for review when added</string>
     <string name="collections_already_member">That card is already in this collection.</string>
+    <string name="membership_title_credits">Membership &amp; Can Credits</string>
+    <string name="membership_terms">Terms of Service</string>
+    <string name="membership_privacy">Privacy Policy</string>
 </resources>

@@ -828,4 +828,7 @@
     <string name="collections_enters_review">加入后送审</string>
     <string name="collections_enters_review_hint">加入后会自动送审</string>
     <string name="collections_already_member">这张卡片已经在合集里了。</string>
+    <string name="membership_title_credits">会员与罐头点数</string>
+    <string name="membership_terms">使用条款</string>
+    <string name="membership_privacy">隐私权政策</string>
 </resources>
