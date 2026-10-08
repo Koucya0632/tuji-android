@@ -210,6 +210,8 @@ fun NewFlowScreen(
                             showChinese = showChinese,
                             session = session,
                             bottomPadding = insets.calculateBottomPadding(),
+                            speech = speech,
+                            accent = accent,
                         )
                         // A miss raises the word rather than printing a line
                         // under the board: the answer is the one thing worth
@@ -452,6 +454,8 @@ private fun StageBody(
     showChinese: Boolean,
     session: TargetLanguage,
     bottomPadding: Dp,
+    speech: WordSpeaking?,
+    accent: String,
 ) {
     val speaker: @Composable (Dp, Color) -> Unit = { size, ground ->
         if (studying.canPlayWord) SpeakerButton(size, ground, studying.playingWord, vm::playWord)
@@ -465,7 +469,9 @@ private fun StageBody(
                 delay(300)
                 vm.playWord()
             }
-            RecognizeCard(stage, studying.teach, showChinese, session, bottomPadding, speaker, vm::rateRecognize)
+            RecognizeCard(stage, studying.teach, showChinese, session, bottomPadding, speaker, vm::rateRecognize) { sentence, language ->
+                SentenceSpeakerButton(sentence, language, speech, accent)
+            }
         }
         is NewFlowViewModel.Stage.Identify ->
             IdentifyCard(stage, showChinese, session, bottomPadding, speaker, vm::pickIdentify, vm::continueFromWrong)
@@ -492,6 +498,8 @@ private fun RecognizeCard(
     bottomPadding: Dp,
     speaker: @Composable (Dp, Color) -> Unit,
     onRate: (SRSRating) -> Unit,
+    /** The example sentence's own speaker, beside it as on iOS. */
+    sentenceSpeaker: @Composable (String, TargetLanguage) -> Unit,
 ) {
     val word = stage.item.word
     Column(Modifier.fillMaxSize()) {
@@ -526,12 +534,17 @@ private fun RecognizeCard(
                         Modifier.fillMaxWidth().background(TujiColor.Paper2).padding(TujiSpace.S3),
                         verticalArrangement = Arrangement.spacedBy(TujiSpace.S1),
                     ) {
-                        InteractiveSentenceText(
-                            sentence = sentence,
-                            spans = annotated?.spans,
-                            language = word.language(session),
-                            style = TujiType.bodySm,
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2), verticalAlignment = Alignment.Top) {
+                            Box(Modifier.weight(1f)) {
+                                InteractiveSentenceText(
+                                    sentence = sentence,
+                                    spans = annotated?.spans,
+                                    language = word.language(session),
+                                    style = TujiType.bodySm,
+                                )
+                            }
+                            sentenceSpeaker(sentence, word.language(session))
+                        }
                         if (showChinese) {
                             annotated?.zh?.takeIf { it.isNotBlank() }?.let {
                                 Text(it, style = TujiType.label, color = TujiColor.Ink3)
@@ -784,6 +797,17 @@ private fun SpellCard(
         // (`min(3, pool.count)`) and the tiles by the rule below. Three is
         // wider than a tile needs and exactly what a chunk needs: `tion` in a
         // sixth-of-a-screen column is a chunk you have to squint at.
+        // The answer under the board, as iOS writes it beside the missed
+        // slots — the raised card says it too, but this is where the eye is.
+        if (stage.correct == false) {
+            Text(
+                stringResource(R.string.new_spell_answer, gaps?.term ?: stage.subject.text),
+                style = TujiType.label,
+                color = TujiColor.Ink3,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         TilePool(stage, onTap, columns = if (gaps != null) minOf(3, stage.pool.size) else null)
 
         // 退一格 stays, though iOS has no visible delete: taking back the last

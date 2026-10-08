@@ -808,4 +808,6 @@
     <string name="review_loading_next">Loading next round…</string>
     <string name="review_stop_here">Stop here and go home</string>
     <string name="study_word_detail">Word details</string>
+    <string name="study_play_sentence">Play sentence</string>
+    <string name="new_spell_answer">Answer: %1$s</string>
 </resources>

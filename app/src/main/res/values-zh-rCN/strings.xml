@@ -808,4 +808,6 @@
     <string name="review_loading_next">载入下一轮…</string>
     <string name="review_stop_here">先到这里，回首页</string>
     <string name="study_word_detail">单字详情</string>
+    <string name="study_play_sentence">播放例句</string>
+    <string name="new_spell_answer">正解 %1$s</string>
 </resources>
