@@ -1,11 +1,13 @@
 package app.tuji.android.credits
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -16,9 +18,16 @@ import app.tuji.android.R
 import app.tuji.android.core.design.*
 import app.tuji.android.core.network.*
 
-/** 罐頭點數 — the wallet: balance, where it comes from, and 每日簽到. */
+/**
+ * 罐頭點數 — iOS's `CreditWalletView`, on the paywall as its first card: the
+ * balance, where it comes from, and 每日簽到.
+ *
+ * No point packs: Android cannot take payments yet (ADR-0001), and a buy button
+ * that cannot do its job is worse than none. The page around this card says
+ * where they can be bought.
+ */
 @Composable
-fun CreditsScreen(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, currentOwner: () -> String?) {
+fun CreditWalletCard(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, currentOwner: () -> String?) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val model = remember(owner) {
@@ -27,29 +36,59 @@ fun CreditsScreen(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, curr
     }
     val state by model.state.collectAsStateWithLifecycle()
     LaunchedEffect(model) { model.load() }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    val wallet = state.wallet
+    Column(Modifier.tierCard(), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(R.drawable.credit_can), null, Modifier.size(48.dp), tint = TujiColor.Ink)
-            Text(stringResource(R.string.credit_title), style = TujiType.h3)
+            Column {
+                Text(stringResource(R.string.credit_title), style = TujiType.h3, color = TujiColor.Ink)
+                Text(wallet?.available?.toString() ?: "—", style = TujiType.h3, color = TujiColor.Ink)
+            }
         }
-        Text(stringResource(R.string.membership_benefit_slots_200_credits))
-        Text(stringResource(R.string.credit_pro_closed))
-        state.wallet?.let { wallet ->
-            Text(wallet.available.toString(), style = TujiType.h3)
-            Text(stringResource(R.string.credit_balances, wallet.reserved, wallet.giftAvailable, wallet.paidAvailable))
-            if (wallet.reconciliationRequired) Text(stringResource(R.string.credit_refund_hold))
-            Text(stringResource(R.string.credit_monthly_auto))
-            Text(stringResource(R.string.credit_free_balance, wallet.monthlyAvailable, wallet.checkInAvailable))
-            Text(stringResource(R.string.credit_monthly_reset_note))
-            TujiButton(stringResource(if (wallet.benefits.checkedInToday) R.string.credit_checked_in else R.string.credit_check_in),
-                { model.claim(false) }, enabled = !state.busy && state.catalog?.checkInEnabled == true && wallet.benefits.hasLifetime && !wallet.benefits.checkedInToday && wallet.benefits.checkInGrantedThisMonth < 300)
-            Text(stringResource(R.string.credit_check_in_note))
+        if (wallet != null) {
+            Text(
+                stringResource(R.string.credit_balances, wallet.reserved, wallet.giftAvailable, wallet.paidAvailable),
+                style = TujiType.label,
+                color = TujiColor.Ink3,
+            )
+            if (wallet.reconciliationRequired) {
+                Text(stringResource(R.string.credit_refund_hold), style = TujiType.label, color = TujiColor.Ink)
+            }
         }
-        TujiButton(stringResource(R.string.credit_retry), model::load, enabled = !state.busy)
-        state.error?.let { Text(stringResource(creditErrorResource(it)), color = MaterialTheme.colorScheme.error) }
+        val benefits = wallet?.benefits
+        // Studying is the check-in: no answer today, nothing to collect yet.
+        val canCheckIn = !state.busy && state.catalog?.checkInEnabled == true && benefits?.hasLifetime == true &&
+            !benefits.checkedInToday && benefits.studiedToday != false && benefits.checkInGrantedThisMonth < 300
+        TujiButton(
+            text = stringResource(if (benefits?.checkedInToday == true) R.string.credit_checked_in else R.string.credit_check_in),
+            onClick = { model.claim(false) },
+            enabled = canCheckIn,
+            style = TujiButtonStyle.Secondary,
+        )
+        Text(stringResource(R.string.credit_monthly_auto), style = TujiType.body, color = TujiColor.Ink)
+        Text(
+            stringResource(R.string.credit_free_balance, wallet?.monthlyAvailable ?: 0, wallet?.checkInAvailable ?: 0),
+            style = TujiType.label,
+            color = TujiColor.Ink3,
+        )
+        Text(stringResource(R.string.credit_monthly_reset_note), style = TujiType.label, color = TujiColor.Ink3)
+        Text(stringResource(R.string.credit_check_in_note), style = TujiType.label, color = TujiColor.Ink3)
+        state.error?.let { Text(stringResource(creditErrorResource(it)), style = TujiType.label, color = TujiColor.Alert) }
+        Text(
+            stringResource(R.string.credit_retry),
+            style = TujiType.bodySmStrong,
+            color = if (state.busy) TujiColor.Ink3 else TujiColor.Ink,
+            modifier = Modifier.tujiClickable(enabled = !state.busy, onClick = model::load).padding(vertical = TujiSpace.S1),
+        )
     }
 }
+
+/** iOS's `tierCard()`: a paper card with a rule, one per thing the paywall sells. */
+fun Modifier.tierCard(): Modifier = this
+    .fillMaxWidth()
+    .background(TujiColor.Paper2)
+    .border(TujiBorder.Bw1, TujiColor.Rule)
+    .padding(TujiSpace.S3)
 
 internal fun creditErrorResource(code: String): Int = when (code) {
     "insufficient_credits" -> R.string.credit_insufficient

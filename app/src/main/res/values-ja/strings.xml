@@ -828,4 +828,7 @@
     <string name="collections_enters_review">追加で審査へ</string>
     <string name="collections_enters_review_hint">追加すると審査に出されます</string>
     <string name="collections_already_member">このカードはすでにコレクションに入っています。</string>
+    <string name="membership_title_credits">会員と缶詰ポイント</string>
+    <string name="membership_terms">利用規約</string>
+    <string name="membership_privacy">プライバシーポリシー</string>
 </resources>

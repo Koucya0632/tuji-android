@@ -541,6 +541,27 @@ object TujiGlyph {
         }
     }
 
+    /** 會員. Three points over a band, filled — iOS's `crown.fill` on the paywall. */
+    @Composable
+    fun Crown(size: Dp = 34.dp, tint: Color = TujiColor.Current, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val crown = Path().apply {
+                moveTo(w * 0.10f, h * 0.30f)
+                lineTo(w * 0.32f, h * 0.52f)
+                lineTo(w * 0.50f, h * 0.18f)
+                lineTo(w * 0.68f, h * 0.52f)
+                lineTo(w * 0.90f, h * 0.30f)
+                lineTo(w * 0.82f, h * 0.72f)
+                lineTo(w * 0.18f, h * 0.72f)
+                close()
+            }
+            drawPath(crown, tint)
+            drawRect(tint, topLeft = Offset(w * 0.18f, h * 0.77f), size = Size(w * 0.64f, h * 0.09f))
+        }
+    }
+
     /** 我. A head and shoulders, both filled. */
     @Composable
     fun Person(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {

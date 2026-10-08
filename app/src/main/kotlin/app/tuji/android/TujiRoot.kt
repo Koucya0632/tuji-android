@@ -18,7 +18,7 @@ import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.credits.CreditCaptureScreen
 import app.tuji.android.reminders.ReminderTexts
 import app.tuji.android.settings.ReminderSettingsSection
-import app.tuji.android.credits.CreditsScreen
+import app.tuji.android.credits.CreditWalletCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
@@ -1357,10 +1357,17 @@ private fun SignedInScreens(
 
                 AppRoute.Membership -> {
                     val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    if (accountState.entitlement?.billingMode == "credits" && owner != null) {
-                        CreditsScreen(app.api, app.atlas, owner,
-                            { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id })
-                    } else MembershipScreen(MembershipOffer.from(accountState.entitlement))
+                    MembershipScreen(
+                        offer = MembershipOffer.from(accountState.entitlement),
+                        walletCard = if (accountState.entitlement?.billingMode == "credits" && owner != null) {
+                            {
+                                CreditWalletCard(app.api, app.atlas, owner,
+                                    { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id })
+                            }
+                        } else {
+                            null
+                        },
+                    )
                 }
 
                 AppRoute.WordLists -> WordListsScreen(
