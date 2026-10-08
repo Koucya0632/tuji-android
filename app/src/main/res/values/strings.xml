@@ -59,8 +59,7 @@
     <string name="study_unsynced">%1$d waiting to sync</string>
     <string name="study_unsynced_done">%1$d ratings haven’t been sent yet. They’ll go out once you’re online.</string>
     <string name="study_next">Next question</string>
-    <string name="study_retest_passed">Got it this time</string>
-    <string name="study_auto_rated">Recorded as %1$s</string>
+    <string name="study_retest_passed">Correct</string>
     <string name="study_done_title">Round complete</string>
     <string name="study_done_count">Reviewed %1$d words</string>
     <string name="study_was_wrong">Missed before</string>
@@ -808,4 +807,5 @@
     <string name="review_another_round">Another round (%d words left)</string>
     <string name="review_loading_next">Loading next round…</string>
     <string name="review_stop_here">Stop here and go home</string>
+    <string name="study_word_detail">Word details</string>
 </resources>
