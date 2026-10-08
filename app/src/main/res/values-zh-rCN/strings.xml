@@ -822,4 +822,6 @@
     <string name="reminder_body">花几分钟复习，记得更牢。</string>
     <string name="reminder_channel">学习提醒</string>
     <string name="reminder_time_confirm">确定</string>
+    <string name="today_sub_pick_themes">先选学习主题，开始学新字</string>
+    <string name="today_hint_no_cards">这个主题目前还没有可学的字</string>
 </resources>

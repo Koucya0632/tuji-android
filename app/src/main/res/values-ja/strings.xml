@@ -822,4 +822,6 @@
     <string name="reminder_body">数分の復習で、しっかり身につきます。</string>
     <string name="reminder_channel">学習リマインダー</string>
     <string name="reminder_time_confirm">確定</string>
+    <string name="today_sub_pick_themes">まず学習テーマを選んで、新しい単語を学びましょう</string>
+    <string name="today_hint_no_cards">このテーマにはまだ学べる単語がありません</string>
 </resources>

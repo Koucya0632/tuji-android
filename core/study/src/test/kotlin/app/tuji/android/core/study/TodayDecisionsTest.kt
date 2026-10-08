@@ -110,4 +110,55 @@ class TodayDecisionsTest {
         assertFalse(t.goalReached)
         assertEquals(TodaySubtitle.NewAvailable, t.subtitle)
     }
+
+    // The themes being studied — iOS's selection-aware rules
+
+    private fun selection(picked: List<String>, seen: Int, total: Int, settingsLoaded: Boolean = true) =
+        CompletionReadout(
+            CompletionReadout.Inputs(
+                settingsLoaded = settingsLoaded,
+                studyCategories = picked,
+                seenInSelection = seen,
+                totalInSelection = total,
+                dictionaryCount = 857,
+                dictionaryCountInSelection = total,
+            ),
+        )
+
+    private fun studying(completion: CompletionReadout, stats: StudyStats? = stats(), loaded: Boolean = true) =
+        TodayDecisions(TodayInputs(stats = stats, completion = completion, progressLoaded = loaded))
+
+    @Test fun `no themes asks for themes, and the hero leaves it to the prompt`() {
+        val t = studying(selection(emptyList(), seen = 0, total = 0))
+        assertEquals(TodaySubtitle.PickThemes, t.subtitle)
+        assertEquals(TodayNewBlock.NoThemes, t.newBlock)
+        assertTrue(t.newDisabled)
+        assertTrue("no-themes is not the hero's to explain", t.heroHint != TodayHeroHint.NewBlocked)
+    }
+
+    @Test fun `settings not loaded yet is not no themes`() {
+        val t = studying(selection(emptyList(), seen = 0, total = 0, settingsLoaded = false), loaded = false)
+        assertTrue(t.subtitle != TodaySubtitle.PickThemes)
+        assertTrue(t.newBlock != TodayNewBlock.NoThemes)
+    }
+
+    @Test fun `picked themes with no words say so`() {
+        val t = studying(selection(listOf("kitchen"), seen = 0, total = 0))
+        assertEquals(TodayNewBlock.NoCards, t.newBlock)
+        assertEquals(TodayHeroHint.NewBlocked, t.heroHint)
+    }
+
+    @Test fun `what is left counts the picked themes, not the whole catalogue`() {
+        // The server still has 537 new words, but the picked themes are done.
+        val t = studying(selection(listOf("kitchen"), seen = 64, total = 64))
+        assertEquals(0, t.newAvailable)
+        assertEquals(TodayNewBlock.AllLearned, t.newBlock)
+        assertEquals(TodaySubtitle.AllLearned, t.subtitle)
+    }
+
+    @Test fun `before the themes' progress lands the server's count stands in`() {
+        val t = studying(selection(listOf("kitchen"), seen = 0, total = 0), loaded = false)
+        assertEquals(537, t.newAvailable)
+        assertEquals(TodayNewBlock.None, t.newBlock)
+    }
 }

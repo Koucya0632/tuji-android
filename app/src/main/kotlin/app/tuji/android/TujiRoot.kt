@@ -651,7 +651,10 @@ private fun SignedInScreens(
             direction = direction,
         )
     }
-    val todayInputs by today.inputs.collectAsStateWithLifecycle()
+    val todayStats by today.inputs.collectAsStateWithLifecycle()
+    // 今日's verdicts read the selected themes too, as iOS's do: what is left
+    // to learn is counted over them once their progress has landed.
+    val todayInputs = todayStats.copy(completion = completion, progressLoaded = progress.loaded)
 
     // 每日學習提醒: laid out again whenever what they say could change — the
     // due count, whether today has been studied, the language they are in —
