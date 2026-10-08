@@ -102,6 +102,8 @@ fun CreditCaptureScreen(
     queuedOperations: () -> Set<String>,
     onOpenWallet: () -> Unit,
     onDone: () -> Unit,
+    /** A card was handed to 生成佇列; the host shows 我做的, where its tile is. */
+    onCardQueued: () -> Unit = onDone,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -149,7 +151,7 @@ fun CreditCaptureScreen(
                     if (operation != null) RecognizingPanel(state, operation, model) else ReadyPanel(state, model, language, glossLanguage, onOpenWallet)
                 state.pending != null -> PendingPanel(state, model)
                 state.quote != null -> QuotePanel(state, state.quote!!, model)
-                operation != null -> OperationPanel(state, operation, model, secondField, language, glossLanguage, onOpenWallet, onDone)
+                operation != null -> OperationPanel(state, operation, model, secondField, language, glossLanguage, onOpenWallet, onDone, onCardQueued)
                 state.photo != null -> ReadyPanel(state, model, language, glossLanguage, onOpenWallet)
                 else -> SourcePanel(
                     state = state,
@@ -430,6 +432,7 @@ private fun OperationPanel(
     gloss: String?,
     onOpenWallet: () -> Unit,
     onDone: () -> Unit,
+    onCardQueued: () -> Unit,
 ) {
     when {
         operation.isRunning -> RecognizingPanel(state, operation, model)
@@ -442,7 +445,7 @@ private fun OperationPanel(
             Text(stringResource(R.string.credit_saved_sync_failed), style = TujiType.body, color = TujiColor.Ink)
             TujiButton(text = stringResource(R.string.credit_sync_cards), onClick = { model.syncCards(onDone) }, enabled = !state.busy)
         }
-        else -> ResultPanel(state, operation, model, secondField, language, gloss, onOpenWallet, onDone)
+        else -> ResultPanel(state, operation, model, secondField, language, gloss, onOpenWallet, onCardQueued)
     }
 }
 
@@ -478,7 +481,7 @@ private fun ResultPanel(
     language: String,
     gloss: String?,
     onOpenWallet: () -> Unit,
-    onDone: () -> Unit,
+    onCardQueued: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         PanelHeader(stringResource(R.string.credit_candidates)) {
@@ -492,7 +495,7 @@ private fun ResultPanel(
         if (state.selectedCandidateId != null) CorrectionForm(state, model, secondField)
         TujiButton(
             text = stringResource(R.string.credit_confirm_card),
-            onClick = { if (model.confirm(secondField)) onDone() },
+            onClick = { if (model.confirm(secondField)) onCardQueued() },
             enabled = state.canConfirm,
             leading = { TujiGlyph.Check(size = 14.dp, tint = if (state.canConfirm) TujiColor.Ink else TujiColor.Ink3) },
         )

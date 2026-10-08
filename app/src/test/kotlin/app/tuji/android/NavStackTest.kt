@@ -147,4 +147,13 @@ class NavStackTest {
         assertFalse(TabShell.tabBarVisible(NavStack().push(AppRoute.Membership)))
         assertFalse(TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(AppRoute.Membership)))
     }
+
+    @Test fun `a queued capture closes onto 圖鑑, with back still leading home`() {
+        // TujiRoot's showQueuedCapture: the capture page goes, 圖鑑 comes up.
+        val fromToday = NavStack().push(AppRoute.Capture).pop().select(AppRoute.Atlas)
+        assertEquals(listOf(AppRoute.Today, AppRoute.Atlas), fromToday.entries)
+        // Opened from 圖鑑 itself, it unwinds to it rather than stacking a second one.
+        val fromAtlas = NavStack().select(AppRoute.Atlas).push(AppRoute.Capture).pop().select(AppRoute.Atlas)
+        assertEquals(listOf(AppRoute.Today, AppRoute.Atlas), fromAtlas.entries)
+    }
 }

@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -120,8 +121,21 @@ fun AtlasCardsScreen(
     onRetryCapture: (String) -> Unit = {},
     /** Themes this account may study; null = all. The rest wear a lock. */
     studyable: List<String>? = null,
+    /**
+     * A source to switch to once, then [onSourceRequestHandled] — iOS's
+     * `cardsSourceRequest`. A capture handed to 生成佇列 asks for 我做的, where
+     * its tile is.
+     */
+    sourceRequest: CardsSource? = null,
+    onSourceRequestHandled: () -> Unit = {},
 ) {
     var source by rememberSaveable { mutableStateOf(CardsSource.Official) }
+    LaunchedEffect(sourceRequest) {
+        sourceRequest?.let {
+            source = it
+            onSourceRequestHandled()
+        }
+    }
     // The word a long press is holding up. Not saveable: a peek is a look, and
     // a look that survives the process being killed is a window the reader
     // never asked to come back to.
