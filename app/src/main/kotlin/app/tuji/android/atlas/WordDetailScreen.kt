@@ -62,6 +62,7 @@ import app.tuji.android.gloss.GlossBookmarks
 import app.tuji.android.gloss.GlossCardHost
 import app.tuji.android.gloss.InteractiveSentenceText
 import app.tuji.android.core.model.WordForm
+import app.tuji.android.study.SentenceSpeakerButton
 import app.tuji.android.core.model.WordInsights
 import app.tuji.android.core.model.WordImageKind
 import app.tuji.android.core.model.headwordDisplay
@@ -195,6 +196,19 @@ fun WordDetailScreen(
                 uiLang = uiLang,
                 showChinese = showChinese,
                 session = session,
+                speech = speech,
+                accent = accent,
+                modifier = Modifier.padding(horizontal = TujiSpace.S4),
+            )
+
+            // 容易混淆・常見誤用・用法補充, after the examples as on iOS. Taken
+            // as a parameter since #69 and never drawn here until now — only
+            // the review sheet's panel showed it.
+            WordInsightsSection(
+                insights = insights,
+                onOpenWord = onOpenWord,
+                canOpen = canOpenWord,
+                onLocked = onLocked,
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
 
@@ -350,18 +364,24 @@ internal fun WordDetailSections(
     showChinese: Boolean,
     /** The deck being read — the fallback language for an untagged entry. */
     session: TargetLanguage,
+    /** Says an example sentence, synthesised as on iOS. Null draws no speaker. */
+    speech: WordSpeaking? = null,
+    accent: String = "us",
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S4)) {
         Details(word = word, uiLang = uiLang, showChinese = showChinese, session = session)
 
-        val examples = word.examples
-            .filter { !it.target.isNullOrBlank() }
-            .take(WordDetailContent.MAX_EXAMPLES)
+        val language = word.language(session)
+        val examples = WordDetailContent.examples(word, language)
         if (examples.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
                 SectionTitle(stringResource(R.string.word_examples_title))
-                examples.forEach { ExampleCard(it, showChinese, session) }
+                examples.forEach { (example, sentence) ->
+                    ExampleCard(example, sentence, showChinese, language) {
+                        SentenceSpeakerButton(sentence, language, speech, accent)
+                    }
+                }
             }
         }
     }
@@ -420,7 +440,7 @@ private fun Details(
         }
         when (selected) {
             WordDetailTab.Definition -> DefinitionCard(word, uiLang, showChinese, session)
-            WordDetailTab.Forms -> FormsCard(word.forms)
+            WordDetailTab.Forms -> FormsCard(word.forms, uiLang)
             WordDetailTab.Origin -> word.etymology?.let { OriginCard(it) }
             WordDetailTab.Collocations -> CollocationsRow(word.collocations, word.collocationsZh)
         }
@@ -469,7 +489,7 @@ private fun DefinitionCard(word: WordDetail, uiLang: String, showChinese: Boolea
 }
 
 @Composable
-private fun FormsCard(forms: List<WordForm>) {
+private fun FormsCard(forms: List<WordForm>, uiLang: String) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -481,7 +501,7 @@ private fun FormsCard(forms: List<WordForm>) {
                 Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule.copy(alpha = 0.2f)))
             }
             Row(Modifier.fillMaxWidth().padding(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
-                Text(form.label, style = TujiType.bodySm, color = TujiColor.Ink2, modifier = Modifier.weight(1f))
+                Text(WordDetailContent.formLabel(form.label, uiLang), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = Modifier.weight(1f))
                 Text(form.value, style = TujiType.monoLabel, color = TujiColor.Ink)
             }
         }
@@ -530,10 +550,25 @@ private fun CollocationsRow(collocations: List<String>, zh: List<String>?) {
 }
 
 @Composable
-private fun ExampleCard(example: WordExample, showChinese: Boolean, session: TargetLanguage) {
+private fun ExampleCard(
+    example: WordExample,
+    sentence: String,
+    showChinese: Boolean,
+    language: TargetLanguage,
+    speaker: @Composable () -> Unit,
+) {
     Card {
-        example.target?.let {
-            InteractiveSentenceText(sentence = it, spans = example.spans, language = session)
+        // The sentence's own speaker beside it, as on iOS.
+        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2), verticalAlignment = Alignment.Top) {
+            Box(Modifier.weight(1f)) {
+                // 詞塊 describe the target sentence; an `en` fallback has none.
+                InteractiveSentenceText(
+                    sentence = sentence,
+                    spans = example.spans.takeIf { sentence == example.target },
+                    language = language,
+                )
+            }
+            speaker()
         }
         if (showChinese) {
             example.zh?.takeIf { it.isNotBlank() }?.let { Text(it, style = TujiType.label, color = TujiColor.Ink3) }

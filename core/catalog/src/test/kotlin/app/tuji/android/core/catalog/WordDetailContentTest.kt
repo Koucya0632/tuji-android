@@ -1,6 +1,8 @@
 package app.tuji.android.core.catalog
 
 import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.model.WordExample
 import app.tuji.android.core.model.WordForm
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -59,5 +61,19 @@ class WordDetailContentTest {
     @Test fun `a compound is joined and an unknown label passes through`() {
         assertEquals("名詞／動詞", WordDetailContent.partOfSpeech("noun / verb", "zh-Hant"))
         assertEquals("counter", WordDetailContent.partOfSpeech("counter", "zh-Hant"))
+    }
+
+    @Test fun `form labels follow the interface language and pass unknown ones through`() {
+        assertEquals("Past tense", WordDetailContent.formLabel("過去式", "en"))
+        assertEquals("過去形", WordDetailContent.formLabel("過去式", "ja"))
+        assertEquals("复数", WordDetailContent.formLabel("複數", "zh-Hans"))
+        assertEquals("て形", WordDetailContent.formLabel("て形", "en"))
+    }
+
+    @Test fun `an English example without a target falls back to en, a Japanese one does not`() {
+        val legacy = WordExample(target = null, en = "I dried off with a towel.")
+        assertEquals("I dried off with a towel.", WordDetailContent.exampleSentence(legacy, TargetLanguage.EN))
+        assertEquals(null, WordDetailContent.exampleSentence(legacy, TargetLanguage.JA))
+        assertEquals("今朝。", WordDetailContent.exampleSentence(WordExample(target = "今朝。", en = "x"), TargetLanguage.JA))
     }
 }
