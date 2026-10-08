@@ -14,6 +14,7 @@ import app.tuji.android.wordlists.WordListQueue
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.MembershipScreen
+import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.credits.CreditCaptureScreen
 import app.tuji.android.credits.CreditsScreen
 import androidx.compose.foundation.background
@@ -514,6 +515,13 @@ private fun SignedInScreens(
     LaunchedEffect(listsExist, direction) { if (listsExist) app.wordListsStore.loadIfNeeded() }
 
     var nav by remember { mutableStateOf(NavStack()) }
+    // 我做的 on request — iOS's `cardsSourceRequest`. Set when a capture is
+    // handed to 生成佇列, so the 圖鑑 tab opens where its 生成中 tile is.
+    var cardsSourceRequest by remember { mutableStateOf<CardsSource?>(null) }
+    fun showQueuedCapture() {
+        nav = nav.pop().select(AppRoute.Atlas)
+        cardsSourceRequest = CardsSource.Mine
+    }
 
     // Where every lock and every 402 leads. Not pushed twice: two refusals in
     // a row would otherwise stack two copies of the same page.
@@ -1021,6 +1029,8 @@ private fun SignedInScreens(
                 )
 
                 AppRoute.Atlas -> AtlasCardsScreen(
+                    sourceRequest = cardsSourceRequest,
+                    onSourceRequestHandled = { cardsSourceRequest = null },
                     words = catalog.words,
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     personal = personal,
@@ -1558,6 +1568,7 @@ private fun SignedInScreens(
                             queuedOperations = { app.captureQueue.creditOperationIds },
                             onOpenWallet = { nav = nav.push(AppRoute.Membership) },
                             onDone = { if (nav.current == route) nav = nav.pop() },
+                            onCardQueued = { if (nav.current == route) showQueuedCapture() },
                         )
                     } else {
                     val vm = remember {
@@ -1571,7 +1582,8 @@ private fun SignedInScreens(
                     CaptureScreen(
                         vm = vm,
                         bottomPadding = 0.dp,
-                        onDone = { nav = nav.pop() },
+                        // Only reached once the capture is queued: show it being made.
+                        onDone = { if (nav.current == route) showQueuedCapture() },
                         onOpenMembership = openMembership,
                     )
                     }
