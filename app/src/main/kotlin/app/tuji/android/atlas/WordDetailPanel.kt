@@ -82,6 +82,8 @@ internal fun WordDetailPanel(
                 uiLang = uiLang,
                 showChinese = showChinese,
                 session = session,
+                speech = speech,
+                accent = accent,
                 modifier = Modifier.fillMaxWidth(),
             )
             WordInsightsSection(

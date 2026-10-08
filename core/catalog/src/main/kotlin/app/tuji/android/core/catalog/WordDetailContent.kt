@@ -1,6 +1,8 @@
 package app.tuji.android.core.catalog
 
+import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordDetail
+import app.tuji.android.core.model.WordExample
 
 /** The 字詞資料 card's pills. */
 enum class WordDetailTab { Definition, Forms, Origin, Collocations }
@@ -34,6 +36,38 @@ object WordDetailContent {
 
     /** The example sentences the page draws: at most three, as on iOS. */
     const val MAX_EXAMPLES = 3
+
+    /**
+     * The sentence an example shows: the one in the language being learned,
+     * or — for English, whose older entries only carry it there — the `en`
+     * field. Japanese has no such fallback, as on iOS. Null draws nothing.
+     */
+    fun exampleSentence(example: WordExample, language: TargetLanguage): String? =
+        example.target?.takeIf { it.isNotBlank() }
+            ?: example.en?.takeIf { language == TargetLanguage.EN && it.isNotBlank() }
+
+    /** The page's examples: the ones with a sentence to show, at most [MAX_EXAMPLES]. */
+    fun examples(word: WordDetail, language: TargetLanguage): List<Pair<WordExample, String>> =
+        word.examples.mapNotNull { ex -> exampleSentence(ex, language)?.let { ex to it } }.take(MAX_EXAMPLES)
+
+    /**
+     * 詞形's row labels arrive in Traditional Chinese, the authoring language,
+     * and iOS runs each through its string table. The same set here; a label
+     * outside it passes through as written.
+     */
+    fun formLabel(label: String, uiLang: String): String = formLabels[label.trim()]?.get(uiLang) ?: label
+
+    private val formLabels: Map<String, Map<String, String>> = mapOf(
+        "原形" to mapOf("zh-Hant" to "原形", "zh-Hans" to "原形", "ja" to "原形", "en" to "Base form"),
+        "單數" to mapOf("zh-Hant" to "單數", "zh-Hans" to "单数", "ja" to "単数", "en" to "Singular"),
+        "複數" to mapOf("zh-Hant" to "複數", "zh-Hans" to "复数", "ja" to "複数", "en" to "Plural"),
+        "比較級" to mapOf("zh-Hant" to "比較級", "zh-Hans" to "比较级", "ja" to "比較級", "en" to "Comparative"),
+        "最高級" to mapOf("zh-Hant" to "最高級", "zh-Hans" to "最高级", "ja" to "最上級", "en" to "Superlative"),
+        "現在分詞" to mapOf("zh-Hant" to "現在分詞", "zh-Hans" to "现在分词", "ja" to "現在分詞", "en" to "Present participle"),
+        "過去式" to mapOf("zh-Hant" to "過去式", "zh-Hans" to "过去式", "ja" to "過去形", "en" to "Past tense"),
+        "過去分詞" to mapOf("zh-Hant" to "過去分詞", "zh-Hans" to "过去分词", "ja" to "過去分詞", "en" to "Past participle"),
+        "第三人稱單數" to mapOf("zh-Hant" to "第三人稱單數", "zh-Hans" to "第三人称单数", "ja" to "三人称単数", "en" to "3rd person singular"),
+    )
 
     private val labels: Map<String, Map<String, String>> = mapOf(
         "noun" to mapOf("zh-Hant" to "名詞", "zh-Hans" to "名词", "ja" to "名詞", "en" to "noun"),
