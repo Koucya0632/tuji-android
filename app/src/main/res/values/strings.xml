@@ -822,4 +822,6 @@
     <string name="reminder_body">A few minutes of review makes it stick.</string>
     <string name="reminder_channel">Study reminders</string>
     <string name="reminder_time_confirm">Confirm</string>
+    <string name="today_sub_pick_themes">Pick your topics to start learning new words</string>
+    <string name="today_hint_no_cards">No words to learn in this topic yet</string>
 </resources>

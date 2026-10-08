@@ -3,25 +3,33 @@ package app.tuji.android.core.study
 import app.tuji.android.core.model.StudyStats
 
 /**
- * What 今日 says and offers, derived from the day's state.
+ * What 今日 says and offers, derived from the day's state — iOS's `TodayDecisions`.
  *
  * Enums, not strings: the screen owns the words, this owns the verdict. That
  * split is what keeps it testable without a resource bundle, and it is also
  * what stops a hard-coded Chinese line leaking into a ja/en UI from here —
  * there is no string to leak.
  *
- * **A deliberate subset of iOS's.** iOS also reasons about 主題 selection and a
- * per-category completion readout; Android has neither yet, so the cases that
- * depend on them (`pickThemes`, `noThemes`) are absent rather than stubbed. A
- * case that can never be returned is worse than a missing one: it looks handled.
+ * This used to be a deliberate subset, missing iOS's 主題 cases because
+ * Android had no theme selection or completion readout yet. It has both now,
+ * so what is left to learn is counted over the themes being studied, and the
+ * no-themes and empty-themes dead ends are named as iOS names them.
  */
 data class TodayInputs(
     /** Null until the first fetch lands. */
     val stats: StudyStats? = null,
     val dailyGoal: Int = DEFAULT_DAILY_GOAL,
+    /**
+     * The selected themes' readout — the hero's 主題進度. With it, what is
+     * left to learn is counted over the themes being studied; without it, the
+     * server's `new` stands in.
+     */
+    val completion: CompletionReadout? = null,
+    /** Whether the per-theme progress has arrived; until then its 0s are not facts. */
+    val progressLoaded: Boolean = false,
 ) {
     companion object {
-        /** iOS's `UserSettings` default; the settings screen that changes it is M3. */
+        /** iOS's `UserSettings` default. */
         const val DEFAULT_DAILY_GOAL = 10
     }
 }
@@ -31,6 +39,9 @@ data class TodayInputs(
  * say, in the order the rules resolve.
  */
 enum class TodaySubtitle {
+    /** No themes picked: the first thing to do is pick some. */
+    PickThemes,
+
     /**
      * Stats have not arrived. A neutral line beats a wrong verdict —
      * 「都學過了」 flashing on a brand-new account while the first fetch is in
@@ -48,7 +59,13 @@ enum class TodaySubtitle {
 enum class TodayNewBlock {
     None,
 
-    /** Nothing left to learn in the catalogue. */
+    /** No themes picked. The theme prompt below says so; the hero adds no caption. */
+    NoThemes,
+
+    /** The picked themes have no words behind them. */
+    NoCards,
+
+    /** Nothing left to learn in the themes being studied. */
     AllLearned,
 
     /** The review backlog has eaten the new-word quota. */
@@ -66,22 +83,42 @@ class TodayDecisions(private val inputs: TodayInputs) {
 
     private val goal: Int get() = maxOf(1, inputs.dailyGoal)
 
+    private val showThemePrompt: Boolean get() = inputs.completion?.showsThemePrompt == true
+
     val goalReached: Boolean
         get() = (inputs.stats?.todayNew ?: 0) >= goal
 
-    /** New words still to learn. Zero until stats land, so nothing claims otherwise. */
-    val newAvailable: Int get() = inputs.stats?.new ?: 0
+    /**
+     * New words still to learn: in the selected themes once their progress has
+     * loaded, so 學新字 is not lit for words outside what is being studied;
+     * the server's count before that. Zero until either lands.
+     */
+    val newAvailable: Int
+        get() {
+            val selection = inputs.completion?.inputs
+            return if (selection != null && inputs.progressLoaded) {
+                maxOf(0, selection.totalInSelection - selection.seenInSelection)
+            } else {
+                inputs.stats?.new ?: 0
+            }
+        }
 
     val reviewDisabled: Boolean
         get() = (inputs.stats?.due ?: 0) == 0
 
     val newBlock: TodayNewBlock
         get() {
-            val stats = inputs.stats ?: return TodayNewBlock.None
+            if (showThemePrompt) return TodayNewBlock.NoThemes
+            val selection = inputs.completion?.inputs
+            if (selection != null && inputs.progressLoaded && selection.totalInSelection == 0) {
+                return TodayNewBlock.NoCards
+            }
+            // Nothing known yet is not "all learned".
+            if (inputs.stats == null && !inputs.progressLoaded) return TodayNewBlock.None
             if (newAvailable == 0) return TodayNewBlock.AllLearned
             // Grey the button rather than let the user in only to bounce back
             // out of an empty session.
-            if (StudyQuotas.computeNewLimit(goal = goal, due = stats.due) == 0) {
+            if (StudyQuotas.computeNewLimit(goal = goal, due = inputs.stats?.due ?: 0) == 0) {
                 return TodayNewBlock.ReviewBacklog
             }
             return TodayNewBlock.None
@@ -92,6 +129,7 @@ class TodayDecisions(private val inputs: TodayInputs) {
 
     val subtitle: TodaySubtitle
         get() {
+            if (showThemePrompt) return TodaySubtitle.PickThemes
             val stats = inputs.stats ?: return TodaySubtitle.Unknown
             if (stats.due > 0) return TodaySubtitle.ReviewDue
             // Goal reached wins over everything below, so this line can never
@@ -120,11 +158,12 @@ class TodayDecisions(private val inputs: TodayInputs) {
      * Which of the three captions speaks, if any.
      *
      * None of them speaks before stats land: a hint about today's numbers,
-     * shown before today's numbers exist, is a guess.
+     * shown before today's numbers exist, is a guess. No themes is said by the
+     * theme prompt below, not by the hero.
      */
     val heroHint: TodayHeroHint?
         get() {
-            if (newBlock != TodayNewBlock.None) return TodayHeroHint.NewBlocked
+            if (newBlock != TodayNewBlock.None && newBlock != TodayNewBlock.NoThemes) return TodayHeroHint.NewBlocked
             if (quotaAdjustment != null) return TodayHeroHint.QuotaAdjusted
             if (reviewDisabled && inputs.stats != null) return TodayHeroHint.NothingToReview
             return null

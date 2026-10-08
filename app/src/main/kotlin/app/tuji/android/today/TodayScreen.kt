@@ -585,6 +585,7 @@ private fun HeroMeter(
 @Composable
 private fun subtitleText(decisions: TodayDecisions, stats: StudyStats?): String =
     when (decisions.subtitle) {
+        TodaySubtitle.PickThemes -> stringResource(R.string.today_sub_pick_themes)
         TodaySubtitle.Unknown -> stringResource(R.string.today_sub_unknown)
         TodaySubtitle.ReviewDue -> stringResource(R.string.today_sub_review_due, stats?.due ?: 0)
         TodaySubtitle.GoalReached -> stringResource(R.string.today_sub_goal_reached)
@@ -601,7 +602,8 @@ private fun heroHintText(decisions: TodayDecisions, stats: StudyStats?): String?
         TodayHeroHint.NewBlocked -> when (decisions.newBlock) {
             TodayNewBlock.AllLearned -> stringResource(R.string.today_hint_all_learned)
             TodayNewBlock.ReviewBacklog -> stringResource(R.string.today_hint_backlog)
-            TodayNewBlock.None -> null
+            TodayNewBlock.NoCards -> stringResource(R.string.today_hint_no_cards)
+            TodayNewBlock.None, TodayNewBlock.NoThemes -> null
         }
         TodayHeroHint.QuotaAdjusted -> decisions.quotaAdjustment?.let { (due, limit) ->
             stringResource(R.string.today_hint_quota, due, limit)
