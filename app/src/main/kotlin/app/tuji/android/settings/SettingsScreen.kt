@@ -76,6 +76,8 @@ fun SettingsScreen(
     feedback: FeedbackSender? = null,
     /** 分享 App. Null draws no row. */
     onShareApp: (() -> Unit)? = null,
+    /** 提醒, between 顯示 and 帳號 as on iOS. Handed in: it owns alarms, not settings. */
+    reminders: @Composable () -> Unit = {},
 ) {
     // 學習 and 顯示 are the account's settings; 帳號 and below are not, and stay
     // usable while those load — signing out must never wait on a read.
@@ -156,6 +158,8 @@ fun SettingsScreen(
             }
         }
 
+        reminders()
+
         TujiSection(title = stringResource(R.string.settings_group_account)) {
             TujiSettingRow(label = stringResource(R.string.profile_title), onClick = onEditProfile)
             TujiRowDivider()
@@ -194,8 +198,9 @@ fun SettingsScreen(
         // One row for everyone, as on iOS: the pitch belongs where a limit
         // bites, and here it only says what this account has.
         TujiSection(title = "Tuji Pro") {
+            // The product's name, as iOS's row reads; 會員方案 is the page it opens.
             TujiSettingRow(
-                label = stringResource(R.string.membership_title),
+                label = "Tuji Pro",
                 subtitle = when (tier) {
                     MembershipTier.Pro -> stringResource(R.string.membership_subscribed)
                     MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)

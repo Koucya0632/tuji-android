@@ -56,7 +56,7 @@ class TujiApplication : Application() {
             // only moment this is called — is what keeps that from being a
             // cycle at construction.
             accountScopedStores = {
-                listOf(settingsStore, masteryStore, progressStore, checkInStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore, wordListsStore)
+                listOf(settingsStore, masteryStore, progressStore, checkInStore, cardsSourceStore, captureQueue, wordInsightsStore, wordNotesStore, wordListsStore, studyReminders)
             },
         )
     }
@@ -151,6 +151,17 @@ class TujiApplication : Application() {
      * app's, so a job survives the capture page being popped, and the journal
      * carries it across an app kill.
      */
+    /**
+     * 每日學習提醒. Application-lifetime, like the queue below: the restore
+     * receiver reaches it after a reboot, with no screen in sight.
+     */
+    val studyReminders: app.tuji.android.reminders.StudyReminders by lazy {
+        app.tuji.android.reminders.StudyReminders(
+            scheduler = app.tuji.android.reminders.AlarmReminderScheduler(this),
+            prefs = getSharedPreferences("study-reminders", MODE_PRIVATE),
+        )
+    }
+
     val captureQueue: app.tuji.android.capture.AtlasCaptureQueue by lazy {
         app.tuji.android.capture.AtlasCaptureQueue(
             authoring = atlas,
