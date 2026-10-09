@@ -1,5 +1,6 @@
 package app.tuji.android.onboarding
 
+import app.tuji.android.core.network.ApiError
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,7 +70,7 @@ fun SetupScreen(
     var picked by remember { mutableStateOf<Set<String>?>(null) }
     var goal by remember { mutableStateOf(SetupChoices.DEFAULT_DAILY_GOAL) }
     var saving by remember { mutableStateOf(false) }
-    var failed by remember { mutableStateOf(false) }
+    var failure by remember { mutableStateOf<Throwable?>(null) }
     val scope = rememberCoroutineScope()
 
     // Seeded once, and only once both halves have arrived. Re-seeding on every
@@ -150,22 +151,26 @@ fun SetupScreen(
                             }
                         }
                     }
-                    if (failed) {
+                    failure?.let { error ->
+                        // iOS's split: only a session the server will not accept
+                        // (401) is unrecoverable here, and only that one offers
+                        // 重新登入 — which signs out. A dropped connection is
+                        // retried with 完成設定, not by throwing the session away.
+                        val unauthorized = error is ApiError.NotAuthenticated || (error as? ApiError.Http)?.status == 401
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
                                 Text(
-                                    stringResource(R.string.setup_failed),
+                                    stringResource(if (unauthorized) R.string.setup_unauthorized else R.string.setup_failed),
                                     style = TujiType.label,
                                     color = TujiColor.Alert,
                                 )
-                                // The failure this screen cannot recover from is
-                                // a session the server will not accept, and the
-                                // only way out of that is a new one.
-                                TujiButton(
-                                    text = stringResource(R.string.setup_sign_in_again),
-                                    style = app.tuji.android.core.design.TujiButtonStyle.Secondary,
-                                    onClick = onSignOut,
-                                )
+                                if (unauthorized) {
+                                    TujiButton(
+                                        text = stringResource(R.string.setup_sign_in_again),
+                                        style = app.tuji.android.core.design.TujiButtonStyle.Secondary,
+                                        onClick = onSignOut,
+                                    )
+                                }
                             }
                         }
                     }
@@ -182,11 +187,11 @@ fun SetupScreen(
             onClick = {
                 if (saving || selection.isNullOrEmpty()) return@TujiButton
                 saving = true
-                failed = false
+                failure = null
                 scope.launch {
                     val result = onDone(selection, goal)
                     saving = false
-                    failed = result.isFailure
+                    failure = result.exceptionOrNull()
                 }
             },
             modifier = Modifier
