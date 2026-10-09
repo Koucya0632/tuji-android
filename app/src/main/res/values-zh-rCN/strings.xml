@@ -831,4 +831,5 @@
     <string name="membership_terms">使用条款</string>
     <string name="membership_privacy">隐私权政策</string>
     <string name="manage_switch">切换 →</string>
+    <string name="load_failed">加载失败，请稍后再试</string>
 </resources>
