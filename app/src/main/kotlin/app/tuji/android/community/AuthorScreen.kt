@@ -1,5 +1,15 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.design.TujiBorder
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +19,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -37,7 +46,6 @@ import app.tuji.android.core.design.MascotEmptyState
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiGlyph
@@ -97,8 +105,20 @@ fun AuthorScreen(
             trailing = when (relationship) {
                 ViewerRelationship.Theirs -> {
                     {
-                        TujiNavIcon(label = stringResource(R.string.author_more), onClick = { showMore = true }) {
-                            TujiGlyph.More(size = 20.dp, tint = TujiColor.Ink2)
+                        // The menu is drawn in the box that holds ⋯ so it drops from it.
+                        Box {
+                            TujiNavIcon(label = stringResource(R.string.author_more), onClick = { showMore = true }) {
+                                TujiGlyph.More(size = 20.dp, tint = TujiColor.Ink2)
+                            }
+                            if (showMore) {
+                                MoreMenu(
+                                    reported = reported,
+                                    blocked = blocked,
+                                    onReport = { showMore = false; reporting = true },
+                                    onBlock = { showMore = false; askBlock = true },
+                                    onDismiss = { showMore = false },
+                                )
+                            }
                         }
                     }
                 }
@@ -137,9 +157,13 @@ fun AuthorScreen(
                     )
                 }
                 when (AuthorShelf.visible(segment, state.collections)) {
-                    AuthorSegment.Collections -> Column {
-                        state.collections.forEachIndexed { index, collection ->
-                            if (index > 0) RowRule()
+                    // iOS's spacing here, not 物見's ruled list: cards s3 apart
+                    // on the page gutter the header bleeds past (iOS #234).
+                    AuthorSegment.Collections -> Column(
+                        Modifier.padding(horizontal = TujiSpace.S4),
+                        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+                    ) {
+                        state.collections.forEach { collection ->
                             CollectionRow(collection, onOpen = { onOpenCollection(collection.slug) }, showsAuthor = false)
                         }
                     }
@@ -178,15 +202,6 @@ fun AuthorScreen(
         }
     }
 
-    if (showMore) {
-        MoreSheet(
-            reported = reported,
-            blocked = blocked,
-            onReport = { showMore = false; reporting = true },
-            onBlock = { showMore = false; askBlock = true },
-            onDismiss = { showMore = false },
-        )
-    }
     if (reporting) {
         ReportSheet(
             onPick = { reason -> reporting = false; onReport(reason) },
@@ -313,57 +328,53 @@ private fun Group(group: LanguageGroup, labelled: Boolean, onOpenItem: (String) 
  * to judge this person's name, bio and avatar; 封鎖 is the reader's own
  * decision to stop seeing them.
  */
+/**
+ * ⋯'s menu, dropped from the ⋯ itself — iOS's `Menu` rather than a sheet from
+ * the bottom edge. 檢舉 and 封鎖 are red, as iOS's `.destructive` roles; 解除封鎖
+ * is not.
+ */
 @Composable
-private fun MoreSheet(
+private fun MoreMenu(
     reported: Boolean,
     blocked: Boolean,
     onReport: () -> Unit,
     onBlock: () -> Unit,
     onDismiss: () -> Unit,
-) = TujiWindow(onDismiss = onDismiss) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TujiColor.Scrim)
-            .tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
+) {
+    // Resolved out here: a popup is a view of its own and would read the
+    // device's language rather than the app's (see `TujiWindow`).
+    val report = stringResource(if (reported) R.string.collection_report_received else R.string.author_report)
+    val block = blockControlLabel(blocked)
+    val density = LocalDensity.current
+    Popup(
+        alignment = Alignment.TopEnd,
+        offset = with(density) { IntOffset(0, 44.dp.roundToPx()) },
+        onDismissRequest = onDismiss,
+        properties = PopupProperties(focusable = true),
     ) {
         Column(
             Modifier
-                .fillMaxWidth()
+                .width(IntrinsicSize.Max)
+                .widthIn(min = 200.dp)
                 .background(TujiColor.Paper)
-                // Swallows taps, so touching the sheet does not dismiss it
-                // through the scrim underneath.
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+                .border(TujiBorder.Bw1, TujiColor.Rule),
         ) {
-            Text(
-                stringResource(if (reported) R.string.collection_report_received else R.string.author_report),
-                style = TujiType.body,
-                color = if (reported) TujiColor.Ink3 else TujiColor.Alert,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .tujiClickable(enabled = !reported, onClick = onReport)
-                    .padding(vertical = TujiSpace.S2),
-            )
-            // Blocking is destructive-flavoured; undoing it is not.
-            Text(
-                blockControlLabel(blocked),
-                style = TujiType.body,
-                color = if (blocked) TujiColor.Ink else TujiColor.Alert,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .tujiClickable(onClick = onBlock)
-                    .padding(vertical = TujiSpace.S2),
-            )
-            TujiButton(
-                text = stringResource(R.string.cancel),
-                style = TujiButtonStyle.Secondary,
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            MenuItem(report, color = if (reported) TujiColor.Ink3 else TujiColor.Alert, enabled = !reported, onClick = onReport)
+            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
+            MenuItem(block, color = if (blocked) TujiColor.Ink else TujiColor.Alert, enabled = true, onClick = onBlock)
         }
     }
+}
+
+@Composable
+private fun MenuItem(text: String, color: Color, enabled: Boolean, onClick: () -> Unit) {
+    Text(
+        text,
+        style = TujiType.body,
+        color = color,
+        modifier = Modifier
+            .fillMaxWidth()
+            .tujiClickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
+    )
 }
