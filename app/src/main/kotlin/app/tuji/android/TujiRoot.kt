@@ -1434,6 +1434,7 @@ private fun SignedInScreens(
 
                 AppRoute.BlockedAuthors -> {
                     var working by remember { mutableStateOf<String?>(null) }
+                    LaunchedEffect(Unit) { community.loadBlocksIfNeeded() }
                     BlockedAuthorsScreen(
                         handles = communityBlocked.sorted,
                         working = working,

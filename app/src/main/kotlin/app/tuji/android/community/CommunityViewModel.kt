@@ -94,6 +94,23 @@ class CommunityViewModel(
         work.launch { reload() }
     }
 
+    /** Whether a block-list read has landed; failing open leaves it false. */
+    private var blocksLoaded = false
+
+    /**
+     * iOS's `BlockStore.loadIfNeeded`, for 已封鎖的人: the list read at launch
+     * fails open to empty, and on that page empty would say 「你還沒有封鎖任何人」
+     * to someone who has. Ask again when the page opens and it never landed.
+     */
+    fun loadBlocksIfNeeded() {
+        if (blocksLoaded) return
+        work.launch {
+            runCatching { BlockList.of(blocks.blockedHandles()) }
+                .onSuccess { _blocked.value = it; blocksLoaded = true }
+                .onFailure { Log.w(TAG, "block list still unavailable", it) }
+        }
+    }
+
     /**
      * The same read, awaited — what a pull-to-refresh needs so the rule stays
      * on screen until the shelves land rather than flashing off with the
@@ -107,6 +124,7 @@ class CommunityViewModel(
             // removed — a hidden author flashing on screen is the one thing
             // this feature exists to prevent.
             _blocked.value = runCatching { BlockList.of(blocks.blockedHandles()) }
+                .onSuccess { blocksLoaded = true }
                 .getOrElse {
                     // Fail open: see BlockList.none. One failed request must not
                     // take 物見 away from everyone.
