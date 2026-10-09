@@ -491,7 +491,7 @@
     <string name="milestone_year">整整一年，沒缺席一天</string>
     <string name="milestone_keep_going">保持下去，下一個里程碑在前面</string>
     <string name="milestone_continue">繼續</string>
-    <string name="community_report_title">要檢舉什麼問題？</string>
+    <string name="community_report_title">檢舉原因</string>
     <string name="community_reason_spam">垃圾內容</string>
     <string name="community_reason_inappropriate">不當內容</string>
     <string name="community_reason_copyright">侵犯版權</string>
@@ -832,4 +832,5 @@
     <string name="membership_privacy">隱私權政策</string>
     <string name="manage_switch">切換 →</string>
     <string name="load_failed">載入失敗，請稍後再試</string>
+    <string name="community_report_footer">檢舉會送給審核人員，對方不會知道是誰檢舉的。</string>
 </resources>

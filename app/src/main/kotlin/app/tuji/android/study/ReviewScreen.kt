@@ -1,5 +1,6 @@
 package app.tuji.android.study
 
+import app.tuji.android.form.TujiSheetHeader
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -110,7 +111,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.draw.rotate
 import app.tuji.android.core.design.TujiWindow
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Color
@@ -649,22 +649,7 @@ private fun WordDetailWindow(onDismiss: () -> Unit, content: @Composable () -> U
                 .tujiClickable {}
                 .navigationBarsPadding(),
         ) {
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw3).background(TujiColor.Ink))
-            Row(
-                Modifier.fillMaxWidth().padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(stringResource(R.string.study_word_detail), style = TujiType.h2, color = TujiColor.Ink, modifier = Modifier.weight(1f))
-                val closeLabel = stringResource(R.string.form_close)
-                Box(
-                    Modifier
-                        .offset(x = TujiSpace.S3)
-                        .size(48.dp)
-                        .semantics { contentDescription = closeLabel }
-                        .tujiClickable(onClick = onDismiss),
-                    contentAlignment = Alignment.Center,
-                ) { TujiGlyph.Close(size = 18.dp, tint = TujiColor.Ink2) }
-            }
+            TujiSheetHeader(title = stringResource(R.string.study_word_detail), closeEnabled = true, onClose = onDismiss)
             Box(Modifier.fillMaxWidth().weight(1f)) { content() }
         }
     }

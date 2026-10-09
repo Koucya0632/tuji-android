@@ -491,7 +491,7 @@
     <string name="milestone_year">整整一年，没缺席一天</string>
     <string name="milestone_keep_going">保持下去，下一个里程碑在前面</string>
     <string name="milestone_continue">继续</string>
-    <string name="community_report_title">要举报什么问题？</string>
+    <string name="community_report_title">举报原因</string>
     <string name="community_reason_spam">垃圾内容</string>
     <string name="community_reason_inappropriate">不当内容</string>
     <string name="community_reason_copyright">侵犯版权</string>
@@ -832,4 +832,5 @@
     <string name="membership_privacy">隐私权政策</string>
     <string name="manage_switch">切换 →</string>
     <string name="load_failed">加载失败，请稍后再试</string>
+    <string name="community_report_footer">举报会送给审核人员，对方不会知道是谁举报的。</string>
 </resources>

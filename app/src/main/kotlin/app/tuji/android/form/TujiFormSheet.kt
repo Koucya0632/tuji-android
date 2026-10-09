@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -28,8 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
@@ -69,26 +66,7 @@ internal fun TujiFormSheet(
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .imePadding(),
         ) {
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw3).background(TujiColor.Ink))
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(title, style = TujiType.h2, color = TujiColor.Ink, maxLines = 1, modifier = Modifier.weight(1f))
-                val closeLabel = stringResource(R.string.form_close)
-                Box(
-                    Modifier
-                        .offset(x = TujiSpace.S3)
-                        .size(48.dp)
-                        .semantics { contentDescription = closeLabel }
-                        .tujiClickable(enabled = closeEnabled, onClick = close),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    TujiGlyph.Close(size = 18.dp, tint = if (closeEnabled) TujiColor.Ink2 else TujiColor.Ink3)
-                }
-            }
+            TujiSheetHeader(title = title, closeEnabled = closeEnabled, onClose = close)
             Column(
                 Modifier
                     .fillMaxSize()

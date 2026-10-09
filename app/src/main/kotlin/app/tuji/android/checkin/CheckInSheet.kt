@@ -1,5 +1,6 @@
 package app.tuji.android.checkin
 
+import app.tuji.android.form.TujiSheetHeader
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -118,9 +119,7 @@ fun CheckInSheet(
                     .tujiClickable {}
                     .navigationBarsPadding(),
             ) {
-                // The 3dp ink edge every sheet in this system wears.
-                Box(Modifier.fillMaxWidth().height(TujiBorder.Bw3).background(TujiColor.Ink))
-                TitleRow(onDismiss)
+                TujiSheetHeader(title = stringResource(R.string.checkin_title), closeEnabled = true, onClose = onDismiss)
                 Column(
                     Modifier
                         .verticalScroll(rememberScrollState())
@@ -148,29 +147,6 @@ fun CheckInSheet(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun TitleRow(onDismiss: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(stringResource(R.string.checkin_title), style = TujiType.h2, color = TujiColor.Ink, modifier = Modifier.weight(1f))
-        val closeLabel = stringResource(R.string.form_close)
-        Box(
-            Modifier
-                .offset(x = TujiSpace.S3)
-                .size(48.dp)
-                .semantics { contentDescription = closeLabel }
-                .tujiClickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center,
-        ) {
-            TujiGlyph.Close(size = 18.dp, tint = TujiColor.Ink2)
         }
     }
 }

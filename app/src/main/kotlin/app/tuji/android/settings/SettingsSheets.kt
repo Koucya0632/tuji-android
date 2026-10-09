@@ -1,44 +1,28 @@
 package app.tuji.android.settings
 
-import androidx.compose.foundation.background
+import app.tuji.android.form.TujiSheet
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
-import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSettingRow
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
-import app.tuji.android.core.design.tujiClickable
 
 /**
- * The bottom sheet every picker on this screen uses.
- *
- * Hand-rolled rather than Material's `ModalBottomSheet`: that component brings
- * a rounded top, a drag handle and a scrim of its own, and the first two are
- * Material's signature in a system whose every surface is a square on paper.
- * What survives is the part that matters — a scrim that dismisses, and content
- * that never grows past half the screen.
- *
- * **A window of its own** — see `TujiWindow`.
+ * The sheet every picker on this screen uses — iOS's `tujiSheet`: the shared
+ * [TujiSheet] head, then the options, then an optional footer.
  */
 @Composable
 private fun Sheet(
@@ -47,46 +31,18 @@ private fun Sheet(
     footer: String? = null,
     content: @Composable () -> Unit,
 ) {
-    TujiWindow(onDismiss = onDismiss) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(TujiColor.Scrim)
-                .tujiClickable(onClick = onDismiss),
-            contentAlignment = Alignment.BottomCenter,
-        ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 520.dp)
-                    .background(TujiColor.Paper)
-                    // The 3dp top edge is a selection indicator, which is the one
-                    // thing that weight means in this system.
-                    .padding(top = TujiBorder.Bw3)
-                    // Swallows taps so a tap on the sheet itself does not dismiss
-                    // it through the scrim underneath.
-                    .tujiClickable {}
-                    .navigationBarsPadding(),
-            ) {
+    TujiSheet(title = title, onDismiss = onDismiss, maxHeight = 520.dp) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(top = TujiSpace.S3)) {
+            content()
+            footer?.let {
                 Text(
-                    title,
-                    style = TujiType.h2,
-                    color = TujiColor.Ink,
-                    modifier = Modifier.padding(TujiSpace.S4),
+                    it,
+                    style = TujiType.bodySm,
+                    color = TujiColor.Ink3,
+                    modifier = Modifier.padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S4),
                 )
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    content()
-                    footer?.let {
-                        Text(
-                            it,
-                            style = TujiType.label,
-                            color = TujiColor.Ink3,
-                            modifier = Modifier.padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S3),
-                        )
-                    }
-                    Spacer(Modifier.height(TujiSpace.S6))
-                }
             }
+            Spacer(Modifier.height(TujiSpace.S5))
         }
     }
 }

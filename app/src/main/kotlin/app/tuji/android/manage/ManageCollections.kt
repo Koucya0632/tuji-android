@@ -1,15 +1,12 @@
 package app.tuji.android.manage
 
+import app.tuji.android.form.TujiSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -39,7 +36,6 @@ import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiStatusEdgeLabel
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.AtlasMyCollection
 import app.tuji.android.core.model.AtlasPublicCollection
@@ -129,25 +125,14 @@ internal fun CreateCollectionSheet(
     state: MyCollectionsViewModel.State,
     onCreate: (String, String) -> Unit,
     onDismiss: () -> Unit,
-) = TujiWindow(onDismiss = onDismiss) {
+) = TujiSheet(title = stringResource(R.string.collections_create), onDismiss = onDismiss) {
     var title by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     val canCreate = !state.creating && CollectionAuthoringRules.titleValid(title)
-    Box(
-        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
         Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Paper)
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(TujiSpace.S4),
+            Modifier.verticalScroll(rememberScrollState()).padding(TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         ) {
-            Text(stringResource(R.string.collections_create), style = TujiType.h2, color = TujiColor.Ink)
             Label(stringResource(R.string.collections_field_title))
             FormInput(value = title, onValueChange = { title = it }, placeholder = stringResource(R.string.collections_title_placeholder), valid = title.trim().length <= CollectionAuthoringRules.TITLE_MAX, enabled = !state.creating)
             Label(stringResource(R.string.collections_field_about_optional))
@@ -178,7 +163,6 @@ internal fun CreateCollectionSheet(
                     .padding(vertical = TujiSpace.S3),
             )
         }
-    }
 }
 
 @Composable
