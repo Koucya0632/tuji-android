@@ -487,6 +487,28 @@ object TujiGlyph {
     }
 
     /**
+     * 我的筆記 — iOS's `note.text`: a sheet with three lines of writing, the
+     * last one short so it reads as text rather than a grid.
+     */
+    @Composable
+    fun Note(size: Dp = 13.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.10f
+            drawRect(
+                tint,
+                topLeft = Offset(w * 0.14f, h * 0.08f),
+                size = Size(w * 0.72f, h * 0.84f),
+                style = Stroke(width = stroke),
+            )
+            listOf(0.32f to 0.70f, 0.50f to 0.70f, 0.68f to 0.54f).forEach { (y, end) ->
+                drawLine(tint, Offset(w * 0.30f, h * y), Offset(w * end, h * y), strokeWidth = stroke, cap = StrokeCap.Round)
+            }
+        }
+    }
+
+    /**
      * 圖鑑. Three spines standing on one shelf line, the last leaning — the
      * lean is what makes three rectangles read as books rather than a chart.
      */

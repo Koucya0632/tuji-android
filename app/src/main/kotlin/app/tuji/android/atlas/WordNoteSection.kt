@@ -1,21 +1,20 @@
 package app.tuji.android.atlas
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -158,15 +157,21 @@ internal fun WordNoteSection(
 @Composable
 internal fun WordNoteLine(body: String?, modifier: Modifier = Modifier) {
     if (body.isNullOrBlank()) return
-    Row(modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Box(Modifier.width(TujiBorder.Bw3).fillMaxHeight().background(TujiColor.Rule))
+    // iOS marks it with `note.text` rather than a rule: it is the reader's own
+    // writing, and the mark says whose.
+    val label = stringResource(R.string.word_note_title)
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+        TujiGlyph.Note(
+            size = 13.dp,
+            tint = TujiColor.Ink3,
+            modifier = Modifier.padding(top = 3.dp).semantics { contentDescription = label },
+        )
         Text(
             body,
             style = TujiType.bodySm,
             color = TujiColor.Ink2,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = TujiSpace.S2),
         )
     }
 }
