@@ -834,4 +834,14 @@
     <string name="load_failed">加载失败，请稍后再试</string>
     <string name="community_report_footer">举报会送给审核人员，对方不会知道是谁举报的。</string>
     <string name="setup_unauthorized">后端不认这次登录。可能要重新登录一次。</string>
+    <string name="billing_load_failed">暂时无法加载方案，请检查网络后再试一次。</string>
+    <string name="billing_reload">重新加载方案</string>
+    <string name="billing_restore">恢复购买</string>
+    <string name="billing_buy_points">加购 %1$d 点</string>
+    <string name="billing_notice_delivered">购买完成，感谢支持！</string>
+    <string name="billing_notice_pending">付款处理中，完成后会自动生效，不需要再次购买。</string>
+    <string name="billing_notice_already_owned">你已经是永久会员，这笔重复的购买会由 Google Play 自动退款。</string>
+    <string name="billing_notice_sync_pending">付款正在同步，请稍后点「恢复购买」，不需再次购买。</string>
+    <string name="billing_notice_failed">无法打开 Google Play 付款，请稍后再试。</string>
+    <string name="billing_notice_unavailable">这项方案目前未开放购买。</string>
 </resources>

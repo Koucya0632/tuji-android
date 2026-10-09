@@ -66,46 +66,64 @@ Console 申請重設，但要等 Google 處理。
 Android OAuth client（見 `AUTH-SETUP.md` 第 1 節），否則 release 版的 Google
 登入會失敗而 debug 版正常。
 
-## 4. 建立訂閱商品
+## 4. 建立應用程式內商品（一次性）
 
-Play Console → 營利 → 訂閱項目
+2026-10 起 Android 只賣 iOS 罐頭點數制下賣的東西：**永久會員**與**點數包**。
+Pro 訂閱不在 Android 販售。商品 ID 與 iOS 完全相同，後端用同一份清單判斷。
 
-| 欄位 | 值 |
-|---|---|
-| 商品 ID | `tuji_pro_monthly`（暫定，決定後要寫進 `secrets.properties`） |
-| 基本方案 | 月繳，自動續訂 |
-| 定價 | 對齊 iOS 的定價 |
+Play Console → 營利 → 產品 → 應用程式內產品
 
-> ⚠️ 商品 ID **建立後不能改也不能重複使用**。
+| 商品 ID | 類型 | 價格（對齊 iOS） |
+|---|---|---|
+| `app.tuji.lifetime` | 一次性（App 不消耗；後端 acknowledge） | 對齊 iOS 永久會員 |
+| `app.tuji.credits.1000` | 一次性（後端 consume） | USD 0.99 |
+| `app.tuji.credits.4000` | 一次性（後端 consume） | USD 2.99 |
+| `app.tuji.credits.7000` | 一次性（後端 consume） | USD 4.99 |
+
+> ⚠️ 商品 ID **建立後不能改也不能重複使用**。四個都要「啟用」，App 才查得到價格。
+> 「消耗型／非消耗型」在 Play 不是商品屬性，是由後端呼叫 consume 與否決定。
 
 ## 5. 授權測試者
 
 Play Console → 設定 → 授權測試 → 加入測試帳號的 Gmail。
 
-授權測試者購買**不會真的扣款**，但走的是完整的 Billing 流程 —— 這正是計劃書
-§05 那個「Play Billing 端到端 spike」要驗的東西。
+授權測試者的購買 `purchaseType = 0`，後端視為 **sandbox**：
+- 永久會員照常生效（與 Apple sandbox 相同，審查需要）。
+- 點數包只會入帳到 sandbox 錢包，所以測試帳號要列在 `AI_CREDITS_REVIEW_USER_IDS`；
+  否則後端回 503、不 consume，Google 三天後自動退款。
 
-## 6. 後端：Google Play 驗證器與 RTDN
+## 6. 後端：服務帳號（`tuji-web`）
 
-**這一段目前不存在。** 後端（`tuji-web`）只有 Apple 那條：
+後端已實作（`lib/billing/play*.ts`）：
 
 ```
-lib/billing/verifier.ts          Apple SignedDataVerifier
-lib/billing/appstore.ts
-app/api/billing/verify/route.ts               ← iOS 送 StoreKit JWS 來
-app/api/billing/appstore-notifications/route.ts
+POST /api/billing/play/verify   ← App 送 { productId, purchaseToken }
+GET  /api/cron/play-voided      ← 每日 04:00 UTC（vercel.json），讀 Voided Purchases API 處理退款
 ```
 
-Google 那條要做的：
+**不使用 Pub/Sub／RTDN。** 一次性商品沒有續訂，退款每天掃最近 30 天即可，
+全部寫入都冪等，漏跑一天也不會漏退款。
 
-- **服務帳號**：GCP 建一個 service account，在 Play Console 授權它讀
-  「財務資料／訂閱」。金鑰是一個 JSON，放進伺服器的環境變數。
-- **驗證端點**：收 Android 送來的 `purchaseToken`，打 Google Play Developer
-  API 的 `purchases.subscriptionsv2.get` 驗證，寫進 `user_entitlements`，
-  `source` 填 `'play'`。
-- **RTDN**：Google 的續訂／退款／過期通知走 Cloud Pub/Sub，不是 webhook。
-  要建一個 Pub/Sub topic，在 Play Console 填它的名稱，再讓伺服器訂閱。
-  這是與 Apple 最不一樣的一塊，別假設可以照抄。
+要做的設定：
+
+1. GCP → IAM → 建立 service account，建立 JSON 金鑰。
+2. GCP 啟用 **Google Play Android Developer API**。
+3. Play Console → 使用者和權限 → 邀請該 service account email，給本 App：
+   「查看財務資料」與「管理訂單和訂閱」。
+4. Vercel 環境變數：
+   - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` = 整份 JSON 金鑰
+   - （選填）`GOOGLE_PLAY_PACKAGE_NAME`，預設 `app.tuji.android`
+   - 點數包另需既有的 `CREDITS_PURCHASE_ENABLED`／`CREDITS_STORE_PROCESSING_ENABLED`
+
+沒設定金鑰時，verify 回 503（不授權、不 acknowledge → Google 自動退款），cron 回 `disabled`。
+
+### 交付順序：先授權，再 acknowledge / consume
+
+Google 對三天內沒 acknowledge 的購買自動退款。所以後端**先寫入權益，成功後才**
+acknowledge（永久會員）或 consume（點數包）。授權失敗 = 錢自動退回；
+App 每次啟動、開會員頁、按「恢復購買」都會重送 Play 還列著的未完成購買。
+
+已經有付費永久會員（任一商店）再買一次 → 後端回 409、**刻意不 acknowledge** → Google 自動退款。
 
 ## 7. 送審與封閉測試
 
@@ -114,24 +132,13 @@ Google 那條要做的：
 
 ---
 
-## App 這側已經做好的（2026-09-09）
+## App 這側已經做好的（2026-10-09）
 
 | 東西 | 狀態 |
 |---|---|
-| 我的（帳號、方案、用量、登出） | ✅ |
-| 讀 `/api/atlas/entitlement` 與 `/api/users/me` | ✅ |
-| ADR-0001 雙商店規則與 `PurchaseGate` | ✅ 8 個測試 |
-| 訂閱按鈕 | ⛔ **刻意不顯示**，見下 |
-| Play Billing 客戶端 | ⛔ 沒有商品可以查，還沒做 |
-| 後端 Google 驗證器與 RTDN | ⛔ 見第 6 節 |
-
-### 訂閱按鈕為什麼是「不顯示」而不是「停用」
-
-`AccountViewModel` 有一個 `billingAvailable` 旗標，預設 `false`。它為 false 時
-畫面**不畫那個按鈕**，改成一句話說明還不能訂閱。
-
-停用的按鈕會邀請一次點擊，而那次點擊什麼也學不到；一句話說得出原因，也說得出
-什麼會改變它。商店設好的那天，這個旗標翻成 `true`，只有一個地方要改。
-
-`PurchaseGate` 的規則（ADR-0001）與這個旗標是**兩件事**：前者回答「這個帳號
-可不可以買」，後者回答「有沒有東西可以賣」。兩個都要成立才會出現按鈕。
+| Play Billing 9.1.0 客戶端（`billing/PlayBilling.kt`） | ✅ |
+| 購買綁帳號：`setObfuscatedAccountId(Tuji user id)` | ✅ 後端只授權給同一 id |
+| 會員方案頁：永久會員購買鈕、點數包加購、恢復購買、狀態提示 | ✅ |
+| 未完成購買自動補交付（啟動／開頁／恢復購買） | ✅ |
+| 後端 Google 驗證與退款 cron | ✅（`tuji-web`） |
+| Play Console 商品、服務帳號、授權測試者 | ⛔ 第 4–6 節，需人工 |

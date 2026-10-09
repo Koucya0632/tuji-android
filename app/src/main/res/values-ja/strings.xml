@@ -834,4 +834,14 @@
     <string name="load_failed">読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="community_report_footer">報告は審査担当者に送られます。誰が報告したかは相手に知らされません。</string>
     <string name="setup_unauthorized">サーバーがこのログインを認識できません。再ログインが必要かもしれません。</string>
+    <string name="billing_load_failed">プランを読み込めませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="billing_reload">プランを再読み込み</string>
+    <string name="billing_restore">購入を復元</string>
+    <string name="billing_buy_points">%1$d ポイントを購入</string>
+    <string name="billing_notice_delivered">購入が完了しました。ご支援ありがとうございます！</string>
+    <string name="billing_notice_pending">お支払いを処理中です。完了すると自動で反映されます。再度購入する必要はありません。</string>
+    <string name="billing_notice_already_owned">すでに永久会員です。重複した購入は Google Play が自動で返金します。</string>
+    <string name="billing_notice_sync_pending">お支払いを同期中です。しばらくしてから「購入を復元」を押してください。再度購入する必要はありません。</string>
+    <string name="billing_notice_failed">Google Play の支払い画面を開けませんでした。しばらくしてからもう一度お試しください。</string>
+    <string name="billing_notice_unavailable">このプランは現在購入できません。</string>
 </resources>

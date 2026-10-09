@@ -39,16 +39,16 @@ import app.tuji.android.credits.tierCard
  * each with only its own benefits, so nobody reads Pro's list as part of
  * 永久會員's.
  *
- * There is no buy button: Play Billing is not set up (ADR-0001), and a button
- * that cannot do its job is worse than none. What the page does instead is say
- * that — and that a membership bought on iPhone already counts here, since it
- * belongs to the Tuji account, not to the store.
+ * 永久會員 is bought through Google Play ([purchase]); the point packs sit on
+ * the wallet card. Without [purchase] — no signed-in account to bind a
+ * purchase to — the page only says what each plan gives.
  */
 @Composable
 fun MembershipScreen(
     offer: MembershipOffer,
     /** The 罐頭點數 wallet card. Drawn when billing is on points and the account is known. */
     walletCard: (@Composable () -> Unit)? = null,
+    purchase: MembershipPurchase? = null,
 ) {
     val credits = offer.credits && walletCard != null
     Column(
@@ -79,6 +79,7 @@ fun MembershipScreen(
                         rows = offer.lifetimeRows,
                         owned = stringResource(R.string.membership_owns_lifetime).takeIf { offer.ownsLifetime },
                         tier = true,
+                        buy = purchase.takeUnless { offer.ownsLifetime },
                     )
                 }
             } else {
@@ -88,6 +89,7 @@ fun MembershipScreen(
                         caption = stringResource(R.string.membership_lifetime_once),
                         rows = offer.lifetimeRows,
                         owned = stringResource(R.string.membership_owns_lifetime).takeIf { offer.ownsLifetime },
+                        buy = purchase.takeUnless { offer.ownsLifetime },
                     )
                 }
                 if (offer.ownsPro) PlanCard(
@@ -101,8 +103,12 @@ fun MembershipScreen(
                 Text(stringResource(R.string.credit_pro_closed), style = TujiType.bodySm, color = TujiColor.Ink2)
             }
 
-            // Where the buy buttons stand on iOS.
-            if (!offer.ownsPro && !(credits && offer.ownsLifetime)) {
+            purchase?.let {
+                PurchaseNotice(it.state.notice)
+                RestoreLink(it)
+            }
+            // Only where nothing can be bought here: before an account exists.
+            if (purchase == null && !offer.ownsPro && !(credits && offer.ownsLifetime)) {
                 Text(
                     stringResource(R.string.membership_android_soon),
                     style = TujiType.bodySm,
@@ -119,7 +125,14 @@ fun MembershipScreen(
 }
 
 @Composable
-private fun PlanCard(title: String, caption: String?, rows: List<Int>, owned: String?, tier: Boolean = false) {
+private fun PlanCard(
+    title: String,
+    caption: String?,
+    rows: List<Int>,
+    owned: String?,
+    tier: Boolean = false,
+    buy: MembershipPurchase? = null,
+) {
     Column(
         if (tier) {
             Modifier.tierCard()
@@ -146,6 +159,7 @@ private fun PlanCard(title: String, caption: String?, rows: List<Int>, owned: St
             Spacer(Modifier.height(TujiSpace.S1))
             Text(it, style = TujiType.bodySmStrong, color = TujiColor.Accumulation)
         }
+        buy?.let { LifetimeBuy(it) }
     }
 }
 
