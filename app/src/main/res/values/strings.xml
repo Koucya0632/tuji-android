@@ -831,4 +831,5 @@
     <string name="membership_terms">Terms of Service</string>
     <string name="membership_privacy">Privacy Policy</string>
     <string name="manage_switch">Switch →</string>
+    <string name="load_failed">Couldn\'t load. Please try again later.</string>
 </resources>

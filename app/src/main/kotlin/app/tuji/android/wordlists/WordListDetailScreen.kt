@@ -1,5 +1,7 @@
 package app.tuji.android.wordlists
 
+import app.tuji.android.core.design.TujiMenuItem
+import app.tuji.android.core.design.TujiMenu
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +34,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiNavIcon
@@ -91,8 +92,26 @@ fun WordListDetailScreen(
                         }
                     }
                     if (detail != null) {
-                        TujiNavIcon(label = stringResource(R.string.author_more), onClick = { menu = true }) {
-                            TujiGlyph.More(tint = TujiColor.Ink)
+                        // iOS's `Menu`: dropped from ⋯, not a sheet from the bottom.
+                        Box {
+                            TujiNavIcon(label = stringResource(R.string.author_more), onClick = { menu = true }) {
+                                TujiGlyph.More(tint = TujiColor.Ink)
+                            }
+                            if (menu) {
+                                TujiMenu(
+                                    items = listOfNotNull(
+                                        TujiMenuItem(stringResource(R.string.wordlist_rename)) {
+                                            menu = false
+                                            renaming = true
+                                        }.takeIf { detail.canEdit },
+                                        TujiMenuItem(stringResource(R.string.wordlist_delete), destructive = true) {
+                                            menu = false
+                                            confirmDelete = true
+                                        },
+                                    ),
+                                    onDismiss = { menu = false },
+                                )
+                            }
                         }
                     }
                 }
@@ -104,12 +123,10 @@ fun WordListDetailScreen(
                     WordListDetailViewModel.State.Loading, WordListDetailViewModel.State.Missing ->
                         TujiPageLoading(label = stringResource(R.string.atlas_loading))
 
-                    WordListDetailViewModel.State.Failed -> TujiErrorState(
-                        title = stringResource(R.string.manage_action_failed),
-                        modifier = Modifier.padding(horizontal = TujiSpace.S4),
-                    ) {
-                        TujiButton(text = stringResource(R.string.retry), onClick = { vm.load() })
-                    }
+                    WordListDetailViewModel.State.Failed -> BlankState(
+                        text = stringResource(R.string.load_failed),
+                        onRetry = { vm.load() },
+                    )
 
                     is WordListDetailViewModel.State.Loaded -> {
                         TujiScreenTitle(s.detail.list.name)
@@ -134,25 +151,6 @@ fun WordListDetailScreen(
         }
     }
 
-    if (menu && detail != null) {
-        BottomSheet(onDismiss = { menu = false }) {
-            if (detail.canEdit) {
-                TujiRow(onClick = {
-                    menu = false
-                    renaming = true
-                }) {
-                    Text(stringResource(R.string.wordlist_rename), style = TujiType.body, color = TujiColor.Ink)
-                }
-                TujiRowDivider()
-            }
-            TujiRow(onClick = {
-                menu = false
-                confirmDelete = true
-            }) {
-                Text(stringResource(R.string.wordlist_delete), style = TujiType.body, color = TujiColor.Alert)
-            }
-        }
-    }
     if (renaming && detail != null) {
         WordListNameSheet(
             title = stringResource(R.string.wordlist_rename),
@@ -265,12 +263,9 @@ private fun WordRows(
     onRemove: (String) -> Unit,
 ) {
     if (detail.wordIds.isEmpty()) {
-        Text(
-            stringResource(R.string.wordlist_no_words),
-            style = TujiType.bodySm,
-            color = TujiColor.Ink2,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(TujiSpace.S5),
+        BlankState(
+            text = stringResource(R.string.wordlist_no_words),
+            icon = { TujiGlyph.Plus(size = 40.dp, tint = TujiColor.Ink3) },
         )
         return
     }

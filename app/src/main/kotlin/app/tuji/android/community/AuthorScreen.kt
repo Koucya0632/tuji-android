@@ -1,15 +1,7 @@
 package app.tuji.android.community
 
-import app.tuji.android.core.design.TujiBorder
-import androidx.compose.ui.window.PopupProperties
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.border
+import app.tuji.android.core.design.TujiMenu
+import app.tuji.android.core.design.TujiMenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -328,11 +320,7 @@ private fun Group(group: LanguageGroup, labelled: Boolean, onOpenItem: (String) 
  * to judge this person's name, bio and avatar; 封鎖 is the reader's own
  * decision to stop seeing them.
  */
-/**
- * ⋯'s menu, dropped from the ⋯ itself — iOS's `Menu` rather than a sheet from
- * the bottom edge. 檢舉 and 封鎖 are red, as iOS's `.destructive` roles; 解除封鎖
- * is not.
- */
+/** 檢舉 and 封鎖 are red, as iOS's `.destructive` roles; 解除封鎖 is not. */
 @Composable
 private fun MoreMenu(
     reported: Boolean,
@@ -340,41 +328,15 @@ private fun MoreMenu(
     onReport: () -> Unit,
     onBlock: () -> Unit,
     onDismiss: () -> Unit,
-) {
-    // Resolved out here: a popup is a view of its own and would read the
-    // device's language rather than the app's (see `TujiWindow`).
-    val report = stringResource(if (reported) R.string.collection_report_received else R.string.author_report)
-    val block = blockControlLabel(blocked)
-    val density = LocalDensity.current
-    Popup(
-        alignment = Alignment.TopEnd,
-        offset = with(density) { IntOffset(0, 44.dp.roundToPx()) },
-        onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true),
-    ) {
-        Column(
-            Modifier
-                .width(IntrinsicSize.Max)
-                .widthIn(min = 200.dp)
-                .background(TujiColor.Paper)
-                .border(TujiBorder.Bw1, TujiColor.Rule),
-        ) {
-            MenuItem(report, color = if (reported) TujiColor.Ink3 else TujiColor.Alert, enabled = !reported, onClick = onReport)
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
-            MenuItem(block, color = if (blocked) TujiColor.Ink else TujiColor.Alert, enabled = true, onClick = onBlock)
-        }
-    }
-}
-
-@Composable
-private fun MenuItem(text: String, color: Color, enabled: Boolean, onClick: () -> Unit) {
-    Text(
-        text,
-        style = TujiType.body,
-        color = color,
-        modifier = Modifier
-            .fillMaxWidth()
-            .tujiClickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-    )
-}
+) = TujiMenu(
+    items = listOf(
+        TujiMenuItem(
+            stringResource(if (reported) R.string.collection_report_received else R.string.author_report),
+            destructive = true,
+            enabled = !reported,
+            onClick = onReport,
+        ),
+        TujiMenuItem(blockControlLabel(blocked), destructive = !blocked, onClick = onBlock),
+    ),
+    onDismiss = onDismiss,
+)

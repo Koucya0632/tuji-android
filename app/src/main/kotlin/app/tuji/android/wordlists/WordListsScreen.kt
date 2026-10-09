@@ -1,5 +1,6 @@
 package app.tuji.android.wordlists
 
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +34,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.design.TujiErrorState
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiNavIcon
@@ -112,20 +112,21 @@ fun WordListsScreen(
                     WordListsStore.Phase.Idle, WordListsStore.Phase.Loading ->
                         TujiPageLoading(label = stringResource(R.string.atlas_loading))
 
-                    WordListsStore.Phase.Failed -> TujiErrorState(
-                        title = stringResource(R.string.manage_action_failed),
-                        modifier = Modifier.padding(horizontal = TujiSpace.S4),
-                    ) {
-                        TujiButton(text = stringResource(R.string.retry), onClick = { scope.launch { store.reload() } })
-                    }
+                    WordListsStore.Phase.Failed -> BlankState(
+                        text = stringResource(R.string.load_failed),
+                        onRetry = { scope.launch { store.reload() } },
+                    )
 
                     WordListsStore.Phase.Loaded -> if (state.lists.isEmpty()) {
                         Column(
-                            Modifier.fillMaxWidth().padding(TujiSpace.S4),
+                            Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text(stringResource(R.string.wordlist_empty), style = TujiType.bodySm, color = TujiColor.Ink2)
+                            BlankState(
+                                text = stringResource(R.string.wordlist_empty),
+                                icon = { TujiGlyph.Books(size = 40.dp, tint = TujiColor.Ink3) },
+                            )
                             if (state.canCreate) {
                                 TujiButton(text = stringResource(R.string.wordlist_create), onClick = { creating = true })
                             }
@@ -239,6 +240,28 @@ private fun MoveButton(label: Int, enabled: Boolean, flipped: Boolean, onClick: 
             tint = TujiColor.Ink,
             modifier = if (flipped) Modifier.rotate(180f) else Modifier,
         )
+    }
+}
+
+/**
+ * iOS's `TujiBlankState`: an optional mark, one grey line, and 重試 when it is
+ * a failure — not a cat, and not a red 警示 square, for a page that is merely
+ * empty or could not load.
+ */
+@Composable
+internal fun BlankState(
+    text: String,
+    icon: (@Composable () -> Unit)? = null,
+    onRetry: (() -> Unit)? = null,
+) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = TujiSpace.S5).padding(horizontal = TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        icon?.invoke()
+        Text(text, style = TujiType.bodySm, color = TujiColor.Ink3, textAlign = TextAlign.Center)
+        onRetry?.let { TujiButton(text = stringResource(R.string.retry), onClick = it) }
     }
 }
 
