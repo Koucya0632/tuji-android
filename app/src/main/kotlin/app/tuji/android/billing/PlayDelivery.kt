@@ -1,9 +1,8 @@
 package app.tuji.android.billing
 
+import android.util.Log
 import app.tuji.android.core.network.ApiError
-import app.tuji.android.core.network.Endpoint
-import app.tuji.android.core.network.TujiApiClient
-import kotlinx.serialization.Serializable
+import app.tuji.android.core.network.BillingRepository
 
 /**
  * What became of one purchase handed to `/api/billing/play/verify`.
@@ -61,18 +60,18 @@ object PlayDelivery {
     fun needsDelivery(purchased: Boolean, acknowledged: Boolean, accountId: String?, currentUser: String): Boolean =
         purchased && !acknowledged && accountId.equals(currentUser, ignoreCase = true)
 
-    suspend fun verify(api: TujiApiClient, productId: String, token: String): DeliveryOutcome = try {
+    suspend fun verify(billing: BillingRepository, productId: String, token: String): DeliveryOutcome = try {
         // A 202 is a success status to the client, so the pending case is
         // read off the reply rather than the status.
-        val reply = api.post<Reply>(Endpoint.PlayPurchaseVerify, Request(productId, token))
-        if (reply.state == "pending") DeliveryOutcome.Pending else DeliveryOutcome.Delivered
+        if (billing.verifyPlayPurchase(productId, token) == "pending") DeliveryOutcome.Pending else DeliveryOutcome.Delivered
     } catch (e: ApiError.Http) {
-        outcome(e.status, e.body)
+        outcome(e.status, e.body).also { Log.w(TAG, "verify $productId: HTTP ${e.status} -> $it") }
     } catch (e: ApiError) {
+        // Not an answer from the server: offline, signed out, or a client
+        // fault. Logged, because "syncing" on screen says nothing about which.
+        Log.w(TAG, "verify $productId failed before an answer", e)
         DeliveryOutcome.RetryLater
     }
 
-    @Serializable private data class Request(val productId: String, val purchaseToken: String)
-
-    @Serializable private data class Reply(val state: String? = null)
+    private const val TAG = "PlayDelivery"
 }
