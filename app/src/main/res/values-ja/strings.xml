@@ -833,4 +833,5 @@
     <string name="manage_switch">切り替え →</string>
     <string name="load_failed">読み込めませんでした。しばらくしてからお試しください。</string>
     <string name="community_report_footer">報告は審査担当者に送られます。誰が報告したかは相手に知らされません。</string>
+    <string name="setup_unauthorized">サーバーがこのログインを認識できません。再ログインが必要かもしれません。</string>
 </resources>

@@ -833,4 +833,5 @@
     <string name="manage_switch">Switch →</string>
     <string name="load_failed">Couldn\'t load. Please try again later.</string>
     <string name="community_report_footer">Reports go to our moderators. The person you report is never told who reported them.</string>
+    <string name="setup_unauthorized">The server didn\'t recognize this sign-in. You may need to sign in again.</string>
 </resources>

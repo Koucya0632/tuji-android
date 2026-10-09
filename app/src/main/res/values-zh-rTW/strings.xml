@@ -833,4 +833,5 @@
     <string name="manage_switch">切換 →</string>
     <string name="load_failed">載入失敗，請稍後再試</string>
     <string name="community_report_footer">檢舉會送給審核人員，對方不會知道是誰檢舉的。</string>
+    <string name="setup_unauthorized">後端不認這次登入。可能要重新登入一次。</string>
 </resources>

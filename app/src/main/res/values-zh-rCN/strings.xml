@@ -833,4 +833,5 @@
     <string name="manage_switch">切换 →</string>
     <string name="load_failed">加载失败，请稍后再试</string>
     <string name="community_report_footer">举报会送给审核人员，对方不会知道是谁举报的。</string>
+    <string name="setup_unauthorized">后端不认这次登录。可能要重新登录一次。</string>
 </resources>
