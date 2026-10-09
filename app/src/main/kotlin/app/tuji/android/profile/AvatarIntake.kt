@@ -1,7 +1,5 @@
 package app.tuji.android.profile
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,7 +31,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -52,10 +48,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import app.tuji.android.R
-import app.tuji.android.capture.CameraController
-import app.tuji.android.capture.CameraFrame
+import app.tuji.android.capture.CaptureCameraWindow
 import app.tuji.android.core.design.CropSquare
 import app.tuji.android.core.design.SquareCrop
 import app.tuji.android.core.design.TujiButton
@@ -123,8 +117,11 @@ fun AvatarIntake(
             onUseDefault = { onUseDefault(); onClose() },
             onDismiss = onClose,
         )
-        Intake.Camera -> CameraWindow(
+        // The same camera 拍照新增 uses, as iOS's `ImageIntake` shares one:
+        // 相簿 from inside it, a square shutter, 切換鏡頭 and pinch to zoom.
+        Intake.Camera -> CaptureCameraWindow(
             onPhoto = { bytes -> decode { PhotoCodec.decode(bytes) } },
+            onLibrary = { library.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
             onDismiss = onClose,
         )
         Intake.Decoding -> TujiWindow(onDismiss = {}, darkGround = true) {
@@ -200,56 +197,6 @@ private fun SourceSheet(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-    }
-}
-
-/** The same viewfinder 拍照收字 uses, for one frame. */
-@Composable
-private fun CameraWindow(onPhoto: (ByteArray) -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss, darkGround = true) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val controller = remember { CameraController() }
-    var granted by remember {
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-    }
-    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
-    LaunchedEffect(Unit) { if (!granted) ask.launch(Manifest.permission.CAMERA) }
-
-    Box(Modifier.fillMaxSize().background(TujiColor.Ink)) {
-        if (granted) {
-            CameraFrame(controller = controller, modifier = Modifier.fillMaxSize())
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(bottom = TujiSpace.S6)
-                    .size(76.dp)
-                    .clip(CircleShape)
-                    .background(TujiColor.Paper)
-                    .tujiClickable {
-                        scope.launch { runCatching { controller.takePhoto(context) }.onSuccess(onPhoto) }
-                    },
-            )
-        } else {
-            Column(
-                Modifier.align(Alignment.Center).padding(TujiSpace.S4),
-                verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(stringResource(R.string.capture_permission), style = TujiType.body, color = TujiColor.Paper, textAlign = TextAlign.Center)
-                TujiButton(text = stringResource(R.string.capture_permission_grant), onClick = { ask.launch(Manifest.permission.CAMERA) })
-            }
-        }
-        Text(
-            stringResource(R.string.cancel),
-            style = TujiType.bodyStrong,
-            color = TujiColor.Paper,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .tujiClickable(onClick = onDismiss)
-                .padding(TujiSpace.S4),
-        )
     }
 }
 
