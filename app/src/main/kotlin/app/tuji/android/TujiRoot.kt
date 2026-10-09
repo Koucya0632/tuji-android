@@ -1490,7 +1490,18 @@ private fun SignedInScreens(
                         showChinese = settings.showZh,
                         scores = scores,
                         onRetry = vm::open,
-                        onToggleSave = vm::toggleSave,
+                        onToggleSave = {
+                            // iOS #234: a non-member's 加入學習 would be refused
+                            // (402), so go where that answer would have sent them.
+                            // 學習中 → 停止 is theirs to undo either way.
+                            if (!itemState.saved &&
+                                MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked
+                            ) {
+                                openMembership()
+                            } else {
+                                vm.toggleSave()
+                            }
+                        },
                         onPlay = vm::play,
                         onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
                         onReport = { reason -> community.report(ReportTarget.Item(route.slug), reason) },

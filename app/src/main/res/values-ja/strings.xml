@@ -316,7 +316,7 @@
     <string name="item_yours">自分のシェア</string>
     <string name="item_stop_title">この単語の学習をやめますか？</string>
     <string name="item_action_failed">操作を完了できませんでした。しばらくしてからもう一度お試しください</string>
-    <string name="item_report">この項目を通報</string>
+    <string name="item_report">このカードを通報</string>
     <string name="item_not_found">項目が見つかりません</string>
     <string name="block_control">この作者をブロック</string>
     <string name="block_undo">ブロック解除</string>
@@ -499,7 +499,6 @@
     <string name="community_reason_other">その他</string>
     <string name="cancel">キャンセル</string>
     <string name="community_author_uid">UID: %1$s</string>
-    <string name="community_note">投稿者のメモ</string>
     <string name="collection_save">保存</string>
     <string name="collection_saved">保存済み</string>
     <string name="collection_tab_contents">目次</string>
@@ -507,7 +506,7 @@
     <string name="collection_learn_all_learning">すべて学習中</string>
     <string name="collection_learn_remaining">残り%1$d語を追加</string>
     <string name="collection_learn_all">すべて学習に追加</string>
-    <string name="collection_empty">このコレクションにはまだ項目がありません</string>
+    <string name="collection_empty">このコレクションにはまだカードがありません</string>
     <string name="collection_locked">コレクションを保存すると %1$d 枚すべて見られます</string>
     <string name="collection_about_empty">この作者はまだ自己紹介を書いていません。</string>
     <string name="collection_report">このコレクションを報告</string>
@@ -519,7 +518,7 @@
     <string name="collection_learn_title">この%1$d語を学習に追加しますか？</string>
     <string name="collection_learn_confirm">すべて追加</string>
     <string name="collection_learn_failed">追加できませんでした</string>
-    <string name="collection_learn_limit">学習項目が上限に達しました。いくつか削除してから追加してください。</string>
+    <string name="collection_learn_limit">取り込んだカードが上限に達しました。いくつか外してから追加してください。</string>
     <string name="collection_not_found">コレクションが見つかりません</string>
     <string name="community_tile_by">by %1$s</string>
     <string name="nav_me">マイページ</string>

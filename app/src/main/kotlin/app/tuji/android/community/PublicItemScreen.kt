@@ -198,15 +198,6 @@ fun PublicItemScreen(
             WordDetailSections(word = word, uiLang = uiLang, showChinese = showChinese, session = session)
         }
 
-        // The publisher's own words, labelled as theirs. Without the label it
-        // reads as part of the dictionary entry.
-        word?.note?.trim()?.takeIf { it.isNotEmpty() }?.let { note ->
-            Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-                Text(stringResource(R.string.community_note), style = TujiType.label, color = TujiColor.Ink3)
-                Text(note, style = TujiType.body, color = TujiColor.Ink)
-            }
-        }
-
         state.error?.let { error ->
             Text(
                 stringResource(if (error == PublicItemViewModel.Error.SaveLimit) R.string.collection_learn_limit else R.string.item_action_failed),

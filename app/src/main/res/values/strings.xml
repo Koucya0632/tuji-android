@@ -316,7 +316,7 @@
     <string name="item_yours">Your share</string>
     <string name="item_stop_title">Stop learning this word?</string>
     <string name="item_action_failed">Couldn\'t finish that. Please try again later.</string>
-    <string name="item_report">Report this item</string>
+    <string name="item_report">Report this card</string>
     <string name="item_not_found">Item not found</string>
     <string name="block_control">Block this author</string>
     <string name="block_undo">Unblock</string>
@@ -499,7 +499,6 @@
     <string name="community_reason_other">Other</string>
     <string name="cancel">Cancel</string>
     <string name="community_author_uid">UID: %1$s</string>
-    <string name="community_note">The publisher’s note</string>
     <string name="collection_save">Save</string>
     <string name="collection_saved">Saved</string>
     <string name="collection_tab_contents">Contents</string>
@@ -519,7 +518,7 @@
     <string name="collection_learn_title">Add these %1$d words to learning?</string>
     <string name="collection_learn_confirm">Add all</string>
     <string name="collection_learn_failed">Couldn’t add</string>
-    <string name="collection_learn_limit">Your study list is full. Remove some words, then add these.</string>
+    <string name="collection_learn_limit">You\'ve reached the limit on cards you\'ve taken in. Remove a few before adding more.</string>
     <string name="collection_not_found">Collection not found</string>
     <string name="community_tile_by">by %1$s</string>
     <string name="nav_me">Me</string>
