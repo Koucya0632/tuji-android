@@ -132,6 +132,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.work)
+    // 永久會員 and 罐頭點數 packs. The server is the authority: the app only
+    // hands Play's purchaseToken to /api/billing/play/verify.
+    implementation(libs.play.billing)
 
     // 自製圖鑑's camera. `camera-view` brings the PreviewView; the other three
     // are what binding a use case to a lifecycle needs.

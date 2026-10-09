@@ -13,6 +13,8 @@ import app.tuji.android.wordlists.WordListDetailViewModel
 import app.tuji.android.wordlists.WordListQueue
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
+import app.tuji.android.membership.CreditPackButtons
+import app.tuji.android.membership.MembershipPurchase
 import app.tuji.android.membership.MembershipScreen
 import app.tuji.android.core.catalog.CardsSource
 import app.tuji.android.credits.CreditCaptureScreen
@@ -36,6 +38,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -103,6 +106,7 @@ import app.tuji.android.core.study.LearningRefreshCause
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -496,6 +500,13 @@ private fun SignedInScreens(
         AccountViewModel(accounts = app.atlas, entitlements = app.atlas, weakWords = app.atlas)
     }
     val accountState by account.state.collectAsStateWithLifecycle()
+
+    // Play purchases paid but not yet granted (a crash, a pending payment that
+    // cleared while Tuji was closed) are sent on entering the shell; every
+    // grant, from here or from 會員方案, re-reads the entitlement.
+    val billing by app.playBilling.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { app.playBilling.reconcile() }
+    LaunchedEffect(billing.deliveries) { if (billing.deliveries > 0) account.refreshEntitlement() }
 
     // 個人筆記, once the entitlement says the feature exists: the review reveal
     // reads them with no request of its own. Loaded here, not on the word page,
@@ -1362,16 +1373,44 @@ private fun SignedInScreens(
 
                 AppRoute.Membership -> {
                     val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    val activity = LocalActivity.current
+                    LaunchedEffect(owner) {
+                        if (owner != null) {
+                            app.playBilling.load()
+                            app.playBilling.reconcile()
+                        }
+                    }
+                    DisposableEffect(Unit) { onDispose { app.playBilling.dismissNotice() } }
+                    val purchase = if (owner != null && activity != null) {
+                        MembershipPurchase(
+                            state = billing,
+                            onBuy = { app.playBilling.purchase(activity, it) },
+                            onReload = { scope.launch { app.playBilling.load() } },
+                            onRestore = {
+                                scope.launch {
+                                    app.playBilling.reconcile(quiet = false)
+                                    app.playBilling.load()
+                                }
+                            },
+                        )
+                    } else {
+                        null
+                    }
                     MembershipScreen(
                         offer = MembershipOffer.from(accountState.entitlement),
                         walletCard = if (accountState.entitlement?.billingMode == "credits" && owner != null) {
                             {
-                                CreditWalletCard(app.api, app.atlas, owner,
-                                    { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id })
+                                CreditWalletCard(
+                                    app.api, app.atlas, owner,
+                                    { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
+                                    refreshKey = billing.deliveries,
+                                    packs = purchase?.let { p -> { CreditPackButtons(p) } },
+                                )
                             }
                         } else {
                             null
                         },
+                        purchase = purchase,
                     )
                 }
 

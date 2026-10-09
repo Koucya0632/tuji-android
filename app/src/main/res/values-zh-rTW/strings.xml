@@ -834,4 +834,14 @@
     <string name="load_failed">載入失敗，請稍後再試</string>
     <string name="community_report_footer">檢舉會送給審核人員，對方不會知道是誰檢舉的。</string>
     <string name="setup_unauthorized">後端不認這次登入。可能要重新登入一次。</string>
+    <string name="billing_load_failed">暫時無法載入方案，請檢查網路後再試一次。</string>
+    <string name="billing_reload">重新載入方案</string>
+    <string name="billing_restore">恢復購買</string>
+    <string name="billing_buy_points">加購 %1$d 點</string>
+    <string name="billing_notice_delivered">購買完成，感謝支持！</string>
+    <string name="billing_notice_pending">付款處理中，完成後會自動生效，不需要再次購買。</string>
+    <string name="billing_notice_already_owned">你已經是永久會員，這筆重複的購買會由 Google Play 自動退款。</string>
+    <string name="billing_notice_sync_pending">付款正在同步，請稍後點「恢復購買」，不需再次購買。</string>
+    <string name="billing_notice_failed">無法開啟 Google Play 付款，請稍後再試。</string>
+    <string name="billing_notice_unavailable">這項方案目前未開放購買。</string>
 </resources>

@@ -484,6 +484,18 @@ interface Endpoint {
         )
     }
 
+    /**
+     * A Google Play purchase handed to the server, which asks Google about the
+     * token, grants it, and only then acknowledges or consumes it. Android's
+     * `/api/billing/verify`.
+     */
+    data object PlayPurchaseVerify : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/billing/play/verify",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** Tier, limits and usage. The server re-checks on every write; this is a mirror. */
     data object Entitlement : Endpoint {
         override val descriptor get() = EndpointDescriptor(

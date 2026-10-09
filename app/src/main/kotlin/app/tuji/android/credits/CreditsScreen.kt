@@ -20,14 +20,19 @@ import app.tuji.android.core.network.*
 
 /**
  * 罐頭點數 — iOS's `CreditWalletView`, on the paywall as its first card: the
- * balance, where it comes from, and 每日簽到.
+ * balance, where it comes from, 每日簽到, and the point packs Play sells.
  *
- * No point packs: Android cannot take payments yet (ADR-0001), and a buy button
- * that cannot do its job is worse than none. The page around this card says
- * where they can be bought.
+ * [refreshKey] changes when a purchase is granted, so the balance re-reads.
  */
 @Composable
-fun CreditWalletCard(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, currentOwner: () -> String?) {
+fun CreditWalletCard(
+    api: TujiApiClient,
+    atlas: AtlasAuthoring,
+    owner: String,
+    currentOwner: () -> String?,
+    refreshKey: Int = 0,
+    packs: (@Composable () -> Unit)? = null,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val model = remember(owner) {
@@ -35,7 +40,7 @@ fun CreditWalletCard(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, c
             context.getSharedPreferences("credit-journal", Context.MODE_PRIVATE), scope)
     }
     val state by model.state.collectAsStateWithLifecycle()
-    LaunchedEffect(model) { model.load() }
+    LaunchedEffect(model, refreshKey) { model.load() }
     val wallet = state.wallet
     Column(Modifier.tierCard(), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
@@ -73,6 +78,7 @@ fun CreditWalletCard(api: TujiApiClient, atlas: AtlasAuthoring, owner: String, c
         )
         Text(stringResource(R.string.credit_monthly_reset_note), style = TujiType.label, color = TujiColor.Ink3)
         Text(stringResource(R.string.credit_check_in_note), style = TujiType.label, color = TujiColor.Ink3)
+        packs?.invoke()
         state.error?.let { Text(stringResource(creditErrorResource(it)), style = TujiType.label, color = TujiColor.Alert) }
         Text(
             stringResource(R.string.credit_retry),

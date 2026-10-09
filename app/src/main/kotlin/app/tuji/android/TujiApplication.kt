@@ -77,6 +77,18 @@ class TujiApplication : Application() {
     /** The transport. [catalog] is the store that holds what it fetched. */
     val catalogReading: CatalogRepository by lazy { CatalogRepository(api) }
 
+    /** 永久會員 and 罐頭點數 packs through Google Play; the server grants. */
+    val playBilling: app.tuji.android.billing.PlayBilling by lazy {
+        val credits = app.tuji.android.core.network.CreditRepository(api)
+        app.tuji.android.billing.PlayBilling(
+            context = this,
+            deliver = { productId, token -> app.tuji.android.billing.PlayDelivery.verify(api, productId, token) },
+            catalog = { credits.catalog() },
+            currentUser = { (auth.session.value.state as? app.tuji.android.core.auth.AuthState.SignedIn)?.user?.id },
+            scope = appScope,
+        )
+    }
+
     /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
     val catalog: app.tuji.android.atlas.CatalogStore by lazy {
         app.tuji.android.atlas.CatalogStore(catalogReading)
