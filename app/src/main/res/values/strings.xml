@@ -837,7 +837,7 @@
     <string name="billing_load_failed">Couldn’t load plans. Check your connection and try again.</string>
     <string name="billing_reload">Reload plans</string>
     <string name="billing_restore">Restore purchases</string>
-    <string name="billing_buy_points">Buy %1$d points</string>
+    <string name="billing_buy_points">Buy %1$,d credits</string>
     <string name="billing_notice_delivered">Purchase complete. Thank you for your support!</string>
     <string name="billing_notice_pending">Your payment is processing. It applies automatically once it clears. No need to buy again.</string>
     <string name="billing_notice_already_owned">You’re already a Lifetime Member. Google Play refunds the duplicate purchase automatically.</string>
