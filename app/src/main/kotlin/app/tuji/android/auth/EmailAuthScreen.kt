@@ -393,7 +393,8 @@ private fun ErrorBox(message: String) {
             .padding(TujiSpace.S3),
         horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
     ) {
-        Box(Modifier.padding(top = 5.dp).size(10.dp).background(TujiColor.Alert))
+        // iOS's `exclamationmark.triangle.fill`, in alert red.
+        TujiGlyph.Warning(size = 16.dp, tint = TujiColor.Alert, modifier = Modifier.padding(top = 2.dp))
         Text(message, style = TujiType.bodySm, color = TujiColor.Ink2)
     }
 }

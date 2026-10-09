@@ -188,7 +188,8 @@ private fun AppleButton(enabled: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 50.dp)
+            // iOS's `SignInWithAppleButton` frame: 52.
+            .defaultMinSize(minHeight = 52.dp)
             .background(Color.Black, RoundedCornerShape(TujiRadius.R0))
             .tujiClickable(enabled = enabled, onClick = onClick),
         horizontalArrangement = Arrangement.Center,
