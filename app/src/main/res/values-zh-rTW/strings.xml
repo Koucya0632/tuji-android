@@ -316,7 +316,7 @@
     <string name="item_yours">你的分享</string>
     <string name="item_stop_title">停止學習這個單詞？</string>
     <string name="item_action_failed">操作沒有完成，請稍後再試</string>
-    <string name="item_report">檢舉這個項目</string>
+    <string name="item_report">檢舉這張卡片</string>
     <string name="item_not_found">找不到這個項目</string>
     <string name="block_control">封鎖這位作者</string>
     <string name="block_undo">解除封鎖</string>
@@ -499,7 +499,6 @@
     <string name="community_reason_other">其他</string>
     <string name="cancel">取消</string>
     <string name="community_author_uid">UID: %1$s</string>
-    <string name="community_note">發布者的筆記</string>
     <string name="collection_save">收藏</string>
     <string name="collection_saved">已收藏</string>
     <string name="collection_tab_contents">目錄</string>
@@ -507,7 +506,7 @@
     <string name="collection_learn_all_learning">全部學習中</string>
     <string name="collection_learn_remaining">加入其餘 %1$d 個</string>
     <string name="collection_learn_all">全部加入學習</string>
-    <string name="collection_empty">這個合集還沒有項目</string>
+    <string name="collection_empty">這個合集還沒有卡片</string>
     <string name="collection_locked">收藏合集後查看全部 %1$d 張卡片</string>
     <string name="collection_about_empty">作者還沒有填寫簡介。</string>
     <string name="collection_report">檢舉這個合集</string>
@@ -519,7 +518,7 @@
     <string name="collection_learn_title">將這 %1$d 個單詞加入學習？</string>
     <string name="collection_learn_confirm">全部加入</string>
     <string name="collection_learn_failed">加入失敗</string>
-    <string name="collection_learn_limit">學習項目已達上限，移除一些後再加入。</string>
+    <string name="collection_learn_limit">已收進的卡片達到上限，移除一些後再加入</string>
     <string name="collection_not_found">找不到這個合集</string>
     <string name="community_tile_by">by %1$s</string>
     <string name="nav_me">我</string>
