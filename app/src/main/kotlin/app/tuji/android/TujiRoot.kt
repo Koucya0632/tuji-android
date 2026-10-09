@@ -1532,7 +1532,15 @@ private fun SignedInScreens(
                         reported = communityReported == ReportTarget.Collection(route.slug),
                         onBack = { nav = nav.pop() },
                         onRetry = vm::open,
-                        onSave = vm::save,
+                        onSave = {
+                            // iOS #234: a non-member's 收藏 would be refused (402),
+                            // so go where that answer would have sent them first.
+                            if (MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked) {
+                                openMembership()
+                            } else {
+                                vm.save()
+                            }
+                        },
                         onUnsave = vm::unsave,
                         onLearn = vm::learnRemaining,
                         onDismissError = vm::dismissError,

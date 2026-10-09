@@ -1,5 +1,7 @@
 package app.tuji.android.community
 
+import androidx.compose.foundation.layout.width
+import app.tuji.android.core.design.TujiIndeterminateBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -290,7 +292,12 @@ private fun ActionBar(
                 contentAlignment = Alignment.Center,
             ) {
                 if (waiting) {
-                    Box(Modifier.widthIn(min = 40.dp).height(3.dp).background(if (state.saved) TujiColor.Paper else TujiColor.Ink))
+                    // iOS's moving bar while the bookmark is read or written.
+                    TujiIndeterminateBar(
+                        modifier = Modifier.width(56.dp),
+                        track = TujiColor.Paper.copy(alpha = 0.2f),
+                        fill = TujiColor.Current,
+                    )
                 } else {
                     Text(
                         stringResource(if (state.saved) R.string.collection_saved else R.string.collection_save),
@@ -305,19 +312,26 @@ private fun ActionBar(
 
 @Composable
 private fun LearnPill(state: CollectionDetailViewModel.State, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    if (state.learningBusy) {
+        // iOS swaps the pill for a moving bar while the members go in.
+        Box(modifier.widthIn(min = 98.dp).height(30.dp), contentAlignment = Alignment.CenterStart) {
+            TujiIndeterminateBar(modifier = Modifier.width(56.dp))
+        }
+        return
+    }
     val action = state.learnAction
     val done = action == CollectionLearnAction.AllLearning
     Row(
         modifier
             .height(30.dp)
             .background(if (done) TujiColor.Paper3 else TujiColor.AccumulationSoft)
-            .tujiClickable(enabled = !done && !state.learningBusy, onClick = onClick)
+            .tujiClickable(enabled = !done, onClick = onClick)
             .padding(horizontal = TujiSpace.S3),
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val ink = if (done) TujiColor.Ink3 else TujiColor.Accumulation
-        if (done) TujiGlyph.Check(size = 11.dp, tint = ink) else Text("＋", style = TujiType.label, color = ink)
+        if (done) TujiGlyph.Check(size = 11.dp, tint = ink) else TujiGlyph.Plus(size = 11.dp, tint = ink)
         Text(
             when (action) {
                 CollectionLearnAction.AllLearning -> stringResource(R.string.collection_learn_all_learning)
