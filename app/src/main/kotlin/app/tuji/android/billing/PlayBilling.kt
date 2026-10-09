@@ -227,6 +227,7 @@ class PlayBilling(
 
         val token = purchase.purchaseToken
         if (!delivering.withLock { inFlight.add(token) }) return
+        var granted = false
         try {
             var outcome = DeliveryOutcome.Delivered
             for (productId in purchase.products) {
@@ -247,9 +248,14 @@ class PlayBilling(
                     deliveries = it.deliveries + if (outcome == DeliveryOutcome.Delivered) 1 else 0,
                 )
             }
+            granted = outcome == DeliveryOutcome.Delivered
         } finally {
             delivering.withLock { inFlight.remove(token) }
         }
+        // What is for sale depends on what was just bought: the point packs
+        // are sold only to a 永久會員, so the catalog read before the purchase
+        // is stale the moment one is granted.
+        if (granted) load()
     }
 
     fun dismissNotice() = _state.update { it.copy(notice = null) }
