@@ -1,5 +1,8 @@
 package app.tuji.android.profile
 
+import app.tuji.android.core.design.TujiRowDivider
+import app.tuji.android.core.design.TujiRow
+import app.tuji.android.form.TujiSheet
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +55,6 @@ import app.tuji.android.capture.CaptureCameraWindow
 import app.tuji.android.core.design.CropSquare
 import app.tuji.android.core.design.SquareCrop
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
@@ -153,6 +154,7 @@ fun AvatarIntake(
     }
 }
 
+/** iOS's `ImageIntakeChoiceList` in its `tujiSheet`: one row per source, ruled between. */
 @Composable
 private fun SourceSheet(
     title: String,
@@ -161,41 +163,17 @@ private fun SourceSheet(
     onLibrary: () -> Unit,
     onUseDefault: () -> Unit,
     onDismiss: () -> Unit,
-) = TujiWindow(onDismiss = onDismiss) {
-    Box(
-        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Paper)
-                // Swallows taps, so touching the sheet does not dismiss it
-                // through the scrim underneath.
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        ) {
-            Text(title, style = TujiType.h3, color = TujiColor.Ink)
-            listOfNotNull(
-                R.string.avatar_camera to onCamera,
-                R.string.avatar_library to onLibrary,
-                (R.string.avatar_use_default to onUseDefault).takeIf { hasCustomAvatar },
-            ).forEach { (label, action) ->
-                Text(
-                    stringResource(label),
-                    style = TujiType.body,
-                    color = TujiColor.Ink,
-                    modifier = Modifier.fillMaxWidth().tujiClickable(onClick = action).padding(vertical = TujiSpace.S2),
-                )
+) = TujiSheet(title = title, onDismiss = onDismiss) {
+    Column(Modifier.padding(top = TujiSpace.S3, bottom = TujiSpace.S5)) {
+        listOfNotNull(
+            R.string.avatar_camera to onCamera,
+            R.string.avatar_library to onLibrary,
+            (R.string.avatar_use_default to onUseDefault).takeIf { hasCustomAvatar },
+        ).forEachIndexed { index, (label, action) ->
+            if (index > 0) TujiRowDivider()
+            TujiRow(onClick = action) {
+                Text(stringResource(label), style = TujiType.body, color = TujiColor.Ink)
             }
-            TujiButton(
-                text = stringResource(R.string.cancel),
-                style = TujiButtonStyle.Secondary,
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }

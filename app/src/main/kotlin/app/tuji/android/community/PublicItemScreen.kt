@@ -1,5 +1,8 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.design.TujiRowDivider
+import app.tuji.android.core.design.TujiRow
+import app.tuji.android.form.TujiSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -44,7 +46,6 @@ import app.tuji.android.core.design.MasteryBar
 import app.tuji.android.core.design.ProfileAvatar
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiImagePlaceholder
 import app.tuji.android.core.design.TujiPageLoading
@@ -52,7 +53,6 @@ import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.study.MasteryLevel
@@ -332,54 +332,36 @@ private fun LearnPillLabel(icon: (@Composable () -> Unit)?, text: String, active
  * A list of reasons rather than a free-text box: the server's one moderation
  * queue sorts on the reason, and a sentence nobody reads is not moderation.
  */
+/**
+ * 檢舉原因 — iOS's `reportSheet`: the shared sheet head, one row per reason,
+ * and the line that says who will see it. Picking sends.
+ */
 @Composable
-fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) = TujiWindow(onDismiss = onDismiss) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(TujiColor.Scrim)
-            .tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Paper)
-                // Swallows taps, so touching the sheet does not dismiss it
-                // through the scrim underneath.
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        ) {
-            Text(
-                stringResource(R.string.community_report_title),
-                style = TujiType.h3,
-                color = TujiColor.Ink,
-            )
+fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) =
+    TujiSheet(title = stringResource(R.string.community_report_title), onDismiss = onDismiss, maxHeight = 460.dp) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(top = TujiSpace.S3, bottom = TujiSpace.S5)) {
             listOf(
                 ReportReason.Spam to R.string.community_reason_spam,
                 ReportReason.Inappropriate to R.string.community_reason_inappropriate,
                 ReportReason.Copyright to R.string.community_reason_copyright,
                 ReportReason.Wrong to R.string.community_reason_wrong,
                 ReportReason.Other to R.string.community_reason_other,
-            ).forEach { (reason, label) ->
-                Text(
-                    stringResource(label),
-                    style = TujiType.body,
-                    color = TujiColor.Ink,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .tujiClickable { onPick(reason) }
-                        .padding(vertical = TujiSpace.S2),
-                )
+            ).forEachIndexed { index, (reason, label) ->
+                if (index > 0) TujiRowDivider()
+                TujiRow(onClick = { onPick(reason) }) {
+                    Text(
+                        stringResource(label),
+                        style = TujiType.h3,
+                        color = TujiColor.Ink,
+                        modifier = Modifier.padding(vertical = TujiSpace.S2),
+                    )
+                }
             }
-            TujiButton(
-                text = stringResource(R.string.cancel),
-                style = TujiButtonStyle.Secondary,
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
+            Text(
+                stringResource(R.string.community_report_footer),
+                style = TujiType.bodySm,
+                color = TujiColor.Ink3,
+                modifier = Modifier.padding(start = TujiSpace.S4, end = TujiSpace.S4, top = TujiSpace.S4),
             )
         }
     }
-}

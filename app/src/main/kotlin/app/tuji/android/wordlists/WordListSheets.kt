@@ -1,15 +1,13 @@
 package app.tuji.android.wordlists
 
+import app.tuji.android.form.TujiSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -41,8 +39,6 @@ import app.tuji.android.core.design.TujiRow
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
-import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.MemberAccessLevel
 import app.tuji.android.core.model.WordList
 import app.tuji.android.membership.MemberWriteOutcome
@@ -78,13 +74,12 @@ internal fun WordListNameSheet(
     onDismiss: () -> Unit,
     onNeedsUpgrade: () -> Unit,
     submit: suspend (String) -> WordListNameResult,
-) = BottomSheet(onDismiss) {
+) = BottomSheet(title, onDismiss) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var working by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
-    Text(title, style = TujiType.h2, color = TujiColor.Ink)
     Text(stringResource(R.string.wordlist_name), style = TujiType.label, color = TujiColor.Ink3)
     BasicTextField(
         value = name,
@@ -206,8 +201,7 @@ internal fun AddToWordListSheet(
         return
     }
 
-    BottomSheet(onDismiss) {
-        Text(stringResource(R.string.wordlist_add), style = TujiType.h2, color = TujiColor.Ink)
+    BottomSheet(stringResource(R.string.wordlist_add), onDismiss) {
         val shown = lists
         when {
             shown != null -> Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -285,23 +279,12 @@ internal fun ListLabel(name: String, subtitle: String?) {
     }
 }
 
-/** The bottom sheet these share — the same shape as 建立合集. */
+/** The sheet these share — [TujiSheet]'s head over a padded column. */
 @Composable
-internal fun BottomSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) = TujiWindow(onDismiss = onDismiss) {
-    Box(
-        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
+internal fun BottomSheet(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) =
+    TujiSheet(title = title, onDismiss = onDismiss) {
         Column(
-            Modifier
-                .fillMaxWidth()
-                .heightIn(max = 560.dp)
-                .background(TujiColor.Paper)
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(TujiSpace.S4),
+            Modifier.padding(TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         ) { content() }
     }
-}

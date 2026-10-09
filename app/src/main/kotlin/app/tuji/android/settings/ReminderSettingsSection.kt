@@ -1,5 +1,6 @@
 package app.tuji.android.settings
 
+import app.tuji.android.form.TujiSheet
 import android.Manifest
 import android.content.Intent
 import android.os.Build
@@ -7,14 +8,8 @@ import android.provider.Settings
 import android.text.format.DateFormat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -29,24 +24,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
-import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiCheckbox
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiSection
 import app.tuji.android.core.design.TujiSettingRow
 import app.tuji.android.core.design.TujiSpace
-import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
-import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.study.ReminderTime
 import app.tuji.android.reminders.StudyReminders
 import java.time.LocalTime
@@ -145,27 +136,9 @@ private fun ReminderTimeSheet(
     is24Hour: Boolean,
     onConfirm: (ReminderTime) -> Unit,
     onDismiss: () -> Unit,
-) = TujiWindow(onDismiss = onDismiss) {
+) {
     val state = rememberTimePickerState(initialHour = initial.hour, initialMinute = initial.minute, is24Hour = is24Hour)
-    Box(
-        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Paper)
-                // Swallows taps so one on the sheet does not reach the scrim.
-                .tujiClickable {}
-                .navigationBarsPadding(),
-        ) {
-            Box(Modifier.fillMaxWidth().padding(bottom = TujiSpace.S3).background(TujiColor.Ink).padding(top = TujiBorder.Bw3))
-            Text(
-                stringResource(R.string.reminder_time),
-                style = TujiType.h2,
-                color = TujiColor.Ink,
-                modifier = Modifier.padding(horizontal = TujiSpace.S4),
-            )
+    TujiSheet(title = stringResource(R.string.reminder_time), onDismiss = onDismiss, maxHeight = 720.dp) {
             Box(Modifier.fillMaxWidth().padding(TujiSpace.S4), contentAlignment = Alignment.Center) {
                 TimePicker(
                     state = state,
@@ -186,22 +159,12 @@ private fun ReminderTimeSheet(
                     ),
                 )
             }
-            Row(
-                Modifier.fillMaxWidth().padding(start = TujiSpace.S4, end = TujiSpace.S4, bottom = TujiSpace.S4),
-                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-            ) {
-                TujiButton(
-                    text = stringResource(R.string.cancel),
-                    onClick = onDismiss,
-                    style = TujiButtonStyle.Secondary,
-                    modifier = Modifier.weight(1f),
-                )
-                TujiButton(
-                    text = stringResource(R.string.reminder_time_confirm),
-                    onClick = { onConfirm(ReminderTime(state.hour, state.minute)) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+            // ✕ in the head is the way out, so one button: the system sheet's
+            // 取消 beside 確定 is what the shared head replaces.
+            TujiButton(
+                text = stringResource(R.string.reminder_time_confirm),
+                onClick = { onConfirm(ReminderTime(state.hour, state.minute)) },
+                modifier = Modifier.fillMaxWidth().padding(start = TujiSpace.S4, end = TujiSpace.S4, bottom = TujiSpace.S4),
+            )
     }
 }

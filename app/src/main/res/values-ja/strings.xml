@@ -491,7 +491,7 @@
     <string name="milestone_year">丸1年、1日も欠かさず</string>
     <string name="milestone_keep_going">この調子！次のマイルストーンはすぐそこ</string>
     <string name="milestone_continue">続ける</string>
-    <string name="community_report_title">どのような問題ですか？</string>
+    <string name="community_report_title">通報の理由</string>
     <string name="community_reason_spam">スパム</string>
     <string name="community_reason_inappropriate">不適切な内容</string>
     <string name="community_reason_copyright">著作権侵害</string>
@@ -832,4 +832,5 @@
     <string name="membership_privacy">プライバシーポリシー</string>
     <string name="manage_switch">切り替え →</string>
     <string name="load_failed">読み込めませんでした。しばらくしてからお試しください。</string>
+    <string name="community_report_footer">報告は審査担当者に送られます。誰が報告したかは相手に知らされません。</string>
 </resources>

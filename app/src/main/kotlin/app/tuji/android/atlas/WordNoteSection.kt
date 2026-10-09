@@ -1,5 +1,8 @@
 package app.tuji.android.atlas
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import app.tuji.android.form.TujiSheet
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -10,10 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
@@ -42,7 +42,6 @@ import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPromptStyle
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.TujiWindow
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Entitlement
 import app.tuji.android.core.model.MemberAccess
@@ -183,7 +182,7 @@ private fun WordNoteEditorSheet(
     store: WordNotesStore,
     onDismiss: () -> Unit,
     onNeedsUpgrade: () -> Unit,
-) = TujiWindow(onDismiss = onDismiss) {
+) = TujiSheet(title = stringResource(R.string.word_note_title), onDismiss = onDismiss) {
     val notes by store.notes.collectAsStateWithLifecycle()
     val existing = notes.byWordId[wordId]
     var text by rememberSaveable(wordId) { mutableStateOf(existing?.body.orEmpty()) }
@@ -208,21 +207,10 @@ private fun WordNoteEditorSheet(
         }
     }
 
-    Box(
-        Modifier.fillMaxSize().background(TujiColor.Scrim).tujiClickable(onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
         Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Paper)
-                .tujiClickable {}
-                .navigationBarsPadding()
-                .imePadding()
-                .padding(TujiSpace.S4),
+            Modifier.verticalScroll(rememberScrollState()).padding(TujiSpace.S4),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         ) {
-            Text(stringResource(R.string.word_note_title), style = TujiType.h2, color = TujiColor.Ink)
             Text(stringResource(R.string.word_note_field), style = TujiType.label, color = TujiColor.Ink3)
             BasicTextField(
                 value = text,
@@ -273,7 +261,6 @@ private fun WordNoteEditorSheet(
                 )
             }
         }
-    }
 }
 
 @Composable

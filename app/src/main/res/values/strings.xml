@@ -491,7 +491,7 @@
     <string name="milestone_year">A full year without missing a day</string>
     <string name="milestone_keep_going">Keep going — the next milestone is ahead</string>
     <string name="milestone_continue">Continue</string>
-    <string name="community_report_title">What’s the problem?</string>
+    <string name="community_report_title">Reason for report</string>
     <string name="community_reason_spam">Spam</string>
     <string name="community_reason_inappropriate">Inappropriate</string>
     <string name="community_reason_copyright">Copyright</string>
@@ -832,4 +832,5 @@
     <string name="membership_privacy">Privacy Policy</string>
     <string name="manage_switch">Switch →</string>
     <string name="load_failed">Couldn\'t load. Please try again later.</string>
+    <string name="community_report_footer">Reports go to our moderators. The person you report is never told who reported them.</string>
 </resources>
