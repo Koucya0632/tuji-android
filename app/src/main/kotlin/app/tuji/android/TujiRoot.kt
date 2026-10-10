@@ -83,6 +83,7 @@ import app.tuji.android.tour.ProvideTourAnchors
 import app.tuji.android.tour.TourAdvance
 import app.tuji.android.tour.TourCopy
 import app.tuji.android.tour.rememberTourAnchors
+import app.tuji.android.update.AppUpdatePrompt
 import kotlinx.coroutines.delay
 import app.tuji.android.onboarding.OnboardingFlow
 import app.tuji.android.onboarding.SetupScreen
@@ -1827,6 +1828,13 @@ private fun SignedInScreens(
         }
     }
     }
+
+    AppUpdatePrompt(
+        updates = app.appUpdates,
+        play = app.playUpdates,
+        studyFocusActive = !TabShell.tabBarVisible(nav),
+        tourRunning = tourStep != null,
+    )
 
     tourStep?.let { index ->
         val step = tour.steps[index]

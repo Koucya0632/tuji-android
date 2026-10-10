@@ -844,4 +844,8 @@
     <string name="billing_notice_sync_pending">Your payment is syncing. Try Restore purchases in a moment. No need to buy again.</string>
     <string name="billing_notice_failed">Couldn’t open Google Play checkout. Please try again later.</string>
     <string name="billing_notice_unavailable">This plan isn’t available for purchase right now.</string>
+    <string name="app_update_title">A new version is available</string>
+    <string name="app_update_message">A newer version is on Google Play.</string>
+    <string name="app_update_confirm">Update</string>
+    <string name="app_update_later">Maybe later</string>
 </resources>
