@@ -4,6 +4,7 @@ import android.app.Application
 import app.tuji.android.core.auth.AuthService
 import app.tuji.android.core.auth.GoogleCredentialBridge
 import app.tuji.android.core.auth.SupabaseProvider
+import app.tuji.android.core.design.signedImageCacheKeys
 import app.tuji.android.core.network.ApiError
 import app.tuji.android.core.network.CatalogRepository
 import app.tuji.android.core.network.StudyRepository
@@ -15,6 +16,9 @@ import app.tuji.android.core.study.DurableAnswerWriter
 import app.tuji.android.core.study.StudyAnswerOutbox
 import app.tuji.android.onboarding.OnboardingStore
 import app.tuji.android.study.AnswerDrainWorker
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
 import java.io.File
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +33,7 @@ import kotlinx.coroutines.Dispatchers
  * those are worth having whether or not a container exists. A container added
  * before the seams do is a container that hides their absence.
  */
-class TujiApplication : Application() {
+class TujiApplication : Application(), SingletonImageLoader.Factory {
 
     /**
      * Application-lifetime, and `SupervisorJob` on purpose: the auth session
@@ -274,6 +278,16 @@ class TujiApplication : Application() {
     val answerWriter: DurableAnswerWriter by lazy {
         DurableAnswerWriter(submit = answerSubmitting, outbox = answerOutbox)
     }
+
+    /**
+     * Coil's one loader, with Coil's defaults and a single addition: a signed
+     * private-bucket URL is cached by the object it names, not by a signature
+     * that changes on every response. See [signedImageCacheKeys].
+     */
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader.Builder(context)
+            .components { signedImageCacheKeys() }
+            .build()
 
     override fun onCreate() {
         super.onCreate()
