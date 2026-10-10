@@ -50,8 +50,8 @@ android {
         // See docs/SPIKE-FURIGANA.md.
         minSdk = 29
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.1.8"
+        versionCode = 10
+        versionName = "0.1.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -135,6 +135,8 @@ dependencies {
     // 永久會員 and 罐頭點數 packs. The server is the authority: the app only
     // hands Play's purchaseToken to /api/billing/play/verify.
     implementation(libs.play.billing)
+    // 有新版本可用: Play says whether this account has a newer build waiting.
+    implementation(libs.play.app.update)
 
     // 自製圖鑑's camera. `camera-view` brings the PreviewView; the other three
     // are what binding a use case to a lifecycle needs.

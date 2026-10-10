@@ -239,6 +239,20 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
         app.tuji.android.study.TtsSpeaker(this)
     }
 
+    /** Google Play's in-app updates: the lookup, and the install. */
+    val playUpdates: app.tuji.android.update.PlayAppUpdates by lazy {
+        app.tuji.android.update.PlayAppUpdates(this)
+    }
+
+    /** 有新版本可用 — per install, so not among the stores sign-out clears. */
+    val appUpdates: app.tuji.android.update.AppUpdateStore by lazy {
+        app.tuji.android.update.AppUpdateStore(
+            installedVersionCode = BuildConfig.VERSION_CODE,
+            lookup = playUpdates,
+            memory = app.tuji.android.update.PrefsAppUpdateMemory(getSharedPreferences("app-update", MODE_PRIVATE)),
+        )
+    }
+
     /** Whether the device is online, for the banner at the top of every screen. */
     val connectivity: app.tuji.android.ConnectivityMonitor by lazy {
         app.tuji.android.ConnectivityMonitor(this)

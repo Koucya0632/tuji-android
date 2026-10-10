@@ -844,4 +844,8 @@
     <string name="billing_notice_sync_pending">お支払いを同期中です。しばらくしてから「購入を復元」を押してください。再度購入する必要はありません。</string>
     <string name="billing_notice_failed">Google Play の支払い画面を開けませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="billing_notice_unavailable">このプランは現在購入できません。</string>
+    <string name="app_update_title">新しいバージョンがあります</string>
+    <string name="app_update_message">Google Play に新しいバージョンが出ています。</string>
+    <string name="app_update_confirm">アップデート</string>
+    <string name="app_update_later">あとで</string>
 </resources>

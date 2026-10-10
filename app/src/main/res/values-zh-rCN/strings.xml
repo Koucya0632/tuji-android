@@ -844,4 +844,8 @@
     <string name="billing_notice_sync_pending">付款正在同步，请稍后点「恢复购买」，不需再次购买。</string>
     <string name="billing_notice_failed">无法打开 Google Play 付款，请稍后再试。</string>
     <string name="billing_notice_unavailable">这项方案目前未开放购买。</string>
+    <string name="app_update_title">有新版本可用</string>
+    <string name="app_update_message">Google Play 上已经有新版本了。</string>
+    <string name="app_update_confirm">前往更新</string>
+    <string name="app_update_later">稍后再说</string>
 </resources>
