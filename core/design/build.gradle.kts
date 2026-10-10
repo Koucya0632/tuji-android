@@ -31,9 +31,9 @@ dependencies {
     api(libs.compose.ui.graphics)
     api(libs.compose.foundation)
     api(libs.compose.material3)
-    // Nuke on iOS. The signed-URL cache key it needs is a later problem
-    // (see the plan): a private-bucket photo re-signs on every response,
-    // so a whole-URL key misses forever on the user's own pictures.
+    // Nuke on iOS. A private-bucket photo re-signs on every response, so a
+    // whole-URL key misses forever on the user's own pictures — the key that
+    // ignores the signature is SignedImageCache.kt.
     api(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.compose.ui.tooling.preview)
