@@ -197,7 +197,7 @@ class CreditCaptureModel(
     // MARK: Recognition
 
     /** 開始識別: upload (once per photo), quote, and accept when the quote matches the price shown. */
-    fun start(language: String, gloss: String?) = launch {
+    fun start(language: String, uiLanguage: String) = launch {
         val s = mutable.value
         val photo = s.photo ?: return@launch
         val expected = s.price ?: return@launch
@@ -211,13 +211,13 @@ class CreditCaptureModel(
                 update { it.copy(image = image) }
             }
             val imageId = mutable.value.image?.id ?: return@act
-            quote = repository.quote(imageId, mode == Mode.Precision, language, gloss)
+            quote = repository.quote(imageId, mode == Mode.Precision, language, uiLanguage)
         }
         proceed(quote, expected)
     }
 
     /** 普通識別 → 高精度: same photo, pay the difference. */
-    fun upgrade(language: String, gloss: String?) = launch {
+    fun upgrade(language: String, uiLanguage: String) = launch {
         val s = mutable.value
         val operation = s.operation ?: return@launch
         val expected = s.upgradePrice ?: return@launch
@@ -226,7 +226,7 @@ class CreditCaptureModel(
         act {
             // The run keeps the language it was paid for; a later settings change does not apply here.
             val target = operation.targetLanguage.ifBlank { language }
-            quote = repository.quote(operation.imageId, true, target, gloss)
+            quote = repository.quote(operation.imageId, true, target, uiLanguage)
         }
         proceed(quote, expected)
     }

@@ -17,17 +17,6 @@ class CaptureCorrectionFieldsTest {
         assertEquals(setOf("Ja-JA", "En-EN"), grid.filterValues { it == CaptureSecondField.Hidden }.keys)
     }
 
-    @Test fun `a paid quote asks for a gloss only where the form has a gloss field`() {
-        assertEquals("en", CaptureCorrectionFields.glossLanguage(UiLanguage.En, TargetLanguage.JA))
-        assertEquals("ja", CaptureCorrectionFields.glossLanguage(UiLanguage.Ja, TargetLanguage.EN))
-        assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.En, TargetLanguage.EN))
-        assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.Ja, TargetLanguage.JA))
-        for (target in TargetLanguage.entries) {
-            assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.ZhHant, target))
-            assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.ZhHans, target))
-        }
-    }
-
     @Test fun `a chip never shows Chinese to a ja or en interface`() {
         // 英文介面學英文曾在每個候選字下面看到中文——表單上根本沒有的欄位。
         assertEquals("貓", CaptureCorrectionFields.candidateMeaning(CaptureSecondField.ChineseName, "貓", "cat"))
