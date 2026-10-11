@@ -104,6 +104,7 @@ import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.study.targets
 import app.tuji.android.core.study.RefreshTarget
 import app.tuji.android.core.study.LearningRefreshCause
+import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
@@ -1258,6 +1259,7 @@ private fun SignedInScreens(
                     LaunchedEffect(manageState.rows.size) { account.refreshEntitlement() }
                     AtlasManageScreen(
                         state = manageState,
+                        uiLanguage = uiLanguage,
                         onBack = { nav = nav.pop() },
                         onRetry = manage::load,
                         onSelecting = manage::setSelecting,
@@ -1318,6 +1320,7 @@ private fun SignedInScreens(
 
                 is AppRoute.ManageCard -> ManageCardScreen(
                     row = manageState.row(route.imageId),
+                    uiLanguage = uiLanguage,
                     withdrawing = manageState.withdrawing,
                     publishing = manageState.publishing,
                     actionFailed = manageState.actionFailed,
@@ -1680,6 +1683,7 @@ private fun SignedInScreens(
                         // Only reached once the capture is queued: show it being made.
                         onDone = { if (nav.current == route) showQueuedCapture() },
                         onOpenMembership = openMembership,
+                        secondField = CaptureCorrectionFields.second(uiLanguage, direction.targetLanguage),
                     )
                     }
                 }

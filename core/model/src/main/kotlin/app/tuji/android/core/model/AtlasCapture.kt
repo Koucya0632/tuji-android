@@ -114,7 +114,8 @@ data class AtlasConfirmPayload(
     val primaryLabel: String,
     val fineLabel: String? = null,
     val lemma: String,
-    val displayZhHant: String,
+    /** Null when the form had no Chinese field and the card was renamed; the server regenerates it. */
+    val displayZhHant: String? = null,
     /** The user's own-language name, for ja/en UIs. Null for Chinese. */
     val displayGloss: String? = null,
     val partOfSpeech: String? = null,
@@ -129,6 +130,9 @@ data class AtlasItem(
     val targetLanguage: TargetLanguage? = null,
     val lemma: String = "",
     val displayZhHant: String? = null,
+    /** The short name in Japanese / English. Null until 補充 fills them. */
+    val displayJa: String? = null,
+    val displayEn: String? = null,
     val primaryLabel: String? = null,
     val fineLabel: String? = null,
     val partOfSpeech: String? = null,

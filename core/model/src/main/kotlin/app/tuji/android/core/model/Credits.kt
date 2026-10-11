@@ -66,7 +66,8 @@ data class CreditConfirmRequest(
     val operationId: String,
     val candidateId: String,
     val lemma: String,
-    val displayZhHant: String,
+    /** Null when the form had no Chinese field and the card was renamed; the server regenerates it. */
+    val displayZhHant: String? = null,
     /** Only for a cross-language capture; null keeps the candidate's own. */
     val displayGloss: String? = null,
 )

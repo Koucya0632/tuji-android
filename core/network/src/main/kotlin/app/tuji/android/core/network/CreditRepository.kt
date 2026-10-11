@@ -40,7 +40,7 @@ class CreditRepository(private val api: TujiApiClient) {
     @Serializable private data class Uploaded(val image: AtlasImageSummary)
     @Serializable private data class QuoteRequest(val imageId: String, val feature: String, val targetLanguage: String, val glossLanguage: String?)
     @Serializable private data class AcceptRequest(val quoteId: String)
-    @Serializable private data class ConfirmRequest(val candidateId: String, val lemma: String, val displayZhHant: String, val displayGloss: String?)
+    @Serializable private data class ConfirmRequest(val candidateId: String, val lemma: String, val displayZhHant: String?, val displayGloss: String?)
     @Serializable data class Item(val id: String)
     @Serializable data class Confirmed(val item: Item, val operation: CreditOperation)
 }

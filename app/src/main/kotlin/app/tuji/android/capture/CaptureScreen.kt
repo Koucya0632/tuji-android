@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import app.tuji.android.core.community.CaptureCorrectionFields
+import app.tuji.android.core.community.CaptureSecondField
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.MascotSpeechBubble
 import app.tuji.android.core.design.TujiMotion
@@ -73,6 +75,7 @@ fun CaptureScreen(
     bottomPadding: androidx.compose.ui.unit.Dp,
     onDone: () -> Unit,
     onOpenMembership: () -> Unit = {},
+    secondField: CaptureSecondField = CaptureSecondField.ChineseName,
 ) {
     val step by vm.step.collectAsStateWithLifecycle()
 
@@ -120,7 +123,7 @@ fun CaptureScreen(
             TujiButton(text = stringResource(R.string.membership_view_plans), onClick = onOpenMembership)
         }
 
-        is CaptureViewModel.Step.Naming -> Naming(s, vm, bottomPadding)
+        is CaptureViewModel.Step.Naming -> Naming(s, vm, bottomPadding, secondField)
 
         // Nothing to show: the work is in the queue and the 圖鑑 grid is
         // where it is now visible. Closing here is what iOS does in the same
@@ -245,6 +248,7 @@ private fun Naming(
     step: CaptureViewModel.Step.Naming,
     vm: CaptureViewModel,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    secondField: CaptureSecondField,
 ) {
     val draft = step.draft
     // Re-recognising **replaces the form**, which is what iOS's
@@ -318,7 +322,7 @@ private fun Naming(
                 ) {
                     Column {
                         Text(candidate.label, style = TujiType.bodyStrong, color = TujiColor.Ink)
-                        candidate.zhHant?.let {
+                        CaptureCorrectionFields.candidateMeaning(secondField, candidate.zhHant, candidate.gloss)?.let {
                             Text(it, style = TujiType.bodySm, color = TujiColor.Ink3)
                         }
                     }
@@ -337,16 +341,25 @@ private fun Naming(
             placeholder = stringResource(R.string.capture_lemma),
             modifier = Modifier.fillMaxWidth(),
         )
-        TujiTextField(
-            value = draft.displayZhHant,
-            onValueChange = { vm.edit(zhHant = it) },
-            placeholder = stringResource(R.string.capture_zh),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        when (secondField) {
+            CaptureSecondField.ChineseName -> TujiTextField(
+                value = draft.displayZhHant,
+                onValueChange = { vm.edit(zhHant = it) },
+                placeholder = stringResource(R.string.capture_zh),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            CaptureSecondField.Gloss -> TujiTextField(
+                value = draft.displayGloss,
+                onValueChange = { vm.edit(gloss = it) },
+                placeholder = stringResource(R.string.credit_chinese_name),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            CaptureSecondField.Hidden -> Unit
+        }
 
         TujiButton(
             text = stringResource(R.string.capture_confirm),
-            onClick = vm::confirm,
+            onClick = { vm.confirm(secondField) },
             enabled = draft.isComplete && step.busy == null,
             modifier = Modifier.fillMaxWidth(),
         )

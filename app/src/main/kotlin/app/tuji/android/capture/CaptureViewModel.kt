@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.community.CaptureDraft
+import app.tuji.android.core.community.CaptureSecondField
 import app.tuji.android.core.model.AtlasConfirmPayload
 import app.tuji.android.core.model.AtlasImageSummary
 import app.tuji.android.core.model.LearningDirection
@@ -157,9 +158,13 @@ class CaptureViewModel(
         _step.value = now.copy(draft = now.draft.apply(candidate))
     }
 
-    fun edit(lemma: String = _draft()?.lemma ?: "", zhHant: String = _draft()?.displayZhHant ?: "") {
+    fun edit(
+        lemma: String = _draft()?.lemma ?: "",
+        zhHant: String = _draft()?.displayZhHant ?: "",
+        gloss: String = _draft()?.displayGloss ?: "",
+    ) {
         val now = _step.value as? Step.Naming ?: return
-        _step.value = now.copy(draft = now.draft.copy(lemma = lemma, displayZhHant = zhHant))
+        _step.value = now.copy(draft = now.draft.copy(lemma = lemma, displayZhHant = zhHant, displayGloss = gloss))
     }
 
     private fun _draft(): CaptureDraft? = (_step.value as? Step.Naming)?.draft
@@ -175,10 +180,10 @@ class CaptureViewModel(
      * [enqueue] rather than a queue instance, so this can still be walked in a
      * test with no journal and no file system.
      */
-    fun confirm() {
+    fun confirm(second: CaptureSecondField = CaptureSecondField.ChineseName) {
         val now = _step.value as? Step.Naming ?: return
         if (!now.draft.isComplete || now.busy != null) return
-        enqueue(now.image.id, now.draft.payload(), now.image.thumbUrl ?: now.image.imageUrl)
+        enqueue(now.image.id, now.draft.payload(second), now.image.thumbUrl ?: now.image.imageUrl)
         _step.value = Step.Queued
     }
 

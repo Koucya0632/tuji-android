@@ -84,14 +84,17 @@ data class CaptureDraft(
      * it, and the server requires the field), and every blank optional drops to
      * null rather than travelling as `""` — an empty string in `fine_label`
      * reads as "there is a fine label and it is nothing".
+     *
+     * [second] is the form the user saw: a Chinese name they could not see is
+     * withheld once the card is renamed (`chineseNameToSend`).
      */
-    fun payload(): AtlasConfirmPayload = AtlasConfirmPayload(
+    fun payload(second: CaptureSecondField = CaptureSecondField.ChineseName): AtlasConfirmPayload = AtlasConfirmPayload(
         selectedCandidateId = selectedCandidateId,
         targetLanguage = targetLanguage,
         primaryLabel = primaryLabel.ifBlank { lemma },
         fineLabel = fineLabel.ifBlank { null },
         lemma = lemma,
-        displayZhHant = displayZhHant,
+        displayZhHant = CaptureCorrectionFields.chineseNameToSend(second, lemma, selected?.label, displayZhHant),
         displayGloss = displayGloss.ifBlank { null },
         partOfSpeech = partOfSpeech.ifBlank { null },
         category = category.ifBlank { null },

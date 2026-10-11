@@ -25,7 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.community.DeleteWarning
+import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.community.ShelfRow
+import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPromptStyle
@@ -42,6 +44,7 @@ import coil3.compose.AsyncImage
 @Composable
 fun ManageCardScreen(
     row: ShelfRow?,
+    uiLanguage: UiLanguage,
     withdrawing: Boolean,
     publishing: Boolean,
     actionFailed: Boolean,
@@ -68,7 +71,7 @@ fun ManageCardScreen(
         }
         if (item != null) {
             Field(stringResource(R.string.manage_field_name), item.lemma)
-            item.displayZhHant?.takeIf { it.isNotBlank() }?.let { Field(stringResource(R.string.manage_field_zh), it) }
+            CaptureCorrectionFields.localName(uiLanguage, item)?.let { Field(stringResource(R.string.manage_field_zh), it) }
             item.fineLabel?.takeIf { it.isNotBlank() }?.let { Field(stringResource(R.string.manage_field_fine), it) }
             item.partOfSpeech?.takeIf { it.isNotBlank() }?.let { Field(stringResource(R.string.manage_field_pos), it) }
             item.category?.takeIf { it.isNotBlank() }?.let { Field(stringResource(R.string.manage_field_category), it) }
