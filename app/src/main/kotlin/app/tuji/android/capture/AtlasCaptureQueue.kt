@@ -2,7 +2,6 @@ package app.tuji.android.capture
 
 import android.util.Log
 import app.tuji.android.core.auth.AccountScopedStore
-import app.tuji.android.core.model.AtlasConfirmPayload
 import app.tuji.android.core.model.CaptureFailure
 import app.tuji.android.core.model.CaptureJobRecord
 import app.tuji.android.core.model.CaptureProgress
@@ -31,8 +30,9 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * 生成佇列 — the durable tail of the 自製圖鑑 capture flow.
  *
- * Once the user confirms a name, `confirm` → `createCards` → one reconciling
- * read runs **here** instead of blocking the screen. Before this the capture
+ * Once the user confirms a candidate, `confirm` → `createCards` → wait for the
+ * server's 補充 → one reconciling read runs **here** instead of blocking the
+ * screen. Before this the capture
  * page stood still waiting for two API calls with nothing to do; iOS has never
  * made anyone wait for them, and the 圖鑑 grid draws the work in progress as
  * 生成中 tiles at its head.
@@ -43,13 +43,14 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * **Weak-network resilience.** Jobs are journalled, so an app kill mid-flight
  * does not lose committed work: on launch the queue restores and resumes them.
- * `confirm` is a plain INSERT server-side and is not idempotent, so once it
- * succeeds the itemId is checkpointed and a resumed run starts from
- * `createCards`, which is.
+ * **Every step is safe to repeat**: the confirm is bound to its 識別操作
+ * server-side and answers a resend with the card it already made, and
+ * `createCards` is idempotent, so a resumed job simply runs again from the top.
+ * (The pre-credit confirm was a plain INSERT and needed an itemId checkpoint;
+ * that flow is retired — tuji-ios docs/adr/0016.)
  *
- * Everything it reaches arrives through a constructor parameter, so the
- * checkpoint rule above — the only thing standing between a resumed run and a
- * duplicate card — is something a test can actually exercise.
+ * Everything it reaches arrives through a constructor parameter, so a test can
+ * exercise the whole tail.
  */
 class AtlasCaptureQueue(
     private val authoring: AtlasAuthoring,
@@ -63,8 +64,8 @@ class AtlasCaptureQueue(
      */
     private val doneLingerMillis: Long = 4_000L,
     private val cardTypes: List<String> = DEFAULT_CARDS,
-    /** The 罐頭點數 confirm and fill-in. Null where no credit job can be queued. */
-    private val credits: CreditCardConfirming? = null,
+    /** The confirm, and the state of the server's fill-in. */
+    private val credits: CreditCardConfirming,
     /** How often a 罐頭點數 job asks whether the server's fill-in has landed. */
     private val enrichmentPollMillis: Long = 2_000L,
     /**
@@ -81,13 +82,11 @@ class AtlasCaptureQueue(
         val lemma: String,
         val thumbUrl: String?,
         val progress: CaptureProgress,
-        internal val payload: AtlasConfirmPayload?,
-        internal val itemId: String?,
-        /** A 罐頭點數 job: confirms through the operation, and the server fills the card in on its own. */
-        internal val credit: CreditConfirmRequest? = null,
+        /** What the user confirmed. The operation it names is what makes a resend safe. */
+        internal val credit: CreditConfirmRequest,
     ) {
         internal val record: CaptureJobRecord
-            get() = CaptureJobRecord(id, imageId, payload, lemma, thumbUrl, itemId, credit)
+            get() = CaptureJobRecord(id, imageId, lemma, thumbUrl, credit)
     }
 
     private val _jobs = MutableStateFlow<List<Item>>(emptyList())
@@ -103,20 +102,9 @@ class AtlasCaptureQueue(
     private val _celebrations = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val celebrations: SharedFlow<String> = _celebrations.asSharedFlow()
 
-    /**
-     * Captures committed but not yet counted by the server's usage snapshot.
-     *
-     * A queued job has already claimed a 自製圖鑑 slot; a gate that ignores them
-     * lets a second capture through at capacity − 1, and it dies as a tile that
-     * can only be dismissed. A 罐頭點數 job is left out: the server reserved its
-     * slot when the recognition was accepted, so its snapshot already counts it.
-     */
-    val inFlightCount: Int
-        get() = _jobs.value.count { it.credit == null && !it.progress.isFailed && it.progress != CaptureProgress.Ready }
-
     /** Operations whose confirm this queue owns. 拍照新增 must not reopen one as a result still waiting to be picked. */
     val creditOperationIds: Set<String>
-        get() = _jobs.value.mapNotNullTo(mutableSetOf()) { it.credit?.operationId }
+        get() = _jobs.value.mapTo(mutableSetOf()) { it.credit.operationId }
 
     private val running = mutableMapOf<String, Job>()
 
@@ -129,17 +117,6 @@ class AtlasCaptureQueue(
      * point — and the returned [Job] exists so a test can await what production
      * deliberately does not.
      */
-    fun enqueue(imageId: String, payload: AtlasConfirmPayload, thumbUrl: String?): Job {
-        val record = CaptureJobRecord(
-            id = UUID.randomUUID().toString(),
-            imageId = imageId,
-            payload = payload,
-            lemma = payload.lemma,
-            thumbUrl = thumbUrl,
-        )
-        return add(record)
-    }
-
     /** A 罐頭點數 result the user confirmed. Same tiles, same journal; only the confirm and the fill-in differ. */
     fun enqueue(credit: CreditConfirmRequest, imageId: String, thumbUrl: String?): Job = add(
         CaptureJobRecord(
@@ -164,7 +141,7 @@ class AtlasCaptureQueue(
     fun retry(id: String): Job? {
         val job = _jobs.value.firstOrNull { it.id == id } ?: return null
         if (!job.progress.canRetry) return null
-        update(id) { it.copy(progress = CaptureProgress.Generating(CaptureProgress.startingFraction(it.itemId != null))) }
+        update(id) { it.copy(progress = CaptureProgress.Generating(CaptureProgress.STARTING_FRACTION)) }
         return start(id)
     }
 
@@ -201,11 +178,7 @@ class AtlasCaptureQueue(
         imageId = record.imageId,
         lemma = record.lemma,
         thumbUrl = record.thumbUrl,
-        progress = CaptureProgress.Generating(
-            CaptureProgress.startingFraction(resuming = record.itemId != null),
-        ),
-        payload = record.payload,
-        itemId = record.itemId,
+        progress = CaptureProgress.Generating(CaptureProgress.STARTING_FRACTION),
         credit = record.credit,
     )
 
@@ -224,31 +197,12 @@ class AtlasCaptureQueue(
     private suspend fun run(id: String) {
         val job = _jobs.value.firstOrNull { it.id == id } ?: return
         try {
-            var fulfillment: String? = null
-            val credit = job.credit
-            val itemId = if (credit != null) {
-                // Safe to resend on resume: the server returns the card it bound.
-                val confirmed = (credits ?: error("no credit confirm")).confirm(credit)
-                fulfillment = confirmed.fulfillmentState
-                update(id) { it.copy(itemId = confirmed.itemId) }
-                checkpoint(id)
-                confirmed.itemId
-            } else {
-                job.itemId ?: run {
-                    val created = authoring.confirm(job.imageId, job.payload ?: error("unreadable record"))
-                    update(id) { it.copy(itemId = created.id) }
-                    // Checkpoint **before** the idempotent tail, never after: the
-                    // window this closes is exactly confirm-succeeded-then-killed.
-                    checkpoint(id)
-                    created.id
-                }
-            }
+            // Safe to resend on resume: the server returns the card it bound.
+            val confirmed = credits.confirm(job.credit)
             update(id) { it.copy(progress = CaptureProgress.Generating(0.5f)) }
-            authoring.createCards(itemId, cardTypes)
-            if (credit != null) {
-                update(id) { it.copy(progress = CaptureProgress.Enriching(0.7f)) }
-                awaitFulfillment(credit.operationId, fulfillment)
-            }
+            authoring.createCards(confirmed.itemId, cardTypes)
+            update(id) { it.copy(progress = CaptureProgress.Enriching(0.7f)) }
+            awaitFulfillment(job.credit.operationId, confirmed.fulfillmentState)
             update(id) { it.copy(progress = CaptureProgress.Enriching(0.9f)) }
             onCompleted()
             update(id) { it.copy(progress = CaptureProgress.Ready) }
@@ -262,7 +216,7 @@ class AtlasCaptureQueue(
             Log.e(TAG, "capture job failed", error)
             update(id) { it.copy(progress = CaptureProgress.Failed(captureFailure(error))) }
             // The journalled record stays, so the job survives an app kill and
-            // can be retried — from the checkpoint if confirm already ran.
+            // can be retried.
         }
     }
 
@@ -271,14 +225,13 @@ class AtlasCaptureQueue(
      * that already has its reading and definitions. A poll that fails is just
      * asked again; the deadline is the only way out besides the fill-in ending.
      */
-    private suspend fun awaitFulfillment(operationId: String, from: String?) {
-        if (from != null && !isEnrichingState(from)) return
-        val confirming = credits ?: return
+    private suspend fun awaitFulfillment(operationId: String, from: String) {
+        if (!isEnrichingState(from)) return
         var waited = 0L
         while (waited < enrichmentDeadlineMillis) {
             delay(enrichmentPollMillis)
             waited += enrichmentPollMillis
-            val state = runCatching { confirming.fulfillmentState(operationId) }
+            val state = runCatching { credits.fulfillmentState(operationId) }
                 .onFailure { if (it is CancellationException) throw it }
                 .getOrNull()
             if (state != null && !isEnrichingState(state)) return
@@ -288,12 +241,6 @@ class AtlasCaptureQueue(
 
     private fun update(id: String, mutate: (Item) -> Item) {
         _jobs.value = _jobs.value.map { if (it.id == id) mutate(it) else it }
-    }
-
-    /** Re-journal a record that changed — in practice only the checkpoint. */
-    private fun checkpoint(id: String) {
-        val job = _jobs.value.firstOrNull { it.id == id } ?: return
-        journal.save(job.record)
     }
 
     private fun restore() {

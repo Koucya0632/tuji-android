@@ -1,8 +1,6 @@
 package app.tuji.android.core.community
 
-import app.tuji.android.core.model.AtlasCandidate
 import app.tuji.android.core.model.AtlasItem
-import app.tuji.android.core.model.RecognitionMode
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.UiLanguage
 import org.junit.Assert.assertEquals
@@ -17,6 +15,17 @@ class CaptureCorrectionFieldsTest {
         }.toMap()
         assertEquals(setOf("Ja-EN", "En-JA"), grid.filterValues { it == CaptureSecondField.Gloss }.keys)
         assertEquals(setOf("Ja-JA", "En-EN"), grid.filterValues { it == CaptureSecondField.Hidden }.keys)
+    }
+
+    @Test fun `a paid quote asks for a gloss only where the form has a gloss field`() {
+        assertEquals("en", CaptureCorrectionFields.glossLanguage(UiLanguage.En, TargetLanguage.JA))
+        assertEquals("ja", CaptureCorrectionFields.glossLanguage(UiLanguage.Ja, TargetLanguage.EN))
+        assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.En, TargetLanguage.EN))
+        assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.Ja, TargetLanguage.JA))
+        for (target in TargetLanguage.entries) {
+            assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.ZhHant, target))
+            assertNull(CaptureCorrectionFields.glossLanguage(UiLanguage.ZhHans, target))
+        }
     }
 
     @Test fun `a chip never shows Chinese to a ja or en interface`() {
@@ -39,15 +48,6 @@ class CaptureCorrectionFieldsTest {
         assertEquals("鍵盤", CaptureCorrectionFields.chineseNameToSend(CaptureSecondField.ChineseName, "laptop", "keyboard", "鍵盤"))
         // No candidate behind the word: nothing to be stale against.
         assertEquals("筆電", CaptureCorrectionFields.chineseNameToSend(CaptureSecondField.Hidden, "laptop", null, "筆電"))
-    }
-
-    @Test fun `a renamed draft on a monolingual form sends no Chinese name`() {
-        val keyboard = AtlasCandidate(id = "a", label = "keyboard", zhHant = "鍵盤", level = AtlasCandidate.LEVEL_PRIMARY, rank = 0, confidence = 0.9)
-        val draft = CaptureDraft().withCandidates(RecognitionMode.Primary, listOf(keyboard)).apply(keyboard)
-        assertEquals("鍵盤", draft.payload(CaptureSecondField.Hidden).displayZhHant)
-        val renamed = draft.copy(lemma = "laptop")
-        assertNull(renamed.payload(CaptureSecondField.Hidden).displayZhHant)
-        assertEquals("鍵盤", renamed.payload(CaptureSecondField.ChineseName).displayZhHant)
     }
 
     @Test fun `an item's local name follows the interface language`() {

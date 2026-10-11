@@ -24,13 +24,9 @@ import app.tuji.android.core.model.AtlasPublicDetailResponse
 import app.tuji.android.core.model.AtlasPublicFeed
 import app.tuji.android.core.model.AtlasCard
 import app.tuji.android.core.model.AtlasCardsResponse
-import app.tuji.android.core.model.AtlasConfirmPayload
 import app.tuji.android.core.model.AtlasItem
 import app.tuji.android.core.model.AtlasPublishResult
-import app.tuji.android.core.model.AtlasRecognitionResponse
-import app.tuji.android.core.model.AtlasUploadResponse
 import app.tuji.android.core.model.BlockedHandles
-import app.tuji.android.core.model.RecognitionMode
 import app.tuji.android.core.model.TargetLanguage
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -97,25 +93,6 @@ interface ReportSubmitting {
  * and a fake for one should not have to stub the other.
  */
 interface AtlasAuthoring {
-    /**
-     * Upload one photo.
-     *
-     * The primary recognition runs server-side **in this same request**, so the
-     * response already carries candidates. That is why it uses the slow policy:
-     * it is an upload plus a vision pass, and it is not retriable for free.
-     */
-    suspend fun uploadImage(
-        bytes: ByteArray,
-        filename: String,
-        mimeType: String,
-        targetLanguage: TargetLanguage?,
-    ): AtlasUploadResponse
-
-    /** A second, explicit pass. Another AI call — `CaptureDraft` decides when. */
-    suspend fun recognize(imageId: String, mode: RecognitionMode): AtlasRecognitionResponse
-
-    suspend fun confirm(imageId: String, payload: AtlasConfirmPayload): AtlasItem
-
     /** The study cards. An item is not reviewable until these exist. */
     suspend fun createCards(itemId: String, cardTypes: List<String>): List<AtlasCard>
 
@@ -212,13 +189,7 @@ interface BlockListing {
 }
 
 @Serializable
-private data class RecognizeBody(val mode: String)
-
-@Serializable
 private data class CardsBody(val cardTypes: List<String>)
-
-@Serializable
-private data class AtlasConfirmResponse(val item: AtlasItem)
 
 @Serializable
 private data class ReportBody(val reason: String, val detail: String? = null)
@@ -267,36 +238,6 @@ class AtlasRepository(private val api: TujiApiClient) :
 
     override suspend fun itemDetail(itemId: String, lang: String): WordDetail =
         api.get(Endpoint.AtlasItemDetail(itemId = itemId, lang = lang))
-
-    override suspend fun uploadImage(
-        bytes: ByteArray,
-        filename: String,
-        mimeType: String,
-        targetLanguage: TargetLanguage?,
-    ): AtlasUploadResponse = api.post(
-        Endpoint.AtlasImages,
-        MultiPartFormDataContent(
-            formData {
-                append(
-                    "file", bytes,
-                    Headers.build {
-                        append(HttpHeaders.ContentType, mimeType)
-                        append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
-                    },
-                )
-                targetLanguage?.let { append("targetLanguage", if (it == TargetLanguage.JA) "ja" else "en") }
-            },
-        ),
-    )
-
-    override suspend fun recognize(
-        imageId: String,
-        mode: RecognitionMode,
-    ): AtlasRecognitionResponse =
-        api.post(Endpoint.AtlasRecognize(imageId), RecognizeBody(mode.wire))
-
-    override suspend fun confirm(imageId: String, payload: AtlasConfirmPayload): AtlasItem =
-        api.post<AtlasConfirmResponse>(Endpoint.AtlasConfirm(imageId), payload).item
 
     override suspend fun createCards(itemId: String, cardTypes: List<String>): List<AtlasCard> =
         api.post<AtlasCardsResponse>(Endpoint.AtlasCards(itemId), CardsBody(cardTypes)).cards
