@@ -17,6 +17,18 @@ class CaptureCorrectionFieldsTest {
         assertEquals(setOf("Ja-JA", "En-EN"), grid.filterValues { it == CaptureSecondField.Hidden }.keys)
     }
 
+    @Test fun `the form the server declared for a run wins over the settings of the moment`() {
+        // Quoted on a Japanese interface; the user has since switched to Chinese.
+        assertEquals(CaptureSecondField.Gloss, CaptureCorrectionFields.forRun("gloss", UiLanguage.ZhHant, TargetLanguage.EN))
+        assertEquals(CaptureSecondField.Hidden, CaptureCorrectionFields.forRun("hidden", UiLanguage.ZhHant, TargetLanguage.EN))
+        assertEquals(CaptureSecondField.ChineseName, CaptureCorrectionFields.forRun("chineseName", UiLanguage.En, TargetLanguage.EN))
+    }
+
+    @Test fun `a run that does not say, or says something unknown, is answered by the grid`() {
+        assertEquals(CaptureSecondField.Gloss, CaptureCorrectionFields.forRun(null, UiLanguage.Ja, TargetLanguage.EN))
+        assertEquals(CaptureSecondField.ChineseName, CaptureCorrectionFields.forRun("something-new", UiLanguage.ZhHant, TargetLanguage.EN))
+    }
+
     @Test fun `a chip never shows Chinese to a ja or en interface`() {
         // 英文介面學英文曾在每個候選字下面看到中文——表單上根本沒有的欄位。
         assertEquals("貓", CaptureCorrectionFields.candidateMeaning(CaptureSecondField.ChineseName, "貓", "cat"))

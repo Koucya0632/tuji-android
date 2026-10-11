@@ -37,6 +37,22 @@ object CaptureCorrectionFields {
     }
 
     /**
+     * The form one run asked its user for.
+     *
+     * The server says so ([declared], `CreditOperation.correctionField`) when it
+     * knows the interface language the run was quoted under — and that answer
+     * wins, because the settings of the moment may have changed since the run
+     * was paid for. A run that does not say, or says something this build does
+     * not know, is answered by the grid.
+     */
+    fun forRun(declared: String?, ui: UiLanguage, target: TargetLanguage): CaptureSecondField = when (declared) {
+        "chineseName" -> CaptureSecondField.ChineseName
+        "gloss" -> CaptureSecondField.Gloss
+        "hidden" -> CaptureSecondField.Hidden
+        else -> second(ui, target)
+    }
+
+    /**
      * The meaning a candidate chip shows under its label: whatever the form's
      * second field would hold. A ja/en interface never falls back to the
      * Chinese name — it is not this user's language, and it is not on the form.

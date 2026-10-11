@@ -124,7 +124,7 @@ fun CreditCaptureScreen(
     val interfaceLanguage = uiLanguage.wire
     // The run keeps the language it was paid for.
     val target = TargetLanguage.entries.firstOrNull { it.name.lowercase() == state.operation?.targetLanguage } ?: direction.targetLanguage
-    val secondField = CaptureCorrectionFields.second(uiLanguage, target)
+    val secondField = CaptureCorrectionFields.forRun(state.operation?.correctionField, uiLanguage, target)
 
     LaunchedEffect(model) { model.load() }
     val operation = state.operation
