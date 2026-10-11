@@ -2,6 +2,8 @@ package app.tuji.android.credits
 
 import android.content.SharedPreferences
 import android.util.Log
+import app.tuji.android.core.community.CaptureCorrectionFields
+import app.tuji.android.core.community.CaptureSecondField
 import app.tuji.android.core.model.*
 import app.tuji.android.core.network.*
 import kotlinx.coroutines.CancellationException
@@ -37,9 +39,6 @@ class CreditCaptureModel(
         Primary("atlas.recognize.primary"),
         Precision("atlas.recognize.precision"),
     }
-
-    /** The second field on the correction form — the one that carries the meaning. */
-    enum class SecondField { ChineseName, Gloss, Hidden }
 
     data class Suggestion(val lemma: String, val zhHant: String, val gloss: String)
 
@@ -327,15 +326,19 @@ class CreditCaptureModel(
      * return, so the screen closes at once and the 圖鑑 grid shows the card
      * being made. Returns whether it was handed over.
      */
-    fun confirm(secondField: SecondField): Boolean {
+    fun confirm(secondField: CaptureSecondField): Boolean {
         val s = mutable.value
         if (!s.canConfirm) return false
         val operation = s.operation ?: return false
         val candidate = operation.result?.candidates?.firstOrNull { it.id == s.selectedCandidateId } ?: return false
         // The gloss field only exists for a cross-language capture; elsewhere the server keeps the candidate's.
-        val gloss = s.displayGloss.trim().takeIf { secondField == SecondField.Gloss && it.isNotEmpty() }
+        val gloss = s.displayGloss.trim().takeIf { secondField == CaptureSecondField.Gloss && it.isNotEmpty() }
         enqueue(
-            CreditConfirmRequest(operation.id, candidate.id, s.lemma.trim(), s.displayZhHant.trim(), gloss),
+            CreditConfirmRequest(
+                operation.id, candidate.id, s.lemma.trim(),
+                CaptureCorrectionFields.chineseNameToSend(secondField, s.lemma, s.suggestion?.lemma, s.displayZhHant.trim()),
+                gloss,
+            ),
             operation.imageId,
             s.image?.thumbUrl ?: s.image?.imageUrl,
         )
@@ -366,12 +369,6 @@ class CreditCaptureModel(
             "insufficient_credits", "capacity_full", "image_changed", "image_not_found", "operation_busy",
             "idempotency_conflict", "credits_reconciliation_required",
         )
-
-        fun secondField(ui: UiLanguage, target: TargetLanguage): SecondField = when (ui) {
-            UiLanguage.ZhHant, UiLanguage.ZhHans -> SecondField.ChineseName
-            UiLanguage.Ja -> if (target == TargetLanguage.JA) SecondField.Hidden else SecondField.Gloss
-            UiLanguage.En -> if (target == TargetLanguage.EN) SecondField.Hidden else SecondField.Gloss
-        }
 
         /**
          * Work already paid for that the screen should reopen on: a run in

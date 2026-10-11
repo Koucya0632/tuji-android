@@ -34,10 +34,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
+import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.community.DeleteWarning
 import app.tuji.android.core.community.ImageStatus
 import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.community.ShelfRow
+import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
@@ -68,6 +70,7 @@ import coil3.compose.AsyncImage
 @Composable
 fun AtlasManageScreen(
     state: AtlasManageViewModel.State,
+    uiLanguage: UiLanguage,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     onSelecting: (Boolean) -> Unit,
@@ -198,6 +201,7 @@ fun AtlasManageScreen(
                             if (index > 0) TujiRowDivider()
                             CardRow(
                                 row = row,
+                                uiLanguage = uiLanguage,
                                 selecting = state.selecting,
                                 selected = row.id in state.selected,
                                 inFlight = inFlight[row.image.id],
@@ -269,7 +273,7 @@ fun AtlasManageScreen(
 }
 
 @Composable
-private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, inFlight: CaptureProgress?, onClick: () -> Unit) {
+private fun CardRow(row: ShelfRow, uiLanguage: UiLanguage, selecting: Boolean, selected: Boolean, inFlight: CaptureProgress?, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -290,7 +294,7 @@ private fun CardRow(row: ShelfRow, selecting: Boolean, selected: Boolean, inFlig
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(row.title(), style = TujiType.bodySmStrong, color = TujiColor.Ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                row.item?.displayZhHant?.takeIf { it.isNotBlank() }?.let {
+                row.item?.let { CaptureCorrectionFields.localName(uiLanguage, it) }?.let {
                     Text(it, style = TujiType.label, color = TujiColor.Ink3, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }

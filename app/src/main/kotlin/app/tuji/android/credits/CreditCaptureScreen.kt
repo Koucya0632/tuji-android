@@ -52,6 +52,8 @@ import app.tuji.android.R
 import app.tuji.android.capture.CaptureIntake
 import app.tuji.android.capture.CaptureSource
 import app.tuji.android.capture.LibraryGlyph
+import app.tuji.android.core.community.CaptureCorrectionFields
+import app.tuji.android.core.community.CaptureSecondField
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.MascotSpeechBubble
 import app.tuji.android.core.design.TujiBorder
@@ -121,7 +123,7 @@ fun CreditCaptureScreen(
     val glossLanguage = uiLanguage.wire.takeIf { it in listOf("en", "ja") && it != language }
     // The run keeps the language it was paid for.
     val target = TargetLanguage.entries.firstOrNull { it.name.lowercase() == state.operation?.targetLanguage } ?: direction.targetLanguage
-    val secondField = CreditCaptureModel.secondField(uiLanguage, target)
+    val secondField = CaptureCorrectionFields.second(uiLanguage, target)
 
     LaunchedEffect(model) { model.load() }
     val operation = state.operation
@@ -427,7 +429,7 @@ private fun OperationPanel(
     state: CreditCaptureModel.State,
     operation: CreditOperation,
     model: CreditCaptureModel,
-    secondField: CreditCaptureModel.SecondField,
+    secondField: CaptureSecondField,
     language: String,
     gloss: String?,
     onOpenWallet: () -> Unit,
@@ -477,7 +479,7 @@ private fun ResultPanel(
     state: CreditCaptureModel.State,
     operation: CreditOperation,
     model: CreditCaptureModel,
-    secondField: CreditCaptureModel.SecondField,
+    secondField: CaptureSecondField,
     language: String,
     gloss: String?,
     onOpenWallet: () -> Unit,
@@ -490,8 +492,8 @@ private fun ResultPanel(
         PhotoFrame(state)
         ModeRow(state, model, language, gloss, onOpenWallet)
         val all = operation.result?.candidates.orEmpty()
-        CandidateGroup(all.filter { it.level != "fine" }, state, model)
-        CandidateGroup(all.filter { it.level == "fine" }, state, model)
+        CandidateGroup(all.filter { it.level != "fine" }, state, model, secondField)
+        CandidateGroup(all.filter { it.level == "fine" }, state, model, secondField)
         if (state.selectedCandidateId != null) CorrectionForm(state, model, secondField)
         TujiButton(
             text = stringResource(R.string.credit_confirm_card),
@@ -561,7 +563,12 @@ private fun ModeTab(title: String, selected: Boolean, enabled: Boolean, modifier
 }
 
 @Composable
-private fun CandidateGroup(rows: List<CreditCandidate>, state: CreditCaptureModel.State, model: CreditCaptureModel) {
+private fun CandidateGroup(
+    rows: List<CreditCandidate>,
+    state: CreditCaptureModel.State,
+    model: CreditCaptureModel,
+    secondField: CaptureSecondField,
+) {
     if (rows.isEmpty()) return
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // iOS's adaptive grid: as many 120-wide columns as fit.
@@ -585,7 +592,9 @@ private fun CandidateGroup(rows: List<CreditCandidate>, state: CreditCaptureMode
                         ) {
                             val ink = if (selected) TujiColor.Paper else TujiColor.Ink
                             Text(candidate.label, style = TujiType.bodySm, color = ink)
-                            Text(candidate.gloss ?: candidate.zhHant, style = TujiType.label, color = ink.copy(alpha = 0.7f))
+                            CaptureCorrectionFields.candidateMeaning(secondField, candidate.zhHant, candidate.gloss)?.let {
+                                Text(it, style = TujiType.label, color = ink.copy(alpha = 0.7f))
+                            }
                         }
                     }
                     repeat(columns - line.size) { Spacer(Modifier.weight(1f)) }
@@ -597,22 +606,22 @@ private fun CandidateGroup(rows: List<CreditCandidate>, state: CreditCaptureMode
 
 /** 人工校正 — the free flow's two names, prefilled from the chosen candidate. */
 @Composable
-private fun CorrectionForm(state: CreditCaptureModel.State, model: CreditCaptureModel, secondField: CreditCaptureModel.SecondField) {
+private fun CorrectionForm(state: CreditCaptureModel.State, model: CreditCaptureModel, secondField: CaptureSecondField) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S4)) {
         Text(stringResource(R.string.credit_correction), style = TujiType.label, color = TujiColor.Ink3)
         Field(stringResource(R.string.credit_image_name), state.lemma, state.isStillSuggested(CreditCaptureModel.SuggestedField.Lemma)) {
             model.edit(lemma = it)
         }
         when (secondField) {
-            CreditCaptureModel.SecondField.ChineseName ->
+            CaptureSecondField.ChineseName ->
                 Field(stringResource(R.string.credit_chinese_name), state.displayZhHant, state.isStillSuggested(CreditCaptureModel.SuggestedField.ZhHant)) {
                     model.edit(zhHant = it)
                 }
-            CreditCaptureModel.SecondField.Gloss ->
+            CaptureSecondField.Gloss ->
                 Field(stringResource(R.string.credit_chinese_name), state.displayGloss, state.isStillSuggested(CreditCaptureModel.SuggestedField.Gloss)) {
                     model.edit(gloss = it)
                 }
-            CreditCaptureModel.SecondField.Hidden -> Unit
+            CaptureSecondField.Hidden -> Unit
         }
     }
 }
