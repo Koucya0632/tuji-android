@@ -120,10 +120,11 @@ fun CreditCaptureScreen(
     var intake by remember { mutableStateOf<CaptureSource?>(null) }
     var showPrecisionInfo by remember { mutableStateOf(false) }
     val language = direction.targetLanguage.name.lowercase()
-    val glossLanguage = CaptureCorrectionFields.glossLanguage(uiLanguage, direction.targetLanguage)
+    // The interface this capture is made on; the server decides what that asks of the run.
+    val interfaceLanguage = uiLanguage.wire
     // The run keeps the language it was paid for.
     val target = TargetLanguage.entries.firstOrNull { it.name.lowercase() == state.operation?.targetLanguage } ?: direction.targetLanguage
-    val secondField = CaptureCorrectionFields.second(uiLanguage, target)
+    val secondField = CaptureCorrectionFields.forRun(state.operation?.correctionField, uiLanguage, target)
 
     LaunchedEffect(model) { model.load() }
     val operation = state.operation
@@ -150,11 +151,11 @@ fun CreditCaptureScreen(
             StatusMessage(state)
             when {
                 state.recognitionInFlight ->
-                    if (operation != null) RecognizingPanel(state, operation, model) else ReadyPanel(state, model, language, glossLanguage, onOpenWallet)
+                    if (operation != null) RecognizingPanel(state, operation, model) else ReadyPanel(state, model, language, interfaceLanguage, onOpenWallet)
                 state.pending != null -> PendingPanel(state, model)
                 state.quote != null -> QuotePanel(state, state.quote!!, model)
-                operation != null -> OperationPanel(state, operation, model, secondField, language, glossLanguage, onOpenWallet, onDone, onCardQueued)
-                state.photo != null -> ReadyPanel(state, model, language, glossLanguage, onOpenWallet)
+                operation != null -> OperationPanel(state, operation, model, secondField, language, interfaceLanguage, onOpenWallet, onDone, onCardQueued)
+                state.photo != null -> ReadyPanel(state, model, language, interfaceLanguage, onOpenWallet)
                 else -> SourcePanel(
                     state = state,
                     model = model,
@@ -370,7 +371,7 @@ private fun ReadyPanel(
     state: CreditCaptureModel.State,
     model: CreditCaptureModel,
     language: String,
-    gloss: String?,
+    interfaceLanguage: String,
     onOpenWallet: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
@@ -389,7 +390,7 @@ private fun ReadyPanel(
                     .fillMaxWidth()
                     .height(56.dp)
                     .background(if (state.operationsEnabled) TujiColor.BrandPrimary else TujiColor.Paper3)
-                    .tujiClickable(enabled = state.operationsEnabled) { model.start(language, gloss) },
+                    .tujiClickable(enabled = state.operationsEnabled) { model.start(language, interfaceLanguage) },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -431,7 +432,7 @@ private fun OperationPanel(
     model: CreditCaptureModel,
     secondField: CaptureSecondField,
     language: String,
-    gloss: String?,
+    interfaceLanguage: String,
     onOpenWallet: () -> Unit,
     onDone: () -> Unit,
     onCardQueued: () -> Unit,
@@ -447,7 +448,7 @@ private fun OperationPanel(
             Text(stringResource(R.string.credit_saved_sync_failed), style = TujiType.body, color = TujiColor.Ink)
             TujiButton(text = stringResource(R.string.credit_sync_cards), onClick = { model.syncCards(onDone) }, enabled = !state.busy)
         }
-        else -> ResultPanel(state, operation, model, secondField, language, gloss, onOpenWallet, onCardQueued)
+        else -> ResultPanel(state, operation, model, secondField, language, interfaceLanguage, onOpenWallet, onCardQueued)
     }
 }
 
@@ -481,7 +482,7 @@ private fun ResultPanel(
     model: CreditCaptureModel,
     secondField: CaptureSecondField,
     language: String,
-    gloss: String?,
+    interfaceLanguage: String,
     onOpenWallet: () -> Unit,
     onCardQueued: () -> Unit,
 ) {
@@ -490,7 +491,7 @@ private fun ResultPanel(
             TextAction(stringResource(R.string.credit_another_photo), enabled = !state.busy, onClick = model::reset)
         }
         PhotoFrame(state)
-        ModeRow(state, model, language, gloss, onOpenWallet)
+        ModeRow(state, model, language, interfaceLanguage, onOpenWallet)
         val all = operation.result?.candidates.orEmpty()
         CandidateGroup(all.filter { it.level != "fine" }, state, model, secondField)
         CandidateGroup(all.filter { it.level == "fine" }, state, model, secondField)
@@ -510,7 +511,7 @@ private fun ModeRow(
     state: CreditCaptureModel.State,
     model: CreditCaptureModel,
     language: String,
-    gloss: String?,
+    interfaceLanguage: String,
     onOpenWallet: () -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
@@ -535,7 +536,7 @@ private fun ModeRow(
                     .height(48.dp)
                     .border(1.dp, TujiColor.Ink)
                     .tujiClickable(enabled = enabled) {
-                        if (state.affordable(state.upgradePrice)) model.upgrade(language, gloss) else onOpenWallet()
+                        if (state.affordable(state.upgradePrice)) model.upgrade(language, interfaceLanguage) else onOpenWallet()
                     },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,

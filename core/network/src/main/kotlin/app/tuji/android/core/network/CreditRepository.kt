@@ -14,8 +14,13 @@ class CreditRepository(private val api: TujiApiClient) {
     suspend fun history(): List<CreditOperation> = api.get<Listing>(CreditEndpoint.Operations).operations
     suspend fun read(id: String): CreditOperation = api.get(CreditEndpoint.Operation(id))
     suspend fun cancel(id: String): CreditOperation = api.post(CreditEndpoint.Cancel(id), Empty())
-    suspend fun quote(imageId: String, precision: Boolean, language: String, gloss: String?): CreditQuote = api.post(
-        CreditEndpoint.Quotes, QuoteRequest(imageId, if (precision) "atlas.recognize.precision" else "atlas.recognize.primary", language, gloss),
+    /**
+     * [uiLanguage] is the interface the capture is made on. The server derives
+     * the rest — which gloss the run asks for, which field the form shows — from
+     * it; the client used to decide the gloss language itself.
+     */
+    suspend fun quote(imageId: String, precision: Boolean, language: String, uiLanguage: String): CreditQuote = api.post(
+        CreditEndpoint.Quotes, QuoteRequest(imageId, if (precision) "atlas.recognize.precision" else "atlas.recognize.primary", language, uiLanguage),
     )
     suspend fun accept(pending: PendingCreditAcceptance): CreditOperation = api.postIdempotent(CreditEndpoint.Operations, AcceptRequest(pending.quoteId), pending.key)
     /** Idempotent per operation and candidate — see [CreditConfirmRequest]. */
@@ -38,7 +43,7 @@ class CreditRepository(private val api: TujiApiClient) {
     @Serializable private data class Claim(val wallet: CreditWallet)
     @Serializable private data class Listing(val operations: List<CreditOperation>)
     @Serializable private data class Uploaded(val image: AtlasImageSummary)
-    @Serializable private data class QuoteRequest(val imageId: String, val feature: String, val targetLanguage: String, val glossLanguage: String?)
+    @Serializable private data class QuoteRequest(val imageId: String, val feature: String, val targetLanguage: String, val uiLanguage: String)
     @Serializable private data class AcceptRequest(val quoteId: String)
     @Serializable private data class ConfirmRequest(val candidateId: String, val lemma: String, val displayZhHant: String?, val displayGloss: String?)
     @Serializable data class Item(val id: String)

@@ -44,6 +44,11 @@ data class CreditResult(val candidates: List<CreditCandidate>)
 data class CreditOperation(
     val id: String, val state: String, val feature: String, val targetLanguage: String, val imageId: String, val points: Int,
     val confirmedItemId: String? = null, val fulfillmentState: String, val result: CreditResult? = null,
+    /**
+     * Which second field the correction form shows for this run — `chineseName`, `gloss` or `hidden` —
+     * when the server knows the interface language it was quoted under. Null from an older run.
+     */
+    val correctionField: String? = null,
 ) {
     val isRunning: Boolean get() = state in listOf("reserved", "running", "reconciling")
     val needsPolling: Boolean get() = state in listOf("reserved", "running", "reconciling") ||
