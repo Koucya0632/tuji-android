@@ -429,31 +429,6 @@ interface Endpoint {
 
     // MARK: 自製圖鑑（拍照 → 辨識 → 確認 → 發布）
 
-    /** Upload a photo. Recognition runs server-side in the same request. */
-    data object AtlasImages : Endpoint {
-        override val descriptor get() = EndpointDescriptor(
-            path = "/api/atlas/images",
-            // Upload plus a vision pass in one round trip; the default timeout
-            // is for reads and this is neither fast nor retriable.
-            policy = EndpointPolicy.PrivateFreshSlow,
-        )
-    }
-
-    /** A second, explicit recognition pass. Costs another AI call. */
-    data class AtlasRecognize(val imageId: String) : Endpoint {
-        override val descriptor get() = EndpointDescriptor(
-            path = "/api/atlas/images/$imageId/recognize",
-            policy = EndpointPolicy.PrivateFreshSlow,
-        )
-    }
-
-    data class AtlasConfirm(val imageId: String) : Endpoint {
-        override val descriptor get() = EndpointDescriptor(
-            path = "/api/atlas/images/$imageId/confirm",
-            policy = EndpointPolicy.PrivateFresh,
-        )
-    }
-
     /** Make the study cards for a confirmed item. */
     data class AtlasCards(val itemId: String) : Endpoint {
         override val descriptor get() = EndpointDescriptor(

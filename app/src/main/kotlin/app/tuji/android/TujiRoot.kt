@@ -104,7 +104,6 @@ import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.study.targets
 import app.tuji.android.core.study.RefreshTarget
 import app.tuji.android.core.study.LearningRefreshCause
-import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
@@ -128,8 +127,8 @@ import app.tuji.android.atlas.WordDetailScreen
 import app.tuji.android.atlas.WordDetailViewModel
 import app.tuji.android.account.AccountScreen
 import app.tuji.android.account.AccountViewModel
-import app.tuji.android.capture.CaptureScreen
-import app.tuji.android.capture.CaptureViewModel
+import app.tuji.android.core.model.CaptureEntry
+import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.community.AuthorScreen
 import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
@@ -1654,37 +1653,33 @@ private fun SignedInScreens(
 
                 AppRoute.Capture -> {
                     val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    if (accountState.entitlement?.billingMode == "credits" && owner != null) {
-                        CreditCaptureScreen(
-                            api = app.api,
-                            atlas = app.atlas,
-                            owner = owner,
-                            currentOwner = { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
-                            direction = direction,
-                            uiLanguage = uiLanguage,
-                            enqueue = { request, imageId, thumbUrl -> app.captureQueue.enqueue(request, imageId, thumbUrl) },
-                            queuedOperations = { app.captureQueue.creditOperationIds },
-                            onOpenWallet = { nav = nav.push(AppRoute.Membership) },
-                            onDone = { if (nav.current == route) nav = nav.pop() },
-                            onCardQueued = { if (nav.current == route) showQueuedCapture() },
-                        )
-                    } else {
-                    val vm = remember {
-                        CaptureViewModel(
-                            authoring = app.atlas,
-                            direction = direction,
-                            enqueue = app.captureQueue::enqueue,
-                            onNeedsMembership = { openMembership() },
-                        )
-                    }
-                    CaptureScreen(
-                        vm = vm,
-                        bottomPadding = 0.dp,
-                        // Only reached once the capture is queued: show it being made.
-                        onDone = { if (nav.current == route) showQueuedCapture() },
-                        onOpenMembership = openMembership,
-                        secondField = CaptureCorrectionFields.second(uiLanguage, direction.targetLanguage),
-                    )
+                    when (CaptureEntry.of(accountState.entitlement)) {
+                        CaptureEntry.Capture -> if (owner != null) {
+                            CreditCaptureScreen(
+                                api = app.api,
+                                atlas = app.atlas,
+                                owner = owner,
+                                currentOwner = { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
+                                direction = direction,
+                                uiLanguage = uiLanguage,
+                                enqueue = { request, imageId, thumbUrl -> app.captureQueue.enqueue(request, imageId, thumbUrl) },
+                                queuedOperations = { app.captureQueue.creditOperationIds },
+                                onOpenWallet = { nav = nav.push(AppRoute.Membership) },
+                                onDone = { if (nav.current == route) nav = nav.pop() },
+                                onCardQueued = { if (nav.current == route) showQueuedCapture() },
+                            )
+                        }
+                        // Replaces this page rather than stacking on it: back
+                        // from 會員 should not land on an empty capture screen.
+                        CaptureEntry.Membership -> LaunchedEffect(Unit) {
+                            if (nav.current == route) nav = nav.pop().push(AppRoute.Membership)
+                        }
+                        CaptureEntry.Resolving -> {
+                            LaunchedEffect(Unit) { account.refreshEntitlement() }
+                            Column(Modifier.fillMaxSize().padding(TujiSpace.S4)) {
+                                TujiIndeterminateBar(label = stringResource(R.string.study_loading))
+                            }
+                        }
                     }
                 }
 

@@ -52,32 +52,24 @@ sealed interface CaptureProgress {
     val canRetry: Boolean get() = (this as? Failed)?.failure?.isRetryable == true
 
     companion object {
-        /**
-         * Where a job's bar starts.
-         *
-         * A job with a checkpoint has already confirmed; restarting it from the
-         * top would re-announce work the server has finished, and the bar would
-         * walk back to 15% for a card that already exists.
-         */
-        fun startingFraction(resuming: Boolean): Float = if (resuming) 0.5f else 0.15f
+        /** Where a job's bar starts. */
+        const val STARTING_FRACTION = 0.15f
     }
 }
 
 /**
  * One queued capture, as it survives an app kill.
  *
- * [itemId] is the checkpoint. `confirm` is a plain INSERT server-side and is
- * **not** idempotent, so once it succeeds the id is written here; a resumed run
- * then skips confirm and continues from `createCards`, which is idempotent.
- * Without it, an app killed between confirm and cards comes back and makes the
- * word twice.
+ * Every step of the job is safe to repeat — the confirm is bound to its 識別操作
+ * server-side and answers a resend with the card it already made — so a
+ * restored record is simply run again from the top. A record journalled by the
+ * retired pre-credit flow has no [credit]; it does not decode, and the journal
+ * drops it.
  */
 @Serializable
 data class CaptureJobRecord(
     val id: String,
     val imageId: String,
-    /** The free flow's confirm. Null for a 罐頭點數 job, which confirms through [credit]. */
-    val payload: AtlasConfirmPayload? = null,
     val lemma: String,
     /**
      * The uploaded picture, for the tile to draw.
@@ -89,7 +81,6 @@ data class CaptureJobRecord(
      * something the cache already has.
      */
     val thumbUrl: String? = null,
-    val itemId: String? = null,
-    /** A 罐頭點數 job. Absent from records written before the kind existed, which decode as free-flow jobs. */
-    val credit: CreditConfirmRequest? = null,
+    /** What to confirm. The operation it names is what makes a resend safe. */
+    val credit: CreditConfirmRequest,
 )

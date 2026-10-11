@@ -120,7 +120,7 @@ fun CreditCaptureScreen(
     var intake by remember { mutableStateOf<CaptureSource?>(null) }
     var showPrecisionInfo by remember { mutableStateOf(false) }
     val language = direction.targetLanguage.name.lowercase()
-    val glossLanguage = uiLanguage.wire.takeIf { it in listOf("en", "ja") && it != language }
+    val glossLanguage = CaptureCorrectionFields.glossLanguage(uiLanguage, direction.targetLanguage)
     // The run keeps the language it was paid for.
     val target = TargetLanguage.entries.firstOrNull { it.name.lowercase() == state.operation?.targetLanguage } ?: direction.targetLanguage
     val secondField = CaptureCorrectionFields.second(uiLanguage, target)
