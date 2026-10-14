@@ -48,6 +48,9 @@ fun ManageCardScreen(
     withdrawing: Boolean,
     publishing: Boolean,
     actionFailed: Boolean,
+    /** A paid result on this photo is still waiting for a candidate to be picked. */
+    resumable: Boolean,
+    onResume: () -> Unit,
     onDelete: () -> Unit,
     onWithdraw: (String) -> Unit,
     onPublish: (String) -> Unit,
@@ -117,8 +120,20 @@ fun ManageCardScreen(
             }
         }
 
+        if (resumable) {
+            ActionBar(
+                text = stringResource(R.string.manage_resume),
+                ground = TujiColor.BrandPrimary,
+                ink = TujiColor.Ink,
+                enabled = true,
+                onClick = onResume,
+                modifier = Modifier.padding(top = TujiSpace.S2),
+            )
+        }
+
+        // A photo with no card is not a card: the copy says what is being deleted.
         ActionBar(
-            text = stringResource(R.string.manage_delete_card),
+            text = stringResource(if (item == null) R.string.manage_delete_photo else R.string.manage_delete_card),
             ground = TujiColor.Alert,
             ink = TujiColor.Paper,
             enabled = true,
@@ -132,8 +147,8 @@ fun ManageCardScreen(
         val warning = row.warning
         TujiPrompt(
             style = TujiPromptStyle.Destructive,
-            title = stringResource(R.string.manage_delete_title),
-            message = stringResource(R.string.manage_delete_message),
+            title = stringResource(if (item == null) R.string.manage_delete_photo_title else R.string.manage_delete_title),
+            message = stringResource(if (item == null) R.string.manage_delete_photo_message else R.string.manage_delete_message),
             detail = warning.detail(batch = false),
             confirm = stringResource(R.string.manage_delete),
             cancel = stringResource(R.string.cancel),
