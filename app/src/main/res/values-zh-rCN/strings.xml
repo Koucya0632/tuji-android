@@ -415,6 +415,10 @@
     <string name="manage_no_card">这张图片还没生成卡片。</string>
     <string name="manage_card_gone">这张卡片已经不在了。</string>
     <string name="manage_delete_card">删除这张卡片</string>
+    <string name="manage_delete_photo">删除这张图片</string>
+    <string name="manage_delete_photo_title">删除这张图片？</string>
+    <string name="manage_delete_photo_message">这张图片会被删除，无法复原。</string>
+    <string name="manage_resume">继续确认</string>
     <string name="manage_withdraw">取消公开</string>
     <string name="manage_withdrawing">收回中…</string>
     <string name="manage_publish_title">公开这张卡片？</string>

@@ -17,6 +17,9 @@ import app.tuji.android.membership.CreditPackButtons
 import app.tuji.android.membership.MembershipPurchase
 import app.tuji.android.membership.MembershipScreen
 import app.tuji.android.core.catalog.CardsSource
+import app.tuji.android.core.community.ImageStatus
+import app.tuji.android.core.network.CreditRepository
+import app.tuji.android.credits.CreditCaptureModel
 import app.tuji.android.credits.CreditCaptureScreen
 import app.tuji.android.reminders.ReminderTexts
 import app.tuji.android.settings.ReminderSettingsSection
@@ -51,6 +54,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.snapshotFlow
@@ -532,6 +536,9 @@ private fun SignedInScreens(
     // 我做的 on request — iOS's `cardsSourceRequest`. Set when a capture is
     // handed to 生成佇列, so the 圖鑑 tab opens where its 生成中 tile is.
     var cardsSourceRequest by remember { mutableStateOf<CardsSource?>(null) }
+    // The photo 圖片詳情's 繼續確認 opens 拍照新增 on; null for the camera button.
+    var captureResume by rememberSaveable { mutableStateOf<String?>(null) }
+
     fun showQueuedCapture() {
         nav = nav.pop().select(AppRoute.Atlas)
         cardsSourceRequest = CardsSource.Mine
@@ -1317,16 +1324,30 @@ private fun SignedInScreens(
                     )
                 }
 
-                is AppRoute.ManageCard -> ManageCardScreen(
-                    row = manageState.row(route.imageId),
+                is AppRoute.ManageCard -> {
+                    val row = manageState.row(route.imageId)
+                    // 待確認 alone does not say the result can still be picked from: a
+                    // photo left by the retired pre-credit flow reads the same and has
+                    // no run to reopen.
+                    val waiting = row != null && row.item == null && row.imageStatus == ImageStatus.NeedsReview
+                    val resumable by produceState(false, route.imageId, waiting) {
+                        value = waiting && runCatching { CreditRepository(app.api).history() }.getOrNull()?.let {
+                            CreditCaptureModel.resumable(route.imageId, it, app.captureQueue.creditOperationIds)
+                        } != null
+                    }
+                    ManageCardScreen(
+                    row = row,
                     uiLanguage = uiLanguage,
                     withdrawing = manageState.withdrawing,
                     publishing = manageState.publishing,
                     actionFailed = manageState.actionFailed,
+                    resumable = resumable,
+                    onResume = { if (nav.current == route) { captureResume = route.imageId; nav = nav.push(AppRoute.Capture) } },
                     onDelete = { manage.delete(setOf(route.imageId)) { if (nav.current == route) nav = nav.pop() } },
                     onWithdraw = manage::withdraw,
                     onPublish = manage::publish,
-                )
+                    )
+                }
 
                 AppRoute.Settings -> SettingsScreen(
                     readiness = settingsReadiness,
@@ -1667,6 +1688,11 @@ private fun SignedInScreens(
                                 onOpenWallet = { nav = nav.push(AppRoute.Membership) },
                                 onDone = { if (nav.current == route) nav = nav.pop() },
                                 onCardQueued = { if (nav.current == route) showQueuedCapture() },
+                                resume = captureResume,
+                                // Opened from 圖鑑管理 already: back is the way there.
+                                onManage = if (captureResume != null) null else ({
+                                    if (nav.current == route) nav = nav.pop().select(AppRoute.Atlas).push(AppRoute.AtlasManage)
+                                }),
                             )
                         }
                         // Replaces this page rather than stacking on it: back
@@ -1819,7 +1845,7 @@ private fun SignedInScreens(
                 selected = nav.tab,
                 bottomInset = insets.calculateBottomPadding(),
                 onSelect = { nav = nav.select(it) },
-                onCapture = { nav = nav.push(AppRoute.Capture) },
+                onCapture = { captureResume = null; nav = nav.push(AppRoute.Capture) },
             )
         }
         if (!TabShell.tabBarVisible(nav)) {

@@ -34,6 +34,11 @@ class CreditCaptureModel(
     private val enqueue: (CreditConfirmRequest, imageId: String, thumbUrl: String?) -> Unit = { _, _, _ -> },
     /** Operations 生成佇列 is already confirming, which must not reopen as results to pick from. */
     private val queuedOperations: () -> Set<String> = { emptySet() },
+    /**
+     * The photo 圖片詳情's 繼續確認 asked for: the screen opens on that photo's
+     * result, not on whichever unpicked result is newest.
+     */
+    private val resume: String? = null,
 ) {
     enum class Mode(val feature: String) {
         Primary("atlas.recognize.primary"),
@@ -129,6 +134,13 @@ class CreditCaptureModel(
     private var pollFailures = 0
 
     private fun current() = currentOwner() == owner
+    /**
+     * The photos whose paid result 換一張 walked away from. 拍照新增 stops
+     * reopening on them; 繼續確認 still does. On this phone only: the result
+     * is not gone, just no longer in the way.
+     */
+    private val asideKey = "credit-aside:${owner.lowercase()}"
+    private fun aside(): Set<String> = preferences.getStringSet(asideKey, null)?.toSet().orEmpty()
     private fun journal(): String? = mutable.value.catalog?.environment?.let { "credit-accept:${owner.lowercase()}:$it" }
     private fun update(mutate: (State) -> State) { if (current()) mutable.value = mutate(mutable.value) }
     private fun apply(wallet: CreditWallet) {
@@ -167,20 +179,33 @@ class CreditCaptureModel(
             if (!current()) return@act
             update { it.copy(history = history) }
             if (mutable.value.operation == null && mutable.value.photo == null) {
-                val resumed = resumable(history, queuedOperations())
-                update { it.copy(operation = resumed) }
-                val imageId = resumed?.imageId ?: return@act
                 // The crop never left the phone's last session; show the upload instead.
-                val image = runCatching { repository.image(imageId) }.onFailure { if (it is CancellationException) throw it }.getOrNull()
-                if (mutable.value.operation?.imageId == imageId) update { it.copy(image = image) }
+                val found = reopen(history, queuedOperations(), resume, aside(), repository::image) ?: return@act
+                // A photo chosen while this was in the air wins.
+                if (mutable.value.operation == null && mutable.value.photo == null) {
+                    update { it.copy(operation = found.operation, image = found.image) }
+                }
             }
         }
     }
 
     fun claim(monthly: Boolean) = launch { act { apply(repository.claim(monthly)) } }
 
-    /** 換一張: back to the source chooser. Results already paid for stay in history. */
-    fun reset() {
+    /**
+     * 換一張: back to the source chooser, and the result left behind stops
+     * reopening here. It used to come back on every visit, since nothing but a
+     * card or deleting the photo closes a paid result — so 換一張 could never
+     * get past it.
+     */
+    fun retake() {
+        mutable.value.operation?.takeIf { it.state != "released" && current() }?.let {
+            preferences.edit().putStringSet(asideKey, aside() + it.imageId).apply()
+        }
+        reset()
+    }
+
+    /** Back to the source chooser. Results already paid for stay in history. */
+    private fun reset() {
         pollFailures = 0
         update { it.copy(photo = null, image = null, operation = null, quote = null, error = null).cleared() }
     }
@@ -380,6 +405,51 @@ class CreditCaptureModel(
             val finished = operations.filter { it.confirmedItemId != null }.map { it.imageId }.toSet()
             return operations.firstOrNull { it.isRunning } ?: operations.firstOrNull {
                 it.state == "committed" && it.confirmedItemId == null && it.imageId !in finished && it.id !in queued
+            }
+        }
+
+        /**
+         * The same question about one photo — what 圖片詳情's 繼續確認 reopens.
+         * [resumable] answers with the newest photo still waiting, so an older
+         * one could only be reached by finishing every photo taken after it.
+         */
+        fun resumable(imageId: String, operations: List<CreditOperation>, queued: Set<String> = emptySet()): CreditOperation? =
+            resumable(operations.filter { it.imageId == imageId }, queued)
+
+        class Reopened(val operation: CreditOperation, val image: AtlasImageSummary?)
+
+        /**
+         * The work to open on, with its photo.
+         *
+         * A result whose photo has been deleted is passed over. Deleting a photo
+         * does not close its run, so the newest unpicked result could be one
+         * that can never become a card; the screen opened on its candidates
+         * with an empty frame, and did so again on every visit.
+         *
+         * [aside] is what 換一張 said "not this one" to: only [resume], which
+         * names the photo, brings one of those back.
+         */
+        suspend fun reopen(
+            operations: List<CreditOperation>,
+            queued: Set<String>,
+            resume: String?,
+            aside: Set<String>,
+            image: suspend (String) -> AtlasImageSummary,
+        ): Reopened? {
+            var waiting = if (resume == null) operations.filter { it.imageId !in aside } else operations
+            while (true) {
+                val found = (if (resume != null) resumable(resume, waiting, queued) else resumable(waiting, queued)) ?: return null
+                try {
+                    return Reopened(found, image(found.imageId))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: ApiError.Http) {
+                    // Unreachable is not gone: the result is still worth showing without its photo.
+                    if (e.status != 404) return Reopened(found, null)
+                    waiting = waiting.filter { it.imageId != found.imageId }
+                } catch (e: Throwable) {
+                    return Reopened(found, null)
+                }
             }
         }
     }

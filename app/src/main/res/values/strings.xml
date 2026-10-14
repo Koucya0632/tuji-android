@@ -415,6 +415,10 @@
     <string name="manage_no_card">This image hasn\'t generated a card yet.</string>
     <string name="manage_card_gone">This card is no longer here.</string>
     <string name="manage_delete_card">Delete this card</string>
+    <string name="manage_delete_photo">Delete this photo</string>
+    <string name="manage_delete_photo_title">Delete this photo?</string>
+    <string name="manage_delete_photo_message">This photo will be deleted. This can\'t be undone.</string>
+    <string name="manage_resume">Finish confirming</string>
     <string name="manage_withdraw">Unpublish</string>
     <string name="manage_withdrawing">Unpublishing…</string>
     <string name="manage_publish_title">Publish this card?</string>

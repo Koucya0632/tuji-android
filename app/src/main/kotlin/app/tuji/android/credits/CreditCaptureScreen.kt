@@ -106,14 +106,18 @@ fun CreditCaptureScreen(
     onDone: () -> Unit,
     /** A card was handed to 生成佇列; the host shows 我做的, where its tile is. */
     onCardQueued: () -> Unit = onDone,
+    /** 圖片詳情's 繼續確認: open on this photo's result. */
+    resume: String? = null,
+    /** 圖鑑管理, where a photo left 待確認 can be found again. Absent when that is where this was opened from. */
+    onManage: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val model = remember(owner) {
+    val model = remember(owner, resume) {
         CreditCaptureModel(
             CreditRepository(api), atlas, owner, currentOwner,
             context.getSharedPreferences("credit-journal", Context.MODE_PRIVATE), scope,
-            enqueue = enqueue, queuedOperations = queuedOperations,
+            enqueue = enqueue, queuedOperations = queuedOperations, resume = resume,
         )
     }
     val state by model.state.collectAsStateWithLifecycle()
@@ -163,6 +167,12 @@ fun CreditCaptureScreen(
                     onInfo = { showPrecisionInfo = true },
                     onPick = { intake = it },
                 )
+            }
+            if (onManage != null) {
+                Row {
+                    Spacer(Modifier.weight(1f))
+                    TextAction(stringResource(R.string.manage_title), enabled = !state.busy, onClick = onManage)
+                }
             }
         }
     }
@@ -377,7 +387,7 @@ private fun ReadyPanel(
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         PanelHeader(
             stringResource(if (state.mode == CreditCaptureModel.Mode.Primary) R.string.capture_mode_primary else R.string.credit_precision_title),
-        ) { TextAction(stringResource(R.string.credit_another_photo), enabled = !state.busy, onClick = model::reset) }
+        ) { TextAction(stringResource(R.string.credit_another_photo), enabled = !state.busy, onClick = model::retake) }
         PhotoFrame(state)
         when {
             state.busy -> {
@@ -442,7 +452,7 @@ private fun OperationPanel(
         operation.state == "released" -> Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
             PhotoFrame(state)
             Text(stringResource(R.string.credit_not_finished), style = TujiType.body, color = TujiColor.Ink)
-            TujiButton(text = stringResource(R.string.credit_another_photo), onClick = model::reset)
+            TujiButton(text = stringResource(R.string.credit_another_photo), onClick = model::retake)
         }
         operation.confirmedItemId != null -> Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
             Text(stringResource(R.string.credit_saved_sync_failed), style = TujiType.body, color = TujiColor.Ink)
@@ -488,7 +498,7 @@ private fun ResultPanel(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         PanelHeader(stringResource(R.string.credit_candidates)) {
-            TextAction(stringResource(R.string.credit_another_photo), enabled = !state.busy, onClick = model::reset)
+            TextAction(stringResource(R.string.credit_another_photo), enabled = !state.busy, onClick = model::retake)
         }
         PhotoFrame(state)
         ModeRow(state, model, language, interfaceLanguage, onOpenWallet)

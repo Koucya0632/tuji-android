@@ -415,6 +415,10 @@
     <string name="manage_no_card">この画像からはまだカードが生成されていません。</string>
     <string name="manage_card_gone">このカードはもうありません。</string>
     <string name="manage_delete_card">このカードを削除</string>
+    <string name="manage_delete_photo">この写真を削除</string>
+    <string name="manage_delete_photo_title">この写真を削除しますか？</string>
+    <string name="manage_delete_photo_message">この写真は削除され、元に戻せません。</string>
+    <string name="manage_resume">確認を続ける</string>
     <string name="manage_withdraw">公開をやめる</string>
     <string name="manage_withdrawing">取り下げ中…</string>
     <string name="manage_publish_title">このカードを公開しますか？</string>
