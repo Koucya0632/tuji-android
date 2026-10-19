@@ -1177,4 +1177,24 @@
     <string name="chat_history_answers">回答 %1$d 次</string>
     <string name="theme_topic_chat">用這個主題聊聊</string>
     <string name="theme_topic_chat_detail">Moira 先開口，你跟著換個詞說說看</string>
+    <string name="shadowing_start">跟讀</string>
+    <string name="shadowing_stop">停止跟讀</string>
+    <string name="shadowing_listening">正在聽…</string>
+    <string name="shadowing_denied">跟讀需要麥克風和語音辨識的權限。</string>
+    <string name="speech_open_settings">打開設定</string>
+    <string name="speech_unavailable">這台裝置不支援這個語言的語音辨識。</string>
+    <string name="speech_failed">沒辦法開始錄音，請再試一次。</string>
+    <string name="shadowing_nothing_heard">沒有聽到聲音</string>
+    <string name="shadowing_score">正確率：%1$d%%</string>
+    <string name="dictation_start">語音輸入</string>
+    <string name="dictation_stop">停止語音輸入</string>
+    <string name="dictation_listening_chinese">正在聽中文…</string>
+    <string name="dictation_listening_japanese">正在聽日文…</string>
+    <string name="dictation_listening_english">正在聽英文…</string>
+    <string name="dictation_switch_chinese">改說中文</string>
+    <string name="dictation_switch_japanese">改說日文</string>
+    <string name="dictation_switch_english">改說英文</string>
+    <string name="dictation_done">完成</string>
+    <string name="dictation_denied">語音輸入需要麥克風和語音辨識的權限。</string>
+    <string name="dictation_dismiss">關閉</string>
 </resources>

@@ -1177,4 +1177,24 @@
     <string name="chat_history_answers">%1$d 回答えました</string>
     <string name="theme_topic_chat">このテーマで話そう</string>
     <string name="theme_topic_chat_detail">Moira が先に話すので、言葉を入れ替えてまねしてみよう</string>
+    <string name="shadowing_start">復唱する</string>
+    <string name="shadowing_stop">復唱をやめる</string>
+    <string name="shadowing_listening">聞いています…</string>
+    <string name="shadowing_denied">復唱にはマイクと音声認識の許可が必要です。</string>
+    <string name="speech_open_settings">設定を開く</string>
+    <string name="speech_unavailable">この端末はこの言語の音声認識に対応していません。</string>
+    <string name="speech_failed">録音を開始できませんでした。もう一度お試しください。</string>
+    <string name="shadowing_nothing_heard">声が聞こえませんでした</string>
+    <string name="shadowing_score">正確率：%1$d%%</string>
+    <string name="dictation_start">音声入力</string>
+    <string name="dictation_stop">音声入力を停止</string>
+    <string name="dictation_listening_chinese">中国語を聞いています…</string>
+    <string name="dictation_listening_japanese">日本語を聞いています…</string>
+    <string name="dictation_listening_english">英語を聞いています…</string>
+    <string name="dictation_switch_chinese">中国語で話す</string>
+    <string name="dictation_switch_japanese">日本語で話す</string>
+    <string name="dictation_switch_english">英語で話す</string>
+    <string name="dictation_done">完了</string>
+    <string name="dictation_denied">音声入力にはマイクと音声認識の許可が必要です。</string>
+    <string name="dictation_dismiss">閉じる</string>
 </resources>

@@ -962,6 +962,37 @@ object TujiGlyph {
         }
     }
 
+    /** 跟讀 / 語音輸入. A capsule microphone on its stand. */
+    @Composable
+    fun Mic(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawRoundRect(
+                tint,
+                topLeft = Offset(w * 0.36f, w * 0.06f),
+                size = Size(w * 0.28f, w * 0.52f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.14f, w * 0.14f),
+            )
+            drawArc(
+                tint, startAngle = 0f, sweepAngle = 180f, useCenter = false,
+                topLeft = Offset(w * 0.22f, w * 0.26f), size = Size(w * 0.56f, w * 0.48f),
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+            drawLine(tint, Offset(w * 0.5f, w * 0.74f), Offset(w * 0.5f, w * 0.90f), stroke, StrokeCap.Round)
+            drawLine(tint, Offset(w * 0.34f, w * 0.92f), Offset(w * 0.66f, w * 0.92f), stroke, StrokeCap.Round)
+        }
+    }
+
+    /** Stop: a filled square. */
+    @Composable
+    fun StopSquare(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            drawRect(tint, topLeft = Offset(w * 0.22f, w * 0.22f), size = Size(w * 0.56f, w * 0.56f))
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

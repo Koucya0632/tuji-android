@@ -1177,4 +1177,24 @@
     <string name="chat_history_answers">%1$d answers</string>
     <string name="theme_topic_chat">Chat about this topic</string>
     <string name="theme_topic_chat_detail">Moira starts. Follow along and swap in your own words.</string>
+    <string name="shadowing_start">Read it back</string>
+    <string name="shadowing_stop">Stop</string>
+    <string name="shadowing_listening">Listening…</string>
+    <string name="shadowing_denied">Reading along needs microphone and speech recognition access.</string>
+    <string name="speech_open_settings">Open Settings</string>
+    <string name="speech_unavailable">This device can\'t recognise speech in this language.</string>
+    <string name="speech_failed">Couldn\'t start recording. Please try again.</string>
+    <string name="shadowing_nothing_heard">Didn\'t hear anything</string>
+    <string name="shadowing_score">Accuracy: %1$d%%</string>
+    <string name="dictation_start">Voice input</string>
+    <string name="dictation_stop">Stop voice input</string>
+    <string name="dictation_listening_chinese">Listening for Chinese…</string>
+    <string name="dictation_listening_japanese">Listening for Japanese…</string>
+    <string name="dictation_listening_english">Listening for English…</string>
+    <string name="dictation_switch_chinese">Speak Chinese</string>
+    <string name="dictation_switch_japanese">Speak Japanese</string>
+    <string name="dictation_switch_english">Speak English</string>
+    <string name="dictation_done">Done</string>
+    <string name="dictation_denied">Voice input needs microphone and speech recognition access.</string>
+    <string name="dictation_dismiss">Close</string>
 </resources>
