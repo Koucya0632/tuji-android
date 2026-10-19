@@ -221,6 +221,15 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
      *  for why the direction is local-only until the settings module lands. */
     val onboarding: OnboardingStore by lazy { OnboardingStore(this) }
 
+    /** 助手's kept offers and 紀錄 lists, shared by its home and its pages. */
+    val assistantCaches: app.tuji.android.assistant.AssistantCaches by lazy {
+        app.tuji.android.assistant.AssistantCaches(getSharedPreferences("assistant", MODE_PRIVATE))
+    }
+
+    val vocabularyJournal: app.tuji.android.assistant.VocabularyJournaling by lazy {
+        app.tuji.android.assistant.PreferencesVocabularyJournal(getSharedPreferences("assistant", MODE_PRIVATE))
+    }
+
     val study: StudyRepository by lazy { StudyRepository(api) }
 
     /** 物見 — reading, saving, reporting and the 封鎖 list, all one client. */

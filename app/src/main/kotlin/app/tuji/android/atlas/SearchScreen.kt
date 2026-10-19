@@ -90,12 +90,17 @@ fun AtlasSearchScreen(
     recents: RecentSearchStore,
     onCancel: () -> Unit,
     onOpen: (String) -> Unit,
+    /** Typed in already — AI 查詞 opens 搜尋 on the word it was asked. */
+    initialQuery: String = "",
 ) {
     // Saveable, so coming back from a result finds the query still typed. A
     // TextFieldValue rather than a String so a picked recent query can put the
     // cursor after itself; a String field keeps the old selection, which on an
     // empty field is 0, and the next keystroke landed in front of the word.
-    var field by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    var field by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(initialQuery, selection = TextRange(initialQuery.length)))
+    }
+    LaunchedEffect(initialQuery) { if (initialQuery.isNotBlank()) vm.queryNow(initialQuery) }
     val typed = field.text
     val results by vm.results.collectAsStateWithLifecycle()
     val recent by recents.queries.collectAsStateWithLifecycle()

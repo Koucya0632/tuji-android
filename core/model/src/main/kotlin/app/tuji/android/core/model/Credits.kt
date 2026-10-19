@@ -13,6 +13,8 @@ data class CreditWallet(
     val available: Int, val reserved: Int, val paidAvailable: Int, val giftAvailable: Int,
     val walletVersion: String, val environment: String, val reconciliationRequired: Boolean, val benefits: CreditBenefits,
     val monthlyAvailable: Int = 0, val checkInAvailable: Int = 0,
+    /** When the monthly gift lapses (ISO 8601). Null from a server that predates it. */
+    val nextMonthlyResetAt: String? = null,
 ) {
     fun isNewerThan(previous: CreditWallet): Boolean = environment != previous.environment ||
         walletVersion.length > previous.walletVersion.length ||

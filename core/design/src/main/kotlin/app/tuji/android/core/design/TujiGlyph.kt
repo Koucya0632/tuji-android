@@ -804,6 +804,97 @@ object TujiGlyph {
         }
     }
 
+    /** AI 查詞. Two lines of text with a lens over the end — iOS's `text.magnifyingglass`. */
+    @Composable
+    fun Lookup(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawLine(tint, Offset(w * 0.08f, w * 0.22f), Offset(w * 0.70f, w * 0.22f), stroke, StrokeCap.Round)
+            drawLine(tint, Offset(w * 0.08f, w * 0.42f), Offset(w * 0.36f, w * 0.42f), stroke, StrokeCap.Round)
+            drawLine(tint, Offset(w * 0.08f, w * 0.62f), Offset(w * 0.30f, w * 0.62f), stroke, StrokeCap.Round)
+            val centre = Offset(w * 0.62f, w * 0.58f)
+            val radius = w * 0.18f
+            drawCircle(tint, radius = radius, center = centre, style = Stroke(width = stroke))
+            val reach = radius * 0.7071f + stroke * 0.3f
+            drawLine(tint, Offset(centre.x + reach, centre.y + reach), Offset(w * 0.92f, w * 0.90f), stroke, StrokeCap.Round)
+        }
+    }
+
+    /** 書籤 on a saved card — a ribbon with a notch, filled once kept. */
+    @Composable
+    fun Bookmark(filled: Boolean, size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val h = this.size.height
+            val stroke = w * 0.09f
+            val path = Path().apply {
+                moveTo(w * 0.24f, h * 0.10f)
+                lineTo(w * 0.76f, h * 0.10f)
+                lineTo(w * 0.76f, h * 0.90f)
+                lineTo(w * 0.50f, h * 0.68f)
+                lineTo(w * 0.24f, h * 0.90f)
+                close()
+            }
+            if (filled) drawPath(path, tint)
+            drawPath(path, tint, style = Stroke(width = stroke, join = StrokeJoin.Round))
+        }
+    }
+
+    /** 紀錄. A clock face whose rim turns back on itself — iOS's `clock.arrow.circlepath`. */
+    @Composable
+    fun History(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            val centre = Offset(w * 0.5f, w * 0.5f)
+            drawArc(
+                tint, startAngle = 200f, sweepAngle = 300f, useCenter = false,
+                topLeft = Offset(w * 0.12f, w * 0.12f), size = Size(w * 0.76f, w * 0.76f),
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+            val head = Path().apply {
+                moveTo(w * 0.06f, w * 0.30f)
+                lineTo(w * 0.16f, w * 0.40f)
+                lineTo(w * 0.28f, w * 0.30f)
+            }
+            drawPath(head, tint, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawLine(tint, centre, Offset(w * 0.5f, w * 0.30f), stroke, StrokeCap.Round)
+            drawLine(tint, centre, Offset(w * 0.64f, w * 0.60f), stroke, StrokeCap.Round)
+        }
+    }
+
+    /** 原句. A pair of opening quote marks. */
+    @Composable
+    fun Quote(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            listOf(0.12f, 0.54f).forEach { x ->
+                drawCircle(tint, radius = w * 0.14f, center = Offset(w * (x + 0.16f), w * 0.58f))
+                val tail = Path().apply {
+                    moveTo(w * (x + 0.04f), w * 0.58f)
+                    quadraticTo(w * (x + 0.04f), w * 0.26f, w * (x + 0.32f), w * 0.22f)
+                    lineTo(w * (x + 0.32f), w * 0.32f)
+                    quadraticTo(w * (x + 0.18f), w * 0.36f, w * (x + 0.20f), w * 0.58f)
+                    close()
+                }
+                drawPath(tail, tint)
+            }
+        }
+    }
+
+    /** 點數明細. A card with its stripe. */
+    @Composable
+    fun CreditCard(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawRect(tint, topLeft = Offset(w * 0.08f, w * 0.20f), size = Size(w * 0.84f, w * 0.60f), style = Stroke(width = stroke))
+            drawRect(tint, topLeft = Offset(w * 0.08f, w * 0.34f), size = Size(w * 0.84f, w * 0.12f))
+            drawLine(tint, Offset(w * 0.20f, w * 0.64f), Offset(w * 0.40f, w * 0.64f), stroke, StrokeCap.Round)
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

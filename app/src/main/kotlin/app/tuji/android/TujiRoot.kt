@@ -123,6 +123,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.shadow
 import app.tuji.android.atlas.AtlasSearchScreen
+import app.tuji.android.assistant.AssistantHomeFeature
+import app.tuji.android.assistant.AssistantHomeScreen
+import app.tuji.android.assistant.CreditStatementScreen
+import app.tuji.android.assistant.VocabularyModel
+import app.tuji.android.assistant.VocabularyScreen
+import app.tuji.android.core.network.CreditLedgerRepository
+import app.tuji.android.core.network.VocabularyRepository
 import app.tuji.android.atlas.WordDetailPanel
 import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.atlas.AtlasCardsScreen
@@ -511,7 +518,13 @@ private fun SignedInScreens(
     // grant, from here or from 會員方案, re-reads the entitlement.
     val billing by app.playBilling.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { app.playBilling.reconcile() }
-    LaunchedEffect(billing.deliveries) { if (billing.deliveries > 0) account.refreshEntitlement() }
+    LaunchedEffect(billing.deliveries) {
+        if (billing.deliveries > 0) {
+            account.refreshEntitlement()
+            // A purchase moved the balance 助手 keeps.
+            app.assistantCaches.balanceChanged()
+        }
+    }
 
     // 個人筆記, once the entitlement says the feature exists: the review reveal
     // reads them with no request of its own. Loaded here, not on the word page,
@@ -1042,6 +1055,7 @@ private fun SignedInScreens(
                     onReview = { nav = nav.push(AppRoute.Review) },
                     onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
                     onSearch = { nav = nav.push(AppRoute.Search) },
+                    onOpenAssistant = { nav = nav.push(AppRoute.Assistant) },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
                     onStreak = { showCheckIn = true },
@@ -1718,6 +1732,69 @@ private fun SignedInScreens(
                     onOpen = { nav = nav.push(AppRoute.Word(it)) },
                 )
 
+                is AppRoute.SearchFor -> AtlasSearchScreen(
+                    vm = search,
+                    direction = direction,
+                    showChinese = settings.showZh,
+                    recents = app.recentSearches,
+                    onCancel = { nav = nav.pop() },
+                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
+                    initialQuery = route.query,
+                )
+
+                AppRoute.Assistant -> {
+                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    AssistantHomeScreen(
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpen = { feature ->
+                            when (feature) {
+                                AssistantHomeFeature.Lookup -> nav = nav.push(AppRoute.Vocabulary)
+                            }
+                        },
+                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                        prefetch = {
+                            val repository = VocabularyRepository(app.api)
+                            app.assistantCaches.vocabularyOffer.prefetch(owner) { repository.offer() }
+                        },
+                    )
+                }
+
+                AppRoute.CreditStatement -> CreditStatementScreen(
+                    repository = remember { CreditLedgerRepository(app.api) },
+                    locale = uiLanguage.locale,
+                    onBack = { if (nav.current == route) nav = nav.pop() },
+                    onOpenMembership = openMembership,
+                )
+
+                AppRoute.Vocabulary -> {
+                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    val model = remember(owner, direction) {
+                        VocabularyModel(
+                            repository = VocabularyRepository(app.api),
+                            offerCache = app.assistantCaches.vocabularyOffer,
+                            historyCache = app.assistantCaches.vocabularyHistory,
+                            journal = app.vocabularyJournal,
+                            owner = owner,
+                            uiLanguage = { app.settingsStore.current.value.language.wire },
+                            learning = direction.wire,
+                            catalog = { app.catalog.words },
+                        )
+                    }
+                    val offerRevision by app.assistantCaches.vocabularyOffer.revision.collectAsStateWithLifecycle()
+                    VocabularyScreen(
+                        model = model,
+                        speech = app.speech,
+                        accent = settings.accent,
+                        offerRevision = offerRevision,
+                        uiLanguage = uiLanguage.wire,
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                        onOpenMembership = openMembership,
+                        onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
+                        onSearch = { nav = nav.push(AppRoute.SearchFor(it)) },
+                    )
+                }
+
                 is AppRoute.Shelf -> AtlasThemeScreen(
                     category = catalog.categories.firstOrNull { it.id == route.categoryId },
                     words = CategoryShelf.words(route.categoryId, studyWords),
@@ -1925,6 +2002,7 @@ private fun TodayColumn(
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
+    onOpenAssistant: () -> Unit,
     completion: CompletionReadout,
     streak: Int,
     onStreak: () -> Unit,
@@ -1957,6 +2035,7 @@ private fun TodayColumn(
             onReview = onReview,
             onLearnNew = onLearnNew,
             onSearch = onSearch,
+            onOpenAssistant = onOpenAssistant,
             completion = completion,
             streak = streak,
             onStreak = onStreak,
