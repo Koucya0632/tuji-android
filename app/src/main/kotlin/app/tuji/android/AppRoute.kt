@@ -43,6 +43,9 @@ sealed interface AppRoute {
     /** AI 語法, from 助手, under AI 查詞. */
     data object Grammar : AppRoute
 
+    /** 情境故事 — pick 圖鑑 items, a place and a difficulty; Moira writes a short dialogue around them. */
+    data object Story : AppRoute
+
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
@@ -203,5 +206,6 @@ object TabShell {
         AppRoute.CreditStatement,
         AppRoute.Vocabulary,
         AppRoute.Grammar,
+        AppRoute.Story,
     )
 }

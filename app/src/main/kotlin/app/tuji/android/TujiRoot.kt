@@ -128,6 +128,9 @@ import app.tuji.android.assistant.AssistantHomeScreen
 import app.tuji.android.assistant.CreditStatementScreen
 import app.tuji.android.assistant.GrammarModel
 import app.tuji.android.assistant.GrammarScreen
+import app.tuji.android.assistant.StoryBuilderModel
+import app.tuji.android.assistant.StoryScreen
+import app.tuji.android.core.network.StoryRepository
 import app.tuji.android.core.network.GrammarRepository
 import app.tuji.android.assistant.VocabularyModel
 import app.tuji.android.assistant.VocabularyScreen
@@ -1754,6 +1757,7 @@ private fun SignedInScreens(
                             when (feature) {
                                 AssistantHomeFeature.Lookup -> nav = nav.push(AppRoute.Vocabulary)
                                 AssistantHomeFeature.Grammar -> nav = nav.push(AppRoute.Grammar)
+                                AssistantHomeFeature.Story -> nav = nav.push(AppRoute.Story)
                             }
                         },
                         onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
@@ -1763,6 +1767,8 @@ private fun SignedInScreens(
                             coroutineScope {
                                 launch { app.assistantCaches.vocabularyOffer.prefetch(owner) { vocabulary.offer() } }
                                 launch { app.assistantCaches.grammarOffer.prefetch(owner) { grammar.offer() } }
+                                val story = StoryRepository(app.api)
+                                launch { app.assistantCaches.storyOffer.prefetch(uiLang) { story.storyOffer(uiLang) } }
                             }
                         },
                     )
@@ -1801,6 +1807,32 @@ private fun SignedInScreens(
                         onOpenMembership = openMembership,
                         onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
                         onSearch = { nav = nav.push(AppRoute.SearchFor(it)) },
+                    )
+                }
+
+                AppRoute.Story -> {
+                    val model = remember(direction) {
+                        StoryBuilderModel(
+                            repository = StoryRepository(app.api),
+                            offerCache = app.assistantCaches.storyOffer,
+                            candidates = { app.catalog.words + personal.mine + personal.taken },
+                            uiLanguage = { app.settingsStore.current.value.language.wire },
+                            learning = direction.wire,
+                            language = direction.targetLanguage,
+                        )
+                    }
+                    val offerRevision by app.assistantCaches.storyOffer.revision.collectAsStateWithLifecycle()
+                    StoryScreen(
+                        model = model,
+                        offerRevision = offerRevision,
+                        speech = app.speech,
+                        accent = settings.accent,
+                        shelves = catalog.shelves,
+                        themeStatus = themeStatus,
+                        bookmarked = personal.bookmarked,
+                        uiLang = uiLang,
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpenWord = openCard,
                     )
                 }
 

@@ -5,6 +5,7 @@ import app.tuji.android.core.model.GrammarInput
 import app.tuji.android.core.model.GrammarOffer
 import app.tuji.android.core.model.GrammarPracticeProgress
 import app.tuji.android.core.model.GrammarRecord
+import app.tuji.android.core.model.StoryOffer
 import app.tuji.android.core.model.VocabularyInput
 import app.tuji.android.core.model.VocabularyOffer
 import app.tuji.android.core.model.VocabularyRecord
@@ -183,16 +184,83 @@ class PreferencesGrammarProgress(private val preferences: SharedPreferences) : G
         preferences.edit().remove(key(owner, learning, setId)).apply()
 }
 
+/**
+ * 情境故事's offer — iOS's `StoryOfferCache`: kept so the page opens on its
+ * choices instead of a loading bar, and so entering does not read the balance
+ * again. By interface language, because the labels are in it. A written story
+ * brings its new balance with it ([store]); a failure or a purchase makes the
+ * kept one untrusted ([balanceChanged]).
+ */
+class StoryOfferCache(private val preferences: SharedPreferences?) {
+    private var read: Map<String, StoryOffer> = emptyMap()
+    private var stale = false
+    private val inFlight = mutableMapOf<String, CompletableDeferred<StoryOffer>>()
+    private val revisions = MutableStateFlow(0)
+    val revision: StateFlow<Int> = revisions.asStateFlow()
+
+    private fun key(uiLanguage: String) = "tuji.story.offer.v1.$uiLanguage"
+
+    @Synchronized
+    fun entry(uiLanguage: String): AssistantOfferCache.Entry<StoryOffer>? {
+        read[uiLanguage]?.let { return AssistantOfferCache.Entry(it, current = !stale) }
+        val kept = preferences?.getString(key(uiLanguage), null) ?: return null
+        val offer = runCatching { TujiJson.decodeFromString(StoryOffer.serializer(), kept) }.getOrNull() ?: return null
+        return AssistantOfferCache.Entry(offer, current = false)
+    }
+
+    /** Asks the server, or joins the ask already on its way. */
+    suspend fun load(uiLanguage: String, fetch: suspend () -> StoryOffer): StoryOffer {
+        val (ask, mine) = synchronized(this) {
+            inFlight[uiLanguage]?.let { it to false }
+                ?: CompletableDeferred<StoryOffer>().also { inFlight[uiLanguage] = it }.let { it to true }
+        }
+        if (!mine) return ask.await()
+        try {
+            val offer = fetch()
+            store(offer, uiLanguage)
+            ask.complete(offer)
+            return offer
+        } catch (e: Throwable) {
+            ask.completeExceptionally(e)
+            throw e
+        } finally {
+            synchronized(this) { if (inFlight[uiLanguage] === ask) inFlight.remove(uiLanguage) }
+        }
+    }
+
+    suspend fun prefetch(uiLanguage: String, fetch: suspend () -> StoryOffer) {
+        if (entry(uiLanguage)?.current == true) return
+        runCatching { load(uiLanguage, fetch) }
+    }
+
+    @Synchronized
+    fun balanceChanged() {
+        if (read.isEmpty()) return
+        stale = true
+        revisions.value += 1
+    }
+
+    /** Another language's copy would hold an older balance, so only this one is kept. */
+    @Synchronized
+    fun store(offer: StoryOffer, uiLanguage: String) {
+        stale = false
+        read = mapOf(uiLanguage to offer)
+        preferences?.edit()?.putString(key(uiLanguage), TujiJson.encodeToString(StoryOffer.serializer(), offer))?.apply()
+    }
+}
+
 /** The process's 助手 caches — iOS's `AssistantOfferCaches` and `AssistantHistoryCaches`. */
 class AssistantCaches(preferences: SharedPreferences?) {
     val vocabularyOffer = AssistantOfferCache("tuji.vocabulary.offer.v1", preferences, VocabularyOffer.serializer())
     val vocabularyHistory = AssistantHistoryCache<VocabularyRecord>()
     val grammarOffer = AssistantOfferCache("tuji.grammar.offer.v1", preferences, GrammarOffer.serializer())
     val grammarHistory = AssistantHistoryCache<GrammarRecord>()
+    val storyOffer = StoryOfferCache(preferences)
 
     /** Every kept 罐頭點數 balance in 助手. */
     fun balanceChanged() {
         vocabularyOffer.balanceChanged()
         grammarOffer.balanceChanged()
+        storyOffer.balanceChanged()
     }
 }

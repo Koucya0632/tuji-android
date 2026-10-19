@@ -914,6 +914,20 @@ object TujiGlyph {
         }
     }
 
+    /** 情境故事. A closed book with lines of text on its cover — iOS's `text.book.closed`. */
+    @Composable
+    fun StoryBook(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawRect(tint, topLeft = Offset(w * 0.18f, w * 0.08f), size = Size(w * 0.64f, w * 0.84f), style = Stroke(width = stroke))
+            drawLine(tint, Offset(w * 0.30f, w * 0.08f), Offset(w * 0.30f, w * 0.92f), stroke)
+            listOf(0.34f to 0.70f, 0.50f to 0.70f, 0.66f to 0.58f).forEach { (y, end) ->
+                drawLine(tint, Offset(w * 0.42f, w * y), Offset(w * end, w * y), stroke * 0.8f, StrokeCap.Round)
+            }
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5
