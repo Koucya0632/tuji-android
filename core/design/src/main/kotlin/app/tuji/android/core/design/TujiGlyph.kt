@@ -895,6 +895,25 @@ object TujiGlyph {
         }
     }
 
+    /** AI 語法. A closed book with a mark on its cover — iOS's `character.book.closed`. */
+    @Composable
+    fun GrammarBook(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawRect(tint, topLeft = Offset(w * 0.18f, w * 0.08f), size = Size(w * 0.64f, w * 0.84f), style = Stroke(width = stroke))
+            drawLine(tint, Offset(w * 0.30f, w * 0.08f), Offset(w * 0.30f, w * 0.92f), stroke)
+            // An "A" on the cover: the book is about how words go together.
+            val letter = Path().apply {
+                moveTo(w * 0.44f, w * 0.64f)
+                lineTo(w * 0.56f, w * 0.30f)
+                lineTo(w * 0.68f, w * 0.64f)
+            }
+            drawPath(letter, tint, style = Stroke(width = stroke * 0.8f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawLine(tint, Offset(w * 0.48f, w * 0.53f), Offset(w * 0.64f, w * 0.53f), stroke * 0.8f, StrokeCap.Round)
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

@@ -118,7 +118,7 @@ class VocabularyModelTest {
         assertTrue(journal.values.isEmpty())
         assertEquals(VocabularyModel.Blocker.InsufficientPoints, state.blocker)
         assertEquals(
-            VocabularyNote.Known(VocabularyNote.Kind.InsufficientCredits),
+            AssistantNote.Known(AssistantNote.Kind.InsufficientCredits),
             state.turns.single().failureNote,
         )
     }
@@ -131,7 +131,7 @@ class VocabularyModelTest {
         model.setQuery("猫")
         model.generate()
         assertEquals(1, journal.values.size)
-        assertEquals(VocabularyNote.Known(VocabularyNote.Kind.Confirming), model.state.value.message)
+        assertEquals(AssistantNote.Known(AssistantNote.Kind.Confirming), model.state.value.message)
     }
 
     @Test fun `助記 offers another card as the main action, the others quietly`() = runTest {

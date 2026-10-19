@@ -126,6 +126,9 @@ import app.tuji.android.atlas.AtlasSearchScreen
 import app.tuji.android.assistant.AssistantHomeFeature
 import app.tuji.android.assistant.AssistantHomeScreen
 import app.tuji.android.assistant.CreditStatementScreen
+import app.tuji.android.assistant.GrammarModel
+import app.tuji.android.assistant.GrammarScreen
+import app.tuji.android.core.network.GrammarRepository
 import app.tuji.android.assistant.VocabularyModel
 import app.tuji.android.assistant.VocabularyScreen
 import app.tuji.android.core.network.CreditLedgerRepository
@@ -195,6 +198,7 @@ import app.tuji.android.settings.FeedbackSender
 import app.tuji.android.settings.shareApp
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.Word
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -1749,12 +1753,17 @@ private fun SignedInScreens(
                         onOpen = { feature ->
                             when (feature) {
                                 AssistantHomeFeature.Lookup -> nav = nav.push(AppRoute.Vocabulary)
+                                AssistantHomeFeature.Grammar -> nav = nav.push(AppRoute.Grammar)
                             }
                         },
                         onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
                         prefetch = {
-                            val repository = VocabularyRepository(app.api)
-                            app.assistantCaches.vocabularyOffer.prefetch(owner) { repository.offer() }
+                            val vocabulary = VocabularyRepository(app.api)
+                            val grammar = GrammarRepository(app.api)
+                            coroutineScope {
+                                launch { app.assistantCaches.vocabularyOffer.prefetch(owner) { vocabulary.offer() } }
+                                launch { app.assistantCaches.grammarOffer.prefetch(owner) { grammar.offer() } }
+                            }
                         },
                     )
                 }
@@ -1792,6 +1801,33 @@ private fun SignedInScreens(
                         onOpenMembership = openMembership,
                         onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
                         onSearch = { nav = nav.push(AppRoute.SearchFor(it)) },
+                    )
+                }
+
+                AppRoute.Grammar -> {
+                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                    val model = remember(owner, direction) {
+                        GrammarModel(
+                            repository = GrammarRepository(app.api),
+                            offerCache = app.assistantCaches.grammarOffer,
+                            historyCache = app.assistantCaches.grammarHistory,
+                            journal = app.grammarJournal,
+                            progress = app.grammarProgress,
+                            owner = owner,
+                            uiLanguage = { app.settingsStore.current.value.language.wire },
+                            learning = direction.wire,
+                        )
+                    }
+                    val offerRevision by app.assistantCaches.grammarOffer.revision.collectAsStateWithLifecycle()
+                    GrammarScreen(
+                        model = model,
+                        speech = app.speech,
+                        accent = settings.accent,
+                        offerRevision = offerRevision,
+                        uiLanguage = uiLanguage.wire,
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                        onOpenMembership = openMembership,
                     )
                 }
 

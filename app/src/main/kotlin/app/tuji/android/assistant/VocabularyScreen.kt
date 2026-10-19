@@ -592,7 +592,7 @@ private fun Modes(selected: VocabularyMode, onSelect: (VocabularyMode) -> Unit) 
 
 /** The composer's fields: 紙2 ground, and 瞳黃 around the one being typed in. */
 @Composable
-private fun PaperField(
+internal fun PaperField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
@@ -669,7 +669,7 @@ private fun VocabularyAskRow(input: VocabularyInput) {
 }
 
 @Composable
-private fun TextAction(text: String, onClick: () -> Unit) {
+internal fun TextAction(text: String, onClick: () -> Unit) {
     Text(
         text,
         style = TujiType.bodySmStrong,
@@ -691,21 +691,23 @@ private fun modeSummary(mode: VocabularyMode): Int = when (mode) {
 }
 
 @Composable
-internal fun noteText(note: VocabularyNote): String = when (note) {
-    is VocabularyNote.Server -> note.text
-    is VocabularyNote.Known -> stringResource(
+internal fun noteText(note: AssistantNote): String = when (note) {
+    is AssistantNote.Server -> note.text
+    is AssistantNote.Known -> stringResource(
         when (note.kind) {
-            VocabularyNote.Kind.InsufficientCredits -> R.string.vocabulary_note_insufficient
-            VocabularyNote.Kind.NoContent -> R.string.vocabulary_note_no_content
-            VocabularyNote.Kind.SignIn -> R.string.vocabulary_note_sign_in
-            VocabularyNote.Kind.PriceUnavailable -> R.string.vocabulary_note_price_unavailable
-            VocabularyNote.Kind.Confirming -> R.string.vocabulary_note_confirming
-            VocabularyNote.Kind.HistoryFailed -> R.string.vocabulary_note_history_failed
-            VocabularyNote.Kind.BookmarkFailed -> R.string.vocabulary_note_bookmark_failed
-            VocabularyNote.Kind.DeleteFailed -> R.string.vocabulary_note_delete_failed
-            VocabularyNote.Kind.PriceChanged -> R.string.vocabulary_note_price_changed
-            VocabularyNote.Kind.RateLimited -> R.string.vocabulary_note_rate_limited
-            VocabularyNote.Kind.Unavailable -> R.string.vocabulary_note_unavailable
+            AssistantNote.Kind.InsufficientCredits -> R.string.vocabulary_note_insufficient
+            AssistantNote.Kind.NoContent -> R.string.vocabulary_note_no_content
+            AssistantNote.Kind.SignIn -> R.string.vocabulary_note_sign_in
+            AssistantNote.Kind.PriceUnavailable -> R.string.vocabulary_note_price_unavailable
+            AssistantNote.Kind.Confirming -> R.string.vocabulary_note_confirming
+            AssistantNote.Kind.HistoryFailed -> R.string.vocabulary_note_history_failed
+            AssistantNote.Kind.BookmarkFailed -> R.string.vocabulary_note_bookmark_failed
+            AssistantNote.Kind.DeleteFailed -> R.string.vocabulary_note_delete_failed
+            AssistantNote.Kind.PriceChanged -> R.string.vocabulary_note_price_changed
+            AssistantNote.Kind.RateLimited -> R.string.vocabulary_note_rate_limited
+            AssistantNote.Kind.Unavailable -> R.string.vocabulary_note_unavailable
+            AssistantNote.Kind.GrammarSignIn -> R.string.grammar_note_sign_in
+            AssistantNote.Kind.GrammarHistoryFailed -> R.string.grammar_note_history_failed
         },
     )
 }

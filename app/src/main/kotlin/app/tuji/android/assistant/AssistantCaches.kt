@@ -1,6 +1,10 @@
 package app.tuji.android.assistant
 
 import android.content.SharedPreferences
+import app.tuji.android.core.model.GrammarInput
+import app.tuji.android.core.model.GrammarOffer
+import app.tuji.android.core.model.GrammarPracticeProgress
+import app.tuji.android.core.model.GrammarRecord
 import app.tuji.android.core.model.VocabularyInput
 import app.tuji.android.core.model.VocabularyOffer
 import app.tuji.android.core.model.VocabularyRecord
@@ -119,40 +123,76 @@ class AssistantHistoryCache<Record> {
 }
 
 /** Only unacknowledged requests live on the device; results belong to server history. */
-interface VocabularyJournaling {
-    fun pending(owner: String): List<VocabularyInput>
-    fun save(input: VocabularyInput, owner: String)
+interface AssistantJournaling<Input> {
+    fun pending(owner: String): List<Input>
+    fun save(input: Input, owner: String)
     fun remove(id: String, owner: String)
 }
 
-class PreferencesVocabularyJournal(private val preferences: SharedPreferences) : VocabularyJournaling {
-    private val serializer = ListSerializer(VocabularyInput.serializer())
-    private fun key(owner: String) = "vocabulary.pending.v1.$owner"
+typealias VocabularyJournaling = AssistantJournaling<VocabularyInput>
+typealias GrammarJournaling = AssistantJournaling<GrammarInput>
 
-    override fun pending(owner: String): List<VocabularyInput> =
+class PreferencesJournal<Input>(
+    private val preferences: SharedPreferences,
+    /** iOS's key, `vocabulary.pending.v1` or `grammar.pending.v1`. */
+    private val prefix: String,
+    item: KSerializer<Input>,
+    private val requestId: (Input) -> String,
+) : AssistantJournaling<Input> {
+    private val serializer = ListSerializer(item)
+    private fun key(owner: String) = "$prefix.$owner"
+
+    override fun pending(owner: String): List<Input> =
         preferences.getString(key(owner), null)
             ?.let { runCatching { TujiJson.decodeFromString(serializer, it) }.getOrNull() }
             .orEmpty()
 
-    override fun save(input: VocabularyInput, owner: String) =
-        write(pending(owner).filter { it.requestId != input.requestId } + input, owner)
+    override fun save(input: Input, owner: String) =
+        write(pending(owner).filter { requestId(it) != requestId(input) } + input, owner)
 
-    override fun remove(id: String, owner: String) = write(pending(owner).filter { it.requestId != id }, owner)
+    override fun remove(id: String, owner: String) = write(pending(owner).filter { requestId(it) != id }, owner)
 
-    private fun write(values: List<VocabularyInput>, owner: String) {
+    private fun write(values: List<Input>, owner: String) {
         val edit = preferences.edit()
         if (values.isEmpty()) edit.remove(key(owner)) else edit.putString(key(owner), TujiJson.encodeToString(serializer, values))
         edit.apply()
     }
 }
 
+/** How far each practice set got on this device — iOS's `GrammarProgressStoring`. */
+interface GrammarProgressStoring {
+    fun progress(owner: String, learning: String, setId: String): GrammarPracticeProgress
+    fun save(progress: GrammarPracticeProgress, owner: String, learning: String, setId: String)
+    fun remove(owner: String, learning: String, setId: String)
+}
+
+class PreferencesGrammarProgress(private val preferences: SharedPreferences) : GrammarProgressStoring {
+    private fun key(owner: String, learning: String, setId: String) = "grammar.practice.v1.$owner.$learning.$setId"
+
+    override fun progress(owner: String, learning: String, setId: String): GrammarPracticeProgress =
+        preferences.getString(key(owner, learning, setId), null)
+            ?.let { runCatching { TujiJson.decodeFromString(GrammarPracticeProgress.serializer(), it) }.getOrNull() }
+            ?: GrammarPracticeProgress()
+
+    override fun save(progress: GrammarPracticeProgress, owner: String, learning: String, setId: String) =
+        preferences.edit()
+            .putString(key(owner, learning, setId), TujiJson.encodeToString(GrammarPracticeProgress.serializer(), progress))
+            .apply()
+
+    override fun remove(owner: String, learning: String, setId: String) =
+        preferences.edit().remove(key(owner, learning, setId)).apply()
+}
+
 /** The process's 助手 caches — iOS's `AssistantOfferCaches` and `AssistantHistoryCaches`. */
 class AssistantCaches(preferences: SharedPreferences?) {
     val vocabularyOffer = AssistantOfferCache("tuji.vocabulary.offer.v1", preferences, VocabularyOffer.serializer())
     val vocabularyHistory = AssistantHistoryCache<VocabularyRecord>()
+    val grammarOffer = AssistantOfferCache("tuji.grammar.offer.v1", preferences, GrammarOffer.serializer())
+    val grammarHistory = AssistantHistoryCache<GrammarRecord>()
 
     /** Every kept 罐頭點數 balance in 助手. */
     fun balanceChanged() {
         vocabularyOffer.balanceChanged()
+        grammarOffer.balanceChanged()
     }
 }
