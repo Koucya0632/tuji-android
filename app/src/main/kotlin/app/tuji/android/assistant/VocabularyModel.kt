@@ -19,14 +19,14 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.util.UUID
 
 /** A sentence the page can say about a request, before it is put into words. */
-sealed interface VocabularyNote {
+sealed interface AssistantNote {
     /** The server's own sentence, already in the interface language. */
-    data class Server(val text: String) : VocabularyNote
-    data class Known(val kind: Kind) : VocabularyNote
+    data class Server(val text: String) : AssistantNote
+    data class Known(val kind: Kind) : AssistantNote
 
     enum class Kind {
         InsufficientCredits, NoContent, SignIn, PriceUnavailable, Confirming, HistoryFailed, BookmarkFailed,
-        DeleteFailed, PriceChanged, RateLimited, Unavailable,
+        DeleteFailed, PriceChanged, RateLimited, Unavailable, GrammarSignIn, GrammarHistoryFailed,
     }
 }
 
@@ -38,17 +38,17 @@ data class VocabularyTurn(
     val input: VocabularyInput,
     val record: VocabularyRecord? = null,
     /** The server refused the request outright; nothing was charged. */
-    val rejection: VocabularyNote? = null,
+    val rejection: AssistantNote? = null,
 ) {
     val id: String get() = input.requestId
 
-    val failureNote: VocabularyNote?
+    val failureNote: AssistantNote?
         get() {
             rejection?.let { return it }
             if (record?.status != VocabularyRecord.Status.Failed) return null
-            record.result?.message?.takeIf { it.isNotEmpty() }?.let { return VocabularyNote.Server(it) }
-            return VocabularyNote.Known(
-                if (record.error == "insufficient_credits") VocabularyNote.Kind.InsufficientCredits else VocabularyNote.Kind.NoContent,
+            record.result?.message?.takeIf { it.isNotEmpty() }?.let { return AssistantNote.Server(it) }
+            return AssistantNote.Known(
+                if (record.error == "insufficient_credits") AssistantNote.Kind.InsufficientCredits else AssistantNote.Kind.NoContent,
             )
         }
 }
@@ -103,8 +103,8 @@ class VocabularyModel(
         val pending: VocabularyInput? = null,
         val busy: Boolean = false,
         val loadingHistory: Boolean = false,
-        val message: VocabularyNote? = null,
-        val historyMessage: VocabularyNote? = null,
+        val message: AssistantNote? = null,
+        val historyMessage: AssistantNote? = null,
     ) {
         fun price(mode: VocabularyMode): VocabularyOffer.Price? = offer?.modes?.firstOrNull { it.mode == mode }
         val price: VocabularyOffer.Price? get() = price(mode)
@@ -166,7 +166,7 @@ class VocabularyModel(
 
     suspend fun load() {
         val owner = owner ?: run {
-            update { it.copy(message = VocabularyNote.Known(VocabularyNote.Kind.SignIn)) }
+            update { it.copy(message = AssistantNote.Known(AssistantNote.Kind.SignIn)) }
             return
         }
         // Entering does not read the balance again when this launch already has it.
@@ -191,7 +191,7 @@ class VocabularyModel(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            update { it.copy(message = VocabularyNote.Known(VocabularyNote.Kind.PriceUnavailable)) }
+            update { it.copy(message = AssistantNote.Known(AssistantNote.Kind.PriceUnavailable)) }
         }
     }
 
@@ -244,18 +244,18 @@ class VocabularyModel(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            if (definitelyRejected(e)) {
+            if (AssistantErrors.definitelyRejected(e)) {
                 journal.remove(input.requestId, owner)
                 update { s ->
                     s.copy(
                         pending = null,
-                        turns = s.turns.map { if (it.id == input.requestId) it.copy(rejection = failureMessage(e)) else it },
-                        outOfPoints = s.outOfPoints || (status(e) == 409 && reason(e) == "insufficient_credits"),
+                        turns = s.turns.map { if (it.id == input.requestId) it.copy(rejection = AssistantErrors.failureMessage(e)) else it },
+                        outOfPoints = s.outOfPoints || (AssistantErrors.status(e) == 409 && AssistantErrors.reason(e) == "insufficient_credits"),
                     )
                 }
                 refreshOffer()
             } else {
-                update { it.copy(message = VocabularyNote.Known(VocabularyNote.Kind.Confirming)) }
+                update { it.copy(message = AssistantNote.Known(AssistantNote.Kind.Confirming)) }
             }
         } finally {
             update { it.copy(busy = false) }
@@ -275,12 +275,12 @@ class VocabularyModel(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            if (status(e) == 404) {
+            if (AssistantErrors.status(e) == 404) {
                 // The original POST may never have arrived; this is still the user's authorized request.
                 update { it.copy(busy = false) }
                 send(input, owner)
             } else {
-                update { it.copy(message = VocabularyNote.Known(VocabularyNote.Kind.Confirming)) }
+                update { it.copy(message = AssistantNote.Known(AssistantNote.Kind.Confirming)) }
             }
         } finally {
             update { it.copy(busy = false) }
@@ -300,7 +300,7 @@ class VocabularyModel(
                 return@repeat
             }
         }
-        if (now.pending != null) update { it.copy(message = VocabularyNote.Known(VocabularyNote.Kind.Confirming)) }
+        if (now.pending != null) update { it.copy(message = AssistantNote.Known(AssistantNote.Kind.Confirming)) }
     }
 
     private fun accept(record: VocabularyRecord, owner: String) {
@@ -377,7 +377,7 @@ class VocabularyModel(
             throw e
         } catch (_: Throwable) {
             if (request == historyRequest) {
-                update { it.copy(historyMessage = VocabularyNote.Known(VocabularyNote.Kind.HistoryFailed)) }
+                update { it.copy(historyMessage = AssistantNote.Known(AssistantNote.Kind.HistoryFailed)) }
             }
         } finally {
             if (request == historyRequest) update { it.copy(loadingHistory = false) }
@@ -401,7 +401,7 @@ class VocabularyModel(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            val note = VocabularyNote.Known(VocabularyNote.Kind.BookmarkFailed)
+            val note = AssistantNote.Known(AssistantNote.Kind.BookmarkFailed)
             update { it.copy(message = note, historyMessage = note) }
         }
     }
@@ -415,7 +415,7 @@ class VocabularyModel(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Throwable) {
-            update { it.copy(historyMessage = VocabularyNote.Known(VocabularyNote.Kind.DeleteFailed)) }
+            update { it.copy(historyMessage = AssistantNote.Known(AssistantNote.Kind.DeleteFailed)) }
         }
     }
 
@@ -432,33 +432,34 @@ class VocabularyModel(
     }
 
     private fun focus(id: String) = update { it.copy(spotlight = Spotlight(id, (it.spotlight?.tick ?: 0) + 1)) }
+}
 
-    internal companion object {
-        fun status(error: Throwable): Int? = when (error) {
-            is ApiError.Http -> error.status
-            ApiError.NotAuthenticated -> 401
-            else -> null
-        }
-
-        fun reason(error: Throwable): String? = (error as? ApiError.Http)?.body?.let { body ->
-            runCatching { TujiJson.parseToJsonElement(body).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
-        }
-
-        /** The server certainly did not take the request: nothing was charged and nothing is pending. */
-        fun definitelyRejected(error: Throwable): Boolean = when (status(error)) {
-            401, 403, 409, 400, 413 -> true
-            429 -> reason(error) != "save_limit"
-            else -> false
-        }
-
-        fun failureMessage(error: Throwable): VocabularyNote.Known = VocabularyNote.Known(
-            when {
-                status(error) == 409 && reason(error) == "price_changed" -> VocabularyNote.Kind.PriceChanged
-                status(error) == 409 && reason(error) == "insufficient_credits" -> VocabularyNote.Kind.InsufficientCredits
-                status(error) == 429 -> VocabularyNote.Kind.RateLimited
-                status(error) == 401 -> VocabularyNote.Kind.SignIn
-                else -> VocabularyNote.Kind.Unavailable
-            },
-        )
+/** How 助手's pages read a failed request — iOS's `definitelyRejected` and `failureMessage`. */
+internal object AssistantErrors {
+    fun status(error: Throwable): Int? = when (error) {
+        is ApiError.Http -> error.status
+        ApiError.NotAuthenticated -> 401
+        else -> null
     }
+
+    fun reason(error: Throwable): String? = (error as? ApiError.Http)?.body?.let { body ->
+        runCatching { TujiJson.parseToJsonElement(body).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
+    }
+
+    /** The server certainly did not take the request: nothing was charged and nothing is pending. */
+    fun definitelyRejected(error: Throwable): Boolean = when (status(error)) {
+        401, 403, 409, 400, 413 -> true
+        429 -> reason(error) != "save_limit"
+        else -> false
+    }
+
+    fun failureMessage(error: Throwable, signIn: AssistantNote.Kind = AssistantNote.Kind.SignIn): AssistantNote.Known = AssistantNote.Known(
+        when {
+            status(error) == 409 && reason(error) == "price_changed" -> AssistantNote.Kind.PriceChanged
+            status(error) == 409 && reason(error) == "insufficient_credits" -> AssistantNote.Kind.InsufficientCredits
+            status(error) == 429 -> AssistantNote.Kind.RateLimited
+            status(error) == 401 -> signIn
+            else -> AssistantNote.Kind.Unavailable
+        },
+    )
 }

@@ -33,3 +33,29 @@ class VocabularyWireTest {
         assertEquals(3, offer.modes.single().maxPoints)
     }
 }
+
+class GrammarWireTest {
+    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false; coerceInputValues = true }
+
+    @Test fun `a grammar card is read by its mode`() {
+        val reply = json.decodeFromString(
+            GrammarReply.serializer(),
+            """
+            {"outcome":"ok","message":"","candidates":[],
+             "content":{"mode":"compare","a":{"name":"〜ばかり","meaning":"m"},"b":{"name":"〜だけ","meaning":"m"},
+               "summary":"s","similarity":{"shared":"x","aFocus":"a","bFocus":"b","interchangeable":"not"},
+               "dimensions":[],"pitfalls":[{"wrong":"w","fixed":"f","kind":"register","reason":"r"}],"substitutions":[]}}
+            """.trimIndent(),
+        )
+        val content = reply.content as GrammarComparison
+        assertEquals("〜ばかり ／ 〜だけ", content.title)
+        assertEquals(GrammarVerdict.Not, content.similarity.interchangeable)
+        assertEquals(GrammarComparison.Pitfall.Kind.Register, content.pitfalls.single().kind)
+    }
+
+    @Test fun `a practice attempt knows when it is finished`() {
+        val attempt = GrammarAttempt("a", isFirst = true, questionIds = listOf("1", "2"), answers = mapOf("1" to "a"))
+        assertEquals(false, attempt.finished)
+        assertTrue(attempt.copy(answers = attempt.answers + ("2" to "b")).finished)
+    }
+}

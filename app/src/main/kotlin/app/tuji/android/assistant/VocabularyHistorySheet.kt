@@ -111,9 +111,14 @@ fun VocabularyHistorySheet(
                     )
                 }
                 state.history.forEach { record ->
-                    HistoryRow(
-                        record = record,
+                    AssistantHistoryRow(
+                        title = record.result?.content?.headword?.text ?: record.input?.query.orEmpty(),
+                        mode = record.input?.mode?.let { stringResource(modeTitle(it)) },
+                        explainedIn = record.input?.uiLanguage,
                         uiLanguage = uiLanguage,
+                        gist = record.result?.content?.headword?.meaning.orEmpty(),
+                        createdAt = record.createdAt,
+                        favorite = record.favorite,
                         onOpen = { onOpen(record) },
                         onFavorite = { scope.launch { model.toggleFavorite(record) } },
                         onDelete = { deleting = record },
@@ -152,10 +157,16 @@ fun VocabularyHistorySheet(
     }
 }
 
+/** One saved card in 查詞紀錄 or 語法紀錄: what it is about, its template, and what it said. */
 @Composable
-private fun HistoryRow(
-    record: VocabularyRecord,
+internal fun AssistantHistoryRow(
+    title: String,
+    mode: String?,
+    explainedIn: String?,
     uiLanguage: String,
+    gist: String,
+    createdAt: String,
+    favorite: Boolean,
     onOpen: () -> Unit,
     onFavorite: () -> Unit,
     onDelete: () -> Unit,
@@ -169,30 +180,25 @@ private fun HistoryRow(
             Modifier.weight(1f).tujiClickable(onClick = onOpen),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
         ) {
-            Text(
-                record.result?.content?.headword?.text ?: record.input?.query.orEmpty(),
-                style = TujiType.h3,
-                color = TujiColor.Ink,
-            )
+            Text(title, style = TujiType.h3, color = TujiColor.Ink, maxLines = 2)
             Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2), verticalAlignment = Alignment.CenterVertically) {
-                record.input?.mode?.let { Text(stringResource(modeTitle(it)), style = TujiType.label, color = TujiColor.Ink) }
+                mode?.let { Text(it, style = TujiType.label, color = TujiColor.Ink) }
                 // A card keeps the language it was explained in; say so when it is not this one.
-                val code = record.input?.uiLanguage
-                if (code != null && code != uiLanguage) {
+                if (explainedIn != null && explainedIn != uiLanguage) {
                     Text(
-                        nativeName(code),
+                        nativeName(explainedIn),
                         style = TujiType.label,
                         color = TujiColor.Ink3,
                         modifier = Modifier.border(1.dp, TujiColor.Ink3).padding(horizontal = TujiSpace.S1),
                     )
                 }
             }
-            Text(record.result?.content?.headword?.meaning.orEmpty(), style = TujiType.bodySm, color = TujiColor.Ink)
-            Text(record.createdAt.take(10), style = TujiType.label, color = TujiColor.Ink3)
+            Text(gist, style = TujiType.bodySm, color = TujiColor.Ink, maxLines = 2)
+            Text(createdAt.take(10), style = TujiType.label, color = TujiColor.Ink3)
         }
         Column {
-            val bookmark = stringResource(if (record.favorite) R.string.vocabulary_unbookmark else R.string.vocabulary_bookmark)
-            IconAction(bookmark, onFavorite) { TujiGlyph.Bookmark(filled = record.favorite) }
+            val bookmark = stringResource(if (favorite) R.string.vocabulary_unbookmark else R.string.vocabulary_bookmark)
+            IconAction(bookmark, onFavorite) { TujiGlyph.Bookmark(filled = favorite) }
             IconAction(stringResource(R.string.vocabulary_delete), onDelete) { TujiGlyph.Trash() }
         }
     }

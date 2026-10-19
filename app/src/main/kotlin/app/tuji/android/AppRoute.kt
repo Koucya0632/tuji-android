@@ -40,6 +40,9 @@ sealed interface AppRoute {
     /** AI 查詞, from 助手. */
     data object Vocabulary : AppRoute
 
+    /** AI 語法, from 助手, under AI 查詞. */
+    data object Grammar : AppRoute
+
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
@@ -199,5 +202,6 @@ object TabShell {
         AppRoute.Assistant,
         AppRoute.CreditStatement,
         AppRoute.Vocabulary,
+        AppRoute.Grammar,
     )
 }

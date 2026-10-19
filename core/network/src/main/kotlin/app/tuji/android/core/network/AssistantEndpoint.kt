@@ -30,4 +30,28 @@ sealed class AssistantEndpoint(override val descriptor: EndpointDescriptor) : En
             policy = EndpointPolicy.PrivateFresh,
         ),
     )
+
+    data object GrammarOffer : AssistantEndpoint(EndpointDescriptor("/api/assistant/grammar", policy = EndpointPolicy.PrivateFresh))
+
+    /** A practice set is written in one model call that can run past a minute. */
+    data object GrammarGenerate : AssistantEndpoint(
+        EndpointDescriptor(
+            "/api/assistant/grammar",
+            policy = EndpointPolicy(CachePolicy.ReloadIgnoringCache, timeoutMillis = 130_000),
+        ),
+    )
+
+    data class GrammarRecord(val id: String) : AssistantEndpoint(
+        EndpointDescriptor("/api/assistant/grammar/records/$id", policy = EndpointPolicy.PrivateFresh),
+    )
+
+    data class GrammarRecords(val learning: String, val favorite: Boolean, val mode: String?, val cursor: String?) :
+        AssistantEndpoint(
+            EndpointDescriptor(
+                "/api/assistant/grammar/records",
+                query = listOf("learningDirection" to learning, "favorite" to favorite.toString()) +
+                    listOfNotNull(mode?.let { "mode" to it }, cursor?.let { "cursor" to it }),
+                policy = EndpointPolicy.PrivateFresh,
+            ),
+        )
 }

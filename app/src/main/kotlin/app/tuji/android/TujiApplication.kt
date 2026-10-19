@@ -227,7 +227,23 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
     }
 
     val vocabularyJournal: app.tuji.android.assistant.VocabularyJournaling by lazy {
-        app.tuji.android.assistant.PreferencesVocabularyJournal(getSharedPreferences("assistant", MODE_PRIVATE))
+        app.tuji.android.assistant.PreferencesJournal(
+            getSharedPreferences("assistant", MODE_PRIVATE),
+            "vocabulary.pending.v1",
+            app.tuji.android.core.model.VocabularyInput.serializer(),
+        ) { it.requestId }
+    }
+
+    val grammarJournal: app.tuji.android.assistant.GrammarJournaling by lazy {
+        app.tuji.android.assistant.PreferencesJournal(
+            getSharedPreferences("assistant", MODE_PRIVATE),
+            "grammar.pending.v1",
+            app.tuji.android.core.model.GrammarInput.serializer(),
+        ) { it.requestId }
+    }
+
+    val grammarProgress: app.tuji.android.assistant.GrammarProgressStoring by lazy {
+        app.tuji.android.assistant.PreferencesGrammarProgress(getSharedPreferences("assistant", MODE_PRIVATE))
     }
 
     val study: StudyRepository by lazy { StudyRepository(api) }
