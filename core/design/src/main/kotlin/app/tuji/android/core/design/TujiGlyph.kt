@@ -462,31 +462,6 @@ object TujiGlyph {
     }
 
     /**
-     * 今天. A filled disc with eight short rays — the tab bar's one daylight
-     * mark, so it is solid like the three beside it.
-     */
-    @Composable
-    fun Sun(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
-        Canvas(modifier.then(Modifier.size(size))) {
-            val w = this.size.width
-            val centre = Rect(Offset.Zero, this.size).center
-            drawCircle(tint, radius = w * 0.21f, center = centre)
-            repeat(RAYS) { i ->
-                val angle = (2.0 * Math.PI / RAYS) * i
-                val dx = kotlin.math.cos(angle).toFloat()
-                val dy = kotlin.math.sin(angle).toFloat()
-                drawLine(
-                    color = tint,
-                    start = Offset(centre.x + dx * w * 0.33f, centre.y + dy * w * 0.33f),
-                    end = Offset(centre.x + dx * w * 0.46f, centre.y + dy * w * 0.46f),
-                    strokeWidth = w * 0.10f,
-                    cap = StrokeCap.Round,
-                )
-            }
-        }
-    }
-
-    /**
      * 我的筆記 — iOS's `note.text`: a sheet with three lines of writing, the
      * last one short so it reads as text rather than a grid.
      */
@@ -532,21 +507,6 @@ object TujiGlyph {
         }
     }
 
-    /** 物見. Two barrels joined at the bridge — things seen, not people. */
-    @Composable
-    fun Binoculars(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
-        Canvas(modifier.then(Modifier.size(size))) {
-            val w = this.size.width
-            val h = this.size.height
-            // The eyepieces, then the bridge, then the two lenses over them.
-            drawRect(tint, topLeft = Offset(w * 0.20f, h * 0.18f), size = Size(w * 0.18f, h * 0.30f))
-            drawRect(tint, topLeft = Offset(w * 0.62f, h * 0.18f), size = Size(w * 0.18f, h * 0.30f))
-            drawRect(tint, topLeft = Offset(w * 0.36f, h * 0.40f), size = Size(w * 0.28f, h * 0.16f))
-            drawCircle(tint, radius = w * 0.215f, center = Offset(w * 0.27f, h * 0.64f))
-            drawCircle(tint, radius = w * 0.215f, center = Offset(w * 0.73f, h * 0.64f))
-        }
-    }
-
     /** 更換頭像. A camera body with a lens cut out of it and a bump on top, filled. */
     @Composable
     fun Camera(size: Dp = 14.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
@@ -581,23 +541,6 @@ object TujiGlyph {
             }
             drawPath(crown, tint)
             drawRect(tint, topLeft = Offset(w * 0.18f, h * 0.77f), size = Size(w * 0.64f, h * 0.09f))
-        }
-    }
-
-    /** 我. A head and shoulders, both filled. */
-    @Composable
-    fun Person(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
-        Canvas(modifier.then(Modifier.size(size))) {
-            val w = this.size.width
-            val h = this.size.height
-            drawCircle(tint, radius = w * 0.21f, center = Offset(w * 0.5f, h * 0.29f))
-            val shoulders = Path().apply {
-                moveTo(w * 0.10f, h * 0.94f)
-                cubicTo(w * 0.10f, h * 0.62f, w * 0.30f, h * 0.55f, w * 0.5f, h * 0.55f)
-                cubicTo(w * 0.70f, h * 0.55f, w * 0.90f, h * 0.62f, w * 0.90f, h * 0.94f)
-                close()
-            }
-            drawPath(shoulders, tint)
         }
     }
 
@@ -996,6 +939,4 @@ object TujiGlyph {
     private const val TEETH = 8
 
     private const val POINTS = 5
-
-    private const val RAYS = 8
 }
