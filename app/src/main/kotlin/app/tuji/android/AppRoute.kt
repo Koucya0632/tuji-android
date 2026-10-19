@@ -28,6 +28,18 @@ sealed interface AppRoute {
      */
     data object Search : AppRoute
 
+    /** 搜尋 opened on a query — AI 查詞's 「圖鑑裡有 N 個相關詞」. */
+    data class SearchFor(val query: String) : AppRoute
+
+    /** 助手 — Moira's home, from the cat on 今天. */
+    data object Assistant : AppRoute
+
+    /** 點數明細, from 助手 and AI 查詞. */
+    data object CreditStatement : AppRoute
+
+    /** AI 查詞, from 助手. */
+    data object Vocabulary : AppRoute
+
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
@@ -152,7 +164,11 @@ object TabShell {
      */
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
-        if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy) return false
+        if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy ||
+            current is AppRoute.SearchFor
+        ) {
+            return false
+        }
         // A page read to the end — its last lines are the ones a bar would cover.
         if (current == AppRoute.Membership) return false
         if (current is AppRoute.Tab) return true
@@ -179,5 +195,9 @@ object TabShell {
         AppRoute.LearnNew,
         AppRoute.Search,
         AppRoute.Capture,
+        // 助手 is a place you study in, as on iOS (`studyFocus.enter()`).
+        AppRoute.Assistant,
+        AppRoute.CreditStatement,
+        AppRoute.Vocabulary,
     )
 }

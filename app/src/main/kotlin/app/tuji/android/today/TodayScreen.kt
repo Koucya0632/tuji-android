@@ -100,6 +100,8 @@ fun TodayScreen(
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
     onSearch: () -> Unit,
+    /** The cat is the way into 助手. */
+    onOpenAssistant: () -> Unit = {},
     /** 主題進度, answered the way 我 answers 完成度. */
     completion: CompletionReadout? = null,
     /** 目前連勝, or 0 before the progress readout lands. */
@@ -174,6 +176,7 @@ fun TodayScreen(
             completion = completion,
             onReview = onReview,
             onLearnNew = onLearnNew,
+            onOpenAssistant = onOpenAssistant,
         )
         when {
             completion?.showsThemePrompt == true -> ThemePrompt(onOpenStudyThemes)
@@ -439,6 +442,7 @@ private fun Hero(
     completion: CompletionReadout?,
     onReview: () -> Unit,
     onLearnNew: () -> Unit,
+    onOpenAssistant: () -> Unit,
 ) {
     Box(Modifier.fillMaxWidth().tourAnchor(TourTarget.Hero)) {
         Column(
@@ -502,10 +506,12 @@ private fun Hero(
         // thing on this screen that is meant to be *noticed*, so the swap runs
         // at D3 — and under 移除動畫 it simply arrives, since watched motion is
         // suppressed rather than raced.
-        MascotCrossfade(
-            pose = if (decisions.goalReached) MascotPose.Cheer else MascotPose.Wave,
-            size = 96.dp,
-            durationMillis = TujiMotion.D3,
+        //
+        // The cat is also the way into 助手. A picture gives no sign that it can
+        // be pressed, so the cat says so — in a speech bubble whose tail is what
+        // says who is talking (iOS's `SpeechCloud`).
+        val assistantLabel = stringResource(R.string.today_assistant_label)
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(end = TujiSpace.S4)
@@ -515,8 +521,30 @@ private fun Hero(
                 // artwork's transparent margin, so this shifts the *drawn* cat
                 // rather than its frame — half of 96 is what puts the waist on
                 // the line.
-                .offset(y = (-48).dp),
-        )
+                .offset(y = (-48).dp)
+                .tujiClickable(onClick = onOpenAssistant)
+                .clearAndSetSemantics {
+                    contentDescription = assistantLabel
+                    role = Role.Button
+                },
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                stringResource(R.string.today_assistant_bubble),
+                style = TujiType.label,
+                color = TujiColor.Ink,
+                maxLines = 1,
+                modifier = Modifier
+                    .background(TujiColor.Paper2, SpeechCloud)
+                    .padding(start = TujiSpace.S3, end = TujiSpace.S3 + SPEECH_TAIL.dp)
+                    .padding(vertical = TujiSpace.S1 + 2.dp),
+            )
+            MascotCrossfade(
+                pose = if (decisions.goalReached) MascotPose.Cheer else MascotPose.Wave,
+                size = 96.dp,
+                durationMillis = TujiMotion.D3,
+            )
+        }
     }
 }
 
@@ -610,3 +638,44 @@ private fun heroHintText(decisions: TodayDecisions, stats: StudyStats?): String?
         }
         TodayHeroHint.NothingToReview -> stringResource(R.string.today_hint_nothing_to_review)
     }
+
+/** How far the bubble's tail reaches past the pill. */
+private const val SPEECH_TAIL = 10f
+
+/**
+ * A pill with a tail pointing right, at the cat — iOS's `SpeechCloud`. The tail
+ * is rooted well inside the pill's rounded end, so the base is hidden by the
+ * body at any height.
+ */
+private object SpeechCloud : androidx.compose.ui.graphics.Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density,
+    ): androidx.compose.ui.graphics.Outline {
+        val tail = SPEECH_TAIL * density.density
+        val width = size.width - tail
+        val height = size.height
+        val body = androidx.compose.ui.graphics.Path().apply {
+            addRoundRect(
+                androidx.compose.ui.geometry.RoundRect(
+                    0f, 0f, width, height,
+                    androidx.compose.ui.geometry.CornerRadius(height / 2, height / 2),
+                ),
+            )
+        }
+        val root = width - height / 2
+        val tailPath = androidx.compose.ui.graphics.Path().apply {
+            moveTo(root, height * 0.2f)
+            lineTo(size.width, height * 0.1f)
+            lineTo(root, height * 0.7f)
+            close()
+        }
+        // A union, not one path: the pill and the tail wind opposite ways, and
+        // drawn as one they cancel where they overlap.
+        val path = androidx.compose.ui.graphics.Path().apply {
+            op(body, tailPath, androidx.compose.ui.graphics.PathOperation.Union)
+        }
+        return androidx.compose.ui.graphics.Outline.Generic(path)
+    }
+}
