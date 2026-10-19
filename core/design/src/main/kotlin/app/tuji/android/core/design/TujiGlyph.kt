@@ -928,6 +928,40 @@ object TujiGlyph {
         }
     }
 
+    /** 主題對話. Two speech bubbles, one answering the other — iOS's `bubble.left.and.text.bubble.right`. */
+    @Composable
+    fun ChatBubbles(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.08f
+            val left = Path().apply {
+                moveTo(w * 0.06f, w * 0.10f)
+                lineTo(w * 0.58f, w * 0.10f)
+                lineTo(w * 0.58f, w * 0.48f)
+                lineTo(w * 0.24f, w * 0.48f)
+                lineTo(w * 0.12f, w * 0.60f)
+                lineTo(w * 0.14f, w * 0.48f)
+                lineTo(w * 0.06f, w * 0.48f)
+                close()
+            }
+            drawPath(left, tint, style = Stroke(width = stroke, join = StrokeJoin.Round))
+            val right = Path().apply {
+                moveTo(w * 0.40f, w * 0.40f)
+                lineTo(w * 0.94f, w * 0.40f)
+                lineTo(w * 0.94f, w * 0.78f)
+                lineTo(w * 0.86f, w * 0.78f)
+                lineTo(w * 0.88f, w * 0.92f)
+                lineTo(w * 0.74f, w * 0.78f)
+                lineTo(w * 0.40f, w * 0.78f)
+                close()
+            }
+            drawPath(right, tint)
+            listOf(0.54f, 0.64f).forEach { y ->
+                drawLine(TujiColor.Paper, Offset(w * 0.50f, w * y), Offset(w * 0.84f, w * y), stroke * 0.8f, StrokeCap.Round)
+            }
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

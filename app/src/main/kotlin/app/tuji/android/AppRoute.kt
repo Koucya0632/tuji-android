@@ -46,6 +46,12 @@ sealed interface AppRoute {
     /** 情境故事 — pick 圖鑑 items, a place and a difficulty; Moira writes a short dialogue around them. */
     data object Story : AppRoute
 
+    /** 圖鑑主題對話 — from 助手, a theme page's 「用這個主題聊聊」, or 對話紀錄. */
+    data class TopicChat(val entry: app.tuji.android.assistant.TopicChatEntry) : AppRoute
+
+    /** 對話紀錄 — saved 主題對話 in the language being learned. */
+    data object TopicChatHistory : AppRoute
+
     /** 設定, reached from the gear on 我的. */
     data object Settings : AppRoute
 
@@ -171,7 +177,7 @@ object TabShell {
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
         if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy ||
-            current is AppRoute.SearchFor
+            current is AppRoute.SearchFor || current is AppRoute.TopicChat
         ) {
             return false
         }
@@ -207,5 +213,6 @@ object TabShell {
         AppRoute.Vocabulary,
         AppRoute.Grammar,
         AppRoute.Story,
+        AppRoute.TopicChatHistory,
     )
 }
