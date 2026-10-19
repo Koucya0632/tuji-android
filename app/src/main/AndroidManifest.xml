@@ -21,6 +21,20 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- 跟讀 and 語音輸入 in 助手. Asked for the first time the mic is tapped,
+         not at launch. Audio goes to the device's speech recogniser and is not
+         recorded or kept by the app. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <!-- Package visibility: without this, SpeechRecognizer cannot see the
+         recognition service on Android 11+ and reports none available. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:name=".TujiApplication"
         android:allowBackup="false"

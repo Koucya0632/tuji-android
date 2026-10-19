@@ -30,7 +30,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.border
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -166,7 +169,7 @@ fun TopicChatScreen(
             TopicChatModel.Phase.Ready -> {
                 Conversation(state, model, topics, language, speech, accent, onOpenStatement, Modifier.weight(1f))
                 if (state.isActive) {
-                    Composer(state, model, supportsOpen, { supportsOpen = it })
+                    Composer(state, model, supportsOpen, { supportsOpen = it }, japanese)
                 } else {
                     state.chat?.topicId?.let { topicId ->
                         Column {
@@ -460,8 +463,42 @@ private fun Composer(
     model: TopicChatModel,
     supportsOpen: Boolean,
     onSupportsOpen: (Boolean) -> Unit,
+    japanese: Boolean,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val dictation = remember { Dictation(context, scope) }
+    val dictationPhase by dictation.phase.collectAsStateWithLifecycle()
+    /** 語音輸入 listens for Chinese instead of the language being learned. */
+    var chinese by rememberSaveable { mutableStateOf(false) }
+    val microphone = rememberMicrophone(refused = dictation::denied)
+    // The person's own Chinese: simplified for a 简体 interface, else traditional.
+    val chineseLocale = if (androidx.compose.ui.platform.LocalConfiguration.current.locales[0].country == "CN") "zh-CN" else "zh-TW"
+    DisposableEffect(dictation) {
+        onDispose {
+            dictation.cancel()
+            model.endDictation()
+        }
+    }
+    fun stopDictation() {
+        dictation.cancel()
+        model.endDictation()
+    }
+    // Listens in the language being learned, or in Chinese, and writes what is
+    // heard after what the draft already holds. Starting again replaces the try.
+    fun startDictation(inChinese: Boolean) {
+        chinese = inChinese
+        onSupportsOpen(false)
+        microphone {
+            model.beginDictation()
+            val locale = when {
+                inChinese -> chineseLocale
+                japanese -> "ja-JP"
+                else -> "en-US"
+            }
+            dictation.start(locale) { heard -> model.dictated(heard, inChinese) }
+        }
+    }
     Column {
         Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
         Column(
@@ -479,6 +516,16 @@ private fun Composer(
                         modifier = Modifier.tujiClickable(onClick = model::discardKeptDraft).padding(vertical = TujiSpace.S3),
                     )
                 }
+            }
+            if (dictationPhase != Dictation.Phase.Idle) {
+                DictationBar(
+                    phase = dictationPhase,
+                    chinese = chinese,
+                    japanese = japanese,
+                    onSwitch = { startDictation(!chinese) },
+                    onDone = dictation::stop,
+                    onDismiss = ::stopDictation,
+                )
             }
             if (supportsOpen) {
                 SupportTray(state, onExample = model::toggleExample) { kind ->
@@ -498,15 +545,46 @@ private fun Composer(
                 ) {
                     if (supportsOpen) TujiGlyph.Close(size = 17.dp) else TujiGlyph.Sparkles(size = 20.dp)
                 }
-                PaperField(
-                    value = state.draft,
-                    onValueChange = model::setDraft,
-                    placeholder = stringResource(R.string.chat_placeholder),
-                    style = TujiType.body,
-                    singleLine = false,
-                    modifier = Modifier.weight(1f).heightIn(min = 52.dp),
-                )
-                SendButton(state, model) { onSupportsOpen(false) }
+                Row(
+                    Modifier
+                        .weight(1f)
+                        .background(TujiColor.Paper2)
+                        .then(if (dictationPhase == Dictation.Phase.Listening) Modifier.border(TujiBorder.Bw2, TujiColor.Current) else Modifier),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    PaperField(
+                        value = state.draft,
+                        onValueChange = {
+                            // Typing takes the draft over from the mic.
+                            if (dictationPhase == Dictation.Phase.Listening) stopDictation()
+                            model.setDraft(it)
+                        },
+                        placeholder = stringResource(R.string.chat_placeholder),
+                        style = TujiType.body,
+                        singleLine = false,
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                    )
+                    val listening = dictationPhase == Dictation.Phase.Listening
+                    val micLabel = stringResource(if (listening) R.string.dictation_stop else R.string.dictation_start)
+                    val haptics = app.tuji.android.core.design.rememberTujiHaptics()
+                    Box(
+                        Modifier
+                            .size(width = 44.dp, height = 52.dp)
+                            .background(if (listening) TujiColor.Current else TujiColor.Paper2)
+                            .tujiClickable {
+                                haptics.soft()
+                                if (listening) dictation.stop() else startDictation(chinese)
+                            }
+                            .semantics { contentDescription = micLabel; role = Role.Button },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (listening) TujiGlyph.StopSquare(size = 14.dp) else TujiGlyph.Mic(size = 17.dp)
+                    }
+                }
+                SendButton(state, model) {
+                    onSupportsOpen(false)
+                    stopDictation()
+                }
             }
             state.chatState?.offer?.let { offer ->
                 Text(
@@ -518,6 +596,64 @@ private fun Composer(
                     style = TujiType.label,
                     color = TujiColor.Ink3,
                 )
+            }
+        }
+    }
+}
+
+/** 語音輸入's line above the field: what it is listening for, or why it cannot. */
+@Composable
+private fun DictationBar(
+    phase: Dictation.Phase,
+    chinese: Boolean,
+    japanese: Boolean,
+    onSwitch: () -> Unit,
+    onDone: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 44.dp),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val note = when (phase) {
+            Dictation.Phase.Listening -> stringResource(
+                when {
+                    chinese -> R.string.dictation_listening_chinese
+                    japanese -> R.string.dictation_listening_japanese
+                    else -> R.string.dictation_listening_english
+                },
+            )
+            Dictation.Phase.Denied -> stringResource(R.string.dictation_denied)
+            Dictation.Phase.Unavailable -> stringResource(R.string.speech_unavailable)
+            Dictation.Phase.Failed -> stringResource(R.string.speech_failed)
+            Dictation.Phase.Idle -> ""
+        }
+        Text(note, style = TujiType.bodySm, color = TujiColor.Ink2, maxLines = 2, modifier = Modifier.weight(1f))
+        when (phase) {
+            Dictation.Phase.Listening -> {
+                val switch = stringResource(
+                    when {
+                        !chinese -> R.string.dictation_switch_chinese
+                        japanese -> R.string.dictation_switch_japanese
+                        else -> R.string.dictation_switch_english
+                    },
+                )
+                TextAction(switch, onSwitch)
+                TextAction(stringResource(R.string.dictation_done), onDone)
+            }
+            Dictation.Phase.Idle -> Unit
+            else -> {
+                if (phase == Dictation.Phase.Denied) TextAction(stringResource(R.string.speech_open_settings)) { openAppSettings(context) }
+                val close = stringResource(R.string.dictation_dismiss)
+                Box(
+                    Modifier
+                        .size(44.dp)
+                        .tujiClickable(onClick = onDismiss)
+                        .semantics { contentDescription = close; role = Role.Button },
+                    contentAlignment = Alignment.Center,
+                ) { TujiGlyph.Close(size = 13.dp) }
             }
         }
     }

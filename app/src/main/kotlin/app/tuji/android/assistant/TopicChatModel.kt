@@ -160,6 +160,8 @@ class TopicChatModel(
     }
 
     private var replyJob: Job? = null
+    /** The draft as it was when 語音輸入 began; what is heard goes after it. */
+    private var dictationBase: String? = null
     /** Bumped by every switch: only the newest one's answer is drawn. */
     private var switchToken = 0
 
@@ -174,6 +176,25 @@ class TopicChatModel(
     }
 
     fun setDraft(value: String) = update { it.copy(draft = value) }
+
+    // MARK: - 語音輸入
+
+    /** What is heard from now on goes after what the draft already holds. */
+    fun beginDictation() {
+        dictationBase = now.draft.trim()
+    }
+
+    /** The whole transcript so far, in place of the last one. Chinese and Japanese join without a space. */
+    fun dictated(heard: String, chinese: Boolean) {
+        val base = dictationBase ?: return
+        val spaced = !chinese && direction != "zh-ja"
+        update { it.copy(draft = if (base.isEmpty()) heard else base + (if (spaced) " " else "") + heard) }
+    }
+
+    /** Typing, or anything else that takes the draft over, ends 語音輸入's hold on it. */
+    fun endDictation() {
+        dictationBase = null
+    }
 
     // MARK: - 進入
 
@@ -287,6 +308,7 @@ class TopicChatModel(
         val turn = s.latestTurn ?: return
         if (!s.canSend) return
         val support = ChatSupport.entries.filter { it in s.draftSupport }
+        dictationBase = null
         update {
             it.copy(
                 outgoing = Outgoing(makeRequestId(), s.draft.trim(), support, turn.id, Outgoing.Status.Sending),
@@ -384,6 +406,8 @@ class TopicChatModel(
 
     /** An option or the example. Never sends; a draft that already holds something asks first. */
     fun fill(text: String, support: ChatSupport) {
+        // The draft is someone else's now; a word heard late must not overwrite it.
+        dictationBase = null
         val current = now.draft.trim()
         if (current.isEmpty() || current == text) {
             update { it.copy(draft = text, draftSupport = it.draftSupport + support) }

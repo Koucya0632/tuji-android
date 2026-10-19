@@ -147,6 +147,25 @@ class TopicChatModelTest {
         assertTrue(model.state.value.draftSupport.isEmpty())
     }
 
+    @Test fun `what is heard goes after the draft, and typing ends the hold`() = runTest {
+        val repository = FakeRepository().apply { current = state(ai("m1")) }
+        val model = model(TopicChatEntry.Saved("c1"), repository)
+        model.load()
+        model.setDraft("I like")
+        model.beginDictation()
+        model.dictated("apples", chinese = false)
+        model.dictated("apples and tea", chinese = false)
+        assertEquals("I like apples and tea", model.state.value.draft)
+        // Chinese joins without a space.
+        model.setDraft("")
+        model.beginDictation()
+        model.dictated("蘋果", chinese = true)
+        assertEquals("蘋果", model.state.value.draft)
+        model.endDictation()
+        model.dictated("late word", chinese = false)
+        assertEquals("蘋果", model.state.value.draft)
+    }
+
     @Test fun `refusals map to what the screen says`() {
         assertEquals(TopicChatModel.Failure.InsufficientPoints, TopicChatModel.failure(ApiError.Http(409, """{"error":"insufficient_credits"}""")))
         assertEquals(TopicChatModel.Failure.AssistLimit, TopicChatModel.failure(ApiError.Http(409, """{"error":"assist_limit"}""")))

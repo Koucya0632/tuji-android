@@ -30,6 +30,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.foundation.layout.size
+import kotlin.math.roundToInt
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -294,13 +299,29 @@ private fun StoryReader(
     var speaking by remember { mutableStateOf<Job?>(null) }
     val reduceMotion = rememberReduceMotion()
     LaunchedEffect(shown, finished) { scroll.animateScrollTo(scroll.maxValue) }
-    DisposableEffect(Unit) { onDispose { speaking?.cancel() } }
+    val context = LocalContext.current
+    val recorder = remember { ShadowingRecorder(context, scope) }
+    val shadowing by recorder.state.collectAsStateWithLifecycle()
+    DisposableEffect(Unit) {
+        onDispose {
+            speaking?.cancel()
+            recorder.cancel()
+        }
+    }
+    // The line whose mic was tapped, so a refusal is said under that line.
+    var pendingLine by remember { mutableStateOf(0) }
+    val microphone = rememberMicrophone(refused = { recorder.denied(pendingLine) })
+    // Moving on, or replaying a line, drops a try in progress.
+    fun quiet() {
+        speaking?.cancel()
+        recorder.cancel()
+    }
 
     fun advance() {
         if (caughtUp) return
         val next = segments[shown]
         shown += 1
-        speaking?.cancel()
+        quiet()
         // Narration is in the interface language, so it is not read aloud.
         if (next.speaker != Story.Speaker.Narrator && speech?.canSpeak(language) == true) {
             speaking = scope.launch { speech.speak(next.text, language, accent) }
@@ -322,7 +343,23 @@ private fun StoryReader(
                     enter = if (reduceMotion) fadeIn() else fadeIn() + slideInVertically { it / 3 },
                     label = "segment$index",
                 ) {
-                    SegmentRow(segment, language, speech, accent) { speaking?.cancel() }
+                    SegmentRow(
+                        segment = segment,
+                        index = index,
+                        language = language,
+                        speech = speech,
+                        accent = accent,
+                        shadowing = shadowing,
+                        onShadow = {
+                            if (shadowing.isActive(index)) {
+                                recorder.stop()
+                            } else {
+                                speaking?.cancel()
+                                pendingLine = index
+                                microphone { recorder.start(index, segment.text, language, segment.furigana) }
+                            }
+                        },
+                    )
                 }
             }
             if (finished) {
@@ -333,7 +370,7 @@ private fun StoryReader(
                 TujiButton(
                     text = stringResource(R.string.story_another),
                     onClick = {
-                        speaking?.cancel()
+                        quiet()
                         onClose()
                     },
                     style = TujiButtonStyle.Secondary,
@@ -365,7 +402,7 @@ private fun StoryReader(
                         modifier = Modifier
                             .heightIn(min = 44.dp)
                             .tujiClickable {
-                                speaking?.cancel()
+                                quiet()
                                 shown = segments.size
                             }
                             .padding(vertical = TujiSpace.S3),
@@ -380,10 +417,12 @@ private fun StoryReader(
 @Composable
 private fun SegmentRow(
     segment: Story.Segment,
+    index: Int,
     language: TargetLanguage,
     speech: WordSpeaking?,
     accent: String,
-    onReplay: () -> Unit,
+    shadowing: ShadowingRecorder.State,
+    onShadow: () -> Unit,
 ) {
     when (segment.speaker) {
         Story.Speaker.Narrator -> Text(
@@ -397,24 +436,27 @@ private fun SegmentRow(
             verticalAlignment = Alignment.Top,
         ) {
             MascotFigure(MascotPose.Face, 32.dp, Modifier.semantics { contentDescription = "Moira" })
-            Line(segment, language, speech, accent, onReplay, Modifier.weight(1f, fill = false))
+            Line(segment, index, language, speech, accent, shadowing, onShadow, Modifier.weight(1f, fill = false))
         }
         Story.Speaker.You -> Box(
             Modifier.fillMaxWidth().padding(start = TujiSpace.S5 + 32.dp),
             contentAlignment = Alignment.CenterEnd,
         ) {
-            Line(segment, language, speech, accent, onReplay)
+            Line(segment, index, language, speech, accent, shadowing, onShadow)
         }
     }
 }
 
+/** A spoken line: the text, and beside it the speaker for a replay and the mic for 跟讀; the result sits in the bubble. */
 @Composable
 private fun Line(
     segment: Story.Segment,
+    index: Int,
     language: TargetLanguage,
     speech: WordSpeaking?,
     accent: String,
-    onReplay: () -> Unit,
+    shadowing: ShadowingRecorder.State,
+    onShadow: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -433,8 +475,70 @@ private fun Line(
                 segment.reading?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink3) }
             }
             segment.translation?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink2) }
+            if (shadowing.line == index) ShadowingFeedback(shadowing.phase)
         }
-        SentenceSpeakerButton(segment.text, language, speech, accent)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
+            SentenceSpeakerButton(segment.text, language, speech, accent)
+            ShadowingButton(active = shadowing.isActive(index), onClick = onShadow)
+        }
+    }
+}
+
+/** The mic under the speaker: 跟讀, or 停止跟讀 while it listens. */
+@Composable
+private fun ShadowingButton(active: Boolean, onClick: () -> Unit) {
+    val haptics = app.tuji.android.core.design.rememberTujiHaptics()
+    val label = stringResource(if (active) R.string.shadowing_stop else R.string.shadowing_start)
+    Box(
+        Modifier
+            .size(32.dp)
+            .background(if (active) TujiColor.Current else TujiColor.Paper)
+            .tujiClickable {
+                haptics.soft()
+                onClick()
+            }
+            .semantics { contentDescription = label; role = Role.Button },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (active) TujiGlyph.StopSquare(size = 12.dp) else TujiGlyph.Mic(size = 14.dp)
+    }
+}
+
+/**
+ * The try's result, inside the bubble: one number — how much of the line the
+ * recogniser caught, not how good the accent was. The transcript is not shown.
+ */
+@Composable
+private fun ShadowingFeedback(phase: ShadowingRecorder.Phase) {
+    val context = LocalContext.current
+    val modifier = Modifier.padding(top = TujiSpace.S1)
+    when (phase) {
+        ShadowingRecorder.Phase.Idle -> Unit
+        is ShadowingRecorder.Phase.Listening ->
+            Text(stringResource(R.string.shadowing_listening), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
+        is ShadowingRecorder.Phase.Scored -> if (phase.heard.isEmpty()) {
+            Text(stringResource(R.string.shadowing_nothing_heard), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
+        } else {
+            Text(
+                stringResource(R.string.shadowing_score, (phase.score.ratio * 100).roundToInt()),
+                style = TujiType.bodyStrong.copy(fontFeatureSettings = "tnum"),
+                color = TujiColor.Ink,
+                modifier = modifier,
+            )
+        }
+        ShadowingRecorder.Phase.Denied -> Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
+            Text(stringResource(R.string.shadowing_denied), style = TujiType.bodySm, color = TujiColor.Ink2)
+            Text(
+                stringResource(R.string.speech_open_settings),
+                style = TujiType.bodySm.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline),
+                color = TujiColor.Ink,
+                modifier = Modifier.tujiClickable { openAppSettings(context) },
+            )
+        }
+        ShadowingRecorder.Phase.Unavailable ->
+            Text(stringResource(R.string.speech_unavailable), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
+        ShadowingRecorder.Phase.Failed ->
+            Text(stringResource(R.string.speech_failed), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
     }
 }
 
