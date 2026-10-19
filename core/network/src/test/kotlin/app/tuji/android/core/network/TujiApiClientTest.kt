@@ -8,6 +8,7 @@ import io.ktor.client.engine.mock.respondError
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -34,6 +35,29 @@ class TujiApiClientTest {
         val api = TujiApiClient("https://example.test", FakeTokens(mutableListOf("stale", "fresh")), engine)
         api.postIdempotent<Map<String, Boolean>>(CreditEndpoint.Operations, mapOf("quoteId" to "quote"), "same-paid-request")
         assertEquals(listOf("same-paid-request", "same-paid-request"), keys)
+    }
+
+    @Test
+    fun `a streamed answer arrives line by line, after a 401 retry`() = runTest {
+        var calls = 0
+        val engine = MockEngine { request ->
+            calls++
+            assertEquals("application/x-ndjson", request.headers[HttpHeaders.Accept])
+            if (calls == 1) respondError(HttpStatusCode.Unauthorized)
+            else respond("{\"type\":\"opening\"}\n\n{\"type\":\"segment\"}\n", HttpStatusCode.OK)
+        }
+        val api = TujiApiClient("https://example.test", FakeTokens(mutableListOf("stale", "fresh")), engine)
+        val lines = api.postLines(AssistantEndpoint.Story, mapOf("a" to "b")).toList()
+        assertEquals(listOf("{\"type\":\"opening\"}", "{\"type\":\"segment\"}"), lines)
+        assertEquals(2, calls)
+    }
+
+    @Test
+    fun `a refused stream throws before any line`() = runTest {
+        val engine = MockEngine { respond("""{"error":"insufficient_credits"}""", HttpStatusCode.Conflict, jsonHeaders) }
+        val api = TujiApiClient("https://example.test", FakeTokens(mutableListOf("t")), engine)
+        val error = runCatching { api.postLines(AssistantEndpoint.Story, mapOf("a" to "b")).toList() }.exceptionOrNull()
+        assertEquals(409, (error as ApiError.Http).status)
     }
 
     private val wordsJson = """

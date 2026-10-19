@@ -42,7 +42,7 @@ import app.tuji.android.core.design.tujiClickable
  * `AssistantHomeFeature`. Each one arrives with its page: a row that leads
  * nowhere is worse than no row.
  */
-enum class AssistantHomeFeature { Lookup, Grammar }
+enum class AssistantHomeFeature { Lookup, Grammar, Story }
 
 /**
  * 助手 — Moira, and what she can do. iOS's `AssistantHomeView`: the cat, a
@@ -53,7 +53,7 @@ fun AssistantHomeScreen(
     onBack: () -> Unit,
     onOpen: (AssistantHomeFeature) -> Unit,
     onOpenStatement: () -> Unit,
-    /** So AI 查詞 and AI 語法 open on their prices rather than waiting for them. */
+    /** So 情境故事 opens on its choices, and AI 查詞 and AI 語法 on their prices, rather than waiting for them. */
     prefetch: suspend () -> Unit,
 ) {
     LaunchedEffect(Unit) { prefetch() }
@@ -108,6 +108,7 @@ private fun FeatureRow(feature: AssistantHomeFeature, onClick: () -> Unit) {
     val (title, detail) = when (feature) {
         AssistantHomeFeature.Lookup -> R.string.assistant_feature_lookup to R.string.assistant_feature_lookup_detail
         AssistantHomeFeature.Grammar -> R.string.assistant_feature_grammar to R.string.assistant_feature_grammar_detail
+        AssistantHomeFeature.Story -> R.string.assistant_feature_story to R.string.assistant_feature_story_detail
     }
     Row(
         Modifier
@@ -121,6 +122,7 @@ private fun FeatureRow(feature: AssistantHomeFeature, onClick: () -> Unit) {
             when (feature) {
                 AssistantHomeFeature.Lookup -> TujiGlyph.Lookup(size = 22.dp)
                 AssistantHomeFeature.Grammar -> TujiGlyph.GrammarBook(size = 22.dp)
+                AssistantHomeFeature.Story -> TujiGlyph.StoryBook(size = 22.dp)
             }
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {

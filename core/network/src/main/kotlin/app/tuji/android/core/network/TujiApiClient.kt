@@ -10,12 +10,15 @@ import io.ktor.client.plugins.timeout
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.accept
 import io.ktor.client.request.header
+import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.request.takeFrom
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
+import io.ktor.utils.io.readUTF8Line
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -23,6 +26,8 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 /**
  * Typed HTTP client. Every protected request automatically picks up the current
@@ -93,9 +98,74 @@ class TujiApiClient(
         }
     }
 
+    /**
+     * POST whose answer is one JSON object per line, read as each line
+     * arrives — iOS's `postLines`. 情境故事 streams its scene this way, so
+     * reading starts seconds before the writing ends.
+     *
+     * The status is checked before the first line, the way [send] checks it:
+     * a refusal throws [ApiError.Http] with its body, and a 401 is retried
+     * once with a fresh token. A connection lost partway ends the flow with
+     * [ApiError.Transport].
+     */
+    fun postLines(endpoint: Endpoint, body: Any?): Flow<String> = flow {
+        val (template, sent) = authorized(endpoint, HttpMethod.Post, body, mapOf(HttpHeaders.Accept to "application/x-ndjson"))
+        suspend fun open(builder: HttpRequestBuilder, retry: Boolean) {
+            try {
+                http.prepareRequest(HttpRequestBuilder().takeFrom(builder)).execute { response ->
+                    if (response.status.value == 401 && retry && endpoint.descriptor.policy.access.mayRetryUnauthorized) {
+                        val fresh = tokens.refreshedAccessToken(rejected = sent)
+                        val again = HttpRequestBuilder().takeFrom(builder).apply {
+                            headers.remove(HttpHeaders.Authorization)
+                            header(HttpHeaders.Authorization, "Bearer $fresh")
+                        }
+                        open(again, retry = false)
+                        return@execute
+                    }
+                    check(response)
+                    val channel = response.bodyAsChannel()
+                    while (true) {
+                        val line = channel.readUTF8Line() ?: break
+                        if (line.isNotBlank()) emit(line)
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ApiError) {
+                throw e
+            } catch (e: Throwable) {
+                throw ApiError.Transport(e)
+            }
+        }
+        open(template, retry = true)
+    }
+
     /** Builds, authenticates, sends, retries once on 401, and checks the status. */
     @PublishedApi
     internal suspend fun send(endpoint: Endpoint, method: HttpMethod, body: Any?, extraHeaders: Map<String, String> = emptyMap()): HttpResponse {
+        val (template, sent) = authorized(endpoint, method, body, extraHeaders)
+        val policy = endpoint.descriptor.policy
+        val first = execute(template)
+        if (first.status.value == 401 && policy.access.mayRetryUnauthorized) {
+            // Same request, fresh Authorization — fresh because the server said
+            // so, not because the device's clock agrees. See refreshedAccessToken.
+            val fresh = tokens.refreshedAccessToken(rejected = sent)
+            val retry = HttpRequestBuilder().takeFrom(template).apply {
+                headers.remove(HttpHeaders.Authorization)
+                header(HttpHeaders.Authorization, "Bearer $fresh")
+            }
+            return check(execute(retry))
+        }
+        return check(first)
+    }
+
+    /** The request [send] and [postLines] make, with the token it carries. */
+    private suspend fun authorized(
+        endpoint: Endpoint,
+        method: HttpMethod,
+        body: Any?,
+        extraHeaders: Map<String, String>,
+    ): Pair<HttpRequestBuilder, String?> {
         val descriptor = endpoint.descriptor
         val policy = descriptor.policy
 
@@ -103,7 +173,8 @@ class TujiApiClient(
             this.method = method
             url(baseUrl.trimEnd('/') + descriptor.path)
             descriptor.query.forEach { (name, value) -> url.parameters.append(name, value) }
-            accept(ContentType.Application.Json)
+            // A streamed answer asks for its own type instead.
+            if (HttpHeaders.Accept !in extraHeaders) accept(ContentType.Application.Json)
             // The account's "today" — streak, heatmap, calendar, 今日目標 and
             // the check-in reward — is the phone's day, as on iOS. Without it
             // the server falls back to Asia/Taipei.
@@ -146,19 +217,7 @@ class TujiApiClient(
             else -> null
         }
         sent?.let { template.header(HttpHeaders.Authorization, "Bearer $it") }
-
-        val first = execute(template)
-        if (first.status.value == 401 && policy.access.mayRetryUnauthorized) {
-            // Same request, fresh Authorization — fresh because the server said
-            // so, not because the device's clock agrees. See refreshedAccessToken.
-            val fresh = tokens.refreshedAccessToken(rejected = sent)
-            val retry = HttpRequestBuilder().takeFrom(template).apply {
-                headers.remove(HttpHeaders.Authorization)
-                header(HttpHeaders.Authorization, "Bearer $fresh")
-            }
-            return check(execute(retry))
-        }
-        return check(first)
+        return template to sent
     }
 
     private suspend fun execute(builder: HttpRequestBuilder): HttpResponse =

@@ -54,4 +54,12 @@ sealed class AssistantEndpoint(override val descriptor: EndpointDescriptor) : En
                 policy = EndpointPolicy.PrivateFresh,
             ),
         )
+
+    /** 情境故事's choices, labelled in [uiLanguage], with the price range and balance. */
+    data class StoryOffer(val uiLanguage: String) : AssistantEndpoint(
+        EndpointDescriptor("/api/assistant/story", query = listOf("uiLanguage" to uiLanguage), policy = EndpointPolicy.PrivateFresh),
+    )
+
+    /** A model call writing a whole scene: up to tens of seconds. */
+    data object Story : AssistantEndpoint(EndpointDescriptor("/api/assistant/story", policy = EndpointPolicy.PrivateFreshSlow))
 }
