@@ -42,7 +42,7 @@ import app.tuji.android.core.design.tujiClickable
  * `AssistantHomeFeature`. Each one arrives with its page: a row that leads
  * nowhere is worse than no row.
  */
-enum class AssistantHomeFeature { Lookup, Grammar, Story }
+enum class AssistantHomeFeature { Lookup, Grammar, Story, TopicChat }
 
 /**
  * 助手 — Moira, and what she can do. iOS's `AssistantHomeView`: the cat, a
@@ -109,6 +109,7 @@ private fun FeatureRow(feature: AssistantHomeFeature, onClick: () -> Unit) {
         AssistantHomeFeature.Lookup -> R.string.assistant_feature_lookup to R.string.assistant_feature_lookup_detail
         AssistantHomeFeature.Grammar -> R.string.assistant_feature_grammar to R.string.assistant_feature_grammar_detail
         AssistantHomeFeature.Story -> R.string.assistant_feature_story to R.string.assistant_feature_story_detail
+        AssistantHomeFeature.TopicChat -> R.string.assistant_feature_topic_chat to R.string.assistant_feature_topic_chat_detail
     }
     Row(
         Modifier
@@ -123,6 +124,7 @@ private fun FeatureRow(feature: AssistantHomeFeature, onClick: () -> Unit) {
                 AssistantHomeFeature.Lookup -> TujiGlyph.Lookup(size = 22.dp)
                 AssistantHomeFeature.Grammar -> TujiGlyph.GrammarBook(size = 22.dp)
                 AssistantHomeFeature.Story -> TujiGlyph.StoryBook(size = 22.dp)
+                AssistantHomeFeature.TopicChat -> TujiGlyph.ChatBubbles(size = 22.dp)
             }
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {

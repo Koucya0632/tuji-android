@@ -62,4 +62,28 @@ sealed class AssistantEndpoint(override val descriptor: EndpointDescriptor) : En
 
     /** A model call writing a whole scene: up to tens of seconds. */
     data object Story : AssistantEndpoint(EndpointDescriptor("/api/assistant/story", policy = EndpointPolicy.PrivateFreshSlow))
+
+    /** 對話紀錄 in one learning direction, and which one to continue. */
+    data class TopicChats(val learning: String, val uiLanguage: String) : AssistantEndpoint(
+        EndpointDescriptor(
+            "/api/topic-chat",
+            query = listOf("learningDirection" to learning, "uiLanguage" to uiLanguage),
+            policy = EndpointPolicy.PrivateFresh,
+        ),
+    )
+
+    /** Writes the opening: one model call. */
+    data object TopicChatStart : AssistantEndpoint(EndpointDescriptor("/api/topic-chat", policy = EndpointPolicy.PrivateFreshSlow))
+
+    data class TopicChat(val id: String, val uiLanguage: String?) : AssistantEndpoint(
+        EndpointDescriptor(
+            "/api/topic-chat/$id",
+            query = listOfNotNull(uiLanguage?.let { "uiLanguage" to it }),
+            policy = EndpointPolicy.PrivateFresh,
+        ),
+    )
+
+    data class TopicChatAction(val id: String, val action: String) : AssistantEndpoint(
+        EndpointDescriptor("/api/topic-chat/$id/$action", policy = EndpointPolicy.PrivateFreshSlow),
+    )
 }

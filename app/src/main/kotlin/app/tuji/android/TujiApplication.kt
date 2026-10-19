@@ -242,6 +242,10 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
         ) { it.requestId }
     }
 
+    val topicChatPreferences: app.tuji.android.assistant.TopicChatPreferences by lazy {
+        app.tuji.android.assistant.SharedTopicChatPreferences(getSharedPreferences("assistant", MODE_PRIVATE))
+    }
+
     val grammarProgress: app.tuji.android.assistant.GrammarProgressStoring by lazy {
         app.tuji.android.assistant.PreferencesGrammarProgress(getSharedPreferences("assistant", MODE_PRIVATE))
     }

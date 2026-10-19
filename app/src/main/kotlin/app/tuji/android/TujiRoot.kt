@@ -130,6 +130,12 @@ import app.tuji.android.assistant.GrammarModel
 import app.tuji.android.assistant.GrammarScreen
 import app.tuji.android.assistant.StoryBuilderModel
 import app.tuji.android.assistant.StoryScreen
+import app.tuji.android.assistant.TopicChatEntry
+import app.tuji.android.assistant.TopicChatHistoryScreen
+import app.tuji.android.assistant.TopicChatModel
+import app.tuji.android.assistant.TopicChatScreen
+import app.tuji.android.assistant.TopicChoice
+import app.tuji.android.core.network.TopicChatRepository
 import app.tuji.android.core.network.StoryRepository
 import app.tuji.android.core.network.GrammarRepository
 import app.tuji.android.assistant.VocabularyModel
@@ -584,6 +590,20 @@ private fun SignedInScreens(
     // catalogue alone leaves both out while showing them ticked in 設定.
     val studyWords = remember(catalog.words, personal.mine, personal.taken) {
         StudyThemes.words(catalog.words, personal.mine, personal.taken)
+    }
+    // 主題對話's topics: the catalogue's themes (not 自製 or 物見), with how many
+    // official words each has — a theme needs enough of them to talk about.
+    val chatTopics = remember(catalog.shelves, catalog.words, uiLang) {
+        catalog.shelves
+            .filter { it.category.id != "custom" && it.category.id != "community" }
+            .map { shelf ->
+                TopicChoice(
+                    id = shelf.category.id,
+                    name = CategoryShelf.title(shelf.category, uiLang),
+                    imageUrl = shelf.category.imageUrl,
+                    wordCount = CategoryShelf.words(shelf.category.id, catalog.words).size,
+                )
+            }
     }
     val studyShelves = remember(catalog.categories, studyWords) {
         CategoryShelf.shelves(catalog.categories, studyWords)
@@ -1758,6 +1778,7 @@ private fun SignedInScreens(
                                 AssistantHomeFeature.Lookup -> nav = nav.push(AppRoute.Vocabulary)
                                 AssistantHomeFeature.Grammar -> nav = nav.push(AppRoute.Grammar)
                                 AssistantHomeFeature.Story -> nav = nav.push(AppRoute.Story)
+                                AssistantHomeFeature.TopicChat -> nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Choose))
                             }
                         },
                         onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
@@ -1871,7 +1892,53 @@ private fun SignedInScreens(
                     bottomPadding = 0.dp,
                     onBack = { nav = nav.pop() },
                     onOpen = openCard,
+                    onChat = chatTopics.firstOrNull { it.id == route.categoryId && it.usable }?.let { topic ->
+                        { nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Topic(topic.id))) }
+                    },
                 )
+
+                is AppRoute.TopicChat -> {
+                    val chatScope = rememberCoroutineScope()
+                    val model = remember(route, direction) {
+                        TopicChatModel(
+                            entry = route.entry,
+                            repository = TopicChatRepository(app.api),
+                            preferences = app.topicChatPreferences,
+                            uiLanguage = { app.settingsStore.current.value.language.wire },
+                            direction = direction.wire,
+                            scope = chatScope,
+                        )
+                    }
+                    TopicChatScreen(
+                        model = model,
+                        topics = chatTopics,
+                        speech = app.speech,
+                        accent = settings.accent,
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpenHistory = { nav = nav.push(AppRoute.TopicChatHistory) },
+                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                        onOpenMembership = openMembership,
+                    )
+                }
+
+                AppRoute.TopicChatHistory -> {
+                    val chatScope = rememberCoroutineScope()
+                    val model = remember(direction) {
+                        TopicChatModel(
+                            entry = TopicChatEntry.Saved(""),
+                            repository = TopicChatRepository(app.api),
+                            preferences = app.topicChatPreferences,
+                            uiLanguage = { app.settingsStore.current.value.language.wire },
+                            direction = direction.wire,
+                            scope = chatScope,
+                        )
+                    }
+                    TopicChatHistoryScreen(
+                        model = model,
+                        onBack = { if (nav.current == route) nav = nav.pop() },
+                        onOpen = { nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Saved(it))) },
+                    )
+                }
 
                 is AppRoute.Word -> {
                     // The whole catalogue in store order — the 官方 grid's own

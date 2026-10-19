@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
@@ -424,6 +425,8 @@ fun AtlasThemeScreen(
     bottomPadding: Dp,
     onBack: () -> Unit,
     onOpen: (String) -> Unit,
+    /** 圖鑑主題對話's way in; null for a theme with too few words to talk about. */
+    onChat: (() -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxSize()) {
         BoxWithConstraints {
@@ -456,6 +459,10 @@ fun AtlasThemeScreen(
                             Text(text, style = TujiType.body, color = TujiColor.Ink2)
                         }
                     }
+                }
+
+                onChat?.let { chat ->
+                    item(span = { GridItemSpan(maxLineSpan) }) { ThemeChatEntry(chat) }
                 }
 
                 item(span = { GridItemSpan(maxLineSpan) }) {
@@ -602,5 +609,27 @@ private fun CardGridSkeleton(bottomPadding: Dp) {
                 TujiSkeleton(height = 14.dp, width = 72.dp)
             }
         }
+    }
+}
+
+/** 圖鑑主題對話's way in: the topic is this page's, so nothing is asked again. */
+@Composable
+private fun ThemeChatEntry(onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .background(TujiColor.Paper2)
+            .tujiClickable(onClick = onClick)
+            .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        app.tuji.android.core.design.MascotFigure(app.tuji.android.core.design.MascotPose.Face, 36.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.theme_topic_chat), style = TujiType.bodyStrong, color = TujiColor.Ink)
+            Text(stringResource(R.string.theme_topic_chat_detail), style = TujiType.bodySm, color = TujiColor.Ink3)
+        }
+        Text("→", style = TujiType.h3, color = TujiColor.Ink3)
     }
 }
