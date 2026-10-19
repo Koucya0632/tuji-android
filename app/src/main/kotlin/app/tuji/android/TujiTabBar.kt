@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -33,7 +36,6 @@ import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.tour.TourTarget
 import app.tuji.android.tour.tourAnchor
-import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.rememberTujiHaptics
@@ -125,12 +127,24 @@ private fun RowScope.TabButton(tab: AppRoute.Tab, selected: Boolean, onClick: ()
     }
 }
 
+/**
+ * The drawn tab family (`res/drawable-*dpi/tab_*.png`, same art as iOS's
+ * `tab-*` assets): white-on-clear, tinted here, cropped on one shared square so
+ * their relative sizes survive.
+ */
 @Composable
-private fun TabIcon(tab: AppRoute.Tab, tint: Color) = when (tab) {
-    AppRoute.Today -> TujiGlyph.Sun(tint = tint)
-    AppRoute.Atlas -> TujiGlyph.Books(tint = tint)
-    AppRoute.Community -> TujiGlyph.Binoculars(tint = tint)
-    AppRoute.Me -> TujiGlyph.Person(tint = tint)
+private fun TabIcon(tab: AppRoute.Tab, tint: Color) = Icon(
+    painter = painterResource(iconOf(tab)),
+    contentDescription = null,
+    tint = tint,
+    modifier = Modifier.size(26.dp),
+)
+
+private fun iconOf(tab: AppRoute.Tab): Int = when (tab) {
+    AppRoute.Today -> R.drawable.tab_today
+    AppRoute.Atlas -> R.drawable.tab_atlas
+    AppRoute.Community -> R.drawable.tab_discover
+    AppRoute.Me -> R.drawable.tab_me
 }
 
 /**
