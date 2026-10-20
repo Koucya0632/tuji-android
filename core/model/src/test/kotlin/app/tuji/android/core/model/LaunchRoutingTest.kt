@@ -15,11 +15,10 @@ class LaunchRoutingTest {
     private fun route(
         account: LaunchAccountState,
         directionSelected: Boolean = true,
-        introDone: Boolean = true,
         catalogReady: Boolean = true,
         launchReady: Boolean = true,
     ) = LaunchRouting.destination(
-        LaunchContext(account, directionSelected, introDone),
+        LaunchContext(account, directionSelected),
         catalogReady = catalogReady,
         launchReady = launchReady,
     )
@@ -30,7 +29,7 @@ class LaunchRoutingTest {
         // every signed-in user on every cold start.
         assertEquals(
             LaunchDestination.Splash,
-            route(LaunchAccountState.Checking, directionSelected = false, introDone = false),
+            route(LaunchAccountState.Checking, directionSelected = false),
         )
     }
 
@@ -91,9 +90,8 @@ class LaunchRoutingTest {
     }
 
     @Test
-    fun `a signed-out user with a direction sees the intro until it is done`() {
-        assertEquals(LaunchDestination.Onboarding, route(LaunchAccountState.SignedOut, introDone = false))
-        assertEquals(LaunchDestination.Welcome, route(LaunchAccountState.SignedOut, introDone = true))
+    fun `a signed-out user with a direction goes straight to Welcome`() {
+        assertEquals(LaunchDestination.Welcome, route(LaunchAccountState.SignedOut))
     }
 
     @Test
@@ -113,15 +111,6 @@ class LaunchRoutingTest {
         assertEquals(
             LaunchDestination.Main,
             route(LaunchAccountState.SignedIn("u1", setupDone = true)),
-        )
-    }
-
-    @Test
-    fun `the intro does not block a signed-in user`() {
-        // introDone only gates the signed-out branch.
-        assertEquals(
-            LaunchDestination.Main,
-            route(LaunchAccountState.SignedIn("u1", setupDone = true), introDone = false),
         )
     }
 }

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -39,13 +41,16 @@ import app.tuji.android.R
 import app.tuji.android.core.auth.AuthAttempt
 import app.tuji.android.core.auth.AuthFailure
 import app.tuji.android.core.auth.AuthService
-import app.tuji.android.core.design.TujiBrandLockup
+import app.tuji.android.core.design.MascotFigure
+import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiRadius
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
+import app.tuji.android.onboarding.OnboardingStep
+import app.tuji.android.onboarding.OnboardingStepBar
 import kotlinx.coroutines.launch
 
 /**
@@ -58,8 +63,9 @@ import kotlinx.coroutines.launch
  * tint rather than a third loud button; and the two ways *out* — 已有帳號 and
  * 先逛逛 — are plain text, because they are not what the screen is asking for.
  *
- * The mark is [TujiBrandLockup], vertically centred with the buttons pinned
- * low. That whitespace is the design, not an oversight.
+ * Step 2 of the run-in: the onboarding step bar on top, the cheering cat and
+ * one headline, and the buttons pinned low — iOS's layout since the intro
+ * pages were removed.
  */
 @Composable
 fun WelcomeScreen(auth: AuthService, modifier: Modifier = Modifier) {
@@ -117,10 +123,27 @@ private fun WelcomeContent(
             .background(TujiColor.Paper),
     ) {
         Spacer(Modifier.height(insets.calculateTopPadding()))
+        OnboardingStepBar(OnboardingStep.Account)
 
-        Spacer(Modifier.weight(1f))
-        TujiBrandLockup(Modifier.align(Alignment.CenterHorizontally), scale = 0.88f)
-        Spacer(Modifier.weight(1f))
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = TujiSpace.S4)
+                .padding(top = TujiSpace.S5),
+            verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
+        ) {
+            MascotFigure(
+                pose = MascotPose.Cheer,
+                size = 120.dp,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            Text(
+                stringResource(R.string.welcome_headline),
+                style = type.h1,
+                color = TujiColor.Ink,
+            )
+        }
 
         Column(
             Modifier
@@ -128,7 +151,7 @@ private fun WelcomeContent(
                 // Capped so every button shares one width, as on iOS.
                 .widthIn(max = 360.dp)
                 .padding(horizontal = TujiSpace.S4)
-                .padding(bottom = insets.calculateBottomPadding() + TujiSpace.S5),
+                .padding(top = TujiSpace.S3, bottom = insets.calculateBottomPadding() + TujiSpace.S5),
             verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
         ) {
             AppleButton(enabled = !busy) { attempt { auth.signInWithApple() } }

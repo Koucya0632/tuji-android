@@ -179,18 +179,16 @@ private fun TourCard(
             horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 跳過 goes on the last step: by then there is nothing left to skip,
-            // and two ways out of one card is one too many.
-            if (!isLast) {
-                Text(
-                    stringResource(R.string.tour_skip),
-                    style = TujiType.bodySmStrong,
-                    color = TujiColor.Ink3,
-                    modifier = Modifier
-                        .tujiClickable(onClick = onSkip)
-                        .padding(vertical = TujiSpace.S2, horizontal = TujiSpace.S1),
-                )
-            }
+            // The closing card's way out is 之後再說 rather than 跳過: by then
+            // there is nothing left to skip, only the lesson to put off.
+            Text(
+                stringResource(if (isLast) R.string.tour_later else R.string.tour_skip),
+                style = TujiType.bodySmStrong,
+                color = TujiColor.Ink3,
+                modifier = Modifier
+                    .tujiClickable(onClick = onSkip)
+                    .padding(vertical = TujiSpace.S2, horizontal = TujiSpace.S1),
+            )
             Spacer(Modifier.weight(1f))
             TujiButton(
                 text = stringResource(if (isLast) R.string.tour_start else R.string.tour_next),

@@ -10,16 +10,10 @@ enum class TourTarget {
     /** The 複習/學新字 pair inside the hero. */
     HeroCtas,
 
-    /** The daily-goal block inside the hero. */
-    DailyGoal,
+    /** The cat on the 今日 hero, which is the way into 助手. */
+    Assistant,
 
-    /** The streak chip in 今日's top row. */
-    Streak,
-
-    /** The ink tab bar. */
-    TabBar,
-
-    /** 拍照, in the middle of the bar. */
+    /** 拍照, in the bar. */
     Capture,
 }
 
@@ -55,58 +49,14 @@ sealed interface TourAdvance {
 }
 
 /**
- * The five-step first-run tour, as decisions rather than as state on the shell.
+ * The first-run tour, as decisions rather than as state on the shell.
  *
  * Kept apart from the overlay for the reason iOS gives: an index machine that
- * only exists inside a tab shell can only be exercised by launching the app,
- * and the one branch worth testing — "the next step lives on another tab" — is
- * exactly the one that is hardest to reach that way.
+ * only exists inside a tab shell can only be exercised by launching the app.
+ * [steps] is a parameter so the cross-tab branch can still be pinned now that
+ * the shipped script never leaves 今日.
  */
-class FeatureTourFlow {
-
-    val steps: List<TourStep> = listOf(
-        TourStep(
-            id = 0,
-            tab = AppRoute.Today,
-            target = TourTarget.HeroCtas,
-            fallback = TourTarget.Hero,
-            shape = TourCutoutShape.Pill,
-        ),
-        TourStep(
-            id = 1,
-            tab = AppRoute.Today,
-            target = TourTarget.DailyGoal,
-            fallback = TourTarget.Streak,
-            shape = TourCutoutShape.Square,
-        ),
-        TourStep(
-            id = 2,
-            tab = AppRoute.Today,
-            target = TourTarget.TabBar,
-            fallback = null,
-            // Squared: what it frames is the ink slab, a rectangle with the
-            // app's usual zero radius.
-            shape = TourCutoutShape.Square,
-        ),
-        TourStep(
-            id = 3,
-            // Stays on 今日: 拍照 is in the bar, so it is on screen whichever
-            // tab is showing.
-            tab = AppRoute.Today,
-            target = TourTarget.Capture,
-            fallback = null,
-            // Round, because what it frames is: the eye is the one circle in
-            // the app.
-            shape = TourCutoutShape.Pill,
-        ),
-        TourStep(
-            id = 4,
-            tab = AppRoute.Atlas,
-            target = null,
-            fallback = null,
-            shape = TourCutoutShape.Square,
-        ),
-    )
+class FeatureTourFlow(val steps: List<TourStep> = SCRIPT) {
 
     /**
      * What happens when 下一步 is tapped on [index], given the tab on screen.
@@ -136,10 +86,57 @@ class FeatureTourFlow {
 
         /**
          * Where the shell lands when the tour *finishes* rather than being
-         * skipped. The closing card invites the reader to start today's study,
-         * which lives on 今日 — so finishing goes there and skipping stays put,
-         * which is the only difference between the two.
+         * skipped. The closing card's 開始學習 opens 學新字, which lives on
+         * 今日 — so finishing goes there and skipping stays put.
          */
         val tabAfterFinishing: AppRoute.Tab = AppRoute.Today
+
+        /** What 開始學習 on the closing card opens. */
+        val routeAfterFinishing: AppRoute = AppRoute.LearnNew
+
+        /**
+         * Only what a new user would not find alone, all on 今日 — iOS's
+         * `TourStep.steps`.
+         *
+         * The tab bar and the daily goal are no longer steps. The bar names its
+         * own tabs, and its step was wrong four times as they changed; each tab
+         * now introduces itself on the first visit (`TabTip`). The goal reads 0
+         * on day one and explains itself after the first lesson.
+         */
+        val SCRIPT: List<TourStep> = listOf(
+            TourStep(
+                id = 0,
+                tab = AppRoute.Today,
+                target = TourTarget.HeroCtas,
+                fallback = TourTarget.Hero,
+                shape = TourCutoutShape.Pill,
+            ),
+            TourStep(
+                id = 1,
+                tab = AppRoute.Today,
+                // The cat gives no sign that it can be pressed — the speech
+                // bubble beside it is the only hint — which makes it the one
+                // thing on 今日 a new user is least likely to find.
+                target = TourTarget.Assistant,
+                fallback = null,
+                shape = TourCutoutShape.Square,
+            ),
+            TourStep(
+                id = 2,
+                tab = AppRoute.Today,
+                target = TourTarget.Capture,
+                fallback = null,
+                // Round, because what it frames is: the eye is the one circle
+                // in the app.
+                shape = TourCutoutShape.Pill,
+            ),
+            TourStep(
+                id = 3,
+                tab = AppRoute.Today,
+                target = null,
+                fallback = null,
+                shape = TourCutoutShape.Square,
+            ),
+        )
     }
 }

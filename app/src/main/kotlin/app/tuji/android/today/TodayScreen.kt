@@ -328,7 +328,7 @@ private fun Greeting(
                 TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
             }
             Spacer(Modifier.width(TujiSpace.S3))
-            StreakChip(streak, streakBadge, onStreak, Modifier.tourAnchor(TourTarget.Streak))
+            StreakChip(streak, streakBadge, onStreak)
         }
 
         // One string with the name inside it, so the whole greeting wraps as
@@ -458,7 +458,7 @@ private fun Hero(
                 Modifier.padding(end = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
             ) {
-                Box(Modifier.tourAnchor(TourTarget.DailyGoal)) { DailyGoal(decisions, inputs) }
+                DailyGoal(decisions, inputs)
                 ThemeProgress(completion)
             }
 
@@ -522,6 +522,7 @@ private fun Hero(
                 // rather than its frame — half of 96 is what puts the waist on
                 // the line.
                 .offset(y = (-48).dp)
+                .tourAnchor(TourTarget.Assistant)
                 .tujiClickable(onClick = onOpenAssistant)
                 .clearAndSetSemantics {
                     contentDescription = assistantLabel
