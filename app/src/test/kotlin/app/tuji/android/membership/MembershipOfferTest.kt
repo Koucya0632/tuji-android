@@ -51,7 +51,8 @@ class MembershipOfferTest {
                 R.string.membership_benefit_community,
                 R.string.membership_benefit_notes,
                 R.string.membership_benefit_lists_20,
-                R.string.membership_benefit_slots_200_credits,
+                R.string.membership_benefit_slots_200,
+                R.string.membership_benefit_ai_credits,
             ),
             offer.lifetimeRows,
         )
