@@ -83,14 +83,15 @@ import app.tuji.android.core.model.LaunchContext
 import app.tuji.android.core.study.SetupChoices
 import app.tuji.android.tour.FeatureTourFlow
 import app.tuji.android.tour.FeatureTourOverlay
+import app.tuji.android.tour.TabTip
+import app.tuji.android.tour.TabTipBubble
 import app.tuji.android.tour.ProvideTourAnchors
 import app.tuji.android.tour.TourAdvance
 import app.tuji.android.tour.TourCopy
 import app.tuji.android.tour.rememberTourAnchors
 import app.tuji.android.update.AppUpdatePrompt
 import kotlinx.coroutines.delay
-import app.tuji.android.onboarding.OnboardingFlow
-import app.tuji.android.onboarding.SetupScreen
+import app.tuji.android.onboarding.AutoSetupScreen
 import app.tuji.android.core.design.TujiFace
 import app.tuji.android.core.design.LockupEntrance
 import app.tuji.android.core.design.TujiBrandLockup
@@ -255,10 +256,9 @@ fun TujiRoot(app: TujiApplication) {
         LaunchContext(
             account = account,
             learningDirectionSelected = direction != null,
-            introDone = app.onboarding.introDone,
         ),
-        // The 3-page intro is not ported yet, so nobody is held waiting for a
-        // catalogue that no screen consumes.
+        // Setup loads the catalogue before it lets go, so nobody is held
+        // waiting here for one.
         catalogReady = true,
         launchReady = launchReady,
     )
@@ -291,51 +291,39 @@ fun TujiRoot(app: TujiApplication) {
                     direction = it
                 },
             )
-            // The 3-page marketing intro is not ported. Treating it as seen sends a
-            // signed-out user to Welcome, which is where they were going anyway.
-            is LaunchDestination.Onboarding -> {
-                var introDone by remember { mutableStateOf(false) }
-                if (introDone) {
-                    WelcomeScreen(app.auth)
-                } else {
-                    OnboardingFlow(
-                        onDone = {
-                            app.onboarding.introDone = true
-                            // The store is a preference, not state routing
-                            // recomposes for — this is what moves the app.
-                            introDone = true
-                        },
-                    )
-                }
-            }
             is LaunchDestination.Welcome -> WelcomeScreen(app.auth)
             is LaunchDestination.Setup -> {
                 val setupLanguage = rememberDeviceLanguage()
                 val setupScope = rememberCoroutineScope()
-                val catalog by app.catalog.contents.collectAsStateWithLifecycle()
-                val settings by app.settingsStore.current.collectAsStateWithLifecycle()
-                val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
-                LaunchedEffect(destination.userId) {
-                    app.settingsStore.load(setupLanguage)
-                    app.catalog.load(app.settingsStore.current.value.direction)
-                }
-                SetupScreen(
-                    categories = catalog.categories,
-                    uiLang = settings.uiLang,
-                    account = SetupChoices.AccountThemes(settings.studyCategories, settings.dailyGoal)
-                        .takeIf { settingsLoaded },
-                    settingsLoaded = settingsLoaded,
-                    onDone = { topics, goal ->
-                        runCatching { app.settingsStore.completeSetup(topics, goal) }
-                            .onSuccess {
-                                // The shell needs the catalogue for the themes
-                                // just chosen; loading it here keeps Setup on
-                                // screen instead of showing the launch mark a
-                                // second time.
-                                app.catalog.load(app.settingsStore.current.value.direction, force = true)
-                                app.onboarding.markSetupDone(destination.userId)
-                                setupDone = setupDone + destination.userId
+                AutoSetupScreen(
+                    run = {
+                        runCatching {
+                            app.settingsStore.load(setupLanguage)
+                            if (!app.settingsStore.loaded.value) error("settings did not load")
+                            val settings = app.settingsStore.current.value
+                            app.catalog.load(settings.direction)
+                            // Words and themes load as one call that keeps the
+                            // words when the themes fail — and the themes are
+                            // what this needs, so ask again rather than write
+                            // an account with none.
+                            if (app.catalog.contents.value.categories.isEmpty()) {
+                                app.catalog.load(settings.direction, force = true)
                             }
+                            val categories = app.catalog.contents.value.categories
+                            if (categories.isEmpty()) error("themes did not load")
+                            val seed = SetupChoices.seed(
+                                account = SetupChoices.AccountThemes(settings.studyCategories, settings.dailyGoal),
+                                catalogIds = categories.map { it.id }.toSet(),
+                                firstThemesFallback = categories.map { it.id },
+                            )
+                            app.settingsStore.completeSetup(seed.topicIds, seed.dailyGoal)
+                            // The shell needs the catalogue for the themes just
+                            // written; loading it here keeps the mark up instead
+                            // of landing on an empty 今日.
+                            app.catalog.load(app.settingsStore.current.value.direction, force = true)
+                            app.onboarding.markSetupDone(destination.userId)
+                            setupDone = setupDone + destination.userId
+                        }
                     },
                     onSignOut = { setupScope.launch { app.auth.signOut() } },
                 )
@@ -1039,12 +1027,36 @@ private fun SignedInScreens(
     val myUid = accountState.me?.username
     LaunchedEffect(myUid) { if (myUid != null) community.loadMe(myUid) }
 
-    // The five-step tour, on the first launch only. The marked composables
+    // The first-run tour, on the first launch only. The marked composables
     // below report where they are; the overlay reads that and nothing else in
     // the shell knows the tour exists.
     val anchors = rememberTourAnchors()
     val tour = remember { FeatureTourFlow() }
     var tourStep by remember { mutableStateOf<Int?>(null) }
+    // Mirrors of the store, which is a preference and not state the shell
+    // recomposes for.
+    var tabTipsArmed by remember { mutableStateOf(app.onboarding.tabTipsArmed) }
+    var tabTipsSeen by remember { mutableStateOf(app.onboarding.tabTipsSeen) }
+    fun tabTipShows(tab: AppRoute.Tab?): Boolean = tab != null && TabTip.shows(
+        tab = tab,
+        armed = tabTipsArmed,
+        seen = tabTipsSeen,
+        atRoot = nav.current is AppRoute.Tab,
+        tourRunning = tourStep != null,
+        studyFocusActive = !TabShell.tabBarVisible(nav),
+    )
+    fun dismissTabTip(tab: AppRoute.Tab) {
+        val key = TabTip.key(tab) ?: return
+        tabTipsSeen = tabTipsSeen + key
+        app.onboarding.tabTipsSeen = tabTipsSeen
+    }
+    // Shown and walked away from counts as read: it is one line, and a tip that
+    // waits for a tap on every visit turns into a nag.
+    var tipShownOn by remember { mutableStateOf<AppRoute.Tab?>(null) }
+    LaunchedEffect(nav.tab) {
+        tipShownOn?.let { if (it != nav.tab) dismissTabTip(it) }
+        tipShownOn = nav.tab?.takeIf { tabTipShows(it) }
+    }
     var tourCrossing by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         // After the launch beat, not before: everything `mayStart` asks about
@@ -2046,6 +2058,18 @@ private fun SignedInScreens(
             }
         }
 
+        // In the column, not over the page: it sits on the bar and pushes the
+        // page up rather than covering the bottom of it.
+        val tipTab = nav.tab?.takeIf { tabTipShows(it) }
+        AnimatedVisibility(
+            visible = tipTab != null,
+            enter = fadeIn(tween(TujiMotion.D2)),
+            exit = fadeOut(tween(TujiMotion.D2)),
+        ) {
+            val shown = tipTab ?: return@AnimatedVisibility
+            TabTip.text(shown)?.let { TabTipBubble(it, onDismiss = { dismissTabTip(shown) }) }
+        }
+
         // The bar leaves downwards, the way it would if it were a thing on
         // the screen rather than a thing being deleted from it.
         AnimatedVisibility(
@@ -2077,10 +2101,15 @@ private fun SignedInScreens(
         val step = tour.steps[index]
         val end = { finished: Boolean ->
             app.onboarding.tourDone = true
+            app.onboarding.tabTipsArmed = true
+            tabTipsArmed = true
             tourStep = null
-            // Finishing lands where the closing card points; skipping stays
-            // put. That is the only difference between the two.
-            if (finished) nav = nav.select(FeatureTourFlow.tabAfterFinishing)
+            // Finishing opens 學新字, which is what the closing card offers;
+            // skipping stays put.
+            if (finished) {
+                nav = nav.select(FeatureTourFlow.tabAfterFinishing)
+                    .push(FeatureTourFlow.routeAfterFinishing)
+            }
         }
         FeatureTourOverlay(
             step = step,

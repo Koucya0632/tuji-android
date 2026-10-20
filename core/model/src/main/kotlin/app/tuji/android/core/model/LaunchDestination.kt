@@ -22,7 +22,6 @@ sealed interface LaunchAccountState {
 sealed interface LaunchDestination {
     data object Splash : LaunchDestination
     data object LearningDirection : LaunchDestination
-    data object Onboarding : LaunchDestination
     data object Welcome : LaunchDestination
     data class Setup(val userId: String) : LaunchDestination
     data object Main : LaunchDestination
@@ -31,7 +30,6 @@ sealed interface LaunchDestination {
 data class LaunchContext(
     val account: LaunchAccountState,
     val learningDirectionSelected: Boolean,
-    val introDone: Boolean,
 )
 
 object LaunchRouting {
@@ -68,11 +66,11 @@ object LaunchRouting {
         return when (val account = context.account) {
             is LaunchAccountState.Checking -> LaunchDestination.Splash
 
-            is LaunchAccountState.SignedOut -> when {
-                !context.learningDirectionSelected -> LaunchDestination.LearningDirection
-                context.introDone -> LaunchDestination.Welcome
-                else -> LaunchDestination.Onboarding
-            }
+            // No intro between the two: a signed-out user with a language
+            // goes straight to making an account.
+            is LaunchAccountState.SignedOut ->
+                if (!context.learningDirectionSelected) LaunchDestination.LearningDirection
+                else LaunchDestination.Welcome
 
             is LaunchAccountState.SignedIn -> when {
                 !context.learningDirectionSelected -> LaunchDestination.LearningDirection

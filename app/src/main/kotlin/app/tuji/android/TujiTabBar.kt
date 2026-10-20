@@ -64,7 +64,6 @@ fun TujiTabBar(
         Modifier
             .fillMaxWidth()
             .background(TujiColor.Ink)
-            .tourAnchor(TourTarget.TabBar)
             .padding(bottom = bottomInset),
     ) {
         TabShell.tabs.forEach { tab ->

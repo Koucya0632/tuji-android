@@ -1,220 +1,110 @@
 package app.tuji.android.onboarding
 
-import app.tuji.android.core.network.ApiError
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.background
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import app.tuji.android.R
-import app.tuji.android.core.catalog.CategoryShelf
-import app.tuji.android.core.design.TujiBorder
+import app.tuji.android.core.design.LockupEntrance
+import app.tuji.android.core.design.TujiBrandLockup
 import app.tuji.android.core.design.TujiButton
+import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.design.TujiPageLoading
-import app.tuji.android.core.design.TujiScreenTitle
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.model.Category
-import app.tuji.android.core.study.SetupChoices
-import app.tuji.android.core.study.SettingsRules
-import app.tuji.android.settings.ThemeTile
-import kotlinx.coroutines.launch
+import app.tuji.android.core.network.ApiError
 
 /**
- * 先幫你排一份學習節奏 — the one screen a signed-in account sees before 今日.
+ * The account's first-run settings, written without a screen of questions —
+ * iOS's `SetupView` since it stopped asking.
  *
- * `LaunchRouting` has computed `Setup` since the launch module was written;
- * `TujiRoot` drew the main shell for it anyway, so nobody on Android had ever
- * seen this. A new account landed on 今日 studying whatever the defaults were,
- * with a daily goal nobody chose.
+ * Setup used to ask for themes and a daily goal. Neither is asked any more: a
+ * new user goes from sign-in straight to 今日. The account still needs them
+ * written — the server hands out no new words with no theme — so [run] seeds
+ * both from `SetupChoices` (the beginner themes and default goal for a new
+ * account, the account's own for a returning one) while the mark stays up.
+ * 設定 changes either later.
  *
- * Two questions, both of which the account can already answer — which is why
- * this is a confirmation and not an interview. [SetupChoices.seed] decides what
- * opens ticked, and the reason it takes the account's own settings is that the
- * flag bringing somebody here lives on the *device*: a reinstall runs this
- * again, months in.
+ * Only a failure shows anything, and iOS's split decides what: a session the
+ * server will not accept (401) offers 重新登入, which signs out; anything else
+ * is retried, not answered by throwing the session away.
  */
 @Composable
-fun SetupScreen(
-    categories: List<Category>,
-    uiLang: String,
-    account: SetupChoices.AccountThemes?,
-    settingsLoaded: Boolean,
-    onDone: suspend (topicIds: Set<String>, dailyGoal: Int) -> Result<Unit>,
+fun AutoSetupScreen(
+    run: suspend () -> Result<Unit>,
     onSignOut: () -> Unit,
 ) {
-    var picked by remember { mutableStateOf<Set<String>?>(null) }
-    var goal by remember { mutableStateOf(SetupChoices.DEFAULT_DAILY_GOAL) }
-    var saving by remember { mutableStateOf(false) }
+    var attempt by remember { mutableIntStateOf(0) }
     var failure by remember { mutableStateOf<Throwable?>(null) }
-    val scope = rememberCoroutineScope()
+    var running by remember { mutableStateOf(false) }
 
-    // Seeded once, and only once both halves have arrived. Re-seeding on every
-    // settings emission would take a tap back off a tile under the user's
-    // finger; seeding before they arrive would open the beginner trio for an
-    // account that has its own themes and is about to have them overwritten.
-    LaunchedEffect(categories.isNotEmpty(), settingsLoaded) {
-        if (picked != null || categories.isEmpty() || !settingsLoaded) return@LaunchedEffect
-        val seed = SetupChoices.seed(
-            account = account,
-            catalogIds = categories.map { it.id }.toSet(),
-            firstThemesFallback = categories.map { it.id },
-        )
-        picked = seed.topicIds
-        goal = seed.dailyGoal
+    LaunchedEffect(attempt) {
+        running = true
+        failure = null
+        failure = run().exceptionOrNull()
+        running = false
     }
 
-    val selection = picked
-    // This screen is drawn before any shell, so nothing above it has reserved
-    // the system bars — the title ran under the clock without this.
     val insets = WindowInsets.systemBars.asPaddingValues()
-    Column(
+    Box(
         Modifier
             .fillMaxSize()
-            .background(TujiColor.Paper)
-            .padding(top = insets.calculateTopPadding()),
+            .background(TujiColor.Paper),
     ) {
-        Box(Modifier.weight(1f)) {
-            if (selection == null) {
-                TujiPageLoading(label = stringResource(R.string.setup_loading))
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    contentPadding = PaddingValues(
-                        start = TujiSpace.S4, end = TujiSpace.S4,
-                        top = TujiSpace.S3, bottom = TujiSpace.S4,
-                    ),
-                    horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-                    verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        TujiScreenTitle(stringResource(R.string.setup_title))
-                    }
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        SectionLabel(stringResource(R.string.setup_topics))
-                    }
-                    items(categories, key = { it.id }) { category ->
-                        ThemeTile(
-                            label = CategoryShelf.title(category, uiLang),
-                            selected = category.id in selection,
-                            onClick = {
-                                picked = SettingsRules
-                                    .toggleCategory(selection.toList(), category.id)
-                                    .toSet()
-                            },
-                        )
-                    }
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        SectionLabel(
-                            stringResource(R.string.setup_goal),
-                            Modifier.padding(top = TujiSpace.S3),
-                        )
-                    }
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                            // Three, not the six 設定 offers: this is somebody's
-                            // first minute, and a six-way choice about a number
-                            // they have no feel for yet is a question they
-                            // cannot answer.
-                            SETUP_GOALS.forEach { option ->
-                                ThemeTile(
-                                    label = stringResource(R.string.settings_goal_value, option),
-                                    selected = goal == option,
-                                    onClick = { goal = option },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                        }
-                    }
-                    failure?.let { error ->
-                        // iOS's split: only a session the server will not accept
-                        // (401) is unrecoverable here, and only that one offers
-                        // 重新登入 — which signs out. A dropped connection is
-                        // retried with 完成設定, not by throwing the session away.
-                        val unauthorized = error is ApiError.NotAuthenticated || (error as? ApiError.Http)?.status == 401
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                                Text(
-                                    stringResource(if (unauthorized) R.string.setup_unauthorized else R.string.setup_failed),
-                                    style = TujiType.label,
-                                    color = TujiColor.Alert,
-                                )
-                                if (unauthorized) {
-                                    TujiButton(
-                                        text = stringResource(R.string.setup_sign_in_again),
-                                        style = app.tuji.android.core.design.TujiButtonStyle.Secondary,
-                                        onClick = onSignOut,
-                                    )
-                                }
-                            }
-                        }
-                    }
+        // The settled mark, not the entrance: the launch screen already played
+        // it, and this reads as the same load carrying on into 今日.
+        TujiBrandLockup(Modifier.align(Alignment.Center), entrance = LockupEntrance.Finished)
+
+        failure?.let { error ->
+            val unauthorized = error is ApiError.NotAuthenticated || (error as? ApiError.Http)?.status == 401
+            Column(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = TujiSpace.S4)
+                    .padding(bottom = insets.calculateBottomPadding() + TujiSpace.S5),
+                verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    stringResource(if (unauthorized) R.string.setup_unauthorized else R.string.setup_failed),
+                    style = TujiType.label,
+                    color = TujiColor.Alert,
+                    textAlign = TextAlign.Center,
+                )
+                TujiButton(
+                    text = stringResource(R.string.retry),
+                    enabled = !running,
+                    onClick = { attempt++ },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (unauthorized) {
+                    TujiButton(
+                        text = stringResource(R.string.setup_sign_in_again),
+                        style = TujiButtonStyle.Secondary,
+                        onClick = onSignOut,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         }
-
-        Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
-        TujiButton(
-            text = stringResource(if (saving) R.string.setup_saving else R.string.setup_done),
-            // Not 開始使用: that is the last intro page's button, and this is a
-            // second tap in the same run-in.
-            enabled = !saving && !selection.isNullOrEmpty(),
-            onClick = {
-                if (saving || selection.isNullOrEmpty()) return@TujiButton
-                saving = true
-                failure = null
-                scope.launch {
-                    val result = onDone(selection, goal)
-                    saving = false
-                    failure = result.exceptionOrNull()
-                }
-            },
-            modifier = Modifier
-                .padding(
-                    start = TujiSpace.S4,
-                    end = TujiSpace.S4,
-                    top = TujiSpace.S4,
-                    bottom = TujiSpace.S4 + insets.calculateBottomPadding(),
-                )
-                .fillMaxWidth(),
-        )
     }
 }
-
-@Composable
-private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = TujiType.label,
-        color = TujiColor.Ink3,
-        modifier = modifier.padding(bottom = TujiSpace.S1),
-    )
-}
-
-/** iOS's Setup offers exactly these three. */
-private val SETUP_GOALS = listOf(5, 10, 20)

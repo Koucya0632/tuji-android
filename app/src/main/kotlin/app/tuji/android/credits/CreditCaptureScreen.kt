@@ -2,7 +2,6 @@ package app.tuji.android.credits
 
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -56,13 +55,13 @@ import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.community.CaptureSecondField
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.MascotSpeechBubble
-import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
 import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.TujiStepIndicator
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiStatusEdgeLabel
@@ -143,7 +142,7 @@ fun CreditCaptureScreen(
     }
 
     Column(Modifier.fillMaxSize()) {
-        StepIndicator(total = 5, current = state.step)
+        TujiStepIndicator(total = 5, current = state.step)
         Column(
             Modifier
                 .fillMaxSize()
@@ -199,27 +198,6 @@ fun CreditCaptureScreen(
 }
 
 // MARK: - Chrome
-
-@Composable
-private fun StepIndicator(total: Int, current: Int) {
-    Row(
-        Modifier.fillMaxWidth().height(TujiBorder.Bw3),
-        horizontalArrangement = Arrangement.spacedBy(TujiBorder.Bw1),
-    ) {
-        repeat(total) { index ->
-            val fill by animateColorAsState(
-                when {
-                    index < current -> TujiColor.Ink
-                    index == current -> TujiColor.Current
-                    else -> TujiColor.Paper2
-                },
-                TujiMotion.ease(TujiMotion.D2),
-                label = "step",
-            )
-            Box(Modifier.weight(1f).fillMaxSize().background(fill))
-        }
-    }
-}
 
 @Composable
 private fun WalletRow(available: Int?, onOpen: () -> Unit) {
