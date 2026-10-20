@@ -613,7 +613,8 @@
     <string name="membership_benefit_community">物見の保存・学習・投稿</string>
     <string name="membership_benefit_notes">単語ごとに自分のメモを残せます</string>
     <string name="membership_benefit_lists_20">単語リスト 20 件（リストから学習）</string>
-    <string name="membership_benefit_slots_200_credits">自作図鑑200枠、AI認識は缶詰ポイントで</string>
+    <string name="membership_benefit_slots_200">自作図鑑200枠</string>
+    <string name="membership_benefit_ai_credits">AI認識・単語検索・文法は缶詰ポイントを使います</string>
     <string name="membership_benefit_lists_100">単語リストが 100 件まで</string>
     <string name="membership_benefit_slots_300">マイ図鑑の容量が300枠に拡張</string>
     <string name="membership_benefit_ai_200">AI認識が月200回に増加</string>
@@ -842,7 +843,7 @@
     <string name="assistant_greeting">こんにちは、Moiraです</string>
     <string name="assistant_intro">単語を調べたり物語を読んだり、一緒に学ぼう。</string>
     <string name="assistant_feature_lookup">AI単語学習</string>
-    <string name="assistant_feature_lookup_detail">意味・使い方・覚え方を缶詰ポイントで学ぶ</string>
+    <string name="assistant_feature_lookup_detail">意味・使い方・覚え方を学ぶ</string>
     <string name="assistant_pet">Moiraをなでる</string>
     <string name="assistant_pet_hint">タップするとMoiraがしっぽを振ります</string>
     <string name="assistant_pet_done">Moiraになでなでが届きました。</string>
@@ -951,7 +952,7 @@
     <string name="vocabulary_delete_cancel">キャンセル</string>
     <string name="vocabulary_delete_message">削除すると元に戻せません。再生成にはポイントを使います。</string>
     <string name="assistant_feature_grammar">AI文法</string>
-    <string name="assistant_feature_grammar_detail">文型の解説・用法の比較・文法練習。缶詰ポイントを使います</string>
+    <string name="assistant_feature_grammar_detail">文型の解説・用法の比較・文法練習</string>
     <string name="grammar_mode_explain">文法解説</string>
     <string name="grammar_mode_compare">類似文法</string>
     <string name="grammar_mode_practice">文法練習</string>

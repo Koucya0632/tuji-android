@@ -613,7 +613,8 @@
     <string name="membership_benefit_community">收藏、学习与投稿物见</string>
     <string name="membership_benefit_notes">为每个字写下自己的笔记</string>
     <string name="membership_benefit_lists_20">个人词表 20 张，可以从词表背词</string>
-    <string name="membership_benefit_slots_200_credits">自制图鉴 200 格，AI 识别使用罐头点数</string>
+    <string name="membership_benefit_slots_200">自制图鉴 200 格</string>
+    <string name="membership_benefit_ai_credits">AI 识别、查词与语法，需要使用罐头点数</string>
     <string name="membership_benefit_lists_100">个人词表增加到 100 张</string>
     <string name="membership_benefit_slots_300">自制图鉴容量提升至 300 格</string>
     <string name="membership_benefit_ai_200">AI 辨识次数提升至每月 200 次</string>
@@ -842,7 +843,7 @@
     <string name="assistant_greeting">嗨，我是 Moira</string>
     <string name="assistant_intro">查单字、读故事，陪你一起学。</string>
     <string name="assistant_feature_lookup">AI 查词</string>
-    <string name="assistant_feature_lookup_detail">查词、深入解析与助记，使用罐头点数</string>
+    <string name="assistant_feature_lookup_detail">查词、深入解析与助记</string>
     <string name="assistant_pet">摸摸 Moira</string>
     <string name="assistant_pet_hint">点击让 Moira 甩尾巴</string>
     <string name="assistant_pet_done">Moira 收到你的摸摸了。</string>
@@ -951,7 +952,7 @@
     <string name="vocabulary_delete_cancel">取消</string>
     <string name="vocabulary_delete_message">删除后无法复原；重新生成会再次使用点数。</string>
     <string name="assistant_feature_grammar">AI 语法</string>
-    <string name="assistant_feature_grammar_detail">解释句型、比较用法与语法练习，使用罐头点数</string>
+    <string name="assistant_feature_grammar_detail">解释句型、比较用法与语法练习</string>
     <string name="grammar_mode_explain">语法解释</string>
     <string name="grammar_mode_compare">近似语法</string>
     <string name="grammar_mode_practice">语法练习</string>

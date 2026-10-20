@@ -55,14 +55,16 @@ data class MembershipOffer(
         /**
          * 永久會員 once billing is on 罐頭點數: AI has no monthly quota any
          * more — it is paid per use from the points — so the card sells what
-         * the membership itself opens. iOS's `MembershipBenefits.creditsLifetime`.
+         * the membership itself opens, then says which AI features draw on
+         * the points. iOS's `MembershipBenefits.creditsLifetime`.
          */
         private val CREDITS_LIFETIME = listOf(
             R.string.membership_benefit_all_series,
             R.string.membership_benefit_community,
             R.string.membership_benefit_notes,
             R.string.membership_benefit_lists_20,
-            R.string.membership_benefit_slots_200_credits,
+            R.string.membership_benefit_slots_200,
+            R.string.membership_benefit_ai_credits,
         )
 
         fun from(entitlement: Entitlement?): MembershipOffer {
