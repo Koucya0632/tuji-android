@@ -359,6 +359,20 @@ interface Endpoint {
     }
 
     /**
+     * 物見搜尋 — 合集 by title or author, and words by spelling or 中文.
+     *
+     * `lang` is required for the same reason as [AtlasCollections]; public and
+     * cached because nothing in it is about the reader.
+     */
+    data class AtlasSearch(val q: String, val lang: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/public/search",
+            query = listOf("q" to q, "lang" to lang),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    /**
      * One collection, opened.
      *
      * **Fresh with optional auth, not public-cached.** The payload's `access`

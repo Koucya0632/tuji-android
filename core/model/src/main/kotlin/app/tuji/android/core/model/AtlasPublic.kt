@@ -110,6 +110,14 @@ data class AtlasCollectionAccess(
 @Serializable
 data class AtlasCollectionsResponse(val collections: List<AtlasPublicCollection> = emptyList())
 
+/** `/api/atlas/public/search` — 物見搜尋: the 合集 and the single words that match, one language. */
+@Serializable
+data class AtlasSearchResponse(
+    val query: String = "",
+    val collections: List<AtlasPublicCollection> = emptyList(),
+    val items: List<AtlasPublicItem> = emptyList(),
+)
+
 /** `/collections/{slug}/save` in all three verbs: where the bookmark stands now, and the new total. */
 @Serializable
 data class AtlasSaveState(val ok: Boolean = true, val saved: Boolean = false, val saveCount: Int = 0)

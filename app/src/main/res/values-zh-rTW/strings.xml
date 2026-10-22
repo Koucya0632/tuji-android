@@ -290,6 +290,12 @@
     <string name="community_saved_empty_ja">目前沒有收藏的日文合集</string>
     <string name="community_saved_empty_en">目前沒有收藏的英文合集</string>
     <string name="community_explore_empty">這個語言還沒有公開合集</string>
+    <string name="community_search">搜尋物見</string>
+    <string name="community_search_placeholder">搜尋合集、作者或單字</string>
+    <string name="community_search_empty_title">在大家的物見裡找找</string>
+    <string name="community_search_empty_message">輸入合集名稱、作者，或想看的單字</string>
+    <string name="community_search_not_found_message">換個關鍵字，或用中文試試</string>
+    <string name="community_search_words">單字卡片</string>
     <string name="community_stat_published">公開卡片</string>
     <string name="community_stat_saves">被收藏</string>
     <string name="community_stat_items">卡片</string>

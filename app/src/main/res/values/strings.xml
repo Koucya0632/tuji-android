@@ -290,6 +290,12 @@
     <string name="community_saved_empty_ja">No saved Japanese collections</string>
     <string name="community_saved_empty_en">No saved English collections</string>
     <string name="community_explore_empty">No public collections in this language yet</string>
+    <string name="community_search">Search sightings</string>
+    <string name="community_search_placeholder">Search collections, authors or words</string>
+    <string name="community_search_empty_title">Search everyone’s sightings</string>
+    <string name="community_search_empty_message">Type a collection name, an author, or a word you want to see</string>
+    <string name="community_search_not_found_message">Try another keyword, or search in Chinese</string>
+    <string name="community_search_words">Word cards</string>
     <string name="community_stat_published">Published</string>
     <string name="community_stat_saves">Saves</string>
     <string name="community_stat_items">Cards</string>

@@ -16,6 +16,7 @@ import app.tuji.android.core.model.TopWordsResponse
 import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasCollectionsResponse
+import app.tuji.android.core.model.AtlasSearchResponse
 import app.tuji.android.core.model.AtlasCollectionLearnResult
 import app.tuji.android.core.model.AtlasSaveState
 import app.tuji.android.core.model.AtlasPublicCollection
@@ -45,6 +46,11 @@ interface AtlasReading {
     suspend fun author(handle: String): AtlasAuthorPage
     suspend fun collections(lang: String, limit: Int = 40): List<AtlasPublicCollection>
     suspend fun collection(slug: String): AtlasCollectionDetail
+}
+
+/** 物見搜尋. Its own seam, so the search screen's model is tested against a stub of one call. */
+fun interface AtlasSearching {
+    suspend fun search(q: String, lang: String): AtlasSearchResponse
 }
 
 /**
@@ -219,7 +225,7 @@ private data class CollectionAddBody(val sourceItemId: String)
 class AtlasRepository(private val api: TujiApiClient) :
     AtlasReading, AtlasSaving, ReportSubmitting, BlockListing, ProfileEditing, AtlasShelfManaging, WeakWordsReading, CollectionAuthoring,
     EntitlementReading, AccountReading, AtlasAuthoring, AtlasItemReading,
-    CollectionBookmarking, CollectionLearning {
+    CollectionBookmarking, CollectionLearning, AtlasSearching {
 
     override suspend fun savedCollections(lang: String): List<AtlasPublicCollection> =
         api.get<AtlasCollectionsResponse>(Endpoint.AtlasSavedCollections(lang = lang, limit = 100)).collections
@@ -366,6 +372,9 @@ class AtlasRepository(private val api: TujiApiClient) :
 
     override suspend fun collection(slug: String): AtlasCollectionDetail =
         api.get(Endpoint.AtlasCollection(slug = slug))
+
+    override suspend fun search(q: String, lang: String): AtlasSearchResponse =
+        api.get(Endpoint.AtlasSearch(q = q, lang = lang))
 
     override suspend fun saveState(slug: String): AtlasSaveState =
         api.get(Endpoint.AtlasSave(slug = slug))

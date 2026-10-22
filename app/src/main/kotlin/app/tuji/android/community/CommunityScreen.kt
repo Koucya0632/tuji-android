@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
@@ -23,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,6 +64,7 @@ fun CommunityScreen(
     onRetry: () -> Unit,
     onOpenCollection: (String) -> Unit,
     onOpenMyPage: (String) -> Unit,
+    onSearch: () -> Unit = {},
     onRefresh: suspend () -> Unit = {},
 ) {
     var shelf by rememberSaveable { mutableStateOf(CommunityShelf.Explore) }
@@ -78,14 +82,30 @@ fun CommunityScreen(
             RowRule()
             Spacer(Modifier.height(TujiSpace.S3))
         }
-        TujiSegmented(
-            options = listOf(
-                CommunityShelf.Explore to stringResource(R.string.community_shelf_explore),
-                CommunityShelf.Saved to stringResource(R.string.community_shelf_saved),
-            ),
-            selected = shelf,
-            onSelect = { shelf = it },
-        )
+        // 搜尋 at the end of the shelf row, drawn as 圖鑑's is — the row is
+        // already there, so it costs no height.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TujiSegmented(
+                options = listOf(
+                    CommunityShelf.Explore to stringResource(R.string.community_shelf_explore),
+                    CommunityShelf.Saved to stringResource(R.string.community_shelf_saved),
+                ),
+                selected = shelf,
+                onSelect = { shelf = it },
+                modifier = Modifier.weight(1f),
+            )
+            val searchLabel = stringResource(R.string.community_search)
+            Box(
+                Modifier
+                    .padding(end = TujiSpace.S2)
+                    .size(44.dp)
+                    .tujiClickable(onClick = onSearch)
+                    .semantics { contentDescription = searchLabel },
+                contentAlignment = Alignment.Center,
+            ) {
+                TujiGlyph.Search(size = 18.dp, tint = TujiColor.Ink2)
+            }
+        }
         Spacer(Modifier.height(TujiSpace.S3))
 
         // The list, not the whole page: the identity row above is a header
