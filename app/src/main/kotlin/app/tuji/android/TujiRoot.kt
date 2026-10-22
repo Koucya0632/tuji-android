@@ -157,6 +157,8 @@ import app.tuji.android.community.AuthorScreen
 import app.tuji.android.community.CommunityScreen
 import app.tuji.android.community.CollectionScreen
 import app.tuji.android.community.CommunityViewModel
+import app.tuji.android.community.CommunitySearchScreen
+import app.tuji.android.community.CommunitySearchViewModel
 import app.tuji.android.community.CollectionDetailViewModel
 import app.tuji.android.core.community.ReportTarget
 import app.tuji.android.community.PublicItemScreen
@@ -646,6 +648,18 @@ private fun SignedInScreens(
     val communitySaved by community.saved.collectAsStateWithLifecycle()
     val communityMe by community.me.collectAsStateWithLifecycle()
     val communityBlocked by community.blocked.collectAsStateWithLifecycle()
+    // 物見搜尋, held above the routes like 搜尋's model so opening a result and
+    // coming back finds the results still there. Keyed on the direction, which
+    // is in the request.
+    val communitySearch = remember(direction) {
+        CommunitySearchViewModel(
+            remote = app.atlas,
+            direction = direction,
+            blocks = { community.blockList },
+        )
+    }
+    // A block made on a pushed page applies to the results on the way back.
+    LaunchedEffect(communityBlocked) { communitySearch.refilter() }
 
     // 圖鑑管理's shelf, above both screens that draw it, so a card deleted on
     // its own page is already gone from the list behind.
@@ -1159,6 +1173,7 @@ private fun SignedInScreens(
                     onRetry = community::load,
                     onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
                     onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
+                    onSearch = { nav = nav.push(AppRoute.CommunitySearch) },
                     // Not the learning policy: 物見 is other people's shelves,
                     // and none of the numbers this table is about are on it.
                     onRefresh = { community.reload(withSaved = true) },
@@ -1761,6 +1776,14 @@ private fun SignedInScreens(
                         }
                     }
                 }
+
+                AppRoute.CommunitySearch -> CommunitySearchScreen(
+                    vm = communitySearch,
+                    onCancel = { nav = nav.pop() },
+                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
+                    onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
+                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                )
 
                 AppRoute.Search -> AtlasSearchScreen(
                     vm = search,

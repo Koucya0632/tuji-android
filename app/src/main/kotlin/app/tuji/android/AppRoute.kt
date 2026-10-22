@@ -91,6 +91,9 @@ sealed interface AppRoute {
     /** One published 合集. */
     data class Collection(val slug: String) : AppRoute
 
+    /** 物見搜尋, from the magnifier on 物見 — 合集 and words in the language being learned. */
+    data object CommunitySearch : AppRoute
+
     /** 自製圖鑑：拍照 → 辨識 → 確認. */
     data object Capture : AppRoute
 
@@ -206,6 +209,7 @@ object TabShell {
         AppRoute.Review,
         AppRoute.LearnNew,
         AppRoute.Search,
+        AppRoute.CommunitySearch,
         AppRoute.Capture,
         // 助手 is a place you study in, as on iOS (`studyFocus.enter()`).
         AppRoute.Assistant,

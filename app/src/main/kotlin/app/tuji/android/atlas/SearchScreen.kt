@@ -183,9 +183,11 @@ fun AtlasSearchScreen(
 /**
  * A square block of 紙2 — a hole in the paper rather than an outline drawn on
  * it — with the 瞳黃 ring only while it has focus, and 取消 beside it.
+ *
+ * Internal so 物見搜尋 draws the same field: the two searches are one control.
  */
 @Composable
-private fun SearchBar(
+internal fun SearchBar(
     value: TextFieldValue,
     placeholder: String,
     onValueChange: (TextFieldValue) -> Unit,
