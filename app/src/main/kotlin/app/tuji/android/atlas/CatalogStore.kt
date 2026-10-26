@@ -2,8 +2,10 @@ package app.tuji.android.atlas
 
 import android.util.Log
 import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.model.CategoriesResponse
 import app.tuji.android.core.model.Category
 import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.TopicPreset
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.network.CatalogReading
 import kotlinx.coroutines.CancellationException
@@ -47,6 +49,8 @@ class CatalogStore(
     data class Contents(
         val words: List<Word> = emptyList(),
         val categories: List<Category> = emptyList(),
+        /** 主題組合, from the same response as [categories]. */
+        val presets: List<TopicPreset> = emptyList(),
     ) {
         val shelves: List<CategoryShelf.Shelf> get() = CategoryShelf.shelves(categories, words)
         val loaded: Boolean get() = words.isNotEmpty()
@@ -85,15 +89,15 @@ class CatalogStore(
             // Categories are a smaller, separate failure: without them 圖鑑 has
             // no shelves, but 聽句 and 搜尋 still work off the words. So the
             // words are kept even when this half fails.
-            val categories = try {
-                catalog.categories(uiLang).categories
+            val response = try {
+                catalog.categories(uiLang)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "categories load failed", failure)
-                emptyList()
+                CategoriesResponse()
             }
-            _contents.value = Contents(words = words, categories = categories)
+            _contents.value = Contents(words = words, categories = response.categories, presets = response.presets)
         }
     }
 

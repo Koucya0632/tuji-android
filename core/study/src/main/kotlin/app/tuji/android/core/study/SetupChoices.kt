@@ -1,5 +1,7 @@
 package app.tuji.android.core.study
 
+import app.tuji.android.core.model.TopicPreset
+
 /**
  * The theme ids this app treats as special, rather than as rows in a catalogue.
  *
@@ -21,7 +23,11 @@ object StudyCategoryDefaults {
      */
     val ATLAS_IDS = listOf(CUSTOM_ID, COMMUNITY_ID)
 
-    /** Hand-picked opening themes: concrete, indoor, and well populated. */
+    /**
+     * Hand-picked opening themes: concrete, indoor, and well populated. Only
+     * the fallback now — a new account starts from the default 主題組合, and
+     * these three are locked for a non-member under membership v2.
+     */
     val BEGINNER_IDS = listOf("kitchen", "bathroom", "living-room")
 }
 
@@ -50,17 +56,26 @@ data class SetupChoices(val topicIds: Set<String>, val dailyGoal: Int) {
          *   preselected into a fresh save.
          * @param firstThemesFallback the catalogue in its own order, for a
          *   server whose ids no longer include the hand-picked three.
+         * @param presets 主題組合 from `/api/categories`. A new account starts
+         *   from the one flagged `isDefault` (留學生, whose themes are all free);
+         *   with none — an older server — it falls back to the beginner three.
          */
         fun seed(
             account: AccountThemes?,
             catalogIds: Set<String>,
             firstThemesFallback: List<String>,
+            presets: List<TopicPreset> = emptyList(),
         ): SetupChoices {
             if (account != null) {
                 val existing = account.studyCategories.toSet().intersect(catalogIds)
                 if (existing.isNotEmpty()) return SetupChoices(existing, account.dailyGoal)
             }
             val atlas = StudyCategoryDefaults.ATLAS_IDS.toSet().intersect(catalogIds)
+            val preset = presets.firstOrNull { it.isDefault }
+            if (preset != null) {
+                val themes = TopicPresetChoice.themes(preset, catalogIds)
+                if (themes.isNotEmpty()) return SetupChoices(themes + atlas, DEFAULT_DAILY_GOAL)
+            }
             val beginner = StudyCategoryDefaults.BEGINNER_IDS.filter { it in catalogIds }
             val opening = if (beginner.size == StudyCategoryDefaults.BEGINNER_IDS.size) {
                 beginner.toSet()

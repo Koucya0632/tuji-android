@@ -226,6 +226,7 @@
     <string name="study_themes_clear">Clear</string>
     <string name="study_themes_selected">%1$d selected</string>
     <string name="study_themes_loading">Loading topics…</string>
+    <string name="study_themes_presets_heading">Not sure what to study? In Japan, you’re…</string>
     <string name="settings_show_zh">Meaning</string>
     <string name="settings_language">Language</string>
     <string name="settings_accent">Pronunciation accent</string>
