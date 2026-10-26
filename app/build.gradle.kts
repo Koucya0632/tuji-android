@@ -50,8 +50,8 @@ android {
         // See docs/SPIKE-FURIGANA.md.
         minSdk = 29
         targetSdk = 36
-        versionCode = 12
-        versionName = "0.1.11"
+        versionCode = 13
+        versionName = "0.1.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
