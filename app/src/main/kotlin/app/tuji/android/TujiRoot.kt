@@ -317,6 +317,7 @@ fun TujiRoot(app: TujiApplication) {
                                 account = SetupChoices.AccountThemes(settings.studyCategories, settings.dailyGoal),
                                 catalogIds = categories.map { it.id }.toSet(),
                                 firstThemesFallback = categories.map { it.id },
+                                presets = app.catalog.contents.value.presets,
                             )
                             app.settingsStore.completeSetup(seed.topicIds, seed.dailyGoal)
                             // The shell needs the catalogue for the themes just
@@ -1581,6 +1582,7 @@ private fun SignedInScreens(
                     onRetryLoad = { scope.launch { app.settingsStore.load(deviceLanguage) } },
                     selected = settings.studyCategories,
                     categories = catalog.categories,
+                    presets = catalog.presets,
                     uiLang = uiLang,
                     onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
                     studyable = studyable,

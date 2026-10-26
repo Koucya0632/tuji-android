@@ -226,6 +226,7 @@
     <string name="study_themes_clear">清除</string>
     <string name="study_themes_selected">已選 %1$d 個</string>
     <string name="study_themes_loading">載入主題中…</string>
+    <string name="study_themes_presets_heading">不知道學什麼？你在日本是…</string>
     <string name="settings_show_zh">中文釋義</string>
     <string name="settings_language">語言</string>
     <string name="settings_accent">發音口音</string>

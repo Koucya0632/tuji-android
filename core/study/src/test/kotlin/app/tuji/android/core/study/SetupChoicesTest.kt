@@ -1,5 +1,6 @@
 package app.tuji.android.core.study
 
+import app.tuji.android.core.model.TopicPreset
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -75,5 +76,42 @@ class SetupChoicesTest {
         val seed = SetupChoices.seed(null, catalog, catalog.toList())
         assert("custom" in seed.topicIds)
         assert("community" in seed.topicIds)
+    }
+
+    private val presetCatalog = catalog + setOf("campus", "bank")
+
+    @Test fun `a new account opens on the default preset plus both shelves`() {
+        val presets = listOf(
+            TopicPreset("travel", "旅遊", listOf("office")),
+            TopicPreset("student", "留學生", listOf("campus", "bank"), isDefault = true),
+        )
+        val seed = SetupChoices.seed(null, presetCatalog, presetCatalog.toList(), presets)
+        assertEquals(setOf("campus", "bank", "custom", "community"), seed.topicIds)
+        assertEquals(10, seed.dailyGoal)
+    }
+
+    @Test fun `the default is read off the flag, not the order`() {
+        val presets = listOf(
+            TopicPreset("travel", "旅遊", listOf("office")),
+            TopicPreset("student", "留學生", listOf("campus"), isDefault = true),
+        )
+        assertEquals(
+            setOf("campus", "custom", "community"),
+            SetupChoices.seed(null, presetCatalog, presetCatalog.toList(), presets).topicIds,
+        )
+    }
+
+    @Test fun `a default preset with nothing served falls back to the beginner three`() {
+        val presets = listOf(TopicPreset("student", "留學生", listOf("retired-theme"), isDefault = true))
+        assertEquals(
+            setOf("kitchen", "bathroom", "living-room", "custom", "community"),
+            SetupChoices.seed(null, catalog, catalog.toList(), presets).topicIds,
+        )
+    }
+
+    @Test fun `an account with themes ignores the default preset`() {
+        val presets = listOf(TopicPreset("student", "留學生", listOf("campus"), isDefault = true))
+        val account = SetupChoices.AccountThemes(listOf("office"), dailyGoal = 30)
+        assertEquals(setOf("office"), SetupChoices.seed(account, presetCatalog, presetCatalog.toList(), presets).topicIds)
     }
 }
