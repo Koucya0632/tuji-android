@@ -147,7 +147,7 @@ fun AvatarIntake(
                 verticalArrangement = Arrangement.spacedBy(TujiSpace.S4, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(stringResource(R.string.avatar_load_failed), style = TujiType.body, color = TujiColor.Paper, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.avatar_load_failed), style = TujiType.bodyStrong, color = TujiColor.Paper, textAlign = TextAlign.Center)
                 TujiButton(text = stringResource(R.string.atlas_back), onClick = onClose)
             }
         }
