@@ -53,9 +53,13 @@ enum class LatinFace(@FontRes val res: Int) {
      * for Medium, and an unused CJK weight is 31 MB of nothing. Display is set
      * in ExtraBold and takes Bold here — GenSenRounded's Heavy would cost
      * another 30 MB for one token.
+     *
+     * SemiBold takes Bold too: iOS picks the CJK weight with
+     * `latin.contains("Bold")`, and "SemiBold" contains it. Mapping it to R
+     * left every Strong token's Chinese at Regular weight beside iOS's Bold.
      */
     val wantsBoldCjk: Boolean
-        get() = this == Bold || this == ExtraBold
+        get() = this != Regular
 }
 
 /**

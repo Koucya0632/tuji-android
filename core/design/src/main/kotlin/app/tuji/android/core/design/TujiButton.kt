@@ -93,10 +93,9 @@ fun TujiButton(
             leading?.invoke()
             Text(
                 text,
-                // Body-with-weight, not a heading: a button's label is a body
-                // step carrying weight, which is the axis 84 iOS call sites
-                // were bypassing the scale to get.
-                style = TujiType.bodyStrong,
+                // h3, as iOS's `BBtn` sets its title — the scale names button
+                // text as an h3 role, not body-with-weight.
+                style = TujiType.h3,
                 color = ink,
             )
         }

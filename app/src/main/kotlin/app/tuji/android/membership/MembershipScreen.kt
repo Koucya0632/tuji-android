@@ -100,7 +100,7 @@ fun MembershipScreen(
                     rows = offer.proRows,
                     owned = stringResource(R.string.membership_owns_pro).takeIf { offer.ownsPro },
                 )
-                Text(stringResource(R.string.credit_pro_closed), style = TujiType.bodySm, color = TujiColor.Ink2)
+                Text(stringResource(R.string.credit_pro_closed), style = TujiType.label, color = TujiColor.Ink2)
             }
 
             purchase?.let {
