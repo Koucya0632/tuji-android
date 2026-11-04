@@ -1951,6 +1951,7 @@ private fun SignedInScreens(
                         topics = chatTopics,
                         speech = app.speech,
                         accent = settings.accent,
+                        uiLanguage = uiLanguage,
                         onBack = { if (nav.current == route) nav = nav.pop() },
                         onOpenHistory = { nav = nav.push(AppRoute.TopicChatHistory) },
                         onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },

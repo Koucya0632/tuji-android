@@ -78,6 +78,7 @@ import app.tuji.android.core.model.ChatTargetText
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.TopicChatAssistKind
 import app.tuji.android.core.model.TopicChatSummary
+import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.study.SentenceSpeakerButton
 import coil3.compose.AsyncImage
@@ -105,6 +106,7 @@ fun TopicChatScreen(
     topics: List<TopicChoice>,
     speech: WordSpeaking?,
     accent: String,
+    uiLanguage: UiLanguage,
     onBack: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenStatement: () -> Unit,
@@ -169,7 +171,7 @@ fun TopicChatScreen(
             TopicChatModel.Phase.Ready -> {
                 Conversation(state, model, topics, language, speech, accent, onOpenStatement, Modifier.weight(1f))
                 if (state.isActive) {
-                    Composer(state, model, supportsOpen, { supportsOpen = it }, japanese)
+                    Composer(state, model, supportsOpen, { supportsOpen = it }, japanese, uiLanguage)
                 } else {
                     state.chat?.topicId?.let { topicId ->
                         Column {
@@ -464,6 +466,7 @@ private fun Composer(
     supportsOpen: Boolean,
     onSupportsOpen: (Boolean) -> Unit,
     japanese: Boolean,
+    uiLanguage: UiLanguage,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -473,7 +476,7 @@ private fun Composer(
     var chinese by rememberSaveable { mutableStateOf(false) }
     val microphone = rememberMicrophone(refused = dictation::denied)
     // The person's own Chinese: simplified for a 简体 interface, else traditional.
-    val chineseLocale = if (androidx.compose.ui.platform.LocalConfiguration.current.locales[0].country == "CN") "zh-CN" else "zh-TW"
+    val chineseLocale = Dictation.chineseLocale(uiLanguage)
     DisposableEffect(dictation) {
         onDispose {
             dictation.cancel()
