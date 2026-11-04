@@ -33,7 +33,8 @@ class SpeechSession(
     private val silence: Long,
     private val ceiling: Long,
 ) {
-    enum class Problem { Unavailable, Denied, Failed }
+    /** [Offline]: the recogniser's server can't be reached, so a try now won't work but a later one may. */
+    enum class Problem { Unavailable, Offline, Denied, Failed }
 
     interface Events {
         /** The whole transcript so far, each time it grows. */
@@ -96,6 +97,8 @@ class SpeechSession(
                             fail(events, Problem.Unavailable)
                         }
                     SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED -> fail(events, Problem.Unavailable)
+                    SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT, SpeechRecognizer.ERROR_SERVER ->
+                        if (lastHeard.isNotEmpty()) end(events) else fail(events, Problem.Offline)
                     // Something was heard before it went wrong: what was heard stands.
                     else -> if (lastHeard.isNotEmpty()) end(events) else fail(events, Problem.Failed)
                 }
@@ -199,6 +202,7 @@ class ShadowingRecorder(context: Context, scope: CoroutineScope) {
         data class Scored(val score: ShadowingScore, val heard: String) : Phase
         data object Denied : Phase
         data object Unavailable : Phase
+        data object Offline : Phase
         data object Failed : Phase
     }
 
@@ -246,6 +250,7 @@ class ShadowingRecorder(context: Context, scope: CoroutineScope) {
     private fun SpeechSession.Problem.phase(): Phase = when (this) {
         SpeechSession.Problem.Denied -> Phase.Denied
         SpeechSession.Problem.Unavailable -> Phase.Unavailable
+        SpeechSession.Problem.Offline -> Phase.Offline
         SpeechSession.Problem.Failed -> Phase.Failed
     }
 }
@@ -257,7 +262,7 @@ class ShadowingRecorder(context: Context, scope: CoroutineScope) {
  * is thinking of what to say, not reading.
  */
 class Dictation(context: Context, scope: CoroutineScope) {
-    enum class Phase { Idle, Listening, Denied, Unavailable, Failed }
+    enum class Phase { Idle, Listening, Denied, Unavailable, Offline, Failed }
 
     private val session = SpeechSession(context, scope, pause = 3_000, silence = 8_000, ceiling = 60_000)
     private val mutable = MutableStateFlow(Phase.Idle)
@@ -277,6 +282,7 @@ class Dictation(context: Context, scope: CoroutineScope) {
                     mutable.value = when (problem) {
                         SpeechSession.Problem.Denied -> Phase.Denied
                         SpeechSession.Problem.Unavailable -> Phase.Unavailable
+                        SpeechSession.Problem.Offline -> Phase.Offline
                         SpeechSession.Problem.Failed -> Phase.Failed
                     }
                 }

@@ -177,6 +177,12 @@ class TopicChatModel(
 
     fun setDraft(value: String) = update { it.copy(draft = value) }
 
+    /**
+     * The open chat's language, which can differ from [direction] after a switch
+     * made while it is open. Dictation listens in this one.
+     */
+    private val writesJapanese get() = (now.chat?.learningDirection?.takeIf { it.isNotEmpty() } ?: direction) == "zh-ja"
+
     // MARK: - 語音輸入
 
     /** What is heard from now on goes after what the draft already holds. */
@@ -187,7 +193,7 @@ class TopicChatModel(
     /** The whole transcript so far, in place of the last one. Chinese and Japanese join without a space. */
     fun dictated(heard: String, chinese: Boolean) {
         val base = dictationBase ?: return
-        val spaced = !chinese && direction != "zh-ja"
+        val spaced = !chinese && !writesJapanese
         update { it.copy(draft = if (base.isEmpty()) heard else base + (if (spaced) " " else "") + heard) }
     }
 
@@ -422,7 +428,7 @@ class TopicChatModel(
         when (choice) {
             FillChoice.Replace -> update { it.copy(draft = pending.text) }
             FillChoice.Append -> {
-                val joiner = if (direction == "zh-ja") "" else " "
+                val joiner = if (writesJapanese) "" else " "
                 update { it.copy(draft = it.draft.trim() + joiner + pending.text) }
             }
             FillChoice.Cancel -> return

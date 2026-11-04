@@ -537,6 +537,8 @@ private fun ShadowingFeedback(phase: ShadowingRecorder.Phase) {
         }
         ShadowingRecorder.Phase.Unavailable ->
             Text(stringResource(R.string.speech_unavailable), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
+        ShadowingRecorder.Phase.Offline ->
+            Text(stringResource(R.string.speech_offline), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
         ShadowingRecorder.Phase.Failed ->
             Text(stringResource(R.string.speech_failed), style = TujiType.bodySm, color = TujiColor.Ink2, modifier = modifier)
     }

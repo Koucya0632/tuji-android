@@ -1172,9 +1172,10 @@
     <string name="shadowing_start">跟讀</string>
     <string name="shadowing_stop">停止跟讀</string>
     <string name="shadowing_listening">正在聽…</string>
-    <string name="shadowing_denied">跟讀需要麥克風和語音辨識的權限。</string>
+    <string name="shadowing_denied">跟讀需要麥克風的權限。</string>
     <string name="speech_open_settings">打開設定</string>
     <string name="speech_unavailable">這台裝置不支援這個語言的語音辨識。</string>
+    <string name="speech_offline">現在連不上語音辨識，請確認網路後再試。</string>
     <string name="speech_failed">沒辦法開始錄音，請再試一次。</string>
     <string name="shadowing_nothing_heard">沒有聽到聲音</string>
     <string name="shadowing_score">正確率：%1$d%%</string>
@@ -1187,6 +1188,6 @@
     <string name="dictation_switch_japanese">改說日文</string>
     <string name="dictation_switch_english">改說英文</string>
     <string name="dictation_done">完成</string>
-    <string name="dictation_denied">語音輸入需要麥克風和語音辨識的權限。</string>
+    <string name="dictation_denied">語音輸入需要麥克風的權限。</string>
     <string name="dictation_dismiss">關閉</string>
 </resources>

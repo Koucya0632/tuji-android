@@ -1172,9 +1172,10 @@
     <string name="shadowing_start">復唱する</string>
     <string name="shadowing_stop">復唱をやめる</string>
     <string name="shadowing_listening">聞いています…</string>
-    <string name="shadowing_denied">復唱にはマイクと音声認識の許可が必要です。</string>
+    <string name="shadowing_denied">復唱にはマイクの許可が必要です。</string>
     <string name="speech_open_settings">設定を開く</string>
     <string name="speech_unavailable">この端末はこの言語の音声認識に対応していません。</string>
+    <string name="speech_offline">音声認識に接続できません。ネットワークを確認してもう一度お試しください。</string>
     <string name="speech_failed">録音を開始できませんでした。もう一度お試しください。</string>
     <string name="shadowing_nothing_heard">声が聞こえませんでした</string>
     <string name="shadowing_score">正確率：%1$d%%</string>
@@ -1187,6 +1188,6 @@
     <string name="dictation_switch_japanese">日本語で話す</string>
     <string name="dictation_switch_english">英語で話す</string>
     <string name="dictation_done">完了</string>
-    <string name="dictation_denied">音声入力にはマイクと音声認識の許可が必要です。</string>
+    <string name="dictation_denied">音声入力にはマイクの許可が必要です。</string>
     <string name="dictation_dismiss">閉じる</string>
 </resources>

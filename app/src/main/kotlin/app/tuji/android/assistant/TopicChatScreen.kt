@@ -627,6 +627,7 @@ private fun DictationBar(
             )
             Dictation.Phase.Denied -> stringResource(R.string.dictation_denied)
             Dictation.Phase.Unavailable -> stringResource(R.string.speech_unavailable)
+            Dictation.Phase.Offline -> stringResource(R.string.speech_offline)
             Dictation.Phase.Failed -> stringResource(R.string.speech_failed)
             Dictation.Phase.Idle -> ""
         }

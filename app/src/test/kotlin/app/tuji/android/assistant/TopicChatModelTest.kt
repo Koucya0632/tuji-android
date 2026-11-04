@@ -166,6 +166,18 @@ class TopicChatModelTest {
         assertEquals("蘋果", model.state.value.draft)
     }
 
+    @Test fun `the open chat's language decides the join, not the setting`() = runTest {
+        // The setting says English, but the open chat is Japanese: dictation listens
+        // in Japanese, so what is heard joins without a space.
+        val repository = FakeRepository().apply { current = state(ai("m1"), chat = summary().copy(learningDirection = "zh-ja")) }
+        val model = model(TopicChatEntry.Saved("c1"), repository)
+        model.load()
+        model.setDraft("公園に")
+        model.beginDictation()
+        model.dictated("行きたい", chinese = false)
+        assertEquals("公園に行きたい", model.state.value.draft)
+    }
+
     @Test fun `refusals map to what the screen says`() {
         assertEquals(TopicChatModel.Failure.InsufficientPoints, TopicChatModel.failure(ApiError.Http(409, """{"error":"insufficient_credits"}""")))
         assertEquals(TopicChatModel.Failure.AssistLimit, TopicChatModel.failure(ApiError.Http(409, """{"error":"assist_limit"}""")))
