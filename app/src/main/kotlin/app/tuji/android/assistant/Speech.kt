@@ -9,6 +9,7 @@ import android.speech.SpeechRecognizer
 import app.tuji.android.core.model.FuriganaSegment
 import app.tuji.android.core.model.ShadowingScore
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.model.UiLanguage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,6 +17,76 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+/**
+ * The system recogniser, behind what [SpeechSession] needs from it, so the
+ * session's timing and error handling can be tested without a device.
+ */
+interface SpeechEngine {
+    fun isAvailable(): Boolean
+
+    /** A recogniser that reports to [listener] until destroyed. */
+    fun create(listener: Listener): Recognizer
+
+    data class Request(val locale: String, val punctuate: Boolean, val offline: Boolean, val pauseMillis: Long)
+
+    interface Listener {
+        fun partial(text: String?)
+        fun results(text: String?)
+        /** A `SpeechRecognizer.ERROR_*` code. */
+        fun error(code: Int)
+    }
+
+    interface Recognizer {
+        /** Starts listening; asked again on the same recogniser, starts again. */
+        fun start(request: Request)
+        fun stop()
+        fun cancel()
+        fun destroy()
+    }
+}
+
+/** [SpeechEngine] on Android's own `SpeechRecognizer`, without the system dialog. */
+class AndroidSpeechEngine(private val context: Context) : SpeechEngine {
+    override fun isAvailable() = SpeechRecognizer.isRecognitionAvailable(context)
+
+    override fun create(listener: SpeechEngine.Listener): SpeechEngine.Recognizer {
+        val recognizer = SpeechRecognizer.createSpeechRecognizer(context)
+        recognizer.setRecognitionListener(object : RecognitionListener {
+            override fun onResults(results: Bundle?) = listener.results(text(results))
+            override fun onPartialResults(results: Bundle?) = listener.partial(text(results))
+            override fun onError(error: Int) = listener.error(error)
+            override fun onReadyForSpeech(params: Bundle?) = Unit
+            override fun onBeginningOfSpeech() = Unit
+            override fun onRmsChanged(rmsdB: Float) = Unit
+            override fun onBufferReceived(buffer: ByteArray?) = Unit
+            override fun onEndOfSpeech() = Unit
+            override fun onEvent(eventType: Int, params: Bundle?) = Unit
+        })
+        return object : SpeechEngine.Recognizer {
+            override fun start(request: SpeechEngine.Request) = recognizer.startListening(intent(request))
+            override fun stop() = recognizer.stopListening()
+            override fun cancel() = recognizer.cancel()
+            override fun destroy() = recognizer.destroy()
+        }
+    }
+
+    private fun intent(request: SpeechEngine.Request) =
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, request.locale)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, request.offline)
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            if (request.punctuate) putExtra(RecognizerIntent.EXTRA_ENABLE_FORMATTING, RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY)
+            // The recogniser's own end-of-speech guess is shorter than ours; the timers decide.
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, request.pauseMillis)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, request.pauseMillis)
+        }
+
+    private fun text(results: Bundle?): String? =
+        results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+}
 
 /**
  * One listening session on the system speech recogniser, with iOS's timing:
@@ -27,7 +98,7 @@ import kotlinx.coroutines.launch
  * main thread, as `SpeechRecognizer` requires.
  */
 class SpeechSession(
-    private val context: Context,
+    private val engine: SpeechEngine,
     private val scope: CoroutineScope,
     private val pause: Long,
     private val silence: Long,
@@ -44,7 +115,7 @@ class SpeechSession(
         fun problem(problem: Problem)
     }
 
-    private var recognizer: SpeechRecognizer? = null
+    private var recognizer: SpeechEngine.Recognizer? = null
     private var timer: Job? = null
     private var limit: Job? = null
     private var lastHeard = ""
@@ -59,32 +130,31 @@ class SpeechSession(
         cancel()
         var offline = true
         val mine = ++attempt
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+        if (!engine.isAvailable()) {
             events.problem(Problem.Unavailable)
             return
         }
-        val recognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        this.recognizer = recognizer
         lastHeard = ""
-        recognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onResults(results: Bundle?) {
+        lateinit var recognizer: SpeechEngine.Recognizer
+        recognizer = engine.create(object : SpeechEngine.Listener {
+            override fun results(text: String?) {
                 if (mine != attempt) return
-                text(results)?.takeIf { it.isNotEmpty() }?.let { lastHeard = it; events.heard(it) }
+                text?.takeIf { it.isNotEmpty() }?.let { lastHeard = it; events.heard(it) }
                 end(events)
             }
 
-            override fun onPartialResults(results: Bundle?) {
+            override fun partial(text: String?) {
                 if (mine != attempt) return
-                val text = text(results)?.takeIf { it.isNotEmpty() } ?: return
-                lastHeard = text
-                events.heard(text)
+                val heard = text?.takeIf { it.isNotEmpty() } ?: return
+                lastHeard = heard
+                events.heard(heard)
                 arm(pause, mine)
             }
 
-            override fun onError(error: Int) {
+            override fun error(code: Int) {
                 if (mine != attempt) return
-                android.util.Log.w("SpeechSession", "recogniser error $error ($locale, offline=$offline)")
-                when (error) {
+                android.util.Log.w("SpeechSession", "recogniser error $code ($locale, offline=$offline)")
+                when (code) {
                     // The recogniser reports silence as an error: nothing heard is not a problem to show.
                     SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> end(events)
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> fail(events, Problem.Denied)
@@ -92,7 +162,7 @@ class SpeechSession(
                         if (offline && lastHeard.isEmpty()) {
                             // Same recogniser, asked again: a new one made inside this callback loses its service.
                             offline = false
-                            recognizer.startListening(intent(locale, punctuate, offline))
+                            recognizer.start(request(locale, punctuate, offline))
                         } else {
                             fail(events, Problem.Unavailable)
                         }
@@ -103,16 +173,10 @@ class SpeechSession(
                     else -> if (lastHeard.isNotEmpty()) end(events) else fail(events, Problem.Failed)
                 }
             }
-
-            override fun onReadyForSpeech(params: Bundle?) = Unit
-            override fun onBeginningOfSpeech() = Unit
-            override fun onRmsChanged(rmsdB: Float) = Unit
-            override fun onBufferReceived(buffer: ByteArray?) = Unit
-            override fun onEndOfSpeech() = Unit
-            override fun onEvent(eventType: Int, params: Bundle?) = Unit
         })
+        this.recognizer = recognizer
         try {
-            recognizer.startListening(intent(locale, punctuate, offline))
+            recognizer.start(request(locale, punctuate, offline))
         } catch (_: Throwable) {
             fail(events, Problem.Failed)
             return
@@ -127,7 +191,7 @@ class SpeechSession(
     /** The person is done: let the recogniser give its last word. */
     fun stop() {
         timer?.cancel()
-        recognizer?.stopListening()
+        recognizer?.stop()
     }
 
     /** Drop it. Nothing more reaches the caller. */
@@ -167,21 +231,8 @@ class SpeechSession(
         }
     }
 
-    private fun intent(locale: String, punctuate: Boolean, offline: Boolean) =
-        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, offline)
-            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
-            if (punctuate) putExtra(RecognizerIntent.EXTRA_ENABLE_FORMATTING, RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY)
-            // The recogniser's own end-of-speech guess is shorter than ours; the timers decide.
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, pause)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, pause)
-        }
-
-    private fun text(results: Bundle?): String? =
-        results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
+    private fun request(locale: String, punctuate: Boolean, offline: Boolean) =
+        SpeechEngine.Request(locale, punctuate, offline, pause)
 
     companion object {
         fun locale(language: TargetLanguage): String = if (language == TargetLanguage.JA) "ja-JP" else "en-US"
@@ -195,7 +246,9 @@ class SpeechSession(
  *
  * One line at a time; starting another line drops the one in progress.
  */
-class ShadowingRecorder(context: Context, scope: CoroutineScope) {
+class ShadowingRecorder(engine: SpeechEngine, scope: CoroutineScope) {
+    constructor(context: Context, scope: CoroutineScope) : this(AndroidSpeechEngine(context), scope)
+
     sealed interface Phase {
         data object Idle : Phase
         data class Listening(val heard: String) : Phase
@@ -210,7 +263,7 @@ class ShadowingRecorder(context: Context, scope: CoroutineScope) {
         fun isActive(line: Int): Boolean = this.line == line && phase is Phase.Listening
     }
 
-    private val session = SpeechSession(context, scope, pause = 2_500, silence = 6_000, ceiling = 20_000)
+    private val session = SpeechSession(engine, scope, pause = 2_500, silence = 6_000, ceiling = 20_000)
     private val mutable = MutableStateFlow(State())
     val state: StateFlow<State> = mutable.asStateFlow()
 
@@ -261,10 +314,12 @@ class ShadowingRecorder(context: Context, scope: CoroutineScope) {
  * Nothing is recorded or kept. Longer pauses than 跟讀's, because the person
  * is thinking of what to say, not reading.
  */
-class Dictation(context: Context, scope: CoroutineScope) {
+class Dictation(engine: SpeechEngine, scope: CoroutineScope) {
+    constructor(context: Context, scope: CoroutineScope) : this(AndroidSpeechEngine(context), scope)
+
     enum class Phase { Idle, Listening, Denied, Unavailable, Offline, Failed }
 
-    private val session = SpeechSession(context, scope, pause = 3_000, silence = 8_000, ceiling = 60_000)
+    private val session = SpeechSession(engine, scope, pause = 3_000, silence = 8_000, ceiling = 60_000)
     private val mutable = MutableStateFlow(Phase.Idle)
     val phase: StateFlow<Phase> = mutable.asStateFlow()
 
@@ -303,5 +358,14 @@ class Dictation(context: Context, scope: CoroutineScope) {
     fun cancel() {
         session.cancel()
         mutable.value = Phase.Idle
+    }
+
+    companion object {
+        /**
+         * Chinese in the interface's own script, as iOS picks it: 简体 listens
+         * for zh-CN, anything else for zh-TW. Taken from the language itself,
+         * not from a locale's region, which a script-only tag would leave blank.
+         */
+        fun chineseLocale(ui: UiLanguage): String = if (ui == UiLanguage.ZhHans) "zh-CN" else "zh-TW"
     }
 }
