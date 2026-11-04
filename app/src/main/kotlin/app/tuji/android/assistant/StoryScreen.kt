@@ -1,8 +1,5 @@
 package app.tuji.android.assistant
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,9 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -39,32 +34,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.tuji.android.R
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.study.ThemeStatus
-import app.tuji.android.core.design.FuriganaSentence
 import app.tuji.android.core.design.MascotFigure
 import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiButton
-import app.tuji.android.core.design.TujiButtonStyle
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiIndeterminateBar
 import app.tuji.android.core.design.TujiNavBar
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.rememberReduceMotion
 import app.tuji.android.core.design.tujiClickable
 import app.tuji.android.core.model.Story
-import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.model.WordSpeaking
-import app.tuji.android.study.SentenceSpeakerButton
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -100,8 +88,9 @@ fun StoryScreen(
             showsRule = true,
         )
         if (state.reading) {
-            StoryReader(
+            StoryStage(
                 story = state.story,
+                sceneId = state.sceneId,
                 language = state.storyLanguage,
                 picked = state.picked,
                 writing = state.writing,
@@ -268,225 +257,9 @@ private fun LabelChip(label: String, selected: Boolean, onClick: () -> Unit) = C
     Text(label, style = TujiType.bodySmStrong, color = if (selected) TujiColor.Paper else TujiColor.Ink)
 }
 
-// MARK: - 讀故事
-
-/**
- * Reading one — iOS's `StoryReaderView`. Narration sits on the paper; Moira's
- * lines beside her face, the person's on the right. The story is read a
- * segment at a time: 繼續 brings in the next one that has arrived and reads it
- * aloud when it is spoken; when the reader has caught up with the writing the
- * bar says so instead. 全部顯示 skips ahead. The words and the way out wait
- * until the last segment is in.
- */
-@Composable
-private fun StoryReader(
-    story: Story?,
-    language: TargetLanguage,
-    picked: List<Word>,
-    writing: StoryBuilderModel.Writing,
-    speech: WordSpeaking?,
-    accent: String,
-    onOpenWord: (String) -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier,
-) {
-    val segments = story?.segments.orEmpty()
-    var shown by rememberSaveable { mutableIntStateOf(1) }
-    val caughtUp = shown >= segments.size
-    val finished = caughtUp && writing != StoryBuilderModel.Writing.InProgress
-    val scroll = rememberScrollState()
-    val scope = rememberCoroutineScope()
-    var speaking by remember { mutableStateOf<Job?>(null) }
-    val reduceMotion = rememberReduceMotion()
-    LaunchedEffect(shown, finished) { scroll.animateScrollTo(scroll.maxValue) }
-    val context = LocalContext.current
-    val recorder = remember { ShadowingRecorder(context, scope) }
-    val shadowing by recorder.state.collectAsStateWithLifecycle()
-    DisposableEffect(Unit) {
-        onDispose {
-            speaking?.cancel()
-            recorder.cancel()
-        }
-    }
-    // The line whose mic was tapped, so a refusal is said under that line.
-    var pendingLine by remember { mutableStateOf(0) }
-    val microphone = rememberMicrophone(refused = { recorder.denied(pendingLine) })
-    // Moving on, or replaying a line, drops a try in progress.
-    fun quiet() {
-        speaking?.cancel()
-        recorder.cancel()
-    }
-
-    fun advance() {
-        if (caughtUp) return
-        val next = segments[shown]
-        shown += 1
-        quiet()
-        // Narration is in the interface language, so it is not read aloud.
-        if (next.speaker != Story.Speaker.Narrator && speech?.canSpeak(language) == true) {
-            speaking = scope.launch { speech.speak(next.text, language, accent) }
-        }
-    }
-
-    Column(modifier) {
-        Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll).padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
-        ) {
-            story?.let {
-                Text(it.title, style = TujiType.h2, color = TujiColor.Ink)
-                Text(it.intro, style = TujiType.body, color = TujiColor.Ink2)
-            }
-            segments.take(shown).forEachIndexed { index, segment ->
-                AnimatedVisibility(
-                    visible = true,
-                    enter = if (reduceMotion) fadeIn() else fadeIn() + slideInVertically { it / 3 },
-                    label = "segment$index",
-                ) {
-                    SegmentRow(
-                        segment = segment,
-                        index = index,
-                        language = language,
-                        speech = speech,
-                        accent = accent,
-                        shadowing = shadowing,
-                        onShadow = {
-                            if (shadowing.isActive(index)) {
-                                recorder.stop()
-                            } else {
-                                speaking?.cancel()
-                                pendingLine = index
-                                microphone { recorder.start(index, segment.text, language, segment.furigana) }
-                            }
-                        },
-                    )
-                }
-            }
-            if (finished) {
-                if (writing is StoryBuilderModel.Writing.Failed) {
-                    Text(stringResource(failureSentence(writing.failure)), style = TujiType.bodySm, color = TujiColor.Ink3)
-                }
-                Words(story, picked, onOpenWord)
-                TujiButton(
-                    text = stringResource(R.string.story_another),
-                    onClick = {
-                        quiet()
-                        onClose()
-                    },
-                    style = TujiButtonStyle.Secondary,
-                    modifier = Modifier.padding(top = TujiSpace.S2),
-                )
-            }
-        }
-        if (!finished) {
-            Box(Modifier.fillMaxWidth().height(TujiBorder.Bw1).background(TujiColor.Rule))
-            Row(
-                Modifier.padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (caughtUp) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TujiIndeterminateBar(Modifier.width(40.dp))
-                        Text(stringResource(R.string.story_writing), style = TujiType.bodySm, color = TujiColor.Ink)
-                    }
-                } else {
-                    Text(
-                        stringResource(R.string.story_show_all),
-                        style = TujiType.bodySm,
-                        color = TujiColor.Ink3,
-                        modifier = Modifier
-                            .heightIn(min = 44.dp)
-                            .tujiClickable {
-                                quiet()
-                                shown = segments.size
-                            }
-                            .padding(vertical = TujiSpace.S3),
-                    )
-                    TujiButton(text = stringResource(R.string.story_continue), onClick = ::advance, modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SegmentRow(
-    segment: Story.Segment,
-    index: Int,
-    language: TargetLanguage,
-    speech: WordSpeaking?,
-    accent: String,
-    shadowing: ShadowingRecorder.State,
-    onShadow: () -> Unit,
-) {
-    when (segment.speaker) {
-        Story.Speaker.Narrator -> Text(
-            segment.text,
-            style = TujiType.bodySm.copy(fontStyle = FontStyle.Italic),
-            color = TujiColor.Ink3,
-        )
-        Story.Speaker.Cat -> Row(
-            Modifier.fillMaxWidth().padding(end = TujiSpace.S5),
-            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-            verticalAlignment = Alignment.Top,
-        ) {
-            MascotFigure(MascotPose.Face, 32.dp, Modifier.semantics { contentDescription = "Moira" })
-            Line(segment, index, language, speech, accent, shadowing, onShadow, Modifier.weight(1f, fill = false))
-        }
-        Story.Speaker.You -> Box(
-            Modifier.fillMaxWidth().padding(start = TujiSpace.S5 + 32.dp),
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            Line(segment, index, language, speech, accent, shadowing, onShadow)
-        }
-    }
-}
-
-/** A spoken line: the text, and beside it the speaker for a replay and the mic for 跟讀; the result sits in the bubble. */
-@Composable
-private fun Line(
-    segment: Story.Segment,
-    index: Int,
-    language: TargetLanguage,
-    speech: WordSpeaking?,
-    accent: String,
-    shadowing: ShadowingRecorder.State,
-    onShadow: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier
-            .background(if (segment.speaker == Story.Speaker.Cat) TujiColor.Paper2 else TujiColor.BrandPrimary.copy(alpha = 0.35f))
-            .padding(horizontal = TujiSpace.S3, vertical = TujiSpace.S2),
-        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-        verticalAlignment = Alignment.Top,
-    ) {
-        Column(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            val furigana = segment.furigana
-            if (!furigana.isNullOrEmpty()) {
-                FuriganaSentence(furigana)
-            } else {
-                Text(segment.text, style = TujiType.bodyStrong, color = TujiColor.Ink)
-                segment.reading?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink3) }
-            }
-            segment.translation?.let { Text(it, style = TujiType.bodySm, color = TujiColor.Ink2) }
-            if (shadowing.line == index) ShadowingFeedback(shadowing.phase)
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-            SentenceSpeakerButton(segment.text, language, speech, accent)
-            ShadowingButton(active = shadowing.isActive(index), onClick = onShadow)
-        }
-    }
-}
-
 /** The mic under the speaker: 跟讀, or 停止跟讀 while it listens. */
 @Composable
-private fun ShadowingButton(active: Boolean, onClick: () -> Unit) {
+internal fun ShadowingButton(active: Boolean, onClick: () -> Unit) {
     val haptics = app.tuji.android.core.design.rememberTujiHaptics()
     val label = stringResource(if (active) R.string.shadowing_stop else R.string.shadowing_start)
     Box(
@@ -509,7 +282,7 @@ private fun ShadowingButton(active: Boolean, onClick: () -> Unit) {
  * recogniser caught, not how good the accent was. The transcript is not shown.
  */
 @Composable
-private fun ShadowingFeedback(phase: ShadowingRecorder.Phase) {
+internal fun ShadowingFeedback(phase: ShadowingRecorder.Phase) {
     val context = LocalContext.current
     val modifier = Modifier.padding(top = TujiSpace.S1)
     when (phase) {
@@ -546,7 +319,7 @@ private fun ShadowingFeedback(phase: ShadowingRecorder.Phase) {
 
 /** The picked words, one tap from their own pages — explained by the story when it gave a note, else by their gloss. */
 @Composable
-private fun Words(story: Story?, picked: List<Word>, onOpenWord: (String) -> Unit) {
+internal fun StoryWords(story: Story?, picked: List<Word>, onOpenWord: (String) -> Unit) {
     Column(Modifier.padding(top = TujiSpace.S3)) {
         Text(stringResource(R.string.story_words), style = TujiType.label, color = TujiColor.Ink3, modifier = Modifier.padding(bottom = TujiSpace.S1))
         picked.forEach { word ->

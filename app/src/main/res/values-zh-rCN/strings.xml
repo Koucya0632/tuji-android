@@ -1049,10 +1049,15 @@
     <string name="story_failure_items">选的单字有变动，请重新选一次。没有扣点。</string>
     <string name="story_failure_failed">这次没写好，再试一次。没有扣点。</string>
     <string name="story_load_failed">加载失败，请稍后再试</string>
-    <string name="story_another">换个情境再写一个</string>
+    <string name="story_another">换个情境</string>
     <string name="story_writing">Moira 正在写故事…</string>
-    <string name="story_show_all">全部显示</string>
     <string name="story_continue">继续</string>
+    <string name="story_you">你</string>
+    <string name="story_translate">译</string>
+    <string name="story_show_translation">显示翻译</string>
+    <string name="story_hide_translation">隐藏翻译</string>
+    <string name="story_backlog">履历</string>
+    <string name="story_read_again">再看一次</string>
     <string name="story_words">故事里的单字</string>
     <string name="story_picked_count">已选 %1$d/%2$d</string>
     <string name="story_done">完成</string>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only. The 情境故事 stage with a sample story, so it can be
+     looked at without spending points. Start it with the string extra
+     `scene` (supermarket, office, restaurant, station, home); see the class. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name="app.tuji.android.assistant.StoryStageDemoActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Tuji" />
+    </application>
+</manifest>
