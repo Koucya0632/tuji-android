@@ -596,9 +596,6 @@ private fun SignedInScreens(
                 )
             }
     }
-    val studyShelves = remember(catalog.categories, studyWords) {
-        CategoryShelf.shelves(catalog.categories, studyWords)
-    }
     // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
     // numbers for one account read as a server bug for a week.
     val completion = remember(settingsLoaded, studyCategories, progress.categories, studyWords) {
@@ -1116,17 +1113,6 @@ private fun SignedInScreens(
                     streakBadge = CheckInDecision.chipBadge(
                         checkInState.reward(fallbackStudiedToday = (progress.streak?.todayCount ?: 0) > 0),
                     ),
-                    shelves = remember(studyShelves, studyCategories) {
-                        StudyThemes.todayShelves(studyShelves, studyCategories)
-                    },
-                    themeStatus = themeStatus,
-                    uiLang = uiLang,
-                    // Pushed on 今天, as on iOS: the theme is a place you come
-                    // back from to the strip you left, not a trip to 圖鑑.
-                    onOpenShelf = { id ->
-                        val shelf = studyShelves.first { it.category.id == id }
-                        nav = nav.push(AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
-                    },
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
                     onRefresh = {
@@ -1587,6 +1573,10 @@ private fun SignedInScreens(
                     onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
                     studyable = studyable,
                     onLocked = openMembership,
+                    // Locked themes too: 圖鑑 is browsable without membership.
+                    onOpenTheme = { category ->
+                        nav = nav.push(AppRoute.Shelf(category.id, CategoryShelf.title(category, uiLang)))
+                    },
                 )
 
                 is AppRoute.PublicItem -> {
@@ -2197,10 +2187,6 @@ private fun TodayColumn(
     streak: Int,
     onStreak: () -> Unit,
     streakBadge: Boolean,
-    shelves: List<CategoryShelf.Shelf>,
-    themeStatus: (String) -> ThemeStatus,
-    uiLang: String,
-    onOpenShelf: (String) -> Unit,
     onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
     onRefresh: suspend () -> Unit,
@@ -2215,8 +2201,6 @@ private fun TodayColumn(
         Modifier
     }
     TujiPullToRefresh(onRefresh = onRefresh) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-    val pageHeight = maxHeight
     Column(Modifier.fillMaxSize().then(spikeDoor).verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
@@ -2230,14 +2214,8 @@ private fun TodayColumn(
             streak = streak,
             onStreak = onStreak,
             streakBadge = streakBadge,
-            shelves = shelves,
-            themeStatus = themeStatus,
-            uiLang = uiLang,
-            onOpenShelf = onOpenShelf,
             onOpenStudyThemes = onOpenStudyThemes,
-            pageHeight = pageHeight,
         )
-    }
     }
     }
 }

@@ -26,21 +26,6 @@ object StudyThemes {
         return byId.values.toList()
     }
 
-    /**
-     * The shelves 今日's strip shows.
-     *
-     * Exactly the picked themes, in the server's category order, minus the
-     * empty ones; nothing picked is nothing shown (今日 asks them to pick
-     * instead).
-     */
-    fun todayShelves(
-        shelves: List<CategoryShelf.Shelf>,
-        selected: List<String>,
-    ): List<CategoryShelf.Shelf> {
-        val picked = selected.toSet()
-        return shelves.filter { it.category.id in picked }
-    }
-
     /** Words in the selection, from every source. Empty selection counts nothing. */
     fun countIn(words: List<Word>, selected: List<String>): Int {
         val picked = selected.toSet()

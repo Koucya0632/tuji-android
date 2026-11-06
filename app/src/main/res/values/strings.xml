@@ -222,6 +222,7 @@
     <string name="settings_themes_all">All</string>
     <string name="settings_themes_count">%1$d topics</string>
     <string name="study_themes_intro">Pick the topics you want to learn. New words and topic progress only count these; review covers every word you’ve learned, regardless of topic.</string>
+    <string name="study_themes_long_press_hint">Long-press a topic to open its Atlas.</string>
     <string name="study_themes_select_all">Select all</string>
     <string name="study_themes_clear">Clear</string>
     <string name="study_themes_selected">%1$d selected</string>

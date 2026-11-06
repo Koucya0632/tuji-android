@@ -36,19 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import app.tuji.android.core.design.TujiGlyph
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.billing.PurchaseGate
 import app.tuji.android.core.design.HeroPill
@@ -72,9 +61,7 @@ import app.tuji.android.core.study.TodayNewBlock
 import app.tuji.android.core.study.TodaySubtitle
 import android.text.format.DateFormat
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import app.tuji.android.atlas.ThemeTile
 import app.tuji.android.core.study.CompletionReadout
-import app.tuji.android.core.study.ThemeStatus
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -110,54 +97,15 @@ fun TodayScreen(
     onStreak: () -> Unit = {},
     /** The chip's dot: points a tap would collect, and nothing else. */
     streakBadge: Boolean = false,
-    /** The strip: the picked themes. */
-    shelves: List<CategoryShelf.Shelf> = emptyList(),
-    themeStatus: (String) -> ThemeStatus = { ThemeStatus.None },
-    uiLang: String = "zh-Hant",
-    onOpenShelf: (String) -> Unit = {},
     onOpenStudyThemes: () -> Unit = {},
-    /**
-     * The height the page scrolls in. The themes grid takes whatever of it the
-     * rest of the page leaves, so the page comes out one screen tall; null
-     * leaves the grid at its two-row floor.
-     */
-    pageHeight: Dp? = null,
 ) {
     val decisions = TodayDecisions(inputs)
-    val density = LocalDensity.current
-    // One tile's height: measured once a tile is drawn, until then iOS's
-    // `themeTileHeight` scaled with the text size.
-    var tileHeight by remember { mutableStateOf<Dp?>(null) }
-    val tile = tileHeight ?: (68.dp * density.fontScale)
-    val stripFloor = tile * 2 + TujiSpace.S2
-    // No taller than the rows need: four themes in a window sized for twenty
-    // leave a screen of empty paper under them.
-    val rows = (shelves.size + 1) / 2
-    val stripContent = tile * rows + TujiSpace.S2 * (rows - 1).coerceAtLeast(0)
-    // What the page's measurement left for the grid. A new page height drops it
-    // back to the floor so the grid re-measures from scratch.
-    var stripSpace by remember(pageHeight) { mutableStateOf<Dp?>(null) }
-    val stripHeight = minOf(maxOf(stripSpace ?: 0.dp, stripFloor), stripContent)
-
-    // Measured rather than weighted: inside a vertical scroll the proposal is
-    // unbounded, so a flexible grid would take its whole height and the page
-    // would grow instead. Everything that is not the grid is `total - grid`,
-    // and what is left of the page after that is the grid's. It settles in one
-    // extra pass and re-settles whenever the text size moves it.
-    val measure = if (pageHeight == null) {
-        Modifier
-    } else {
-        Modifier.onSizeChanged { size ->
-            val total = with(density) { size.height.toDp() }
-            stripSpace = pageHeight - (total - stripHeight)
-        }
-    }
 
     // Padding, not spacers: a spacer is a child, so the column's gap lands on
     // either side of it as well — 16dp at the top read as 56, and the bottom as
     // 104 under the themes. iOS pads the stack: s3 above, s4 below.
     Column(
-        measure.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
+        Modifier.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S5),
     ) {
         Greeting(
@@ -178,84 +126,30 @@ fun TodayScreen(
             onLearnNew = onLearnNew,
             onOpenAssistant = onOpenAssistant,
         )
-        when {
-            completion?.showsThemePrompt == true -> ThemePrompt(onOpenStudyThemes)
-            shelves.isNotEmpty() -> Themes(
-                shelves = shelves,
-                themeStatus = themeStatus,
-                uiLang = uiLang,
-                onOpenShelf = onOpenShelf,
-                onOpenStudyThemes = onOpenStudyThemes,
-                height = stripHeight,
-                onTileHeight = { tileHeight = it },
-            )
+        // The themes grid is gone, as on iOS: a theme's words are on 圖鑑, and
+        // a long press on 學習主題's tiles opens one. Only the way into the
+        // picker stays — iOS moved it onto the ink block's ⚙, which this hero
+        // does not have yet, so it keeps its own line here until it does.
+        if (completion?.showsThemePrompt == true) {
+            ThemePrompt(onOpenStudyThemes)
+        } else {
+            ChangeThemesLink(onOpenStudyThemes)
         }
     }
 }
 
-/**
- * The themes strip.
- *
- * **Two across, in a window that scrolls on its own** and takes whatever the
- * page has left — iOS's shape. A horizontal strip hid every theme past the
- * third behind a sideways swipe; letting the page grow instead would push
- * everything below twenty themes off the bottom. The section keeps its height
- * and the tiles move inside it.
- *
- * The link is named for **what it does**: the strip shows the themes you
- * picked, so the action beside it changes that pick. It once said 「全部 →」,
- * promising the whole catalogue and delivering a multi-select, then
- * 「學習主題 →」, which names the destination but not the verb; browsing every
- * theme is 主題's job, on 圖鑑.
- */
+/** 更換學習主題 — the strip's header link, left on its own line. */
 @Composable
-private fun Themes(
-    shelves: List<CategoryShelf.Shelf>,
-    themeStatus: (String) -> ThemeStatus,
-    uiLang: String,
-    onOpenShelf: (String) -> Unit,
-    onOpenStudyThemes: () -> Unit,
-    height: Dp,
-    onTileHeight: (Dp) -> Unit,
-) {
-    val density = LocalDensity.current
-    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                stringResource(R.string.today_themes),
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                stringResource(R.string.today_themes_all),
-                style = TujiType.label,
-                color = TujiColor.Ink,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.tujiClickable(onClick = onOpenStudyThemes),
-            )
-        }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(horizontal = TujiSpace.S4),
-            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-            modifier = Modifier.fillMaxWidth().height(height),
-        ) {
-            items(shelves, key = { it.category.id }) { shelf ->
-                ThemeTile(
-                    shelf = shelf,
-                    status = themeStatus(shelf.category.id),
-                    uiLang = uiLang,
-                    onClick = { onOpenShelf(shelf.category.id) },
-                    modifier = Modifier.onSizeChanged { onTileHeight(with(density) { it.height.toDp() }) },
-                )
-            }
-        }
-    }
+private fun ChangeThemesLink(onOpenStudyThemes: () -> Unit) {
+    Text(
+        stringResource(R.string.today_themes_all),
+        style = TujiType.label,
+        color = TujiColor.Ink,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(horizontal = TujiSpace.S4)
+            .tujiClickable(onClick = onOpenStudyThemes),
+    )
 }
 
 /**

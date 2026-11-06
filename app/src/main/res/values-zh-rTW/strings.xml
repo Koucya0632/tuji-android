@@ -222,6 +222,7 @@
     <string name="settings_themes_all">全部</string>
     <string name="settings_themes_count">%1$d 個主題</string>
     <string name="study_themes_intro">選你想學的主題。學新字與主題進度只會算這些主題；複習不分主題，所有學過的字都會排進來。</string>
+    <string name="study_themes_long_press_hint">長按主題可以看它的圖鑑。</string>
     <string name="study_themes_select_all">全選</string>
     <string name="study_themes_clear">清除</string>
     <string name="study_themes_selected">已選 %1$d 個</string>

@@ -222,6 +222,7 @@
     <string name="settings_themes_all">すべて</string>
     <string name="settings_themes_count">%1$d個のテーマ</string>
     <string name="study_themes_intro">学びたいテーマを選んでください。新出単語とテーマ進捗はこれらのテーマのみが対象です。復習はテーマを問わず、学習したすべての単語が出題されます。</string>
+    <string name="study_themes_long_press_hint">テーマを長押しすると、その図鑑が開きます。</string>
     <string name="study_themes_select_all">すべて選択</string>
     <string name="study_themes_clear">クリア</string>
     <string name="study_themes_selected">%1$d件選択中</string>
