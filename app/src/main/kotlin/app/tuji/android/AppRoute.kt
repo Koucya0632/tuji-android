@@ -31,10 +31,10 @@ sealed interface AppRoute {
     /** 搜尋 opened on a query — AI 查詞's 「圖鑑裡有 N 個相關詞」. */
     data class SearchFor(val query: String) : AppRoute
 
-    /** 助手 — Moira's home, from the cat on 今天. */
-    data object Assistant : AppRoute
+    /** 學習統計 — 我's numbers, from the trend icon on 今天's ink block. */
+    data object ProgressStats : AppRoute
 
-    /** 點數明細, from 助手 and AI 查詞. */
+    /** 點數明細, from the can on 今天 and from AI 查詞. */
     data object CreditStatement : AppRoute
 
     /** AI 查詞, from 助手. */
@@ -211,8 +211,7 @@ object TabShell {
         AppRoute.Search,
         AppRoute.CommunitySearch,
         AppRoute.Capture,
-        // 助手 is a place you study in, as on iOS (`studyFocus.enter()`).
-        AppRoute.Assistant,
+        // Moira's pages are places you study in, as on iOS (`studyFocus.enter()`).
         AppRoute.CreditStatement,
         AppRoute.Vocabulary,
         AppRoute.Grammar,

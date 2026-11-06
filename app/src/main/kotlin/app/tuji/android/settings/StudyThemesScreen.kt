@@ -43,6 +43,7 @@ import app.tuji.android.core.design.TujiPageLoading
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
+import app.tuji.android.core.design.rememberTujiHaptics
 import app.tuji.android.core.model.Category
 import app.tuji.android.core.model.TopicPreset
 import app.tuji.android.core.study.SettingsRules
@@ -58,6 +59,9 @@ import app.tuji.android.core.study.TopicPresetChoice
  * directly, and a sheet has no address to link to.
  *
  * Every tap writes through [onChange] — no save button, as on iOS.
+ *
+ * A long press on a tile opens that theme's 圖鑑 ([onOpenTheme]). 今日 lost its
+ * themes grid, and this is the screen that still lists every theme by name.
  */
 @Composable
 fun StudyThemesScreen(
@@ -75,7 +79,10 @@ fun StudyThemesScreen(
     onLocked: () -> Unit = {},
     /** 主題組合 from `/api/categories`; none from an older server, and then no row. */
     presets: List<TopicPreset> = emptyList(),
+    /** Long press on a tile: that theme's 圖鑑. Null leaves tiles tap-only. */
+    onOpenTheme: ((Category) -> Unit)? = null,
 ) {
+    val haptics = rememberTujiHaptics()
     val picked = selected.toSet()
     val catalogIds = categories.map { it.id }.toSet()
     LazyVerticalGrid(
@@ -92,6 +99,16 @@ fun StudyThemesScreen(
                 color = TujiColor.Ink3,
                 modifier = Modifier.padding(bottom = TujiSpace.S2),
             )
+        }
+        if (onOpenTheme != null) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    stringResource(R.string.study_themes_long_press_hint),
+                    style = TujiType.label,
+                    color = TujiColor.Ink3,
+                    modifier = Modifier.padding(bottom = TujiSpace.S2),
+                )
+            }
         }
         // Only while something is locked: a member never reads about locks.
         if (studyable != null) {
@@ -169,6 +186,7 @@ fun StudyThemesScreen(
                         onChange(SettingsRules.selection(SettingsRules.toggleCategory(selected, category.id)))
                     }
                 },
+                onLongClick = onOpenTheme?.let { open -> { haptics.firm(); open(category) } },
             )
         }
     }
@@ -254,6 +272,7 @@ fun ThemeTile(
     modifier: Modifier = Modifier,
     /** Browsable but not studyable: a lock, dimmed, and the tap opens 會員方案. */
     locked: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val lockedLabel = stringResource(R.string.theme_locked)
     Box(
@@ -264,7 +283,14 @@ fun ThemeTile(
                 if (selected) 1.5.dp else TujiBorder.Bw1,
                 if (selected) TujiColor.Current else TujiColor.Rule,
             )
-            .tujiClickable(onClick = onClick)
+            // Only a tile that has a long press pays combinedClickable's delay.
+            .then(
+                if (onLongClick != null) {
+                    Modifier.tujiClickable(onLongClick = onLongClick, onClick = onClick)
+                } else {
+                    Modifier.tujiClickable(onClick = onClick)
+                },
+            )
             .semantics {
                 role = Role.Checkbox
                 this.selected = selected

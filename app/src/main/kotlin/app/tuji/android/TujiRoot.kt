@@ -125,7 +125,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.draw.shadow
 import app.tuji.android.atlas.AtlasSearchScreen
 import app.tuji.android.assistant.AssistantHomeFeature
-import app.tuji.android.assistant.AssistantHomeScreen
+import app.tuji.android.account.ProgressStatsScreen
+import app.tuji.android.core.study.FreeThemesProgress
+import app.tuji.android.core.study.TodayCall
 import app.tuji.android.assistant.CreditStatementScreen
 import app.tuji.android.assistant.GrammarModel
 import app.tuji.android.assistant.GrammarScreen
@@ -596,9 +598,6 @@ private fun SignedInScreens(
                 )
             }
     }
-    val studyShelves = remember(catalog.categories, studyWords) {
-        CategoryShelf.shelves(catalog.categories, studyWords)
-    }
     // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
     // numbers for one account read as a server bug for a week.
     val completion = remember(settingsLoaded, studyCategories, progress.categories, studyWords) {
@@ -716,7 +715,13 @@ private fun SignedInScreens(
     val todayStats by today.inputs.collectAsStateWithLifecycle()
     // 今日's verdicts read the selected themes too, as iOS's do: what is left
     // to learn is counted over them once their progress has landed.
-    val todayInputs = todayStats.copy(completion = completion, progressLoaded = progress.loaded)
+    val todayInputs = todayStats.copy(
+        completion = completion,
+        progressLoaded = progress.loaded,
+        // 解鎖全部主題 rather than 換幾個主題, once a non-member has learned
+        // every free theme.
+        freeThemes = remember(studyable, progress.categories) { FreeThemesProgress.of(studyable, progress.categories) },
+    )
 
     // 每日學習提醒: laid out again whenever what they say could change — the
     // due count, whether today has been studied, the language they are in —
@@ -813,10 +818,16 @@ private fun SignedInScreens(
                 showCheckIn = false
                 openMembership()
             },
-            // Take the hero's own advice: 複習 when it is lit, otherwise 學新字.
+            // Take the hero's own advice: the one button's `call`, not a
+            // second copy of the review-first rule.
             onStudy = {
                 showCheckIn = false
-                nav = nav.push(if (TodayDecisions(todayInputs).reviewDisabled) AppRoute.LearnNew else AppRoute.Review)
+                when (val call = TodayDecisions(todayInputs).call) {
+                    is TodayCall.Study -> nav = nav.push(if (call.mode == StudyMode.Review) AppRoute.Review else AppRoute.LearnNew)
+                    TodayCall.PickThemes -> nav = nav.push(AppRoute.StudyThemes)
+                    TodayCall.Unknown -> nav = nav.push(AppRoute.Review)
+                    is TodayCall.Blocked -> Unit
+                }
             },
             onDismiss = { showCheckIn = false },
         )
@@ -1106,27 +1117,43 @@ private fun SignedInScreens(
                 AppRoute.Today -> TodayColumn(
                     inputs = todayInputs,
                     identity = identity,
-                    onReview = { nav = nav.push(AppRoute.Review) },
-                    onLearnNew = { nav = nav.push(AppRoute.LearnNew) },
+                    onStudy = { mode -> nav = nav.push(if (mode == StudyMode.Review) AppRoute.Review else AppRoute.LearnNew) },
                     onSearch = { nav = nav.push(AppRoute.Search) },
-                    onOpenAssistant = { nav = nav.push(AppRoute.Assistant) },
+                    themeName = { id -> catalog.categories.firstOrNull { it.id == id }?.let { CategoryShelf.title(it, uiLang) } },
+                    onOpenStats = { nav = nav.push(AppRoute.ProgressStats) },
+                    onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                    onUnlock = openMembership,
+                    onOpenFeature = { feature ->
+                        nav = nav.push(
+                            when (feature) {
+                                AssistantHomeFeature.Lookup -> AppRoute.Vocabulary
+                                AssistantHomeFeature.Grammar -> AppRoute.Grammar
+                                AssistantHomeFeature.Story -> AppRoute.Story
+                                AssistantHomeFeature.TopicChat -> AppRoute.TopicChat(TopicChatEntry.Choose)
+                            },
+                        )
+                    },
+                    mascotPaused = nav.current != AppRoute.Today,
+                    // So 情境故事 opens on its choices and AI 查詞／AI 語法 on
+                    // their prices. It hung off 助手's page; the ways in moved
+                    // here, so the warm-up did too.
+                    prefetchAssistant = {
+                        val owner = (session.state as? AuthState.SignedIn)?.user?.id
+                        val vocabulary = VocabularyRepository(app.api)
+                        val grammar = GrammarRepository(app.api)
+                        val story = StoryRepository(app.api)
+                        coroutineScope {
+                            launch { app.assistantCaches.vocabularyOffer.prefetch(owner) { vocabulary.offer() } }
+                            launch { app.assistantCaches.grammarOffer.prefetch(owner) { grammar.offer() } }
+                            launch { app.assistantCaches.storyOffer.prefetch(uiLang) { story.storyOffer(uiLang) } }
+                        }
+                    },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
                     onStreak = { showCheckIn = true },
                     streakBadge = CheckInDecision.chipBadge(
                         checkInState.reward(fallbackStudiedToday = (progress.streak?.todayCount ?: 0) > 0),
                     ),
-                    shelves = remember(studyShelves, studyCategories) {
-                        StudyThemes.todayShelves(studyShelves, studyCategories)
-                    },
-                    themeStatus = themeStatus,
-                    uiLang = uiLang,
-                    // Pushed on 今天, as on iOS: the theme is a place you come
-                    // back from to the strip you left, not a trip to 圖鑑.
-                    onOpenShelf = { id ->
-                        val shelf = studyShelves.first { it.category.id == id }
-                        nav = nav.push(AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
-                    },
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
                     onRefresh = {
@@ -1587,6 +1614,10 @@ private fun SignedInScreens(
                     onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
                     studyable = studyable,
                     onLocked = openMembership,
+                    // Locked themes too: 圖鑑 is browsable without membership.
+                    onOpenTheme = { category ->
+                        nav = nav.push(AppRoute.Shelf(category.id, CategoryShelf.title(category, uiLang)))
+                    },
                 )
 
                 is AppRoute.PublicItem -> {
@@ -1806,31 +1837,15 @@ private fun SignedInScreens(
                     initialQuery = route.query,
                 )
 
-                AppRoute.Assistant -> {
-                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    AssistantHomeScreen(
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpen = { feature ->
-                            when (feature) {
-                                AssistantHomeFeature.Lookup -> nav = nav.push(AppRoute.Vocabulary)
-                                AssistantHomeFeature.Grammar -> nav = nav.push(AppRoute.Grammar)
-                                AssistantHomeFeature.Story -> nav = nav.push(AppRoute.Story)
-                                AssistantHomeFeature.TopicChat -> nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Choose))
-                            }
-                        },
-                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
-                        prefetch = {
-                            val vocabulary = VocabularyRepository(app.api)
-                            val grammar = GrammarRepository(app.api)
-                            coroutineScope {
-                                launch { app.assistantCaches.vocabularyOffer.prefetch(owner) { vocabulary.offer() } }
-                                launch { app.assistantCaches.grammarOffer.prefetch(owner) { grammar.offer() } }
-                                val story = StoryRepository(app.api)
-                                launch { app.assistantCaches.storyOffer.prefetch(uiLang) { story.storyOffer(uiLang) } }
-                            }
-                        },
-                    )
-                }
+                AppRoute.ProgressStats -> ProgressStatsScreen(
+                    completion = completion,
+                    progress = progress,
+                    spread = remember(scores) { MasteryDistribution.of(scores.byId) },
+                    masteryLoaded = scores.loaded,
+                    categories = catalog.categories,
+                    studyCategories = settings.studyCategories,
+                    onBack = { if (nav.current == route) nav = nav.pop() },
+                )
 
                 AppRoute.CreditStatement -> CreditStatementScreen(
                     repository = remember { CreditLedgerRepository(app.api) },
@@ -2189,18 +2204,19 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
 private fun TodayColumn(
     inputs: TodayInputs,
     identity: String?,
-    onReview: () -> Unit,
-    onLearnNew: () -> Unit,
+    onStudy: (StudyMode) -> Unit,
     onSearch: () -> Unit,
-    onOpenAssistant: () -> Unit,
+    themeName: (String) -> String?,
+    onOpenStats: () -> Unit,
+    onOpenStatement: () -> Unit,
+    onUnlock: () -> Unit,
+    onOpenFeature: (AssistantHomeFeature) -> Unit,
+    mascotPaused: Boolean,
+    prefetchAssistant: suspend () -> Unit,
     completion: CompletionReadout,
     streak: Int,
     onStreak: () -> Unit,
     streakBadge: Boolean,
-    shelves: List<CategoryShelf.Shelf>,
-    themeStatus: (String) -> ThemeStatus,
-    uiLang: String,
-    onOpenShelf: (String) -> Unit,
     onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
     onRefresh: suspend () -> Unit,
@@ -2214,30 +2230,27 @@ private fun TodayColumn(
     } else {
         Modifier
     }
+    LaunchedEffect(Unit) { prefetchAssistant() }
     TujiPullToRefresh(onRefresh = onRefresh) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-    val pageHeight = maxHeight
     Column(Modifier.fillMaxSize().then(spikeDoor).verticalScroll(rememberScrollState())) {
         TodayScreen(
             inputs = inputs,
             name = identity,
             bottomPadding = 0.dp,
-            onReview = onReview,
-            onLearnNew = onLearnNew,
+            onStudy = onStudy,
             onSearch = onSearch,
-            onOpenAssistant = onOpenAssistant,
+            themeName = themeName,
+            onOpenStats = onOpenStats,
+            onOpenStatement = onOpenStatement,
+            onUnlock = onUnlock,
+            onOpenFeature = onOpenFeature,
+            mascotPaused = mascotPaused,
             completion = completion,
             streak = streak,
             onStreak = onStreak,
             streakBadge = streakBadge,
-            shelves = shelves,
-            themeStatus = themeStatus,
-            uiLang = uiLang,
-            onOpenShelf = onOpenShelf,
             onOpenStudyThemes = onOpenStudyThemes,
-            pageHeight = pageHeight,
         )
-    }
     }
     }
 }

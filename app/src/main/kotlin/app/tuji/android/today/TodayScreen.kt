@@ -1,319 +1,207 @@
 package app.tuji.android.today
 
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
+import android.text.format.DateFormat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.core.os.ConfigurationCompat
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.ConfigurationCompat
 import app.tuji.android.R
-import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import app.tuji.android.core.design.TujiGlyph
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
-import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.assistant.AnimatedMascot
+import app.tuji.android.assistant.AssistantCreditLink
+import app.tuji.android.assistant.AssistantHomeFeature
+import app.tuji.android.assistant.MoiraFeatureBand
 import app.tuji.android.core.design.TujiBorder
-import app.tuji.android.core.billing.PurchaseGate
-import app.tuji.android.core.design.HeroPill
-import app.tuji.android.tour.TourTarget
-import app.tuji.android.tour.tourAnchor
-import app.tuji.android.core.design.HeroPillRole
-import app.tuji.android.core.design.MascotCrossfade
-import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.design.TujiMotion
-import app.tuji.android.core.design.TujiRollingNumber
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiProgressBar
+import app.tuji.android.core.design.TujiRollingNumber
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.core.model.StudyStats
-import app.tuji.android.core.study.TodayDecisions
-import app.tuji.android.core.study.TodayHeroHint
-import app.tuji.android.core.study.TodayInputs
-import app.tuji.android.core.study.TodayNewBlock
-import app.tuji.android.core.study.TodaySubtitle
-import android.text.format.DateFormat
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import app.tuji.android.atlas.ThemeTile
+import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.study.CompletionReadout
-import app.tuji.android.core.study.ThemeStatus
+import app.tuji.android.core.study.TodayCall
+import app.tuji.android.core.study.TodayDecisions
+import app.tuji.android.core.study.TodayFooter
+import app.tuji.android.core.study.TodayHeading
+import app.tuji.android.core.study.TodayInputs
+import app.tuji.android.tour.TourTarget
+import app.tuji.android.tour.tourAnchor
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * 今日 — what there is to do, and how far through it the day is.
+ * 今日 — iOS's `TodayView`, after 助手 was merged into it.
  *
- * **No shared horizontal padding.** The ink block bleeds to the screen edges
- * and each section owns its own margin: a block with paper on either side is
- * "a card", one that reaches the edges is "this part of the screen", and the
- * difference in weight is large. The Android version was a light card for its
- * first four milestones; this is the iOS shape.
+ * 問候 → 墨塊 → Moira and her four ways in. Nothing below.
  *
- * Every verdict still comes from [TodayDecisions]; this owns the words and the
- * ink.
+ * The ink block was folded once. It used to be two bars (今日目標, 主題進度),
+ * two buttons side by side (複習, 學新字) and a line explaining why one was
+ * grey. Now it is a title, one total bar, one button and at most one line:
+ *
+ *  1. One button. [TodayDecisions.call] picks the mode — review when anything
+ *     is due, new words otherwise. Someone with reviews due can no longer pick
+ *     new words instead; the line under the button (`SwitchToNew`) is the way
+ *     out.
+ *  2. 今日目標 is gone and the progress bar counts every word in the picked
+ *     themes. 今日 has no daily loop now — a known trade, not an omission.
+ *  3. The line is [TodayDecisions.footer]: always another thing you can do,
+ *     never why a button will not press.
+ *
+ * Three unlabelled icons ride the block: ⚙ beside the title changes the
+ * themes, the trend line top-right opens 學習統計, ⓘ bottom-right opens
+ * 記憶曲線.
+ *
+ * **No shared horizontal padding.** The ink block and the band bleed to the
+ * screen edges and each section owns its own margin.
  */
 @Composable
 fun TodayScreen(
     inputs: TodayInputs,
     name: String?,
     bottomPadding: androidx.compose.ui.unit.Dp,
-    onReview: () -> Unit,
-    onLearnNew: () -> Unit,
+    onStudy: (StudyMode) -> Unit,
     onSearch: () -> Unit,
-    /** The cat is the way into 助手. */
-    onOpenAssistant: () -> Unit = {},
     /** 主題進度, answered the way 我 answers 完成度. */
     completion: CompletionReadout? = null,
+    /** A theme id's name in the interface language, or null if unknown. */
+    themeName: (String) -> String? = { null },
     /** 目前連勝, or 0 before the progress readout lands. */
     streak: Int = 0,
     /** The chip opens 打卡. */
     onStreak: () -> Unit = {},
     /** The chip's dot: points a tap would collect, and nothing else. */
     streakBadge: Boolean = false,
-    /** The strip: the picked themes. */
-    shelves: List<CategoryShelf.Shelf> = emptyList(),
-    themeStatus: (String) -> ThemeStatus = { ThemeStatus.None },
-    uiLang: String = "zh-Hant",
-    onOpenShelf: (String) -> Unit = {},
     onOpenStudyThemes: () -> Unit = {},
-    /**
-     * The height the page scrolls in. The themes grid takes whatever of it the
-     * rest of the page leaves, so the page comes out one screen tall; null
-     * leaves the grid at its two-row floor.
-     */
-    pageHeight: Dp? = null,
+    onOpenStats: () -> Unit = {},
+    onOpenStatement: () -> Unit = {},
+    /** 解鎖全部主題: the membership page. */
+    onUnlock: () -> Unit = {},
+    onOpenFeature: (AssistantHomeFeature) -> Unit = {},
+    /** Another tab or a pushed screen is in front: the cat stops breathing. */
+    mascotPaused: Boolean = false,
 ) {
     val decisions = TodayDecisions(inputs)
-    val density = LocalDensity.current
-    // One tile's height: measured once a tile is drawn, until then iOS's
-    // `themeTileHeight` scaled with the text size.
-    var tileHeight by remember { mutableStateOf<Dp?>(null) }
-    val tile = tileHeight ?: (68.dp * density.fontScale)
-    val stripFloor = tile * 2 + TujiSpace.S2
-    // No taller than the rows need: four themes in a window sized for twenty
-    // leave a screen of empty paper under them.
-    val rows = (shelves.size + 1) / 2
-    val stripContent = tile * rows + TujiSpace.S2 * (rows - 1).coerceAtLeast(0)
-    // What the page's measurement left for the grid. A new page height drops it
-    // back to the floor so the grid re-measures from scratch.
-    var stripSpace by remember(pageHeight) { mutableStateOf<Dp?>(null) }
-    val stripHeight = minOf(maxOf(stripSpace ?: 0.dp, stripFloor), stripContent)
+    var showingCurve by rememberSaveable { mutableStateOf(false) }
 
-    // Measured rather than weighted: inside a vertical scroll the proposal is
-    // unbounded, so a flexible grid would take its whole height and the page
-    // would grow instead. Everything that is not the grid is `total - grid`,
-    // and what is left of the page after that is the grid's. It settles in one
-    // extra pass and re-settles whenever the text size moves it.
-    val measure = if (pageHeight == null) {
-        Modifier
-    } else {
-        Modifier.onSizeChanged { size ->
-            val total = with(density) { size.height.toDp() }
-            stripSpace = pageHeight - (total - stripHeight)
-        }
-    }
-
-    // Padding, not spacers: a spacer is a child, so the column's gap lands on
-    // either side of it as well — 16dp at the top read as 56, and the bottom as
-    // 104 under the themes. iOS pads the stack: s3 above, s4 below.
+    // Padding, not spacers: a spacer is a child, so the column's gap would land
+    // on either side of it as well. iOS pads the stack: s3 above, s4 below.
     Column(
-        measure.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
-        verticalArrangement = Arrangement.spacedBy(TujiSpace.S5),
+        Modifier.padding(top = TujiSpace.S3, bottom = bottomPadding + TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S4),
     ) {
         Greeting(
-            decisions = decisions,
-            stats = inputs.stats,
             name = name,
             streak = streak,
             onStreak = onStreak,
             streakBadge = streakBadge,
             onSearch = onSearch,
+            onOpenStatement = onOpenStatement,
             modifier = Modifier.padding(horizontal = TujiSpace.S4),
         )
         Hero(
             decisions = decisions,
-            inputs = inputs,
-            completion = completion,
-            onReview = onReview,
-            onLearnNew = onLearnNew,
-            onOpenAssistant = onOpenAssistant,
+            themeName = themeName,
+            onStudy = onStudy,
+            onOpenStudyThemes = onOpenStudyThemes,
+            onOpenStats = onOpenStats,
+            onUnlock = onUnlock,
+            onOpenCurve = { showingCurve = true },
         )
-        when {
-            completion?.showsThemePrompt == true -> ThemePrompt(onOpenStudyThemes)
-            shelves.isNotEmpty() -> Themes(
-                shelves = shelves,
-                themeStatus = themeStatus,
-                uiLang = uiLang,
-                onOpenShelf = onOpenShelf,
-                onOpenStudyThemes = onOpenStudyThemes,
-                height = stripHeight,
-                onTileHeight = { tileHeight = it },
-            )
-        }
+        MoiraSection(onOpenFeature, mascotPaused)
     }
+
+    if (showingCurve) ReviewCurveSheet(onDismiss = { showingCurve = false })
 }
 
 /**
- * The themes strip.
- *
- * **Two across, in a window that scrolls on its own** and takes whatever the
- * page has left — iOS's shape. A horizontal strip hid every theme past the
- * third behind a sideways swipe; letting the page grow instead would push
- * everything below twenty themes off the bottom. The section keeps its height
- * and the tiles move inside it.
- *
- * The link is named for **what it does**: the strip shows the themes you
- * picked, so the action beside it changes that pick. It once said 「全部 →」,
- * promising the whole catalogue and delivering a multi-select, then
- * 「學習主題 →」, which names the destination but not the verb; browsing every
- * theme is 主題's job, on 圖鑑.
+ * The merged 助手 home: a breathing cat over her four ways in. The cat says
+ * whose they are, so the cells carry titles and no detail.
  */
 @Composable
-private fun Themes(
-    shelves: List<CategoryShelf.Shelf>,
-    themeStatus: (String) -> ThemeStatus,
-    uiLang: String,
-    onOpenShelf: (String) -> Unit,
-    onOpenStudyThemes: () -> Unit,
-    height: Dp,
-    onTileHeight: (Dp) -> Unit,
-) {
-    val density = LocalDensity.current
-    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = TujiSpace.S4),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                stringResource(R.string.today_themes),
-                style = TujiType.label,
-                color = TujiColor.Ink3,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                stringResource(R.string.today_themes_all),
-                style = TujiType.label,
-                color = TujiColor.Ink,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.tujiClickable(onClick = onOpenStudyThemes),
-            )
-        }
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(horizontal = TujiSpace.S4),
-            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S2),
-            modifier = Modifier.fillMaxWidth().height(height),
-        ) {
-            items(shelves, key = { it.category.id }) { shelf ->
-                ThemeTile(
-                    shelf = shelf,
-                    status = themeStatus(shelf.category.id),
-                    uiLang = uiLang,
-                    onClick = { onOpenShelf(shelf.category.id) },
-                    modifier = Modifier.onSizeChanged { onTileHeight(with(density) { it.height.toDp() }) },
-                )
-            }
-        }
-    }
-}
-
-/**
- * Signed in, settings loaded, nothing picked. Not an empty strip — the strip
- * and 學新字 both draw from the pick, so the one useful thing here is making it.
- */
-@Composable
-private fun ThemePrompt(onOpenStudyThemes: () -> Unit) {
+private fun MoiraSection(onOpenFeature: (AssistantHomeFeature) -> Unit, paused: Boolean) {
     Column(
-        Modifier.padding(horizontal = TujiSpace.S4),
+        Modifier.fillMaxWidth().tourAnchor(TourTarget.Assistant),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
     ) {
-        Text(stringResource(R.string.today_themes), style = TujiType.label, color = TujiColor.Ink3)
-        Column(
-            Modifier
+        // Her 580-unit canvas has ~24dp of nothing under the contact shadow.
+        // It did not matter at the bottom of 助手; here it pushes the band down,
+        // so the slot is laid out 24dp shorter than she is drawn.
+        AnimatedMascot(
+            paused = paused,
+            modifier = Modifier
                 .fillMaxWidth()
-                .background(TujiColor.Paper)
-                .border(TujiBorder.Bw1, TujiColor.Rule)
-                .padding(TujiSpace.S4),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-        ) {
-            Text(stringResource(R.string.today_theme_prompt_title), style = TujiType.bodySmStrong, color = TujiColor.Ink)
-            Text(stringResource(R.string.today_theme_prompt_body), style = TujiType.label, color = TujiColor.Ink3)
-            Text(
-                stringResource(R.string.today_theme_prompt_cta),
-                style = TujiType.bodySmStrong,
-                color = TujiColor.Ink,
-                modifier = Modifier
-                    .background(TujiColor.Current)
-                    .tujiClickable(onClick = onOpenStudyThemes)
-                    .padding(horizontal = TujiSpace.S4, vertical = TujiSpace.S3),
-            )
-        }
+                .layout { measurable, constraints ->
+                    val height = 236.dp.roundToPx()
+                    val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+                    layout(placeable.width, height - 24.dp.roundToPx()) { placeable.place(0, 0) }
+                },
+        )
+        MoiraFeatureBand(onOpen = onOpenFeature)
     }
 }
 
 @Composable
 private fun Greeting(
-    decisions: TodayDecisions,
-    stats: StudyStats?,
     name: String?,
     streak: Int,
     onStreak: () -> Unit,
     streakBadge: Boolean,
     onSearch: () -> Unit,
+    onOpenStatement: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
         // Search rides the date line, not the headline: the headline is one
-        // flowing line precisely so a long localisation wraps, and taking ~90dp
-        // off its right edge would cost it a line — more than the row saves.
+        // flowing line precisely so a long localisation wraps.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 dateLabel(),
                 style = TujiType.label.copy(letterSpacing = 2.sp),
-                color = TujiColor.Ink3,
+                // 墨2, not 墨3: 墨3 on paper is 3.6:1 for 13sp type.
+                color = TujiColor.Ink2,
             )
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f).width(TujiSpace.S3))
             val searchLabel = stringResource(R.string.search_open)
             Box(
                 Modifier
@@ -328,15 +216,16 @@ private fun Greeting(
                 TujiGlyph.Search(size = 16.dp, tint = TujiColor.Ink2)
             }
             Spacer(Modifier.width(TujiSpace.S3))
+            // The can beside the flame: both are your counters.
+            AssistantCreditLink(onOpenStatement)
+            Spacer(Modifier.width(TujiSpace.S3))
             StreakChip(streak, streakBadge, onStreak)
         }
 
         // One string with the name inside it, so the whole greeting wraps as
-        // one line. The name is the only part in full ink.
-        //
-        // An account with no nickname is still greeted by name: 「晚安，」
-        // followed by nothing reads as the name failing to load. The fallback
-        // is this screen's copy, as on iOS.
+        // one line. The subtitle under it went: most of its cases spoke about
+        // 今日目標, which is no longer on screen, and the rest moved into the
+        // ink block's own title, button and line.
         Text(
             run {
                 val shown = name?.takeIf { it.isNotBlank() }
@@ -356,19 +245,12 @@ private fun Greeting(
             style = TujiType.h2,
             color = TujiColor.Ink,
         )
-
-        Text(subtitleText(decisions, stats), style = TujiType.bodySm, color = TujiColor.Ink3)
     }
 }
 
 /**
- * The date in the interface language, as an overline.
- *
- * The locale comes from the configuration, not `Locale.getDefault()`: the
- * latter is not observable state, so a language switch would leave this line
- * formatted in the old one until something else happened to recompose it.
- * Lint calls this out by name (`NonObservableLocale`) — it is the same mistake
- * as hard-coding `uiLang`, one layer down.
+ * The date in the interface language, as an overline. The locale comes from
+ * the configuration, which is observable, not `Locale.getDefault()`.
  */
 @Composable
 private fun dateLabel(): String {
@@ -376,10 +258,7 @@ private fun dateLabel(): String {
     val locale = remember(configuration) {
         ConfigurationCompat.getLocales(configuration)[0] ?: Locale.ROOT
     }
-    // A skeleton, not a pattern: "EEE, MMM d" is an English word order, and
-    // written out it gave a Chinese phone 「週日，9月 13」. The skeleton lets
-    // the locale place the parts — 「9月13日 週日」, 「Sun, Sep 13」 — the way
-    // iOS's `setLocalizedDateFormatFromTemplate("EEEMMMd")` does.
+    // A skeleton, not a pattern, so the locale places the parts.
     val pattern = remember(locale) { DateFormat.getBestDateTimePattern(locale, "EEEMMMd") }
     return LocalDate.now()
         .format(DateTimeFormatter.ofPattern(pattern, locale))
@@ -387,11 +266,8 @@ private fun dateLabel(): String {
 }
 
 /**
- * 連勝, beside 搜尋 on the date line. The flame is 積累 once there is a run and
- * 墨3 at zero — a lit flame over a 0 would be congratulating nothing.
- *
- * It opens 打卡. Its dot means exactly one thing — points a tap would collect —
- * so it is never decoration and never a nag to study.
+ * 連勝, on the date line. The flame is 積累 once there is a run and 墨3 at
+ * zero. It opens 打卡; its dot means points a tap would collect, nothing else.
  */
 @Composable
 private fun StreakChip(days: Int, badge: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -435,248 +311,224 @@ private fun greetingPrefix(): Int = when (LocalTime.now().hour) {
     else -> R.string.today_greeting_evening
 }
 
+// MARK: - 墨塊
+
 @Composable
 private fun Hero(
     decisions: TodayDecisions,
-    inputs: TodayInputs,
-    completion: CompletionReadout?,
-    onReview: () -> Unit,
-    onLearnNew: () -> Unit,
-    onOpenAssistant: () -> Unit,
+    themeName: (String) -> String?,
+    onStudy: (StudyMode) -> Unit,
+    onOpenStudyThemes: () -> Unit,
+    onOpenStats: () -> Unit,
+    onUnlock: () -> Unit,
+    onOpenCurve: () -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth().tourAnchor(TourTarget.Hero)) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .background(TujiColor.Ink)
-                .padding(TujiSpace.S4)
-                .padding(top = TujiSpace.S5),
-            verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-        ) {
-            Column(
-                // Room for the cat, which straddles the top-right edge.
-                Modifier.padding(end = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-            ) {
-                DailyGoal(decisions, inputs)
-                ThemeProgress(completion)
-            }
-
-            // One control, so one height. 複習 is two characters in every
-            // language and its neighbour is not; the moment the longer
-            // label wraps, an unconstrained row draws a short button beside
-            // a tall one and the pair reads as two unrelated things.
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .tourAnchor(TourTarget.HeroCtas),
-                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
-            ) {
-                HeroPill(
-                    text = stringResource(R.string.today_review),
-                    role = if (decisions.reviewDisabled) HeroPillRole.Secondary else HeroPillRole.Primary,
-                    enabled = !decisions.reviewDisabled,
-                    onClick = onReview,
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
-                HeroPill(
-                    text = stringResource(R.string.today_learn_new),
-                    // 瞳 marks the recommended action: when there is nothing
-                    // to review, learning new words is the thing to do.
-                    role = if (decisions.reviewDisabled && !decisions.newDisabled) {
-                        HeroPillRole.Primary
-                    } else {
-                        HeroPillRole.Secondary
-                    },
-                    enabled = !decisions.newDisabled,
-                    onClick = onLearnNew,
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                )
-            }
-            heroHintText(decisions, inputs.stats)?.let {
-                Text(it, style = TujiType.label, color = TujiColor.Paper.copy(alpha = 0.6f))
-            }
-        }
-
-        // Over the ink rather than inside it, so the cat straddles the top edge:
-        // its body is ink, so the overlapping half reads as a silhouette and
-        // only the eyes come forward — the gesture the logo already uses.
-        // Fades between the two poses rather than cutting: 達成 is the one
-        // thing on this screen that is meant to be *noticed*, so the swap runs
-        // at D3 — and under 移除動畫 it simply arrives, since watched motion is
-        // suppressed rather than raced.
-        //
-        // The cat is also the way into 助手. A picture gives no sign that it can
-        // be pressed, so the cat says so — in a speech bubble whose tail is what
-        // says who is talking (iOS's `SpeechCloud`).
-        val assistantLabel = stringResource(R.string.today_assistant_label)
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = TujiSpace.S4)
-                // Straddling the edge, not floating above it: the body is ink,
-                // so the overlapping half reads as a silhouette and only the
-                // eyes come forward. MascotFigure has already cropped the
-                // artwork's transparent margin, so this shifts the *drawn* cat
-                // rather than its frame — half of 96 is what puts the waist on
-                // the line.
-                .offset(y = (-48).dp)
-                .tourAnchor(TourTarget.Assistant)
-                .tujiClickable(onClick = onOpenAssistant)
-                .clearAndSetSemantics {
-                    contentDescription = assistantLabel
-                    role = Role.Button
-                },
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Text(
-                stringResource(R.string.today_assistant_bubble),
-                style = TujiType.label,
-                color = TujiColor.Ink,
-                maxLines = 1,
-                modifier = Modifier
-                    .background(TujiColor.Paper2, SpeechCloud)
-                    .padding(start = TujiSpace.S3, end = TujiSpace.S3 + SPEECH_TAIL.dp)
-                    .padding(vertical = TujiSpace.S1 + 2.dp),
-            )
-            MascotCrossfade(
-                pose = if (decisions.goalReached) MascotPose.Cheer else MascotPose.Wave,
-                size = 96.dp,
-                durationMillis = TujiMotion.D3,
-            )
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(TujiColor.Ink)
+            .tourAnchor(TourTarget.Hero)
+            .padding(TujiSpace.S4),
+        verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+    ) {
+        HeroHeading(decisions.heading, themeName, onOpenStudyThemes, onOpenStats)
+        HeroProgress(decisions.completion)
+        Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+            StudyButton(decisions.call, onStudy, onOpenStudyThemes)
+            HeroFootRow(decisions.footer, onStudy, onOpenStudyThemes, onUnlock, onOpenCurve)
         }
     }
 }
 
+/** Which themes, plus changing them and seeing the numbers. */
 @Composable
-private fun DailyGoal(decisions: TodayDecisions, inputs: TodayInputs) {
-    val done = inputs.stats?.todayNew ?: 0
-    val goal = maxOf(1, inputs.dailyGoal)
-    HeroMeter(
-        label = stringResource(R.string.today_goal),
-        trailing = if (decisions.goalReached) {
-            stringResource(R.string.today_goal_reached_badge)
-        } else {
-            stringResource(R.string.today_goal_progress, done, goal)
-        },
-        trailingColor = if (decisions.goalReached) TujiColor.Current else TujiColor.Paper.copy(alpha = 0.7f),
-        progress = done.toDouble() / goal,
-        // Always 瞳黃. The unreached state was Alert once, which said "you are
-        // failing" — not hitting today's goal at 10am is not an error, it is
-        // the thing in progress.
-        fill = TujiColor.Current,
-    )
-}
-
-@Composable
-private fun ThemeProgress(completion: CompletionReadout?) {
-    // Not the study stats' seen / total: those count the whole dictionary
-    // whatever was picked, and 我 prints this same number from the readout.
-    val seen = completion?.seen ?: 0
-    val total = completion?.total ?: 0
-    HeroMeter(
-        label = stringResource(R.string.today_theme_progress),
-        trailing = "$seen / $total",
-        trailingColor = TujiColor.Paper.copy(alpha = 0.7f),
-        progress = completion?.ratio ?: 0.0,
-        // The pale step, not the deep teal: on ink the deep one reaches 3.04:1
-        // and the pale one 13.58:1, and they mean the same thing.
-        fill = TujiColor.AccumulationSoft,
-    )
-}
-
-@Composable
-private fun HeroMeter(
-    label: String,
-    trailing: String,
-    trailingColor: androidx.compose.ui.graphics.Color,
-    progress: Double,
-    fill: androidx.compose.ui.graphics.Color,
+private fun HeroHeading(
+    heading: TodayHeading,
+    themeName: (String) -> String?,
+    onOpenStudyThemes: () -> Unit,
+    onOpenStats: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S1)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                label,
-                style = TujiType.label.copy(letterSpacing = 2.sp),
-                color = TujiColor.Paper.copy(alpha = 0.6f),
-            )
-            TujiRollingNumber(trailing, style = TujiType.label, color = trailingColor)
+    val text = when (heading) {
+        // Settings not here yet: 「還沒選學習主題」 would be contradicted a
+        // moment later, so a noun that claims nothing.
+        TodayHeading.Unknown -> stringResource(R.string.today_heading_unknown)
+        TodayHeading.NoThemes -> stringResource(R.string.today_heading_no_themes)
+        is TodayHeading.Themes -> {
+            val name = themeName(heading.firstId)
+            when {
+                name == null -> stringResource(R.string.today_heading_count, heading.count)
+                heading.count > 1 -> stringResource(R.string.today_heading_themes, name, heading.count)
+                else -> name
+            }
         }
-        TujiProgressBar(
-            progress = progress,
-            track = TujiColor.Paper.copy(alpha = 0.2f),
-            fill = fill,
-        )
+    }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        // The title and its ⚙ share everything left of the trend icon, so the
+        // ⚙ hugs the title and the trend icon stays in the corner, on the same
+        // vertical line as ⓘ below. A long title wraps before it moves either.
+        Row(Modifier.weight(1f).padding(end = TujiSpace.S2), verticalAlignment = Alignment.CenterVertically) {
+            Text(text, style = TujiType.h3, color = TujiColor.Paper, maxLines = 2, modifier = Modifier.weight(1f, fill = false))
+            InkIcon(stringResource(R.string.today_themes_all), onOpenStudyThemes) {
+                TujiGlyph.Sliders(size = 16.dp, tint = TujiColor.Paper.copy(alpha = 0.75f))
+            }
+        }
+        InkIcon(stringResource(R.string.today_stats), onOpenStats) {
+            TujiGlyph.TrendChart(size = 17.dp, tint = TujiColor.Paper.copy(alpha = 0.85f))
+        }
     }
 }
 
 @Composable
-private fun subtitleText(decisions: TodayDecisions, stats: StudyStats?): String =
-    when (decisions.subtitle) {
-        TodaySubtitle.PickThemes -> stringResource(R.string.today_sub_pick_themes)
-        TodaySubtitle.Unknown -> stringResource(R.string.today_sub_unknown)
-        TodaySubtitle.ReviewDue -> stringResource(R.string.today_sub_review_due, stats?.due ?: 0)
-        TodaySubtitle.GoalReached -> stringResource(R.string.today_sub_goal_reached)
-        TodaySubtitle.NewDoneToday ->
-            stringResource(R.string.today_sub_new_done, stats?.todayNew ?: 0)
-        TodaySubtitle.NewAvailable -> stringResource(R.string.today_sub_new_available)
-        TodaySubtitle.AllLearned -> stringResource(R.string.today_sub_all_learned)
-    }
-
-@Composable
-private fun heroHintText(decisions: TodayDecisions, stats: StudyStats?): String? =
-    when (decisions.heroHint) {
-        null -> null
-        TodayHeroHint.NewBlocked -> when (decisions.newBlock) {
-            TodayNewBlock.AllLearned -> stringResource(R.string.today_hint_all_learned)
-            TodayNewBlock.ReviewBacklog -> stringResource(R.string.today_hint_backlog)
-            TodayNewBlock.NoCards -> stringResource(R.string.today_hint_no_cards)
-            TodayNewBlock.None, TodayNewBlock.NoThemes -> null
-        }
-        TodayHeroHint.QuotaAdjusted -> decisions.quotaAdjustment?.let { (due, limit) ->
-            stringResource(R.string.today_hint_quota, due, limit)
-        }
-        TodayHeroHint.NothingToReview -> stringResource(R.string.today_hint_nothing_to_review)
-    }
-
-/** How far the bubble's tail reaches past the pill. */
-private const val SPEECH_TAIL = 10f
+private fun InkIcon(label: String, onClick: () -> Unit, glyph: @Composable () -> Unit) {
+    Box(
+        Modifier
+            .size(32.dp)
+            .tujiClickable(onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = label
+                role = Role.Button
+            },
+        contentAlignment = Alignment.Center,
+    ) { glyph() }
+}
 
 /**
- * A pill with a tail pointing right, at the cat — iOS's `SpeechCloud`. The tail
- * is rooted well inside the pill's rounded end, so the base is hidden by the
- * body at any height.
+ * Every word in the picked themes, bar left and number right. 積累 rather than
+ * 瞳黃: it says how much has built up, and 瞳黃 on this block now means only
+ * "the next step is here". The pale step, since deep teal on ink is 3.04:1.
  */
-private object SpeechCloud : androidx.compose.ui.graphics.Shape {
-    override fun createOutline(
-        size: androidx.compose.ui.geometry.Size,
-        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-        density: androidx.compose.ui.unit.Density,
-    ): androidx.compose.ui.graphics.Outline {
-        val tail = SPEECH_TAIL * density.density
-        val width = size.width - tail
-        val height = size.height
-        val body = androidx.compose.ui.graphics.Path().apply {
-            addRoundRect(
-                androidx.compose.ui.geometry.RoundRect(
-                    0f, 0f, width, height,
-                    androidx.compose.ui.geometry.CornerRadius(height / 2, height / 2),
-                ),
+@Composable
+private fun HeroProgress(readout: CompletionReadout?) {
+    val label = stringResource(R.string.today_theme_progress)
+    val value = stringResource(R.string.today_progress_words, readout?.seen ?: 0, readout?.total ?: 0)
+    Row(
+        Modifier.fillMaxWidth().clearAndSetSemantics {
+            contentDescription = label
+            stateDescription = value
+        },
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TujiProgressBar(
+            progress = readout?.ratio ?: 0.0,
+            track = TujiColor.Paper.copy(alpha = 0.2f),
+            fill = TujiColor.AccumulationSoft,
+            modifier = Modifier.weight(1f),
+        )
+        TujiRollingNumber(value, style = TujiType.bodySmStrong, color = TujiColor.AccumulationSoft)
+    }
+}
+
+/** One button. On its right, what it will do and how many. */
+@Composable
+private fun StudyButton(call: TodayCall, onStudy: (StudyMode) -> Unit, onOpenStudyThemes: () -> Unit) {
+    val study = stringResource(R.string.today_study)
+    when (call) {
+        TodayCall.PickThemes ->
+            StudyCall(stringResource(R.string.today_pick_themes), null, onClick = onOpenStudyThemes)
+        // Stats not here: no number to give. The button still works — the
+        // session fetches its own queue and has its own empty state.
+        TodayCall.Unknown -> StudyCall(study, null, onClick = { onStudy(StudyMode.Review) })
+        is TodayCall.Study -> StudyCall(
+            study,
+            when (call.mode) {
+                StudyMode.Review -> stringResource(R.string.today_call_review, call.count)
+                StudyMode.New -> stringResource(R.string.today_call_new, call.count)
+            },
+            onClick = { onStudy(call.mode) },
+        )
+        is TodayCall.Blocked -> StudyCall(study, null, onClick = null)
+    }
+}
+
+/** 瞳黃 with ink type; a press changes the ground and nothing else. Null [onClick] is the greyed state. */
+@Composable
+private fun StudyCall(title: String, trailing: String?, onClick: (() -> Unit)?) {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val enabled = onClick != null
+    val ink = if (enabled) TujiColor.Ink else TujiColor.Paper.copy(alpha = 0.4f)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .tourAnchor(TourTarget.HeroCtas)
+            .background(
+                when {
+                    !enabled -> TujiColor.Paper.copy(alpha = 0.08f)
+                    pressed -> TujiColor.CurrentDeep
+                    else -> TujiColor.Current
+                },
+            )
+            .tujiClickable(enabled = enabled, interactionSource = source, onClick = onClick ?: {})
+            .clearAndSetSemantics {
+                contentDescription = listOfNotNull(title, trailing).joinToString(", ")
+                if (enabled) role = Role.Button
+            }
+            .padding(vertical = TujiSpace.S3, horizontal = TujiSpace.S3 + 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, style = TujiType.h3, color = ink, modifier = Modifier.weight(1f))
+        if (trailing != null) {
+            Text(trailing, style = TujiType.bodySmStrong, color = ink.copy(alpha = ink.alpha * 0.75f))
+        }
+    }
+}
+
+/**
+ * Under the button: at most one line in the middle, 記憶曲線 bottom-right.
+ * The row is always there, so the block's height does not jump with the day.
+ */
+@Composable
+private fun HeroFootRow(
+    footer: TodayFooter?,
+    onStudy: (StudyMode) -> Unit,
+    onOpenStudyThemes: () -> Unit,
+    onUnlock: () -> Unit,
+    onOpenCurve: () -> Unit,
+) {
+    Box(Modifier.fillMaxWidth()) {
+        if (footer != null) {
+            val (text, action) = when (footer) {
+                TodayFooter.SwitchToNew -> stringResource(R.string.today_learn_new) to { onStudy(StudyMode.New) }
+                TodayFooter.ChangeThemes -> stringResource(R.string.today_change_themes) to onOpenStudyThemes
+                // A non-member through every free theme: 換幾個主題 would lead to
+                // a row of padlocks that each open the paywall. Open it here.
+                TodayFooter.UnlockAllThemes -> stringResource(R.string.today_unlock_all_themes) to onUnlock
+            }
+            Text(
+                text,
+                style = TujiType.label,
+                color = TujiColor.Paper.copy(alpha = 0.85f),
+                textDecoration = TextDecoration.Underline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    // Clear of the icon in the corner, at the largest text too.
+                    .padding(horizontal = 40.dp)
+                    .tujiClickable(onClick = action)
+                    .semantics { role = Role.Button }
+                    // 13sp type is 18dp tall; the padding makes the target 44.
+                    .padding(horizontal = TujiSpace.S3, vertical = 13.dp),
             )
         }
-        val root = width - height / 2
-        val tailPath = androidx.compose.ui.graphics.Path().apply {
-            moveTo(root, height * 0.2f)
-            lineTo(size.width, height * 0.1f)
-            lineTo(root, height * 0.7f)
-            close()
+        // It explains "why review first", so it sits beside the button that
+        // says 「複習 26」. Pulled 6dp out so its glyph lines up with the
+        // title row's icons; the extra lands in the block's own margin.
+        val curveLabel = stringResource(R.string.today_review_curve)
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 6.dp)
+                .size(44.dp)
+                .tujiClickable(onClick = onOpenCurve)
+                .clearAndSetSemantics {
+                    contentDescription = curveLabel
+                    role = Role.Button
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            TujiGlyph.ExclamationCircle(size = 17.dp, tint = TujiColor.Paper.copy(alpha = 0.75f))
         }
-        // A union, not one path: the pill and the tail wind opposite ways, and
-        // drawn as one they cancel where they overlap.
-        val path = androidx.compose.ui.graphics.Path().apply {
-            op(body, tailPath, androidx.compose.ui.graphics.PathOperation.Union)
-        }
-        return androidx.compose.ui.graphics.Outline.Generic(path)
     }
 }

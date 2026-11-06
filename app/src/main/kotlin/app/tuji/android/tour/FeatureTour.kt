@@ -10,7 +10,7 @@ enum class TourTarget {
     /** The 複習/學新字 pair inside the hero. */
     HeroCtas,
 
-    /** The cat on the 今日 hero, which is the way into 助手. */
+    /** Moira's area on 今日: the cat and her four ways in. */
     Assistant,
 
     /** 拍照, in the bar. */
@@ -114,9 +114,11 @@ class FeatureTourFlow(val steps: List<TourStep> = SCRIPT) {
             TourStep(
                 id = 1,
                 tab = AppRoute.Today,
-                // The cat gives no sign that it can be pressed — the speech
-                // bubble beside it is the only hint — which makes it the one
-                // thing on 今日 a new user is least likely to find.
+                // This used to point at the still cat on the ink block — a
+                // picture with no sign it could be pressed. Since 助手 merged
+                // into 今日 it frames the whole Moira area: a breathing cat
+                // over four named ways in. The step stays because they spend
+                // points.
                 target = TourTarget.Assistant,
                 fallback = null,
                 shape = TourCutoutShape.Square,
