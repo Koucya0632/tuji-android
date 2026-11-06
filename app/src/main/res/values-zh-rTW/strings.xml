@@ -1024,10 +1024,15 @@
     <string name="story_failure_items">選的單字有變動，請重新選一次。沒有扣點。</string>
     <string name="story_failure_failed">這次沒寫好，再試一次。沒有扣點。</string>
     <string name="story_load_failed">載入失敗，請稍後再試</string>
-    <string name="story_another">換個情境再寫一個</string>
+    <string name="story_another">換個情境</string>
     <string name="story_writing">Moira 正在寫故事…</string>
-    <string name="story_show_all">全部顯示</string>
     <string name="story_continue">繼續</string>
+    <string name="story_you">你</string>
+    <string name="story_translate">譯</string>
+    <string name="story_show_translation">顯示翻譯</string>
+    <string name="story_hide_translation">隱藏翻譯</string>
+    <string name="story_backlog">履歷</string>
+    <string name="story_read_again">再看一次</string>
     <string name="story_words">故事裡的單字</string>
     <string name="story_picked_count">已選 %1$d/%2$d</string>
     <string name="story_done">完成</string>

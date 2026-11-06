@@ -1024,10 +1024,15 @@
     <string name="story_failure_items">選んだ単語が変わりました。もう一度選んでください。ポイントは使われていません。</string>
     <string name="story_failure_failed">うまく作れませんでした。もう一度お試しください。ポイントは使われていません。</string>
     <string name="story_load_failed">読み込めませんでした。しばらくしてからお試しください。</string>
-    <string name="story_another">別のシチュエーションで作る</string>
+    <string name="story_another">別の場面で</string>
     <string name="story_writing">Moiraがストーリーを書いています…</string>
-    <string name="story_show_all">すべて表示</string>
     <string name="story_continue">続ける</string>
+    <string name="story_you">あなた</string>
+    <string name="story_translate">訳</string>
+    <string name="story_show_translation">訳を表示</string>
+    <string name="story_hide_translation">訳を隠す</string>
+    <string name="story_backlog">履歴</string>
+    <string name="story_read_again">もう一度読む</string>
     <string name="story_words">ストーリーの単語</string>
     <string name="story_picked_count">%1$d/%2$d 選択中</string>
     <string name="story_done">完了</string>

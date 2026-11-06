@@ -1024,10 +1024,15 @@
     <string name="story_failure_items">Some of the words you picked have changed. Please pick again. Nothing was charged.</string>
     <string name="story_failure_failed">That story didn\'t work out. Try again. Nothing was charged.</string>
     <string name="story_load_failed">Couldn\'t load. Please try again later.</string>
-    <string name="story_another">Try another scene</string>
+    <string name="story_another">New scene</string>
     <string name="story_writing">Moira is writing your story…</string>
-    <string name="story_show_all">Show all</string>
     <string name="story_continue">Continue</string>
+    <string name="story_you">You</string>
+    <string name="story_translate">Tr.</string>
+    <string name="story_show_translation">Show translation</string>
+    <string name="story_hide_translation">Hide translation</string>
+    <string name="story_backlog">Log</string>
+    <string name="story_read_again">Read again</string>
     <string name="story_words">Words in this story</string>
     <string name="story_picked_count">%1$d/%2$d picked</string>
     <string name="story_done">Done</string>
