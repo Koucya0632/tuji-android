@@ -54,15 +54,23 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Moira on 助手's home: breathing, blinking, and wagging her tail the moment a
+ * Moira on 今日, over her four ways in: breathing, blinking, and wagging her tail the moment a
  * finger lands — iOS's `AnimatedMascot`.
  *
- * The only looping motion on the assistant home. It stops while the page is not
- * resumed and under 移除動畫, where a touch is answered with an announcement
+ * The only looping motion on 今日. It stops while the page is not resumed or
+ * not in front ([paused]) and under 移除動畫, where a touch is answered with an announcement
  * instead.
  */
 @Composable
-fun AnimatedMascot(modifier: Modifier = Modifier) {
+fun AnimatedMascot(
+    modifier: Modifier = Modifier,
+    /**
+     * Not in front. 今日 lives in the tab pager and stays composed while
+     * another tab or a pushed screen is showing, so being resumed is not
+     * enough to mean she is seen.
+     */
+    paused: Boolean = false,
+) {
     val context = LocalContext.current
     val view = LocalView.current
     val artwork = remember { MascotArtwork.load(context.resources) }
@@ -76,8 +84,8 @@ fun AnimatedMascot(modifier: Modifier = Modifier) {
     var animating by remember { mutableStateOf(false) }
     val petted = stringResource(R.string.assistant_pet_done)
 
-    LaunchedEffect(reduceMotion) {
-        if (reduceMotion) return@LaunchedEffect
+    LaunchedEffect(reduceMotion, paused) {
+        if (reduceMotion || paused) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             animating = true
             try {

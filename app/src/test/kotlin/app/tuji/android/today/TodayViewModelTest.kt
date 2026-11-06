@@ -5,7 +5,8 @@ import app.tuji.android.core.model.StudyStats
 import app.tuji.android.core.model.StudyStatsResponse
 import app.tuji.android.core.network.StudyStatsReading
 import app.tuji.android.core.study.TodayDecisions
-import app.tuji.android.core.study.TodaySubtitle
+import app.tuji.android.core.study.TodayCall
+import app.tuji.android.core.model.StudyMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -47,7 +48,7 @@ class TodayViewModelTest {
         val vm = vm(reader { StudyStatsResponse(stats = good) })
         vm.refresh(); advanceUntilIdle()
         assertEquals(good, vm.inputs.value.stats)
-        assertEquals(TodaySubtitle.ReviewDue, TodayDecisions(vm.inputs.value).subtitle)
+        assertEquals(TodayCall.Study(StudyMode.Review, 3), TodayDecisions(vm.inputs.value).call)
     }
 
     @Test fun `a failed refresh keeps the numbers it had`() = runTest(dispatcher) {
@@ -71,6 +72,6 @@ class TodayViewModelTest {
             val vm = vm(reader { throw java.io.IOException("offline") })
             vm.refresh(); advanceUntilIdle()
             assertNull(vm.inputs.value.stats)
-            assertEquals(TodaySubtitle.Unknown, TodayDecisions(vm.inputs.value).subtitle)
+            assertEquals(TodayCall.Unknown, TodayDecisions(vm.inputs.value).call)
         }
 }

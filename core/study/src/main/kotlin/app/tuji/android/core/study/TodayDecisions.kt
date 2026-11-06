@@ -1,5 +1,7 @@
 package app.tuji.android.core.study
 
+import app.tuji.android.core.model.CategoryProgress
+import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyStats
 
 /**
@@ -9,6 +11,10 @@ import app.tuji.android.core.model.StudyStats
  * split is what keeps it testable without a resource bundle, and it is also
  * what stops a hard-coded Chinese line leaking into a ja/en UI from here —
  * there is no string to leak.
+ *
+ * The ink block answers three questions now — [heading], [call] and
+ * [footer] — where it used to have a seven-case subtitle and a three-case
+ * hint. Those went with the 複習／學新字 pair and the 今日目標 bar, as on iOS.
  *
  * This used to be a deliberate subset, missing iOS's 主題 cases because
  * Android had no theme selection or completion readout yet. It has both now,
@@ -27,6 +33,8 @@ data class TodayInputs(
     val completion: CompletionReadout? = null,
     /** Whether the per-theme progress has arrived; until then its 0s are not facts. */
     val progressLoaded: Boolean = false,
+    /** Every free theme's progress, for a non-member; null for everyone else. */
+    val freeThemes: FreeThemesProgress? = null,
 ) {
     companion object {
         /** iOS's `UserSettings` default. */
@@ -35,24 +43,91 @@ data class TodayInputs(
 }
 
 /**
- * Which line sits under the greeting. One case per thing 今日 can truthfully
- * say, in the order the rules resolve.
+ * What the ink block's title says — iOS's `TodayHeading`. The screen looks the
+ * id up for a name; this module answers whether there are themes, which comes
+ * first, and how many.
  */
-enum class TodaySubtitle {
-    /** No themes picked: the first thing to do is pick some. */
-    PickThemes,
+sealed interface TodayHeading {
+    /** Settings have not arrived: an empty list means nothing yet. */
+    data object Unknown : TodayHeading
+    data object NoThemes : TodayHeading
+    data class Themes(val firstId: String, val count: Int) : TodayHeading
+}
+
+/**
+ * What the one 背單字 button will do — iOS's `TodayCall`.
+ *
+ * It replaced the 複習／學新字 pair. The mode is picked here, not by the user:
+ * review when anything is due, new words otherwise. [TodayDecisions.footer]'s
+ * [TodayFooter.SwitchToNew] is the way out of that choice.
+ */
+sealed interface TodayCall {
+    /** No themes picked: the button goes and picks some. */
+    data object PickThemes : TodayCall
+
+    /** Stats have not arrived. The button still works; it just names no number. */
+    data object Unknown : TodayCall
+    data class Study(val mode: StudyMode, val count: Int) : TodayCall
+    data class Blocked(val block: TodayBlock) : TodayCall
+}
+
+/** Why the button is dead. Both are "the picked themes give nothing", for different reasons. */
+enum class TodayBlock {
+    /** Everything in the picked themes has been learned. */
+    ThemesExhausted,
 
     /**
-     * Stats have not arrived. A neutral line beats a wrong verdict —
-     * 「都學過了」 flashing on a brand-new account while the first fetch is in
-     * flight is worse than saying nothing specific.
+     * As above, and a non-member has also learned every free theme: each theme
+     * they could switch to is locked, so 「換幾個主題」 leads nowhere.
      */
-    Unknown,
-    ReviewDue,
-    GoalReached,
-    NewDoneToday,
-    NewAvailable,
-    AllLearned,
+    FreeThemesLearned,
+
+    /** The picked themes have no words in the current deck. */
+    NoCards,
+}
+
+/** The one line under the button: always another thing the user can do. */
+enum class TodayFooter {
+    /** Heading for review, but new words are there too. */
+    SwitchToNew,
+
+    /** The button is dead; the way on is other themes. */
+    ChangeThemes,
+
+    /** The button is dead and every theme to switch to needs membership. */
+    UnlockAllThemes,
+}
+
+/**
+ * How far a non-member is through every theme they may study, picked or not —
+ * iOS's `FreeThemesProgress`.
+ */
+data class FreeThemesProgress(
+    /** Published cards across the free themes. */
+    val total: Int,
+    /**
+     * Cards not yet studied, counted theme by theme. Not `total − seen`: a
+     * withdrawn word leaves one theme's seen above its total, and summed, that
+     * surplus would hide another theme's unlearned words.
+     */
+    val unseen: Int,
+) {
+    val allLearned: Boolean get() = total > 0 && unseen == 0
+
+    companion object {
+        /**
+         * Null when nothing is gated: members, and before the first entitlement
+         * sync. An empty gate is not read as "every theme".
+         */
+        fun of(studyable: List<String>?, progress: List<CategoryProgress>): FreeThemesProgress? {
+            if (studyable.isNullOrEmpty()) return null
+            val byTheme = progress.associateBy { it.category }
+            return FreeThemesProgress(
+                total = studyable.sumOf { byTheme[it]?.total ?: 0 },
+                unseen = studyable.sumOf { theme -> byTheme[theme]?.let { maxOf(0, it.total - it.seen) } ?: 0 },
+            )
+        }
+    }
 }
 
 /** Why 學新字 is unavailable, so the screen can explain the dead end. */
@@ -72,21 +147,11 @@ enum class TodayNewBlock {
     ReviewBacklog,
 }
 
-/** Which caption the hero shows under its buttons, when it shows one. */
-enum class TodayHeroHint {
-    NewBlocked,
-    QuotaAdjusted,
-    NothingToReview,
-}
-
 class TodayDecisions(private val inputs: TodayInputs) {
 
     private val goal: Int get() = maxOf(1, inputs.dailyGoal)
 
     private val showThemePrompt: Boolean get() = inputs.completion?.showsThemePrompt == true
-
-    val goalReached: Boolean
-        get() = (inputs.stats?.todayNew ?: 0) >= goal
 
     /**
      * New words still to learn: in the selected themes once their progress has
@@ -127,45 +192,57 @@ class TodayDecisions(private val inputs: TodayInputs) {
     val newDisabled: Boolean
         get() = newBlock != TodayNewBlock.None
 
-    val subtitle: TodaySubtitle
+    /** 主題進度 — the readout 我 prints too. Null until the screen has one. */
+    val completion: CompletionReadout?
+        get() = inputs.completion
+
+    val heading: TodayHeading
         get() {
-            if (showThemePrompt) return TodaySubtitle.PickThemes
-            val stats = inputs.stats ?: return TodaySubtitle.Unknown
-            if (stats.due > 0) return TodaySubtitle.ReviewDue
-            // Goal reached wins over everything below, so this line can never
-            // contradict the 達成 badge next to it.
-            if (goalReached) return TodaySubtitle.GoalReached
-            if ((stats.todayNew ?: 0) > 0) return TodaySubtitle.NewDoneToday
-            if (newAvailable > 0) return TodaySubtitle.NewAvailable
-            return TodaySubtitle.AllLearned
+            if (showThemePrompt) return TodayHeading.NoThemes
+            val picked = inputs.completion?.inputs?.studyCategories.orEmpty()
+            val first = picked.firstOrNull() ?: return TodayHeading.Unknown
+            return TodayHeading.Themes(firstId = first, count = picked.size)
         }
 
     /**
-     * The backlog-tapers-the-quota fact, or null when it is not happening.
-     *
-     * @return due count and the reduced limit.
+     * How many new words this round draws: the daily goal, capped by what is
+     * left. Not `computeNewLimit`: reaching here means nothing is due, and the
+     * backlog taper only bites past 20.
      */
-    val quotaAdjustment: Pair<Int, Int>?
+    val newCount: Int
+        get() = maxOf(0, minOf(newAvailable, goal))
+
+    val call: TodayCall
         get() {
-            val stats = inputs.stats ?: return null
-            if ((stats.todayNew ?: 0) >= goal) return null
-            if (newAvailable <= 0) return null
-            val limit = StudyQuotas.computeNewLimit(goal = goal, due = stats.due)
-            return if (limit in 1 until goal) stats.due to limit else null
+            if (showThemePrompt) return TodayCall.PickThemes
+            val stats = inputs.stats ?: return TodayCall.Unknown
+            if (stats.due > 0) return TodayCall.Study(StudyMode.Review, stats.due)
+            return when (newBlock) {
+                TodayNewBlock.NoThemes -> TodayCall.PickThemes
+                TodayNewBlock.NoCards -> TodayCall.Blocked(TodayBlock.NoCards)
+                TodayNewBlock.AllLearned -> TodayCall.Blocked(
+                    if (freeThemesLearned) TodayBlock.FreeThemesLearned else TodayBlock.ThemesExhausted,
+                )
+                // Unreachable with nothing due (the taper zeroes only past 100);
+                // if it ever is reached, it is the same dead end.
+                TodayNewBlock.ReviewBacklog -> TodayCall.Blocked(TodayBlock.ThemesExhausted)
+                TodayNewBlock.None -> TodayCall.Study(StudyMode.New, newCount)
+            }
+        }
+
+    val footer: TodayFooter?
+        get() = when (val call = call) {
+            TodayCall.PickThemes, TodayCall.Unknown -> null
+            is TodayCall.Study ->
+                if (call.mode == StudyMode.Review && !newDisabled) TodayFooter.SwitchToNew else null
+            is TodayCall.Blocked ->
+                if (call.block == TodayBlock.FreeThemesLearned) TodayFooter.UnlockAllThemes else TodayFooter.ChangeThemes
         }
 
     /**
-     * Which of the three captions speaks, if any.
-     *
-     * None of them speaks before stats land: a hint about today's numbers,
-     * shown before today's numbers exist, is a guess. No themes is said by the
-     * theme prompt below, not by the hero.
+     * A non-member has learned every word in every free theme. Waits for
+     * progress: before it lands every count is zero, which is not "all learned".
      */
-    val heroHint: TodayHeroHint?
-        get() {
-            if (newBlock != TodayNewBlock.None && newBlock != TodayNewBlock.NoThemes) return TodayHeroHint.NewBlocked
-            if (quotaAdjustment != null) return TodayHeroHint.QuotaAdjusted
-            if (reviewDisabled && inputs.stats != null) return TodayHeroHint.NothingToReview
-            return null
-        }
+    val freeThemesLearned: Boolean
+        get() = inputs.progressLoaded && inputs.freeThemes?.allLearned == true
 }

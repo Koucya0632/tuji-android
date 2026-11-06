@@ -936,6 +936,57 @@ object TujiGlyph {
         }
     }
 
+    /**
+     * 更換學習主題 on 今日's ink block — SF Symbols' `slider.horizontal.3`:
+     * three rails, each with a knob at a different stop.
+     */
+    @Composable
+    fun Sliders(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            val knob = w * 0.10f
+            for ((y, x) in listOf(0.22f to 0.68f, 0.50f to 0.32f, 0.78f to 0.56f)) {
+                drawLine(tint, Offset(w * 0.08f, w * y), Offset(w * 0.92f, w * y), stroke, StrokeCap.Round)
+                drawCircle(tint, radius = knob, center = Offset(w * x, w * y))
+            }
+        }
+    }
+
+    /** 學習統計 — SF Symbols' `chart.line.uptrend.xyaxis`: two axes and a rising line. */
+    @Composable
+    fun TrendChart(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            val axes = Path().apply {
+                moveTo(w * 0.10f, w * 0.08f)
+                lineTo(w * 0.10f, w * 0.90f)
+                lineTo(w * 0.92f, w * 0.90f)
+            }
+            drawPath(axes, tint, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            val line = Path().apply {
+                moveTo(w * 0.24f, w * 0.70f)
+                lineTo(w * 0.44f, w * 0.48f)
+                lineTo(w * 0.60f, w * 0.60f)
+                lineTo(w * 0.88f, w * 0.24f)
+            }
+            drawPath(line, tint, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+    }
+
+    /** 記憶曲線 — SF Symbols' `exclamationmark.circle`: a ring, a bar, a dot. */
+    @Composable
+    fun ExclamationCircle(size: Dp = 20.dp, tint: Color = TujiColor.Ink, modifier: Modifier = Modifier) {
+        Canvas(modifier.then(Modifier.size(size))) {
+            val w = this.size.width
+            val stroke = w * 0.09f
+            drawCircle(tint, radius = w * 0.42f, center = Offset(w * 0.5f, w * 0.5f), style = Stroke(width = stroke))
+            drawLine(tint, Offset(w * 0.5f, w * 0.28f), Offset(w * 0.5f, w * 0.56f), stroke, StrokeCap.Round)
+            drawCircle(tint, radius = stroke * 0.65f, center = Offset(w * 0.5f, w * 0.71f))
+        }
+    }
+
     private const val TEETH = 8
 
     private const val POINTS = 5

@@ -1,5 +1,7 @@
 package app.tuji.android.core.study
 
+import app.tuji.android.core.model.CategoryProgress
+import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.StudyStats
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -17,102 +19,6 @@ class TodayDecisionsTest {
         dailyGoal: Int = 10,
     ) = TodayDecisions(TodayInputs(stats = stats, dailyGoal = dailyGoal))
 
-    // Before the numbers exist
-
-    @Test fun `nothing is claimed before stats land`() {
-        val t = today(stats = null)
-        assertEquals(TodaySubtitle.Unknown, t.subtitle)
-        assertNull("a hint about today's numbers, before them, is a guess", t.heroHint)
-        assertEquals(TodayNewBlock.None, t.newBlock)
-    }
-
-    @Test fun `an empty account is not told it has learned everything`() {
-        // The failure this guards: 「都學過了」 flashing on a brand-new account
-        // while the first fetch is still in flight.
-        assertEquals(TodaySubtitle.Unknown, today(stats = null).subtitle)
-    }
-
-    // The subtitle ladder
-
-    @Test fun `a review backlog is what the line says first`() {
-        assertEquals(TodaySubtitle.ReviewDue, today(stats = stats(due = 7)).subtitle)
-    }
-
-    @Test fun `the goal never contradicts the badge beside it`() {
-        val t = today(stats = stats(todayNew = 10), dailyGoal = 10)
-        assertTrue(t.goalReached)
-        assertEquals(TodaySubtitle.GoalReached, t.subtitle)
-    }
-
-    @Test fun `partway through the day it says what was done`() {
-        assertEquals(TodaySubtitle.NewDoneToday, today(stats = stats(todayNew = 3)).subtitle)
-    }
-
-    @Test fun `a fresh day with words left offers them`() {
-        assertEquals(TodaySubtitle.NewAvailable, today(stats = stats(todayNew = 0, new = 40)).subtitle)
-    }
-
-    @Test fun `a finished catalogue says so`() {
-        assertEquals(TodaySubtitle.AllLearned, today(stats = stats(new = 0, todayNew = 0)).subtitle)
-    }
-
-    // What is offered
-
-    @Test fun `複習 is dead when nothing is due`() {
-        assertTrue(today(stats = stats(due = 0)).reviewDisabled)
-        assertFalse(today(stats = stats(due = 1)).reviewDisabled)
-    }
-
-    @Test fun `an empty catalogue blocks 學新字 with a reason`() {
-        val t = today(stats = stats(new = 0))
-        assertEquals(TodayNewBlock.AllLearned, t.newBlock)
-        assertTrue(t.newDisabled)
-    }
-
-    @Test fun `a big backlog blocks 學新字 rather than letting it bounce`() {
-        // computeNewLimit falls to 0 once the backlog is large enough; without
-        // this the user enters the flow and is thrown straight back out.
-        val due = (1..500).first { StudyQuotas.computeNewLimit(goal = 10, due = it) == 0 }
-        val t = today(stats = stats(due = due, new = 200))
-        assertEquals(TodayNewBlock.ReviewBacklog, t.newBlock)
-    }
-
-    // The hint
-
-    @Test fun `a blocked 學新字 speaks before the quota note`() {
-        val t = today(stats = stats(new = 0, due = 0))
-        assertEquals(TodayHeroHint.NewBlocked, t.heroHint)
-    }
-
-    @Test fun `a tapered quota is reported with its numbers`() {
-        val due = (1..500).firstOrNull {
-            StudyQuotas.computeNewLimit(goal = 10, due = it) in 1..9
-        } ?: error("no backlog tapers the quota — the rule changed")
-        val t = today(stats = stats(due = due, new = 200, todayNew = 0))
-        val (reportedDue, limit) = t.quotaAdjustment!!
-        assertEquals(due, reportedDue)
-        assertTrue(limit in 1..9)
-        // 複習 is available in this state, so the quota note is what speaks.
-        assertEquals(TodayHeroHint.QuotaAdjusted, t.heroHint)
-    }
-
-    @Test fun `a met goal is not also a quota complaint`() {
-        assertNull(today(stats = stats(todayNew = 10, due = 3), dailyGoal = 10).quotaAdjustment)
-    }
-
-    @Test fun `nothing to review is the last thing said`() {
-        val t = today(stats = stats(due = 0, new = 200, todayNew = 3))
-        assertEquals(TodayHeroHint.NothingToReview, t.heroHint)
-    }
-
-    @Test fun `a zero goal cannot divide the day by nothing`() {
-        val t = today(stats = stats(todayNew = 0), dailyGoal = 0)
-        assertFalse(t.goalReached)
-        assertEquals(TodaySubtitle.NewAvailable, t.subtitle)
-    }
-
-    // The themes being studied — iOS's selection-aware rules
-
     private fun selection(picked: List<String>, seen: Int, total: Int, settingsLoaded: Boolean = true) =
         CompletionReadout(
             CompletionReadout.Inputs(
@@ -125,40 +31,161 @@ class TodayDecisionsTest {
             ),
         )
 
-    private fun studying(completion: CompletionReadout, stats: StudyStats? = stats(), loaded: Boolean = true) =
-        TodayDecisions(TodayInputs(stats = stats, completion = completion, progressLoaded = loaded))
+    private fun studying(
+        completion: CompletionReadout,
+        stats: StudyStats? = stats(),
+        loaded: Boolean = true,
+        freeThemes: FreeThemesProgress? = null,
+    ) = TodayDecisions(TodayInputs(stats = stats, completion = completion, progressLoaded = loaded, freeThemes = freeThemes))
 
-    @Test fun `no themes asks for themes, and the hero leaves it to the prompt`() {
-        val t = studying(selection(emptyList(), seen = 0, total = 0))
-        assertEquals(TodaySubtitle.PickThemes, t.subtitle)
-        assertEquals(TodayNewBlock.NoThemes, t.newBlock)
-        assertTrue(t.newDisabled)
-        assertTrue("no-themes is not the hero's to explain", t.heroHint != TodayHeroHint.NewBlocked)
+    // Before the numbers exist
+
+    @Test fun `nothing is claimed before stats land`() {
+        val t = today(stats = null)
+        assertEquals(TodayCall.Unknown, t.call)
+        assertNull("no way out is offered for a call that names nothing", t.footer)
+        assertEquals(TodayNewBlock.None, t.newBlock)
+    }
+
+    // The heading
+
+    @Test fun `the heading names the first theme and the count`() {
+        val t = studying(selection(listOf("kitchen", "bathroom", "office"), seen = 3, total = 90))
+        assertEquals(TodayHeading.Themes(firstId = "kitchen", count = 3), t.heading)
+    }
+
+    @Test fun `no themes is said as no themes`() {
+        assertEquals(TodayHeading.NoThemes, studying(selection(emptyList(), seen = 0, total = 0)).heading)
     }
 
     @Test fun `settings not loaded yet is not no themes`() {
         val t = studying(selection(emptyList(), seen = 0, total = 0, settingsLoaded = false), loaded = false)
-        assertTrue(t.subtitle != TodaySubtitle.PickThemes)
+        assertEquals(TodayHeading.Unknown, t.heading)
+        assertTrue(t.call != TodayCall.PickThemes)
         assertTrue(t.newBlock != TodayNewBlock.NoThemes)
     }
 
-    @Test fun `picked themes with no words say so`() {
+    // The one button
+
+    @Test fun `anything due is reviewed first, with its count`() {
+        assertEquals(TodayCall.Study(StudyMode.Review, 7), today(stats = stats(due = 7)).call)
+    }
+
+    @Test fun `nothing due learns new words, capped by the goal`() {
+        assertEquals(TodayCall.Study(StudyMode.New, 10), today(stats = stats(due = 0, new = 40)).call)
+    }
+
+    @Test fun `the new count is capped by what is left`() {
+        val t = studying(selection(listOf("kitchen"), seen = 61, total = 64))
+        assertEquals(TodayCall.Study(StudyMode.New, 3), t.call)
+    }
+
+    @Test fun `no themes sends the button to pick them`() {
+        val t = studying(selection(emptyList(), seen = 0, total = 0))
+        assertEquals(TodayCall.PickThemes, t.call)
+        assertEquals(TodayNewBlock.NoThemes, t.newBlock)
+        assertNull(t.footer)
+    }
+
+    @Test fun `picked themes with no words block the button`() {
         val t = studying(selection(listOf("kitchen"), seen = 0, total = 0))
-        assertEquals(TodayNewBlock.NoCards, t.newBlock)
-        assertEquals(TodayHeroHint.NewBlocked, t.heroHint)
+        assertEquals(TodayCall.Blocked(TodayBlock.NoCards), t.call)
+        assertEquals(TodayFooter.ChangeThemes, t.footer)
     }
 
     @Test fun `what is left counts the picked themes, not the whole catalogue`() {
         // The server still has 537 new words, but the picked themes are done.
         val t = studying(selection(listOf("kitchen"), seen = 64, total = 64))
         assertEquals(0, t.newAvailable)
-        assertEquals(TodayNewBlock.AllLearned, t.newBlock)
-        assertEquals(TodaySubtitle.AllLearned, t.subtitle)
+        assertEquals(TodayCall.Blocked(TodayBlock.ThemesExhausted), t.call)
+        assertEquals(TodayFooter.ChangeThemes, t.footer)
     }
 
     @Test fun `before the themes' progress lands the server's count stands in`() {
         val t = studying(selection(listOf("kitchen"), seen = 0, total = 0), loaded = false)
         assertEquals(537, t.newAvailable)
         assertEquals(TodayNewBlock.None, t.newBlock)
+    }
+
+    // The footer
+
+    @Test fun `reviewing with new words left offers to switch`() {
+        assertEquals(TodayFooter.SwitchToNew, today(stats = stats(due = 5, new = 40)).footer)
+    }
+
+    @Test fun `reviewing with no new words offers nothing`() {
+        assertNull(today(stats = stats(due = 5, new = 0)).footer)
+    }
+
+    @Test fun `a backlog that eats the quota offers no switch`() {
+        val due = (1..500).first { StudyQuotas.computeNewLimit(goal = 10, due = it) == 0 }
+        val t = today(stats = stats(due = due, new = 200))
+        assertEquals(TodayNewBlock.ReviewBacklog, t.newBlock)
+        assertNull(t.footer)
+    }
+
+    @Test fun `learning new words needs no way out`() {
+        assertNull(today(stats = stats(due = 0, new = 40)).footer)
+    }
+
+    // Free themes, for a non-member
+
+    @Test fun `every free theme learned unlocks rather than switches`() {
+        val t = studying(
+            selection(listOf("kitchen"), seen = 64, total = 64),
+            freeThemes = FreeThemesProgress(total = 150, unseen = 0),
+        )
+        assertEquals(TodayCall.Blocked(TodayBlock.FreeThemesLearned), t.call)
+        assertEquals(TodayFooter.UnlockAllThemes, t.footer)
+    }
+
+    @Test fun `free themes still unlearned keep 換幾個主題`() {
+        val t = studying(
+            selection(listOf("kitchen"), seen = 64, total = 64),
+            freeThemes = FreeThemesProgress(total = 150, unseen = 30),
+        )
+        assertEquals(TodayFooter.ChangeThemes, t.footer)
+    }
+
+    @Test fun `free themes are not all learned before progress lands`() {
+        val t = studying(
+            selection(listOf("kitchen"), seen = 0, total = 0),
+            loaded = false,
+            freeThemes = FreeThemesProgress(total = 0, unseen = 0),
+        )
+        assertFalse(t.freeThemesLearned)
+    }
+
+    @Test fun `free-theme progress counts unlearned words theme by theme`() {
+        // A withdrawn word leaves kitchen's seen above its total; summed, that
+        // surplus would hide fruit's two unlearned words.
+        val p = FreeThemesProgress.of(
+            studyable = listOf("kitchen", "fruit"),
+            progress = listOf(
+                CategoryProgress("kitchen", total = 10, seen = 12),
+                CategoryProgress("fruit", total = 5, seen = 3),
+                CategoryProgress("office", total = 60, seen = 0),
+            ),
+        )!!
+        assertEquals(15, p.total)
+        assertEquals(2, p.unseen)
+        assertFalse(p.allLearned)
+    }
+
+    @Test fun `no gate is no free-theme progress`() {
+        assertNull(FreeThemesProgress.of(null, emptyList()))
+        assertNull(FreeThemesProgress.of(emptyList(), emptyList()))
+    }
+
+    // What is offered
+
+    @Test fun `an empty catalogue blocks 學新字 with a reason`() {
+        val t = today(stats = stats(new = 0))
+        assertEquals(TodayNewBlock.AllLearned, t.newBlock)
+        assertTrue(t.newDisabled)
+    }
+
+    @Test fun `a zero goal cannot divide the day by nothing`() {
+        assertEquals(TodayCall.Study(StudyMode.New, 1), today(stats = stats(new = 40), dailyGoal = 0).call)
     }
 }
