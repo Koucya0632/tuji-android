@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -73,7 +74,36 @@ private val AssistantHomeFeature.detail: Int
  * double tap does.
  */
 @Composable
-fun MoiraFeatureBand(onOpen: (AssistantHomeFeature) -> Unit, modifier: Modifier = Modifier) {
+fun MoiraFeatureBand(
+    onOpen: (AssistantHomeFeature) -> Unit,
+    modifier: Modifier = Modifier,
+    /**
+     * 試用點數 left on a free account ([app.tuji.android.account.CheckInStore.Snapshot.trialPoints]).
+     * The tag is the only place a free account learns it can try these: no popup, no extra card.
+     */
+    trialPoints: Int? = null,
+) {
+    Box(modifier.fillMaxWidth()) {
+        FeatureCells(onOpen)
+        if (trialPoints != null) {
+            Text(
+                stringResource(R.string.assistant_trial_points, trialPoints),
+                style = TujiType.label,
+                color = TujiColor.Ink,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = -TujiSpace.S3, y = (-10).dp)
+                    .clip(CircleShape)
+                    .background(TujiColor.Paper)
+                    .border(TujiBorder.Bw1, TujiColor.Rule, CircleShape)
+                    .padding(horizontal = TujiSpace.S2, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeatureCells(onOpen: (AssistantHomeFeature) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
             .fillMaxWidth()

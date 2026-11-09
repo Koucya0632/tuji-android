@@ -35,6 +35,11 @@ class CreditStatementTest {
         assertEquals(CreditStatement.Activity.AskedAssistant, CreditStatement.Activity.of("commit", "assistant:story"))
         assertEquals(CreditStatement.Activity.Recognition, CreditStatement.Activity.of("commit", "ai:op"))
         assertEquals(CreditStatement.Activity.CheckIn, CreditStatement.Activity.of("grant", "benefit:check_in:1"))
+        assertEquals(CreditStatement.Activity.Trial, CreditStatement.Activity.of("grant", "benefit:trial"))
+        assertEquals(
+            CreditStatement.Activity.FirstPurchaseGift,
+            CreditStatement.Activity.of("grant", "benefit:first_purchase:2000001"),
+        )
         assertEquals(CreditStatement.Activity.Purchase, CreditStatement.Activity.of("grant", "play:token"))
         assertEquals(CreditStatement.Activity.Purchase, CreditStatement.Activity.of("grant", "apple:tx"))
         assertEquals(CreditStatement.Activity.Gift, CreditStatement.Activity.of("grant", "admin"))

@@ -49,6 +49,8 @@ fun MembershipScreen(
     /** The 罐頭點數 wallet card. Drawn when billing is on points and the account is known. */
     walletCard: (@Composable () -> Unit)? = null,
     purchase: MembershipPurchase? = null,
+    /** 首購禮 and the allowance after it, from the catalog's policy; null before the trial switch. */
+    firstPurchaseGift: Pair<Int, Int>? = null,
 ) {
     val credits = offer.credits && walletCard != null
     Column(
@@ -75,7 +77,9 @@ fun MembershipScreen(
                 if (offer.showsLifetime) {
                     PlanCard(
                         title = stringResource(R.string.membership_lifetime),
-                        caption = null,
+                        caption = firstPurchaseGift?.let { (gift, monthly) ->
+                            stringResource(R.string.membership_first_purchase_gift, gift, monthly)
+                        },
                         rows = offer.lifetimeRows,
                         owned = stringResource(R.string.membership_owns_lifetime).takeIf { offer.ownsLifetime },
                         tier = true,

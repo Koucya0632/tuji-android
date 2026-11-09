@@ -13,6 +13,8 @@ data class CreditWallet(
     val available: Int, val reserved: Int, val paidAvailable: Int, val giftAvailable: Int,
     val walletVersion: String, val environment: String, val reconciliationRequired: Boolean, val benefits: CreditBenefits,
     val monthlyAvailable: Int = 0, val checkInAvailable: Int = 0,
+    /** Unspent 試用點數 (part of [giftAvailable]). Null from a server before the trial release. */
+    val trialAvailable: Int? = null,
     /** When the monthly gift lapses (ISO 8601). Null from a server that predates it. */
     val nextMonthlyResetAt: String? = null,
 ) {
@@ -30,12 +32,20 @@ data class CreditPack(val productId: String, val points: Int)
 data class CreditPolicy(
     val recognition: Int? = null, val precision: Int? = null, val precisionUpgrade: Int? = null,
     val checkInDaily: Int? = null, val checkInMonthlyCap: Int? = null,
+    /** The member allowance: 1,000 before the trial switch, 500 from it. */
+    val monthlyGift: Int? = null,
+    /** 0 before the trial switch. */
+    val trialGrant: Int? = null,
+    /** 首購禮: what a lifetime bought now brings. 0 before the trial switch. */
+    val firstPurchaseGift: Int? = null,
 )
 @Serializable
 data class CreditCatalog(
     val billingMode: String, val environment: String, val purchaseEnabled: Boolean, val proNewPurchaseEnabled: Boolean,
     val operationsEnabled: Boolean, val monthlyEnabled: Boolean, val checkInEnabled: Boolean, val packs: List<CreditPack>,
     val policy: CreditPolicy? = null,
+    /** Free accounts are on points with 試用點數 only (no check-in, no packs). Null from older servers. */
+    val trialEnabled: Boolean? = null,
 )
 /** [level] is "primary" or "fine" — the two rows of the candidate grid. */
 @Serializable

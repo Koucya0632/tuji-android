@@ -38,6 +38,23 @@ class CheckInStoreTest {
         assertEquals(Reward.Locked(10), store.snapshot.value.reward(true))
     }
 
+    @Test fun `a free account on trial points reads its wallet and tags the AI entries until they are spent`() = runTest {
+        val trialCatalog = catalog().copy(checkInEnabled = false, trialEnabled = true)
+        fun free(left: Int, version: String) =
+            CreditWallet(left, 0, 0, left, version, "sandbox", false, CreditBenefits(false, false, 0, false, true), trialAvailable = left)
+        val fake = Fake(trialCatalog, free(50, "1")) { error("no check-in") }
+        val store = store(fake)
+        store.loadReward()
+        assertEquals(1, fake.walletReads)
+        assertEquals(50, store.snapshot.value.trialPoints)
+        fake.wallet = free(0, "2")
+        store.loadReward()
+        assertEquals(null, store.snapshot.value.trialPoints)
+        fake.wallet = wallet(version = "3").copy(trialAvailable = 50)
+        store.loadReward()
+        assertEquals("a member's leftover trial points are not advertised", null, store.snapshot.value.trialPoints)
+    }
+
     @Test fun `a claim swaps in the returned wallet`() = runTest {
         val fake = Fake(catalog(), wallet()) { wallet(checkedIn = true, version = "2") }
         val store = store(fake)

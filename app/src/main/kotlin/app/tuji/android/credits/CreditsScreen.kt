@@ -61,6 +61,26 @@ fun CreditWalletCard(
             }
         }
         val benefits = wallet?.benefits
+        if (benefits?.hasLifetime == false) {
+            // A free account on 試用點數: what is left, and what 永久會員 would bring.
+            // No check-in and no allowance lines — neither applies to it.
+            Text(stringResource(R.string.credit_trial_balance, wallet.trialAvailable ?: 0), style = TujiType.body, color = TujiColor.Ink)
+            Text(stringResource(R.string.credit_trial_note), style = TujiType.label, color = TujiColor.Ink3)
+            val policy = state.catalog?.policy
+            val gift = policy?.firstPurchaseGift
+            val monthly = policy?.monthlyGift
+            if (gift != null && gift > 0 && monthly != null) {
+                Text(stringResource(R.string.credit_trial_upgrade, gift, monthly), style = TujiType.label, color = TujiColor.Ink3)
+            }
+            state.error?.let { Text(stringResource(creditErrorResource(it)), style = TujiType.label, color = TujiColor.Alert) }
+            Text(
+                stringResource(R.string.credit_retry),
+                style = TujiType.bodySmStrong,
+                color = if (state.busy) TujiColor.Ink3 else TujiColor.Ink,
+                modifier = Modifier.tujiClickable(enabled = !state.busy, onClick = model::load).padding(vertical = TujiSpace.S1),
+            )
+            return@Column
+        }
         // Studying is the check-in: no answer today, nothing to collect yet.
         val canCheckIn = !state.busy && state.catalog?.checkInEnabled == true && benefits?.hasLifetime == true &&
             !benefits.checkedInToday && benefits.studiedToday != false && benefits.checkInGrantedThisMonth < 300
@@ -70,7 +90,11 @@ fun CreditWalletCard(
             enabled = canCheckIn,
             style = TujiButtonStyle.Secondary,
         )
-        Text(stringResource(R.string.credit_monthly_auto), style = TujiType.body, color = TujiColor.Ink)
+        Text(
+            stringResource(R.string.credit_monthly_auto, state.catalog?.policy?.monthlyGift ?: 1000),
+            style = TujiType.body,
+            color = TujiColor.Ink,
+        )
         Text(
             stringResource(R.string.credit_free_balance, wallet?.monthlyAvailable ?: 0, wallet?.checkInAvailable ?: 0),
             style = TujiType.label,

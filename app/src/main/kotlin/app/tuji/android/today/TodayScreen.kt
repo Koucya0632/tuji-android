@@ -120,6 +120,8 @@ fun TodayScreen(
     onOpenFeature: (AssistantHomeFeature) -> Unit = {},
     /** Another tab or a pushed screen is in front: the cat stops breathing. */
     mascotPaused: Boolean = false,
+    /** 試用點數 left on a free account; tags the four AI entries. */
+    trialPoints: Int? = null,
 ) {
     val decisions = TodayDecisions(inputs)
     var showingCurve by rememberSaveable { mutableStateOf(false) }
@@ -148,7 +150,7 @@ fun TodayScreen(
             onUnlock = onUnlock,
             onOpenCurve = { showingCurve = true },
         )
-        MoiraSection(onOpenFeature, mascotPaused)
+        MoiraSection(onOpenFeature, mascotPaused, trialPoints)
     }
 
     if (showingCurve) ReviewCurveSheet(onDismiss = { showingCurve = false })
@@ -159,7 +161,7 @@ fun TodayScreen(
  * whose they are, so the cells carry titles and no detail.
  */
 @Composable
-private fun MoiraSection(onOpenFeature: (AssistantHomeFeature) -> Unit, paused: Boolean) {
+private fun MoiraSection(onOpenFeature: (AssistantHomeFeature) -> Unit, paused: Boolean, trialPoints: Int?) {
     Column(
         Modifier.fillMaxWidth().tourAnchor(TourTarget.Assistant),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
@@ -177,7 +179,7 @@ private fun MoiraSection(onOpenFeature: (AssistantHomeFeature) -> Unit, paused: 
                     layout(placeable.width, height - 24.dp.roundToPx()) { placeable.place(0, 0) }
                 },
         )
-        MoiraFeatureBand(onOpen = onOpenFeature)
+        MoiraFeatureBand(onOpen = onOpenFeature, trialPoints = trialPoints)
     }
 }
 

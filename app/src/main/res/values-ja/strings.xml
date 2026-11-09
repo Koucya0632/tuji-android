@@ -671,7 +671,6 @@
     <string name="credit_balances">予約 %1$d · 特典 %2$d · 購入 %3$d</string>
     <string name="credit_refund_hold">返金分のポイントを確認中です。新しいAI処理は一時停止しています。</string>
     <string name="credit_monthly_claimed">今月は受取済み</string>
-    <string name="credit_monthly">今月の1,000ポイントを受け取る</string>
     <string name="credit_checked_in">今日は受取済み</string>
     <string name="credit_check_in">毎日チェックイン</string>
     <string name="credit_check_in_note">学習後のチェックインで毎日10ポイント、月最大300ポイント。日付は端末のタイムゾーン基準です。</string>
@@ -695,7 +694,7 @@
     <string name="credit_included">カード1枚の基本情報を含みます。結果を提供できた場合にポイントを使用します。</string>
     <string name="credit_confirm">ポイント使用を確認</string>
     <string name="credit_dismiss">見積もりをキャンセル</string>
-    <string name="credit_insufficient">缶詰ポイントが不足しています。チェックインで特典を受け取るか追加購入してください。</string>
+    <string name="credit_insufficient">缶詰ポイントが不足しています。ポイントは消費されていません。</string>
     <string name="credit_capacity">自作図鑑がいっぱいです。カードを整理してください。</string>
     <string name="credit_expired">見積もりの有効期限が切れました。新しい見積もりを取得してください。</string>
     <string name="credit_busy">この写真は処理中です。先に処理結果を確認してください。</string>
@@ -707,7 +706,7 @@
     <string name="credit_results">認識結果を選択</string>
     <string name="credit_task">AI処理</string>
 
-    <string name="credit_monthly_auto">毎月1,000ポイントを無料プレゼント</string>
+    <string name="credit_monthly_auto">毎月%1$dポイントを無料プレゼント</string>
     <string name="credit_free_balance">無料分残高 %1$d ポイント · チェックイン分 %2$d ポイント</string>
     <string name="credit_monthly_reset_note">無料分は毎月自動で補充され、繰り越しません。チェックイン分と購入分に有効期限はありません。</string>
 
@@ -1192,4 +1191,11 @@
     <string name="review_curve_on_time">時間どおりに復習</string>
     <string name="review_curve_no_review">復習なし</string>
     <string name="review_curve_time">時間 →</string>
+    <string name="assistant_trial_points">お試し %1$dポイント</string>
+    <string name="credit_trial_balance">お試しポイント残り %1$d</string>
+    <string name="credit_trial_note">お試しポイントに期限はありません。使い切ったら終わりです。</string>
+    <string name="credit_trial_upgrade">永久会員になると、購入時に%1$dポイント、その後は毎月%2$dポイント。</string>
+    <string name="membership_first_purchase_gift">購入時に%1$dポイント、その後は毎月%2$dポイント</string>
+    <string name="credit_activity_trial">お試しポイント</string>
+    <string name="credit_activity_first_purchase">初回購入特典</string>
 </resources>

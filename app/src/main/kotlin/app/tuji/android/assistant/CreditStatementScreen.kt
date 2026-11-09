@@ -310,6 +310,8 @@ internal fun activityTitle(activity: CreditStatement.Activity): Int = when (acti
     CreditStatement.Activity.AskedAssistant -> R.string.credit_activity_assistant
     CreditStatement.Activity.Recognition -> R.string.credit_activity_recognition
     CreditStatement.Activity.MonthlyGift -> R.string.credit_statement_monthly
+    CreditStatement.Activity.Trial -> R.string.credit_activity_trial
+    CreditStatement.Activity.FirstPurchaseGift -> R.string.credit_activity_first_purchase
     CreditStatement.Activity.CheckIn -> R.string.credit_statement_check_in
     CreditStatement.Activity.Purchase -> R.string.credit_statement_purchased
     CreditStatement.Activity.Gift -> R.string.credit_activity_gift

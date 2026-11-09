@@ -30,6 +30,11 @@ class CheckInDecisionTest {
         assertEquals(Reward.Locked(10), reward(wallet = wallet(lifetime = false)))
     }
 
+    @Test fun `a free account on trial points is offered the upgrade, though check-in is off for it`() {
+        val trial = catalog(enabled = false).copy(trialEnabled = true)
+        assertEquals(Reward.Locked(10), reward(catalog = trial, wallet = wallet(lifetime = false).copy(trialAvailable = 150)))
+    }
+
     @Test fun `claimed today wins over everything after it`() {
         assertEquals(Reward.Claimed, reward(wallet = wallet(checkedIn = true, granted = 300, studied = false)))
     }
