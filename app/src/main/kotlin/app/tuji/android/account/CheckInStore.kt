@@ -44,6 +44,11 @@ class CheckInStore(
         fun reward(fallbackStudiedToday: Boolean): CheckInDecision.Reward =
             CheckInDecision.reward(catalog, wallet, fallbackStudiedToday)
 
+        /** 試用點數 still unspent, for the tag on 今日's AI entries; null once spent or for a member. */
+        val trialPoints: Int?
+            get() = wallet?.takeIf { catalog?.trialEnabled == true && !it.benefits.hasLifetime }
+                ?.trialAvailable?.takeIf { it > 0 }
+
         private val monthsBack: Int?
             get() = calendar?.let { MonthGrid.monthsBefore(it.month, it.today.take(7)) }
 
@@ -71,7 +76,8 @@ class CheckInStore(
         try {
             val catalog = loadCatalog()
             // A legacy account has no wallet; asking would only collect a 403.
-            val wallet = if (catalog.billingMode == "credits" && catalog.checkInEnabled) loadWallet() else null
+            // Every credit account has one, including a free account on 試用點數.
+            val wallet = if (catalog.billingMode == "credits") loadWallet() else null
             _snapshot.update {
                 it.copy(catalog = catalog, wallet = if (wallet == null) null else newer(it.wallet, wallet), claimFailed = false)
             }

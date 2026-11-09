@@ -40,9 +40,10 @@ object CheckInDecision {
         val daily = catalog.policy?.checkInDaily ?: DEFAULT_DAILY
         val cap = catalog.policy?.checkInMonthlyCap ?: DEFAULT_MONTHLY_CAP
         if (catalog.billingMode != "credits") return Reward.Locked(daily)
+        // A free account on 試用點數 is on points too, but check-in stays a 永久會員 benefit.
+        if (wallet?.benefits?.hasLifetime == false) return Reward.Locked(daily)
         if (!catalog.checkInEnabled || wallet == null) return Reward.Hidden
         val benefits = wallet.benefits
-        if (!benefits.hasLifetime) return Reward.Locked(daily)
         if (benefits.checkedInToday) return Reward.Claimed
         val left = cap - benefits.checkInGrantedThisMonth
         if (left <= 0) return Reward.Capped(cap)

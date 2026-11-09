@@ -36,7 +36,7 @@ data class CreditStatement(
 ) {
     /** What a ledger movement was, in the app's own vocabulary. */
     enum class Activity {
-        AskedAssistant, Recognition, MonthlyGift, CheckIn, Purchase, Gift, Expired, Refund, Returned, Other;
+        AskedAssistant, Recognition, MonthlyGift, Trial, FirstPurchaseGift, CheckIn, Purchase, Gift, Expired, Refund, Returned, Other;
 
         companion object {
             fun of(kind: String, reference: String): Activity = when (kind) {
@@ -47,6 +47,8 @@ data class CreditStatement(
                 }
                 "grant" -> when {
                     reference.startsWith("benefit:monthly") -> MonthlyGift
+                    reference == "benefit:trial" -> Trial
+                    reference.startsWith("benefit:first_purchase:") -> FirstPurchaseGift
                     reference.startsWith("benefit:check_in") -> CheckIn
                     reference.startsWith("apple:") || reference.startsWith("play:") -> Purchase
                     else -> Gift

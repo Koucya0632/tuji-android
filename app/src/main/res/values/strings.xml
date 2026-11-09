@@ -671,7 +671,6 @@
     <string name="credit_balances">Reserved %1$d · Bonus %2$d · Purchased %3$d</string>
     <string name="credit_refund_hold">Refunded points are being reconciled. New AI tasks are paused.</string>
     <string name="credit_monthly_claimed">Claimed this month</string>
-    <string name="credit_monthly">Claim this month’s 1,000 points</string>
     <string name="credit_checked_in">Checked in today</string>
     <string name="credit_check_in">Daily check-in</string>
     <string name="credit_check_in_note">Study, then check in for 10 points a day, up to 300 a month. Days follow your phone\'s time zone.</string>
@@ -695,7 +694,7 @@
     <string name="credit_included">Includes basic details for one card. Points are charged when results are delivered.</string>
     <string name="credit_confirm">Confirm points use</string>
     <string name="credit_dismiss">Dismiss quote</string>
-    <string name="credit_insufficient">Not enough Can Points. Check in for bonus points or buy more.</string>
+    <string name="credit_insufficient">Not enough Can Points. Nothing was charged.</string>
     <string name="credit_capacity">Your custom atlas is full. Make room for more cards first.</string>
     <string name="credit_expired">This quote has expired. Get a new quote.</string>
     <string name="credit_busy">This photo already has a task in progress. Check its result first.</string>
@@ -707,7 +706,7 @@
     <string name="credit_results">Choose a result</string>
     <string name="credit_task">AI task</string>
 
-    <string name="credit_monthly_auto">1,000 free points every month</string>
+    <string name="credit_monthly_auto">%1$d free points every month</string>
     <string name="credit_free_balance">Free allowance: %1$d points · Check-in: %2$d points</string>
     <string name="credit_monthly_reset_note">The free allowance resets automatically each month and does not carry over. Check-in and purchased points never expire.</string>
 
@@ -1192,4 +1191,11 @@
     <string name="review_curve_on_time">Reviewed on time</string>
     <string name="review_curve_no_review">No review</string>
     <string name="review_curve_time">Time →</string>
+    <string name="assistant_trial_points">Try %1$d pts</string>
+    <string name="credit_trial_balance">Trial points left: %1$d</string>
+    <string name="credit_trial_note">Trial points don\'t expire. Once they\'re used, they\'re gone.</string>
+    <string name="credit_trial_upgrade">Lifetime members get %1$d points when they buy, then %2$d every month.</string>
+    <string name="membership_first_purchase_gift">%1$d points with your purchase, then %2$d every month</string>
+    <string name="credit_activity_trial">Trial points</string>
+    <string name="credit_activity_first_purchase">First-purchase gift</string>
 </resources>

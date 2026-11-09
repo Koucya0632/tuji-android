@@ -1154,6 +1154,7 @@ private fun SignedInScreens(
                     streakBadge = CheckInDecision.chipBadge(
                         checkInState.reward(fallbackStudiedToday = (progress.streak?.todayCount ?: 0) > 0),
                     ),
+                    trialPoints = checkInState.trialPoints,
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
                     onSpike = { showSpike = true },
                     onRefresh = {
@@ -1531,6 +1532,10 @@ private fun SignedInScreens(
                             null
                         },
                         purchase = purchase,
+                        firstPurchaseGift = checkInState.catalog?.policy?.let { policy ->
+                            val gift = policy.firstPurchaseGift ?: 0
+                            policy.monthlyGift?.takeIf { gift > 0 }?.let { gift to it }
+                        },
                     )
                 }
 
@@ -2217,6 +2222,7 @@ private fun TodayColumn(
     streak: Int,
     onStreak: () -> Unit,
     streakBadge: Boolean,
+    trialPoints: Int?,
     onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
     onRefresh: suspend () -> Unit,
@@ -2250,6 +2256,7 @@ private fun TodayColumn(
             onStreak = onStreak,
             streakBadge = streakBadge,
             onOpenStudyThemes = onOpenStudyThemes,
+            trialPoints = trialPoints,
         )
     }
     }
