@@ -1,0 +1,1838 @@
+{
+  "schemaVersion": 2,
+  "id": "ramen-shop",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "拉麵店",
+    "zh-Hans": "拉面店",
+    "en": "Ramen shop"
+  },
+  "summary": {
+    "zh-Hant": "從買券到開吃會被問的六件事",
+    "zh-Hans": "从买券到开吃会被问的六件事",
+    "en": "Six things you are asked from the ticket machine to your bowl"
+  },
+  "questions": [
+    {
+      "id": "ramen-shop.ticket-machine",
+      "kind": "screen",
+      "goal": {
+        "zh-Hant": "拉麵按好了，想把麵加大。在食券機上再按哪一個",
+        "zh-Hans": "拉面按好了，想把面加大。在食券机上再按哪一个",
+        "en": "You have chosen ramen and want a bigger portion of noodles. Which button do you press next"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.ticket-machine.p1",
+          "role": "first",
+          "speaker": "screen",
+          "text": null,
+          "voice": null,
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "追加メニュー",
+            "detail": "ラーメン　¥900　千円札・硬貨のみ",
+            "buttons": [
+              {
+                "choiceId": "large",
+                "ja": "大盛 +¥100"
+              },
+              {
+                "choiceId": "kaedama",
+                "ja": "替玉 +¥150"
+              },
+              {
+                "choiceId": "egg",
+                "ja": "味玉 +¥150"
+              },
+              {
+                "choiceId": "rice",
+                "ja": "ライス ¥150"
+              }
+            ]
+          },
+          "audio": null
+        },
+        {
+          "id": "ramen-shop.ticket-machine.p2",
+          "role": "review",
+          "speaker": "screen",
+          "text": null,
+          "voice": null,
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "ラーメン　¥900",
+            "detail": "追加を選んでください",
+            "buttons": [
+              {
+                "choiceId": "rice",
+                "ja": "ご飯"
+              },
+              {
+                "choiceId": "egg",
+                "ja": "味付け玉子"
+              },
+              {
+                "choiceId": "large",
+                "ja": "麺大盛り"
+              },
+              {
+                "choiceId": "kaedama",
+                "ja": "替え玉"
+              }
+            ]
+          },
+          "audio": null
+        },
+        {
+          "id": "ramen-shop.ticket-machine.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "食券制になっております。先に券売機でお願いします",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": {
+            "heading": "追加メニュー",
+            "detail": "ラーメン　¥900　千円札・硬貨のみ",
+            "buttons": [
+              {
+                "choiceId": "large",
+                "ja": "大盛 +¥100"
+              },
+              {
+                "choiceId": "kaedama",
+                "ja": "替玉 +¥150"
+              },
+              {
+                "choiceId": "egg",
+                "ja": "味玉 +¥150"
+              },
+              {
+                "choiceId": "rice",
+                "ja": "ライス ¥150"
+              }
+            ]
+          },
+          "audio": "ramen-shop.ticket-machine.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "large",
+          "text": {
+            "zh-Hant": "大碗（麵加量）",
+            "zh-Hans": "大份（面加量）",
+            "en": "Large portion"
+          },
+          "correct": true
+        },
+        {
+          "id": "kaedama",
+          "text": {
+            "zh-Hant": "吃到一半再加一份麵",
+            "zh-Hans": "吃到一半再加一份面",
+            "en": "Extra noodles for later"
+          },
+          "correct": false
+        },
+        {
+          "id": "egg",
+          "text": {
+            "zh-Hant": "加溏心蛋",
+            "zh-Hans": "加溏心蛋",
+            "en": "Add a soft-boiled egg"
+          },
+          "correct": false
+        },
+        {
+          "id": "rice",
+          "text": {
+            "zh-Hant": "白飯",
+            "zh-Hans": "白饭",
+            "en": "A bowl of rice"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "大盛",
+        "audio": null,
+        "voice": null
+      },
+      "explanation": {
+        "zh-Hant": "「大盛」是大碗，「替玉」是吃到一半再加一份麵，「味玉」是溏心蛋，「ライス」是白飯。按鈕名稱、能不能用萬元鈔都依店家不同。買好券交給店員。",
+        "zh-Hans": "「大盛」是大份，「替玉」是吃到一半再加一份面，「味玉」是溏心蛋，「ライス」是白饭。按钮名称、能不能用万元钞都依店家不同。买好券交给店员。",
+        "en": "大盛 is a large portion, 替玉 is a second serving of noodles you order mid-bowl, 味玉 is a soft-boiled egg and ライス is rice. Button names, and whether the machine takes 10,000 yen notes, vary by shop. Hand your tickets to the staff."
+      },
+      "wordIds": [
+        "ramen-bowl"
+      ]
+    },
+    {
+      "id": "ramen-shop.counter-seat",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂店員問坐吧檯可不可以",
+        "zh-Hans": "听懂店员问坐吧台行不行",
+        "en": "Understand when the staff ask if the counter is fine"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.counter-seat.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "食券お預かりします。カウンター席でよろしいですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.counter-seat.p1.mp3"
+        },
+        {
+          "id": "ramen-shop.counter-seat.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "カウンターでもよろしいですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "ramen-shop.counter-seat.p2.mp3"
+        },
+        {
+          "id": "ramen-shop.counter-seat.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お席、カウンターになりますが大丈夫ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.counter-seat.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "坐吧檯可以嗎",
+            "zh-Hans": "坐吧台可以吗",
+            "en": "Is the counter all right"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要等桌子的位子",
+            "zh-Hans": "要不要等桌子的位子",
+            "en": "Do you want to wait for a table"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要先買券嗎",
+            "zh-Hans": "要先买券吗",
+            "en": "Do you need to buy a ticket first"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい、大丈夫です",
+        "audio": "ramen-shop.counter-seat.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「カウンター」是吧檯座位。「食券お預かりします」是店員收下你的券。可以的話說「はい、大丈夫です」。",
+        "zh-Hans": "「カウンター」是吧台座位。「食券お預かりします」是店员收下你的券。可以的话说「はい、大丈夫です」。",
+        "en": "カウンター is the counter seating. 食券お預かりします just means the staff are taking your ticket. Say はい、大丈夫です if that is fine."
+      },
+      "wordIds": [
+        "counter-seat"
+      ]
+    },
+    {
+      "id": "ramen-shop.noodle-firmness",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂店員問麵要多硬",
+        "zh-Hans": "听懂店员问面要多硬",
+        "en": "Understand when the staff ask how firm you want the noodles"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.noodle-firmness.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "麺の硬さはどうされますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.noodle-firmness.p1.mp3"
+        },
+        {
+          "id": "ramen-shop.noodle-firmness.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "麺の硬さ、お好みありますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "ramen-shop.noodle-firmness.p2.mp3"
+        },
+        {
+          "id": "ramen-shop.noodle-firmness.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "麺は普通でよろしいですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.noodle-firmness.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "麵要大碗嗎",
+            "zh-Hans": "面要大份吗",
+            "en": "Do you want a large portion"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "麵要多硬",
+            "zh-Hans": "面要多硬",
+            "en": "How firm do you want the noodles"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "湯頭要濃還是淡",
+            "zh-Hans": "汤头要浓还是淡",
+            "en": "Strong or light soup"
+          },
+          "correct": false
+        },
+        {
+          "id": "d",
+          "text": {
+            "zh-Hant": "要不要加一份麵",
+            "zh-Hans": "要不要加一份面",
+            "en": "Do you want extra noodles"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "普通で／硬めで",
+        "audio": "ramen-shop.noodle-firmness.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「硬さ」是硬度。「普通」是一般，「硬め」偏硬，「柔らかめ」偏軟。有些店會用「バリカタ」「カタ」這類說法，依店家不同。",
+        "zh-Hans": "「硬さ」是硬度。「普通」是一般，「硬め」偏硬，「柔らかめ」偏软。有些店会用「バリカタ」「カタ」这类说法，依店家不同。",
+        "en": "硬さ means firmness. 普通 is regular, 硬め is firmer and 柔らかめ is softer. Some shops use their own words like バリカタ or カタ."
+      },
+      "wordIds": [
+        "ramen-bowl"
+      ]
+    },
+    {
+      "id": "ramen-shop.taste-and-oil",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂店員問口味濃淡和油量",
+        "zh-Hans": "听懂店员问口味浓淡和油量",
+        "en": "Understand when the staff ask about soup strength and oil"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.taste-and-oil.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "味の濃さと油の量はどうされますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.taste-and-oil.p1.mp3"
+        },
+        {
+          "id": "ramen-shop.taste-and-oil.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "味と油、お好みありますか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "ramen-shop.taste-and-oil.p2.mp3"
+        },
+        {
+          "id": "ramen-shop.taste-and-oil.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "味の濃さ、油の量は普通でよろしいですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.taste-and-oil.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "口味濃淡和油量",
+            "zh-Hans": "口味浓淡和油量",
+            "en": "How strong and how oily"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "麵要多硬",
+            "zh-Hans": "面要多硬",
+            "en": "How firm the noodles should be"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要加蒜",
+            "zh-Hans": "要不要加蒜",
+            "en": "Do you want garlic"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "全部普通で",
+        "audio": "ramen-shop.taste-and-oil.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「味の濃さ」是口味濃淡，「油の量」是油量。第一次去說「全部普通で」最保險。想淡一點說「味薄め」，少油說「油少なめ」。多半在家系拉麵店才會問，依店家不同。",
+        "zh-Hans": "「味の濃さ」是口味浓淡，「油の量」是油量。第一次去说「全部普通で」最保险。想淡一点说「味薄め」，少油说「油少なめ」。多半在家系拉面店才会问，依店家不同。",
+        "en": "味の濃さ is how strong the soup is and 油の量 is how much oil. 全部普通で, regular for everything, is the safe answer. Ask for 味薄め for lighter or 油少なめ for less oil. Mostly asked at iekei-style shops."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "ramen-shop.rice",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂店員問要不要白飯",
+        "zh-Hans": "听懂店员问要不要白饭",
+        "en": "Understand when the staff offer rice"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.rice.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ライスは無料ですが、お付けしますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.rice.p1.mp3"
+        },
+        {
+          "id": "ramen-shop.rice.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ライスいかがですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "ramen-shop.rice.p2.mp3"
+        },
+        {
+          "id": "ramen-shop.rice.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご飯はお付けしますか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.rice.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要加一份麵",
+            "zh-Hans": "要不要加一份面",
+            "en": "Would you like extra noodles"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要加溏心蛋",
+            "zh-Hans": "要不要加溏心蛋",
+            "en": "Would you like a soft-boiled egg"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要白飯",
+            "zh-Hans": "要不要白饭",
+            "en": "Would you like rice"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "お願いします／大丈夫です",
+        "audio": "ramen-shop.rice.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「ライス」「ご飯」都是白飯。有的店免費，有的要另外買券。要就說「お願いします」，不用說「大丈夫です」。",
+        "zh-Hans": "「ライス」「ご飯」都是白饭。有的店免费，有的要另外买券。要就说「お願いします」，不用说「大丈夫です」。",
+        "en": "ライス and ご飯 both mean rice. Some shops give it free, others sell it as a ticket. Say お願いします for yes or 大丈夫です for no."
+      },
+      "wordIds": [
+        "rice-bowl"
+      ]
+    },
+    {
+      "id": "ramen-shop.paper-apron",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂店員問要不要紙圍裙",
+        "zh-Hans": "听懂店员问要不要纸围裙",
+        "en": "Understand when the staff offer a paper apron"
+      },
+      "phrasings": [
+        {
+          "id": "ramen-shop.paper-apron.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "紙エプロンお使いになりますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.paper-apron.p1.mp3"
+        },
+        {
+          "id": "ramen-shop.paper-apron.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "エプロンご利用ですか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "ramen-shop.paper-apron.p2.mp3"
+        },
+        {
+          "id": "ramen-shop.paper-apron.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "エプロン、よろしければお使いください",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "ramen-shop.paper-apron.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要紙圍裙",
+            "zh-Hans": "要不要纸围裙",
+            "en": "Would you like a paper apron"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要濕毛巾",
+            "zh-Hans": "要不要湿毛巾",
+            "en": "Would you like a hand towel"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要再加水",
+            "zh-Hans": "要不要再加水",
+            "en": "Would you like more water"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "お願いします／大丈夫です",
+        "audio": "ramen-shop.paper-apron.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「エプロン」是圍裙，這裡是防湯汁噴到衣服的紙圍裙。要就說「お願いします」，不用說「大丈夫です」。",
+        "zh-Hans": "「エプロン」是围裙，这里是防汤汁溅到衣服的纸围裙。要就说「お願いします」，不用说「大丈夫です」。",
+        "en": "エプロン is an apron, here a paper one to keep soup off your clothes. Say お願いします for yes or 大丈夫です for no."
+      },
+      "wordIds": []
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "拉麵加大",
+          "zh-Hans": "拉面加大",
+          "en": "A large bowl of ramen"
+        },
+        "intent": {
+          "zh-Hant": "你一個人來吃拉麵，帶著現金，想把麵加大。麵要偏硬，口味和油量都一般。",
+          "zh-Hans": "你一个人来吃拉面，带着现金，想把面加大。面要偏硬，口味和油量都一般。",
+          "en": "You're eating ramen alone, with cash, and want a large serving of noodles. You like them firm, with regular flavour and oil."
+        },
+        "enter": {
+          "zh-Hant": "推開店門",
+          "zh-Hans": "推开店门",
+          "en": "Push open the door"
+        },
+        "questions": [
+          "ramen-shop.ticket-machine",
+          "ramen-shop.counter-seat",
+          "ramen-shop.noodle-firmness",
+          "ramen-shop.taste-and-oil",
+          "ramen-shop.rice",
+          "ramen-shop.paper-apron"
+        ]
+      }
+    ],
+    "steps": {
+      "ramen-shop.ticket-machine": {
+        "background": "scene-bg-ramen-shop",
+        "note": {
+          "zh-Hant": "拉麵 ¥900 已經按好了。你想把麵加大。",
+          "zh-Hans": "拉面 ¥900 已经按好了。你想把面加大。",
+          "en": "You've already pressed ramen for ¥900. You want a large serving of noodles."
+        },
+        "machine": {
+          "kind": "food-ticket",
+          "menu": [
+            {
+              "id": "oomori",
+              "name": "大盛",
+              "price": 100
+            },
+            {
+              "id": "kaedama",
+              "name": "替玉",
+              "price": 150
+            },
+            {
+              "id": "ajitama",
+              "name": "味玉",
+              "price": 150
+            },
+            {
+              "id": "rice",
+              "name": "ライス",
+              "price": 150
+            }
+          ],
+          "expect": "oomori"
+        }
+      },
+      "ramen-shop.counter-seat": {
+        "background": "scene-bg-ramen-shop",
+        "note": {
+          "zh-Hant": "店裡只剩吧檯有空位。",
+          "zh-Hans": "店里只剩吧台有空位。",
+          "en": "Only counter seats are free."
+        },
+        "card": {
+          "title": "食券",
+          "lines": [
+            "ラーメン　¥900",
+            "大盛　+¥100"
+          ]
+        },
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "はい、大丈夫です",
+            "meaning": {
+              "zh-Hant": "好，可以",
+              "zh-Hans": "好，可以",
+              "en": "Yes, that's fine"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員收下食券，帶你坐到吧檯。",
+              "zh-Hans": "店员收下餐券，带你坐到吧台。",
+              "en": "The clerk takes your tickets and seats you at the counter."
+            }
+          },
+          {
+            "id": "table",
+            "ja": "テーブル席がいいです",
+            "meaning": {
+              "zh-Hant": "想坐桌子的位子",
+              "zh-Hans": "想坐桌子的位子",
+              "en": "I'd like a table"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員請你到門口排隊等桌位。吧檯其實馬上就能坐。",
+              "zh-Hans": "店员请你到门口排队等桌位。吧台其实马上就能坐。",
+              "en": "The clerk asks you to wait by the door for a table. The counter was free right now."
+            }
+          },
+          {
+            "id": "firm",
+            "ja": "硬めで",
+            "meaning": {
+              "zh-Hant": "麵偏硬",
+              "zh-Hans": "面偏硬",
+              "en": "Firm noodles"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒問到麵，店員在問坐吧檯可不可以。",
+              "zh-Hans": "还没问到面，店员在问坐吧台可不可以。",
+              "en": "Noodles come later. The clerk is asking if the counter is OK."
+            }
+          }
+        ]
+      },
+      "ramen-shop.noodle-firmness": {
+        "background": "scene-bg-ramen-shop",
+        "replies": [
+          {
+            "id": "firm",
+            "ja": "硬めで",
+            "meaning": {
+              "zh-Hant": "偏硬",
+              "zh-Hans": "偏硬",
+              "en": "Firm, please"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員在你的食券上寫了「硬め」。",
+              "zh-Hans": "店员在你的餐券上写了「硬め」。",
+              "en": "The clerk writes 硬め on your ticket."
+            }
+          },
+          {
+            "id": "soft",
+            "ja": "柔らかめで",
+            "meaning": {
+              "zh-Hant": "偏軟",
+              "zh-Hans": "偏软",
+              "en": "Soft, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "端上來的麵偏軟。你原本想吃硬一點的。",
+              "zh-Hans": "端上来的面偏软。你本来想吃硬一点的。",
+              "en": "The noodles come out soft. You wanted them firm."
+            }
+          },
+          {
+            "id": "large",
+            "ja": "大盛で",
+            "meaning": {
+              "zh-Hant": "大碗",
+              "zh-Hans": "大碗",
+              "en": "Large, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "大盛已經在食券上了，店員在問麵要多硬。",
+              "zh-Hans": "大盛已经在餐券上了，店员在问面要多硬。",
+              "en": "Large is already on your ticket. The clerk is asking how firm."
+            }
+          }
+        ]
+      },
+      "ramen-shop.taste-and-oil": {
+        "background": "scene-bg-ramen-shop",
+        "replies": [
+          {
+            "id": "regular",
+            "ja": "全部普通で",
+            "meaning": {
+              "zh-Hant": "全部一般",
+              "zh-Hans": "全部一般",
+              "en": "Regular for everything"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員點頭，在食券上寫了「普通」。",
+              "zh-Hans": "店员点头，在餐券上写了「普通」。",
+              "en": "The clerk nods and writes 普通 on your ticket."
+            }
+          },
+          {
+            "id": "rich",
+            "ja": "濃いめ、油多めで",
+            "meaning": {
+              "zh-Hant": "口味重一點，油多一點",
+              "zh-Hans": "口味重一点，油多一点",
+              "en": "Stronger, with more oil"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "端上來的湯又鹹又油。你原本想要一般的。",
+              "zh-Hans": "端上来的汤又咸又油。你本来想要一般的。",
+              "en": "The soup comes out salty and oily. You wanted it regular."
+            }
+          },
+          {
+            "id": "firm",
+            "ja": "硬めで",
+            "meaning": {
+              "zh-Hant": "麵偏硬",
+              "zh-Hans": "面偏硬",
+              "en": "Firm noodles"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "麵的硬度已經說過了，店員在問口味和油量。",
+              "zh-Hans": "面的硬度已经说过了，店员在问口味和油量。",
+              "en": "You already said how firm. The clerk is asking about flavour and oil."
+            }
+          }
+        ]
+      },
+      "ramen-shop.rice": {
+        "background": "scene-bg-ramen-shop",
+        "note": {
+          "zh-Hant": "麵已經加大，你吃不下白飯。",
+          "zh-Hans": "面已经加大，你吃不下白饭。",
+          "en": "With a large serving of noodles, you can't fit in rice."
+        },
+        "replies": [
+          {
+            "id": "no",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "No, thanks"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員點點頭，沒有放白飯。",
+              "zh-Hans": "店员点点头，没有放白饭。",
+              "en": "The clerk nods and brings no rice."
+            }
+          },
+          {
+            "id": "yes",
+            "ja": "お願いします",
+            "meaning": {
+              "zh-Hant": "麻煩了（要白飯）",
+              "zh-Hans": "麻烦了（要白饭）",
+              "en": "Yes, please (rice)"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員端來一碗白飯。麵已經加大，你吃不完。",
+              "zh-Hans": "店员端来一碗白饭。面已经加大，你吃不完。",
+              "en": "The clerk brings a bowl of rice. With the large noodles, you can't finish it."
+            }
+          },
+          {
+            "id": "regular",
+            "ja": "全部普通で",
+            "meaning": {
+              "zh-Hant": "全部一般",
+              "zh-Hans": "全部一般",
+              "en": "Regular for everything"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "口味已經說過了，店員在問要不要白飯。",
+              "zh-Hans": "口味已经说过了，店员在问要不要白饭。",
+              "en": "You already gave your flavour. The clerk is asking about rice."
+            }
+          }
+        ]
+      },
+      "ramen-shop.paper-apron": {
+        "background": "scene-bg-ramen-shop",
+        "note": {
+          "zh-Hant": "你穿著白襯衫。",
+          "zh-Hans": "你穿着白衬衫。",
+          "en": "You're wearing a white shirt."
+        },
+        "replies": [
+          {
+            "id": "yes",
+            "ja": "お願いします",
+            "meaning": {
+              "zh-Hant": "麻煩了（要圍裙）",
+              "zh-Hans": "麻烦了（要围裙）",
+              "en": "Yes, please (an apron)"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員遞來一件紙圍裙。",
+              "zh-Hans": "店员递来一件纸围裙。",
+              "en": "The clerk hands you a paper apron."
+            }
+          },
+          {
+            "id": "no",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "No, thanks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "吃到一半，湯汁濺到白襯衫上。",
+              "zh-Hans": "吃到一半，汤汁溅到白衬衫上。",
+              "en": "Halfway through, soup splashes onto your white shirt."
+            }
+          },
+          {
+            "id": "no-rice",
+            "ja": "ライスは大丈夫です",
+            "meaning": {
+              "zh-Hant": "白飯不用了",
+              "zh-Hans": "白饭不用了",
+              "en": "No rice, thanks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "白飯剛才已經說過了，店員在問要不要紙圍裙。",
+              "zh-Hans": "白饭刚才已经说过了，店员在问要不要纸围裙。",
+              "en": "You already turned down rice. The clerk is asking about an apron."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "食券制になっております。先に券売機でお願いします": [
+      {
+        "t": "食券制",
+        "r": "しょっけんせい",
+        "m": {
+          "zh-Hant": "先買餐券的制度",
+          "zh-Hans": "先买餐券的制度",
+          "en": "pay-first ticket system"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "なっております",
+        "m": {
+          "zh-Hant": "是……（敬語）",
+          "zh-Hans": "是……（敬语）",
+          "en": "it is… (polite)"
+        }
+      },
+      {
+        "t": "。"
+      },
+      {
+        "t": "先に",
+        "r": "さきに",
+        "m": {
+          "zh-Hant": "先",
+          "zh-Hans": "先",
+          "en": "first, beforehand"
+        }
+      },
+      {
+        "t": "券売機",
+        "r": "けんばいき",
+        "m": {
+          "zh-Hant": "售票機",
+          "zh-Hans": "售票机",
+          "en": "ticket machine"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "大盛": [
+      {
+        "t": "大盛",
+        "r": "おおもり",
+        "m": {
+          "zh-Hant": "大碗",
+          "zh-Hans": "大碗",
+          "en": "large serving"
+        }
+      }
+    ],
+    "食券お預かりします。カウンター席でよろしいですか？": [
+      {
+        "t": "食券",
+        "r": "しょっけん",
+        "m": {
+          "zh-Hant": "餐券",
+          "zh-Hans": "餐券",
+          "en": "meal ticket"
+        }
+      },
+      {
+        "t": "お預かりします",
+        "r": "おあずかりします",
+        "m": {
+          "zh-Hant": "收下了、先替您保管（敬語）",
+          "zh-Hans": "收下了、先替您保管（敬语）",
+          "en": "I'll take this (polite)"
+        }
+      },
+      {
+        "t": "。"
+      },
+      {
+        "t": "カウンター席",
+        "r": "カウンターせき",
+        "m": {
+          "zh-Hant": "吧檯座位",
+          "zh-Hans": "吧台座位",
+          "en": "counter seat"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "カウンターでもよろしいですか？": [
+      {
+        "t": "カウンター",
+        "m": {
+          "zh-Hant": "吧檯",
+          "zh-Hans": "吧台",
+          "en": "counter"
+        }
+      },
+      {
+        "t": "でも",
+        "m": {
+          "zh-Hant": "……也",
+          "zh-Hans": "……也",
+          "en": "also, even"
+        }
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お席、カウンターになりますが大丈夫ですか？": [
+      {
+        "t": "お席",
+        "r": "おせき",
+        "m": {
+          "zh-Hant": "座位（敬語）",
+          "zh-Hans": "座位（敬语）",
+          "en": "seat (polite)"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "カウンター",
+        "m": {
+          "zh-Hant": "吧檯",
+          "zh-Hans": "吧台",
+          "en": "counter"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "なりますが",
+        "m": {
+          "zh-Hant": "會是……（敬語）",
+          "zh-Hans": "会是……（敬语）",
+          "en": "it will be… (polite)"
+        }
+      },
+      {
+        "t": "大丈夫ですか",
+        "r": "だいじょうぶですか",
+        "m": {
+          "zh-Hant": "可以嗎、沒問題嗎",
+          "zh-Hans": "可以吗、没问题吗",
+          "en": "is that OK?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい、大丈夫です": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "麺の硬さはどうされますか？": [
+      {
+        "t": "麺",
+        "r": "めん",
+        "m": {
+          "zh-Hant": "麵",
+          "zh-Hans": "面",
+          "en": "noodles"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "硬さ",
+        "r": "かたさ",
+        "m": {
+          "zh-Hant": "硬度",
+          "zh-Hans": "硬度",
+          "en": "firmness"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どうされますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "麺の硬さ、お好みありますか？": [
+      {
+        "t": "麺",
+        "r": "めん",
+        "m": {
+          "zh-Hant": "麵",
+          "zh-Hans": "面",
+          "en": "noodles"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "硬さ",
+        "r": "かたさ",
+        "m": {
+          "zh-Hant": "硬度",
+          "zh-Hans": "硬度",
+          "en": "firmness"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "お好み",
+        "r": "おこのみ",
+        "m": {
+          "zh-Hant": "喜好",
+          "zh-Hans": "喜好",
+          "en": "preference"
+        }
+      },
+      {
+        "t": "あります",
+        "m": {
+          "zh-Hant": "有",
+          "zh-Hans": "有",
+          "en": "there is, have"
+        }
+      },
+      {
+        "t": "か"
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "麺は普通でよろしいですか？": [
+      {
+        "t": "麺",
+        "r": "めん",
+        "m": {
+          "zh-Hant": "麵",
+          "zh-Hans": "面",
+          "en": "noodles"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "普通",
+        "r": "ふつう",
+        "m": {
+          "zh-Hant": "普通、一般",
+          "zh-Hans": "普通、一般",
+          "en": "regular"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "普通で／硬めで": [
+      {
+        "t": "普通",
+        "r": "ふつう",
+        "m": {
+          "zh-Hant": "普通、一般",
+          "zh-Hans": "普通、一般",
+          "en": "regular"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "硬め",
+        "r": "かため",
+        "m": {
+          "zh-Hant": "偏硬",
+          "zh-Hans": "偏硬",
+          "en": "firmer"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "味の濃さと油の量はどうされますか？": [
+      {
+        "t": "味",
+        "r": "あじ",
+        "m": {
+          "zh-Hant": "味道",
+          "zh-Hans": "味道",
+          "en": "flavour"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "濃さ",
+        "r": "こさ",
+        "m": {
+          "zh-Hant": "濃淡",
+          "zh-Hans": "浓淡",
+          "en": "strength (of flavour)"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "油",
+        "r": "あぶら",
+        "m": {
+          "zh-Hant": "油",
+          "zh-Hans": "油",
+          "en": "oil"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "量",
+        "r": "りょう",
+        "m": {
+          "zh-Hant": "量",
+          "zh-Hans": "量",
+          "en": "amount"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どうされますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "味と油、お好みありますか？": [
+      {
+        "t": "味",
+        "r": "あじ",
+        "m": {
+          "zh-Hant": "味道",
+          "zh-Hans": "味道",
+          "en": "flavour"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "油",
+        "r": "あぶら",
+        "m": {
+          "zh-Hant": "油",
+          "zh-Hans": "油",
+          "en": "oil"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "お好み",
+        "r": "おこのみ",
+        "m": {
+          "zh-Hant": "喜好",
+          "zh-Hans": "喜好",
+          "en": "preference"
+        }
+      },
+      {
+        "t": "あります",
+        "m": {
+          "zh-Hant": "有",
+          "zh-Hans": "有",
+          "en": "there is, have"
+        }
+      },
+      {
+        "t": "か"
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "味の濃さ、油の量は普通でよろしいですか？": [
+      {
+        "t": "味",
+        "r": "あじ",
+        "m": {
+          "zh-Hant": "味道",
+          "zh-Hans": "味道",
+          "en": "flavour"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "濃さ",
+        "r": "こさ",
+        "m": {
+          "zh-Hant": "濃淡",
+          "zh-Hans": "浓淡",
+          "en": "strength (of flavour)"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "油",
+        "r": "あぶら",
+        "m": {
+          "zh-Hant": "油",
+          "zh-Hans": "油",
+          "en": "oil"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "量",
+        "r": "りょう",
+        "m": {
+          "zh-Hant": "量",
+          "zh-Hans": "量",
+          "en": "amount"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "普通",
+        "r": "ふつう",
+        "m": {
+          "zh-Hant": "普通、一般",
+          "zh-Hans": "普通、一般",
+          "en": "regular"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "全部普通で": [
+      {
+        "t": "全部",
+        "r": "ぜんぶ",
+        "m": {
+          "zh-Hant": "全部",
+          "zh-Hans": "全部",
+          "en": "all of it"
+        }
+      },
+      {
+        "t": "普通",
+        "r": "ふつう",
+        "m": {
+          "zh-Hant": "普通、一般",
+          "zh-Hans": "普通、一般",
+          "en": "regular"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "ライスは無料ですが、お付けしますか？": [
+      {
+        "t": "ライス",
+        "m": {
+          "zh-Hant": "白飯",
+          "zh-Hans": "米饭",
+          "en": "rice"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "無料",
+        "r": "むりょう",
+        "m": {
+          "zh-Hant": "免費",
+          "zh-Hans": "免费",
+          "en": "free of charge"
+        }
+      },
+      {
+        "t": "ですが",
+        "m": {
+          "zh-Hant": "是……，不過",
+          "zh-Hans": "是……，不过",
+          "en": "it is…, but"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "お付けしますか",
+        "r": "おつけしますか",
+        "m": {
+          "zh-Hant": "要幫您附上嗎（敬語）",
+          "zh-Hans": "要帮您附上吗（敬语）",
+          "en": "shall I add it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ライスいかがですか？": [
+      {
+        "t": "ライス",
+        "m": {
+          "zh-Hant": "白飯",
+          "zh-Hans": "米饭",
+          "en": "rice"
+        }
+      },
+      {
+        "t": "いかがですか",
+        "m": {
+          "zh-Hant": "要不要、如何（敬語）",
+          "zh-Hans": "要不要、如何（敬语）",
+          "en": "how about…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご飯はお付けしますか？": [
+      {
+        "t": "ご飯",
+        "r": "ごはん",
+        "m": {
+          "zh-Hant": "白飯",
+          "zh-Hans": "米饭",
+          "en": "rice"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お付けしますか",
+        "r": "おつけしますか",
+        "m": {
+          "zh-Hant": "要幫您附上嗎（敬語）",
+          "zh-Hans": "要帮您附上吗（敬语）",
+          "en": "shall I add it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お願いします／大丈夫です": [
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "紙エプロンお使いになりますか？": [
+      {
+        "t": "紙エプロン",
+        "r": "かみエプロン",
+        "m": {
+          "zh-Hant": "紙圍兜",
+          "zh-Hans": "纸围兜",
+          "en": "paper bib"
+        }
+      },
+      {
+        "t": "お使いになりますか",
+        "r": "おつかいになりますか",
+        "m": {
+          "zh-Hant": "要用嗎（敬語）",
+          "zh-Hans": "要用吗（敬语）",
+          "en": "will you use it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "エプロンご利用ですか？": [
+      {
+        "t": "エプロン",
+        "m": {
+          "zh-Hant": "圍兜",
+          "zh-Hans": "围兜",
+          "en": "bib"
+        }
+      },
+      {
+        "t": "ご利用ですか",
+        "r": "ごりようですか",
+        "m": {
+          "zh-Hant": "要使用嗎（敬語）",
+          "zh-Hans": "要使用吗（敬语）",
+          "en": "will you use it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "エプロン、よろしければお使いください": [
+      {
+        "t": "エプロン",
+        "m": {
+          "zh-Hant": "圍兜",
+          "zh-Hans": "围兜",
+          "en": "bib"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "よろしければ",
+        "m": {
+          "zh-Hant": "如果方便、需要的話",
+          "zh-Hans": "如果方便、需要的话",
+          "en": "if you like"
+        }
+      },
+      {
+        "t": "お使いください",
+        "r": "おつかいください",
+        "m": {
+          "zh-Hant": "請用",
+          "zh-Hans": "请用",
+          "en": "please use it"
+        }
+      }
+    ],
+    "テーブル席がいいです": [
+      {
+        "t": "テーブル席",
+        "r": "テーブルせき",
+        "m": {
+          "zh-Hant": "桌位",
+          "zh-Hans": "桌位",
+          "en": "table seat"
+        }
+      },
+      {
+        "t": "がいいです",
+        "m": {
+          "zh-Hant": "比較好、想要",
+          "zh-Hans": "比较好、想要",
+          "en": "I'd prefer"
+        }
+      }
+    ],
+    "硬めで": [
+      {
+        "t": "硬め",
+        "r": "かため",
+        "m": {
+          "zh-Hant": "偏硬",
+          "zh-Hans": "偏硬",
+          "en": "firmer"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "柔らかめで": [
+      {
+        "t": "柔らかめ",
+        "r": "やわらかめ",
+        "m": {
+          "zh-Hant": "偏軟",
+          "zh-Hans": "偏软",
+          "en": "softer"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "大盛で": [
+      {
+        "t": "大盛",
+        "r": "おおもり",
+        "m": {
+          "zh-Hant": "大碗",
+          "zh-Hans": "大碗",
+          "en": "large serving"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "濃いめ、油多めで": [
+      {
+        "t": "濃いめ",
+        "r": "こいめ",
+        "m": {
+          "zh-Hant": "偏濃",
+          "zh-Hans": "偏浓",
+          "en": "stronger"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "油多め",
+        "r": "あぶらおおめ",
+        "m": {
+          "zh-Hant": "油多一點",
+          "zh-Hans": "油多一点",
+          "en": "extra oil"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "大丈夫です": [
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "お願いします": [
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "ライスは大丈夫です": [
+      {
+        "t": "ライス",
+        "m": {
+          "zh-Hant": "白飯",
+          "zh-Hans": "米饭",
+          "en": "rice"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ]
+  }
+}

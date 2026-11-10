@@ -1,0 +1,1812 @@
+{
+  "schemaVersion": 2,
+  "id": "post-office",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "郵局寄包裹",
+    "zh-Hans": "邮局寄包裹",
+    "en": "Post office parcel"
+  },
+  "summary": {
+    "zh-Hant": "寄國際包裹時窗口會問的六件事",
+    "zh-Hans": "寄国际包裹时窗口会问的六件事",
+    "en": "Six things the counter asks when you send a parcel abroad"
+  },
+  "questions": [
+    {
+      "id": "post-office.destination",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口問要寄到哪裡",
+        "zh-Hans": "听懂窗口问要寄到哪里",
+        "en": "Understand when you are asked where the parcel is going"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.destination.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "どちらまでお送りしますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.destination.p1.mp3"
+        },
+        {
+          "id": "post-office.destination.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "お届け先はどちらですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.destination.p2.mp3"
+        },
+        {
+          "id": "post-office.destination.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "国内ですか、海外ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.destination.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要寄到哪裡",
+            "zh-Hans": "要寄到哪里",
+            "en": "Where it is going"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要用什麼方式寄",
+            "zh-Hans": "要用什么方式寄",
+            "en": "How you want to send it"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "裡面裝什麼",
+            "zh-Hans": "里面装什么",
+            "en": "What is inside"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "台湾です",
+        "audio": "post-office.destination.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「お届け先」是收件的地方，「国内」是日本國內，「海外」是國外。說國名加「です」就好。",
+        "zh-Hans": "「お届け先」是收件的地方，「国内」是日本国内，「海外」是国外。说国名加「です」就好。",
+        "en": "お届け先 is where it is delivered. 国内 means within Japan and 海外 means abroad. Say the country with です."
+      },
+      "wordIds": [
+        "parcel",
+        "postal-counter"
+      ]
+    },
+    {
+      "id": "post-office.method",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口問要用哪種方式寄",
+        "zh-Hans": "听懂窗口问要用哪种方式寄",
+        "en": "Understand when you are asked how to send it"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.method.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "EMSと航空便、どちらになさいますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.method.p1.mp3"
+        },
+        {
+          "id": "post-office.method.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "発送方法はいかがなさいますか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.method.p2.mp3"
+        },
+        {
+          "id": "post-office.method.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "航空便と船便がございますが、どうなさいますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.method.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "什麼時候要寄到",
+            "zh-Hans": "什么时候要寄到",
+            "en": "When it needs to arrive"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要用哪種方式寄",
+            "zh-Hans": "要用哪种方式寄",
+            "en": "How you want to send it"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要寄到哪裡",
+            "zh-Hans": "要寄到哪里",
+            "en": "Where it is going"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "EMSで／航空便で",
+        "audio": "post-office.method.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「EMS」最快也最貴，「航空便」是空運，「船便」是海運，便宜但慢。能選哪些方式依目的地與時期不同，以現場說明為準。",
+        "zh-Hans": "「EMS」最快也最贵，「航空便」是空运，「船便」是海运，便宜但慢。能选哪些方式依目的地与时期不同，以现场说明为准。",
+        "en": "EMS is fastest and costs the most, 航空便 is airmail, and 船便 is sea mail, cheap but slow. Which ones you can choose depends on the destination and the time, so follow what the staff tell you."
+      },
+      "wordIds": [],
+      "reviewNote": "Available services (EMS, airmail, sea mail, SAL) vary by destination and change over time. Confirm the three named services are still offered for common destinations."
+    },
+    {
+      "id": "post-office.contents",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口問包裹裡裝什麼",
+        "zh-Hans": "听懂窗口问包裹里装什么",
+        "en": "Understand when you are asked what is inside"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.contents.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "中身は何ですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.contents.p1.mp3"
+        },
+        {
+          "id": "post-office.contents.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "中身をお伺いしてもよろしいですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.contents.p2.mp3"
+        },
+        {
+          "id": "post-office.contents.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "内容品は何でしょうか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.contents.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "東西值多少錢",
+            "zh-Hans": "东西值多少钱",
+            "en": "How much it is worth"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "有多重",
+            "zh-Hans": "有多重",
+            "en": "How heavy it is"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "裡面裝什麼",
+            "zh-Hans": "里面装什么",
+            "en": "What is inside"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "服とお菓子です",
+        "audio": "post-office.contents.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「中身」「内容品」是包裹裡的東西。寄國外要寫在單子上，簡單說品項就好，例如「服です」「お菓子です」。",
+        "zh-Hans": "「中身」「内容品」是包裹里的东西。寄国外要写在单子上，简单说品项就好，例如「服です」「お菓子です」。",
+        "en": "中身 and 内容品 mean the contents. For overseas mail they go on the form. Name the items simply, like 服です or お菓子です."
+      },
+      "wordIds": [
+        "parcel",
+        "cardboard-box"
+      ]
+    },
+    {
+      "id": "post-office.batteries",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口問有沒有電池這類東西",
+        "zh-Hans": "听懂窗口问有没有电池这类东西",
+        "en": "Understand when you are asked about batteries and sprays"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.batteries.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "電池やスプレー缶は入っていませんか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.batteries.p1.mp3"
+        },
+        {
+          "id": "post-office.batteries.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "リチウム電池などは入っていませんよね？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.batteries.p2.mp3"
+        },
+        {
+          "id": "post-office.batteries.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "危険物は入っていませんか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.batteries.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "有沒有電池或噴霧罐",
+            "zh-Hans": "有没有电池或喷雾罐",
+            "en": "Any batteries or spray cans"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "有沒有容易破的東西",
+            "zh-Hans": "有没有容易碎的东西",
+            "en": "Anything fragile"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "有沒有現金或貴重的東西",
+            "zh-Hans": "有没有现金或贵重的东西",
+            "en": "Any cash or valuables"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "入っていません",
+        "audio": "post-office.batteries.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「電池」是電池，「スプレー缶」是噴霧罐，「危険物」是危險物品。這是否定問句，回「はい」是「對，沒有」，很容易答反，所以直接說「入っていません」。有的話說「入っています」，能不能寄依目的地與規定不同，以現場說明為準。",
+        "zh-Hans": "「電池」是电池，「スプレー缶」是喷雾罐，「危険物」是危险物品。这是否定问句，回「はい」是「对，没有」，很容易答反，所以直接说「入っていません」。有的话说「入っています」，能不能寄依目的地与规定不同，以现场说明为准。",
+        "en": "電池 is battery, スプレー缶 is spray can and 危険物 means dangerous goods. This is a negative question, so はい means yes, there are none, which is easy to get backwards. Say 入っていません. If there are, say 入っています. Whether they can go depends on the destination and the rules, so follow what the staff tell you."
+      },
+      "wordIds": [
+        "aa-battery"
+      ],
+      "reviewNote": "Prohibited items in international mail (lithium batteries, sprays, liquids) are safety and legal content; someone who knows Japan Post rules should check the phrasings and explanation."
+    },
+    {
+      "id": "post-office.label",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口請你在平板上做寄件單",
+        "zh-Hans": "听懂窗口请你在平板上做寄件单",
+        "en": "Understand when you are asked to make the label on the tablet"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.label.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "こちらのタブレットで、ラベルの作成をお願いします",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.label.p1.mp3"
+        },
+        {
+          "id": "post-office.label.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "お届け先と中身を、こちらの画面に入力してください",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.label.p2.mp3"
+        },
+        {
+          "id": "post-office.label.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "送り状は、そちらのタブレットでお作りいただけますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.label.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "請把包裹放到秤上",
+            "zh-Hans": "请把包裹放到秤上",
+            "en": "Please put the parcel on the scale"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請在平板上做寄件單",
+            "zh-Hans": "请在平板上做寄件单",
+            "en": "Please make the label on the tablet"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "請到旁邊的窗口",
+            "zh-Hans": "请到旁边的窗口",
+            "en": "Please go to the next counter"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい",
+        "audio": "post-office.label.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「ラベル」「送り状」是寄件單，「タブレット」是平板，「作成」「入力」是製作、輸入。寄物品到國外，寄件單要在窗口的平板或「国際郵便マイページ」網站上輸入收件人、地址和內容物，手寫的不收。操作方式依郵局不同，以現場說明為準。",
+        "zh-Hans": "「ラベル」「送り状」是寄件单，「タブレット」是平板，「作成」「入力」是制作、输入。寄物品到国外，寄件单要在窗口的平板或「国際郵便マイページ」网站上输入收件人、地址和内容物，手写的不收。操作方式依邮局不同，以现场说明为准。",
+        "en": "ラベル and 送り状 are the shipping label, タブレット is a tablet, and 作成 and 入力 mean making and entering. To send goods abroad, you enter the recipient, address and contents on the counter tablet or the 国際郵便マイページ website; handwritten labels are not accepted. How it works varies by post office, so follow what the staff tell you."
+      },
+      "wordIds": [
+        "shipping-label"
+      ],
+      "reviewNote": "Checked 2026-11 against Japan Post: since 2024-03-01, goods sent abroad need an electronic label made on 国際郵便マイページ or the counter tablet; handwritten labels are not accepted."
+    },
+    {
+      "id": "post-office.payment",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂窗口問要用什麼付款",
+        "zh-Hans": "听懂窗口问用什么付款",
+        "en": "Understand when you are asked how you will pay"
+      },
+      "phrasings": [
+        {
+          "id": "post-office.payment.p1",
+          "role": "first",
+          "speaker": "staff",
+          "text": "お支払いは現金でよろしいですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.payment.p1.mp3"
+        },
+        {
+          "id": "post-office.payment.p2",
+          "role": "review",
+          "speaker": "staff",
+          "text": "お支払い方法はいかがなさいますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "post-office.payment.p2.mp3"
+        },
+        {
+          "id": "post-office.payment.p3",
+          "role": "review",
+          "speaker": "staff",
+          "text": "お支払いは現金ですか、カードですか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "post-office.payment.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要收據",
+            "zh-Hans": "要不要收据",
+            "en": "Do you need a receipt"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "運費是多少",
+            "zh-Hans": "运费是多少",
+            "en": "How much the postage is"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要用什麼付款",
+            "zh-Hans": "要用什么付款",
+            "en": "How you will pay"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "カードで／現金で",
+        "audio": "post-office.payment.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「お支払い」是付款。刷卡說「カードで」，付現說「現金で」。能用的付款方式依郵局不同。",
+        "zh-Hans": "「お支払い」是付款。刷卡说「カードで」，付现说「現金で」。能用的付款方式依邮局不同。",
+        "en": "お支払い means payment. Say カードで for card or 現金で for cash. Which methods are accepted depends on the post office."
+      },
+      "wordIds": []
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "寄一箱回台灣",
+          "zh-Hans": "寄一箱回台湾",
+          "en": "A box home to Taiwan"
+        },
+        "intent": {
+          "zh-Hant": "你要寄一箱衣服和零食回台灣，想用 EMS。箱子裡沒有電池或噴霧罐。刷卡付款。",
+          "zh-Hans": "你要寄一箱衣服和零食回台湾，想用 EMS。箱子里没有电池或喷雾罐。刷卡付款。",
+          "en": "You're sending a box of clothes and snacks home to Taiwan by EMS. There are no batteries or spray cans in it. You'll pay by card."
+        },
+        "enter": {
+          "zh-Hant": "把箱子放上窗口",
+          "zh-Hans": "把箱子放上窗口",
+          "en": "Put the box on the counter"
+        },
+        "questions": [
+          "post-office.destination",
+          "post-office.method",
+          "post-office.contents",
+          "post-office.batteries",
+          "post-office.label",
+          "post-office.payment"
+        ]
+      }
+    ],
+    "steps": {
+      "post-office.destination": {
+        "background": "scene-bg-post-office",
+        "replies": [
+          {
+            "id": "taiwan",
+            "ja": "台湾です",
+            "meaning": {
+              "zh-Hant": "台灣",
+              "zh-Hans": "台湾",
+              "en": "Taiwan"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "職員點點頭，記下寄往台灣。",
+              "zh-Hans": "工作人员点点头，记下寄往台湾。",
+              "en": "The staff member nods and notes it's going to Taiwan."
+            }
+          },
+          {
+            "id": "domestic",
+            "ja": "国内です",
+            "meaning": {
+              "zh-Hant": "日本國內",
+              "zh-Hans": "日本国内",
+              "en": "Within Japan"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員開始算國內的運費。你要寄回台灣。",
+              "zh-Hans": "工作人员开始算国内的运费。你要寄回台湾。",
+              "en": "The staff member starts working out the domestic rate. You're sending it to Taiwan."
+            }
+          },
+          {
+            "id": "ems",
+            "ja": "EMSで",
+            "meaning": {
+              "zh-Hant": "用 EMS",
+              "zh-Hans": "用 EMS",
+              "en": "By EMS"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員還在等你說寄到哪裡。",
+              "zh-Hans": "工作人员还在等你说寄到哪里。",
+              "en": "The staff member is still waiting to hear where it's going."
+            }
+          }
+        ]
+      },
+      "post-office.method": {
+        "background": "scene-bg-post-office",
+        "replies": [
+          {
+            "id": "ems",
+            "ja": "EMSで",
+            "meaning": {
+              "zh-Hant": "用 EMS",
+              "zh-Hans": "用 EMS",
+              "en": "By EMS"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "職員點點頭，記下 EMS。",
+              "zh-Hans": "工作人员点点头，记下 EMS。",
+              "en": "The staff member nods and notes EMS."
+            }
+          },
+          {
+            "id": "sea",
+            "ja": "船便で",
+            "meaning": {
+              "zh-Hant": "用海運",
+              "zh-Hans": "用海运",
+              "en": "By sea"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員開始算海運的運費。你想用 EMS。",
+              "zh-Hans": "工作人员开始算海运的运费。你想用 EMS。",
+              "en": "The staff member starts working out the sea mail rate. You wanted EMS."
+            }
+          },
+          {
+            "id": "contents",
+            "ja": "服とお菓子です",
+            "meaning": {
+              "zh-Hant": "衣服和零食",
+              "zh-Hans": "衣服和零食",
+              "en": "Clothes and snacks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員還在等你選寄送方式。",
+              "zh-Hans": "工作人员还在等你选寄送方式。",
+              "en": "The staff member is still waiting for you to choose how to send it."
+            }
+          }
+        ]
+      },
+      "post-office.contents": {
+        "background": "scene-bg-post-office",
+        "replies": [
+          {
+            "id": "both",
+            "ja": "服とお菓子です",
+            "meaning": {
+              "zh-Hant": "衣服和零食",
+              "zh-Hans": "衣服和零食",
+              "en": "Clothes and snacks"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "職員點點頭，說待會兒做寄件單時要輸入。",
+              "zh-Hans": "工作人员点点头，说待会儿做寄件单时要输入。",
+              "en": "The staff member nods and says to enter that when you make the label."
+            }
+          },
+          {
+            "id": "clothes",
+            "ja": "服だけです",
+            "meaning": {
+              "zh-Hant": "只有衣服",
+              "zh-Hans": "只有衣服",
+              "en": "Just clothes"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員說那寄件單上就只寫衣服。箱子裡還有零食。",
+              "zh-Hans": "工作人员说那寄件单上就只写衣服。箱子里还有零食。",
+              "en": "The staff member says to list only clothes on the label, then. The box has snacks too."
+            }
+          },
+          {
+            "id": "taiwan",
+            "ja": "台湾です",
+            "meaning": {
+              "zh-Hant": "台灣",
+              "zh-Hans": "台湾",
+              "en": "Taiwan"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "寄到哪裡剛才說過了，職員在問箱子裡是什麼。",
+              "zh-Hans": "寄到哪里刚才说过了，工作人员在问箱子里是什么。",
+              "en": "You've already said where. The staff member is asking what's inside."
+            }
+          }
+        ]
+      },
+      "post-office.batteries": {
+        "background": "scene-bg-post-office",
+        "replies": [
+          {
+            "id": "no",
+            "ja": "入っていません",
+            "meaning": {
+              "zh-Hant": "沒有放",
+              "zh-Hans": "没有放",
+              "en": "There aren't any"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "職員點點頭，繼續辦。",
+              "zh-Hans": "工作人员点点头，继续办。",
+              "en": "The staff member nods and carries on."
+            }
+          },
+          {
+            "id": "yes",
+            "ja": "入っています",
+            "meaning": {
+              "zh-Hant": "有放",
+              "zh-Hans": "有放",
+              "en": "There are"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員請你打開箱子一起看。你其實沒有放這些東西。",
+              "zh-Hans": "工作人员请你打开箱子一起看。你其实没有放这些东西。",
+              "en": "The staff member asks you to open the box together. You didn't pack any of those."
+            }
+          },
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒到付款，職員在問有沒有電池或噴霧罐。",
+              "zh-Hans": "还没到付款，工作人员在问有没有电池或喷雾罐。",
+              "en": "You're not paying yet. The staff member is asking about batteries and spray cans."
+            }
+          }
+        ]
+      },
+      "post-office.label": {
+        "background": "scene-bg-post-office",
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "はい",
+            "meaning": {
+              "zh-Hant": "好",
+              "zh-Hans": "好",
+              "en": "OK"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "你在平板上輸入收件人、地址和內容物，印出寄件單。",
+              "zh-Hans": "你在平板上输入收件人、地址和内容物，打印出寄件单。",
+              "en": "You enter the recipient, address and contents on the tablet and print the label."
+            }
+          },
+          {
+            "id": "write",
+            "ja": "書いてもらえますか",
+            "meaning": {
+              "zh-Hant": "可以幫我寫嗎",
+              "zh-Hans": "可以帮我写吗",
+              "en": "Could you write it for me?"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員指著平板，請你自己輸入。",
+              "zh-Hans": "工作人员指着平板，请你自己输入。",
+              "en": "The staff member points at the tablet and asks you to enter it yourself."
+            }
+          },
+          {
+            "id": "ems",
+            "ja": "EMSで",
+            "meaning": {
+              "zh-Hant": "用 EMS",
+              "zh-Hans": "用 EMS",
+              "en": "By EMS"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "寄送方式剛才說過了，職員在等你在平板上做寄件單。",
+              "zh-Hans": "寄送方式刚才说过了，工作人员在等你在平板上做寄件单。",
+              "en": "You've already chosen. The staff member is waiting for you to make the label on the tablet."
+            }
+          }
+        ]
+      },
+      "post-office.payment": {
+        "background": "scene-bg-post-office",
+        "card": {
+          "title": "EMS",
+          "lines": [
+            "お届け先　台湾",
+            "内容品　服・お菓子"
+          ]
+        },
+        "replies": [
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "職員把讀卡機轉向你。",
+              "zh-Hans": "工作人员把刷卡机转向你。",
+              "en": "The staff member turns the card reader towards you."
+            }
+          },
+          {
+            "id": "cash",
+            "ja": "現金で",
+            "meaning": {
+              "zh-Hant": "付現",
+              "zh-Hans": "付现金",
+              "en": "Cash"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "職員等你拿出現金。你想刷卡。",
+              "zh-Hans": "工作人员等你拿出现金。你想刷卡。",
+              "en": "The staff member waits for cash. You wanted to pay by card."
+            }
+          },
+          {
+            "id": "ems",
+            "ja": "EMSで",
+            "meaning": {
+              "zh-Hant": "用 EMS",
+              "zh-Hans": "用 EMS",
+              "en": "By EMS"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "寄送方式剛才說過了，職員在問怎麼付款。",
+              "zh-Hans": "寄送方式刚才说过了，工作人员在问怎么付款。",
+              "en": "You've already chosen that. The staff member is asking how you'll pay."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "どちらまでお送りしますか？": [
+      {
+        "t": "どちらまで",
+        "m": {
+          "zh-Hant": "到哪裡",
+          "zh-Hans": "到哪里",
+          "en": "to where"
+        }
+      },
+      {
+        "t": "お送りしますか",
+        "r": "おおくりしますか",
+        "m": {
+          "zh-Hant": "要寄嗎（敬語）",
+          "zh-Hans": "要寄吗（敬语）",
+          "en": "will you send? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お届け先はどちらですか？": [
+      {
+        "t": "お届け先",
+        "r": "おとどけさき",
+        "m": {
+          "zh-Hant": "收件地",
+          "zh-Hans": "收件地",
+          "en": "destination"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "国内ですか、海外ですか？": [
+      {
+        "t": "国内",
+        "r": "こくない",
+        "m": {
+          "zh-Hant": "國內",
+          "zh-Hans": "国内",
+          "en": "domestic"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "海外",
+        "r": "かいがい",
+        "m": {
+          "zh-Hant": "國外",
+          "zh-Hans": "国外",
+          "en": "overseas"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "台湾です": [
+      {
+        "t": "台湾",
+        "r": "たいわん",
+        "m": {
+          "zh-Hant": "台灣",
+          "zh-Hans": "台湾",
+          "en": "Taiwan"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "EMSと航空便、どちらになさいますか？": [
+      {
+        "t": "EMS",
+        "r": "イーエムエス",
+        "m": {
+          "zh-Hant": "國際快捷（EMS）",
+          "zh-Hans": "国际快递（EMS）",
+          "en": "EMS express mail"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "航空便",
+        "r": "こうくうびん",
+        "m": {
+          "zh-Hant": "空運",
+          "zh-Hans": "空运",
+          "en": "airmail"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "になさいますか",
+        "m": {
+          "zh-Hant": "要選……嗎（敬語）",
+          "zh-Hans": "要选……吗（敬语）",
+          "en": "would you like…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "発送方法はいかがなさいますか？": [
+      {
+        "t": "発送方法",
+        "r": "はっそうほうほう",
+        "m": {
+          "zh-Hant": "寄送方式",
+          "zh-Hans": "寄送方式",
+          "en": "shipping method"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "いかがなさいますか",
+        "m": {
+          "zh-Hant": "要怎麼處理（敬語）",
+          "zh-Hans": "要怎么处理（敬语）",
+          "en": "what would you like? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "航空便と船便がございますが、どうなさいますか？": [
+      {
+        "t": "航空便",
+        "r": "こうくうびん",
+        "m": {
+          "zh-Hant": "空運",
+          "zh-Hans": "空运",
+          "en": "airmail"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "船便",
+        "r": "ふなびん",
+        "m": {
+          "zh-Hant": "海運",
+          "zh-Hans": "海运",
+          "en": "sea mail"
+        }
+      },
+      {
+        "t": "が"
+      },
+      {
+        "t": "ございますが",
+        "m": {
+          "zh-Hant": "有……（敬語）",
+          "zh-Hans": "有……（敬语）",
+          "en": "we have… (polite)"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どうなさいますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "EMSで／航空便で": [
+      {
+        "t": "EMS",
+        "r": "イーエムエス",
+        "m": {
+          "zh-Hant": "國際快捷（EMS）",
+          "zh-Hans": "国际快递（EMS）",
+          "en": "EMS express mail"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "航空便",
+        "r": "こうくうびん",
+        "m": {
+          "zh-Hant": "空運",
+          "zh-Hans": "空运",
+          "en": "airmail"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "中身は何ですか？": [
+      {
+        "t": "中身",
+        "r": "なかみ",
+        "m": {
+          "zh-Hant": "裡面的東西",
+          "zh-Hans": "里面的东西",
+          "en": "contents"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何",
+        "r": "なに",
+        "m": {
+          "zh-Hant": "什麼",
+          "zh-Hans": "什么",
+          "en": "what"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "中身をお伺いしてもよろしいですか？": [
+      {
+        "t": "中身",
+        "r": "なかみ",
+        "m": {
+          "zh-Hant": "裡面的東西",
+          "zh-Hans": "里面的东西",
+          "en": "contents"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お伺いしても",
+        "r": "おうかがいしても",
+        "m": {
+          "zh-Hant": "可以請問（謙讓語）",
+          "zh-Hans": "可以请问（谦让语）",
+          "en": "may I ask (humble)"
+        }
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "内容品は何でしょうか？": [
+      {
+        "t": "内容品",
+        "r": "ないようひん",
+        "m": {
+          "zh-Hant": "內容物",
+          "zh-Hans": "内容物",
+          "en": "contents"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何",
+        "r": "なに",
+        "m": {
+          "zh-Hant": "什麼",
+          "zh-Hans": "什么",
+          "en": "what"
+        }
+      },
+      {
+        "t": "でしょうか",
+        "m": {
+          "zh-Hant": "……嗎（更客氣）",
+          "zh-Hans": "……吗（更客气）",
+          "en": "is it…? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "服とお菓子です": [
+      {
+        "t": "服",
+        "r": "ふく",
+        "m": {
+          "zh-Hant": "衣服",
+          "zh-Hans": "衣服",
+          "en": "clothes"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "お菓子",
+        "r": "おかし",
+        "m": {
+          "zh-Hant": "零食",
+          "zh-Hans": "零食",
+          "en": "snacks"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "電池やスプレー缶は入っていませんか？": [
+      {
+        "t": "電池",
+        "r": "でんち",
+        "m": {
+          "zh-Hant": "電池",
+          "zh-Hans": "电池",
+          "en": "battery"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "スプレー缶",
+        "r": "スプレーかん",
+        "m": {
+          "zh-Hant": "噴霧罐",
+          "zh-Hans": "喷雾罐",
+          "en": "spray can"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "リチウム電池などは入っていませんよね？": [
+      {
+        "t": "リチウム電池",
+        "r": "リチウムでんち",
+        "m": {
+          "zh-Hant": "鋰電池",
+          "zh-Hans": "锂电池",
+          "en": "lithium battery"
+        }
+      },
+      {
+        "t": "など",
+        "m": {
+          "zh-Hant": "……等等",
+          "zh-Hans": "……等等",
+          "en": "and so on"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんよね",
+        "r": "はいっていませんよね",
+        "m": {
+          "zh-Hant": "沒有放……對吧",
+          "zh-Hans": "没有放……对吧",
+          "en": "there isn't… in it, right?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "危険物は入っていませんか？": [
+      {
+        "t": "危険物",
+        "r": "きけんぶつ",
+        "m": {
+          "zh-Hant": "危險物品",
+          "zh-Hans": "危险物品",
+          "en": "dangerous goods"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "入っていません": [
+      {
+        "t": "入っていません",
+        "r": "はいっていません",
+        "m": {
+          "zh-Hant": "沒有放",
+          "zh-Hans": "没有放",
+          "en": "there isn't any"
+        }
+      }
+    ],
+    "こちらのタブレットで、ラベルの作成をお願いします": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "タブレット",
+        "m": {
+          "zh-Hant": "平板",
+          "zh-Hans": "平板",
+          "en": "tablet"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "ラベル",
+        "m": {
+          "zh-Hant": "寄件單",
+          "zh-Hans": "寄件单",
+          "en": "label"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "作成",
+        "r": "さくせい",
+        "m": {
+          "zh-Hant": "製作",
+          "zh-Hans": "制作",
+          "en": "making"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "お届け先と中身を、こちらの画面に入力してください": [
+      {
+        "t": "お届け先",
+        "r": "おとどけさき",
+        "m": {
+          "zh-Hant": "收件地",
+          "zh-Hans": "收件地",
+          "en": "destination"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "中身",
+        "r": "なかみ",
+        "m": {
+          "zh-Hant": "裡面的東西",
+          "zh-Hans": "里面的东西",
+          "en": "contents"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "画面",
+        "r": "がめん",
+        "m": {
+          "zh-Hant": "畫面、螢幕",
+          "zh-Hans": "画面、屏幕",
+          "en": "screen"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "入力してください",
+        "r": "にゅうりょくしてください",
+        "m": {
+          "zh-Hant": "請輸入",
+          "zh-Hans": "请输入",
+          "en": "please enter"
+        }
+      }
+    ],
+    "送り状は、そちらのタブレットでお作りいただけますか？": [
+      {
+        "t": "送り状",
+        "r": "おくりじょう",
+        "m": {
+          "zh-Hant": "寄件單",
+          "zh-Hans": "寄件单",
+          "en": "shipping form"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "そちら",
+        "m": {
+          "zh-Hant": "那邊（您那邊）",
+          "zh-Hans": "那边（您那边）",
+          "en": "there (by you)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "タブレット",
+        "m": {
+          "zh-Hant": "平板",
+          "zh-Hans": "平板",
+          "en": "tablet"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お作りいただけますか",
+        "r": "おつくりいただけますか",
+        "m": {
+          "zh-Hant": "可以麻煩您製作嗎",
+          "zh-Hans": "可以麻烦您制作吗",
+          "en": "could you make it?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      }
+    ],
+    "お支払いは現金でよろしいですか？": [
+      {
+        "t": "お支払い",
+        "r": "おしはらい",
+        "m": {
+          "zh-Hant": "付款（敬語）",
+          "zh-Hans": "付款（敬语）",
+          "en": "payment (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お支払い方法はいかがなさいますか？": [
+      {
+        "t": "お支払い方法",
+        "r": "おしはらいほうほう",
+        "m": {
+          "zh-Hant": "付款方式",
+          "zh-Hans": "付款方式",
+          "en": "payment method"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "いかがなさいますか",
+        "m": {
+          "zh-Hant": "要怎麼處理（敬語）",
+          "zh-Hans": "要怎么处理（敬语）",
+          "en": "what would you like? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お支払いは現金ですか、カードですか？": [
+      {
+        "t": "お支払い",
+        "r": "おしはらい",
+        "m": {
+          "zh-Hant": "付款（敬語）",
+          "zh-Hans": "付款（敬语）",
+          "en": "payment (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "カードで／現金で": [
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "国内です": [
+      {
+        "t": "国内",
+        "r": "こくない",
+        "m": {
+          "zh-Hant": "國內",
+          "zh-Hans": "国内",
+          "en": "domestic"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "EMSで": [
+      {
+        "t": "EMS",
+        "r": "イーエムエス",
+        "m": {
+          "zh-Hant": "國際快捷（EMS）",
+          "zh-Hans": "国际快递（EMS）",
+          "en": "EMS express mail"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "船便で": [
+      {
+        "t": "船便",
+        "r": "ふなびん",
+        "m": {
+          "zh-Hant": "海運",
+          "zh-Hans": "海运",
+          "en": "sea mail"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "服だけです": [
+      {
+        "t": "服だけです",
+        "r": "ふくだけです",
+        "m": {
+          "zh-Hant": "只有衣服",
+          "zh-Hans": "只有衣服",
+          "en": "just clothes"
+        }
+      }
+    ],
+    "入っています": [
+      {
+        "t": "入っています",
+        "r": "はいっています",
+        "m": {
+          "zh-Hant": "有放",
+          "zh-Hans": "有放",
+          "en": "there is"
+        }
+      }
+    ],
+    "カードで": [
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "書いてもらえますか": [
+      {
+        "t": "書いてもらえますか",
+        "r": "かいてもらえますか",
+        "m": {
+          "zh-Hant": "可以幫我寫嗎",
+          "zh-Hans": "可以帮我写吗",
+          "en": "could you write it for me?"
+        }
+      }
+    ],
+    "現金で": [
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ]
+  }
+}

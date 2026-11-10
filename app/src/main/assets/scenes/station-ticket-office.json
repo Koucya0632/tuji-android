@@ -1,0 +1,2028 @@
+{
+  "schemaVersion": 2,
+  "id": "station-ticket-office",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "車站窗口買票",
+    "zh-Hans": "车站窗口买票",
+    "en": "Buying tickets at a station counter"
+  },
+  "summary": {
+    "zh-Hant": "在車站窗口買票時會被問的七件事",
+    "zh-Hans": "在车站窗口买票时会被问的七件事",
+    "en": "Seven things you are asked at a ticket counter"
+  },
+  "questions": [
+    {
+      "id": "station-ticket-office.destination",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問要去哪裡",
+        "zh-Hans": "听懂工作人员问去哪里",
+        "en": "Understand when the clerk asks where you are going"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.destination.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "どちらまでご利用ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.destination.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.destination.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "行き先はどちらですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.destination.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.destination.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "どこまで行かれますか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.destination.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要去哪裡",
+            "zh-Hans": "去哪里",
+            "en": "Where are you going"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "從哪一站上車",
+            "zh-Hans": "从哪一站上车",
+            "en": "Which station are you leaving from"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要買幾張",
+            "zh-Hans": "要买几张",
+            "en": "How many tickets"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "京都までお願いします",
+        "audio": "station-ticket-office.destination.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「どちらまで」是問到哪裡。說站名加「までお願いします」，或遞出寫好站名、日期和時間的紙。",
+        "zh-Hans": "「どちらまで」是问到哪里。说站名加「までお願いします」，或递上写好站名、日期和时间的纸条。",
+        "en": "どちらまで asks where to. Say the station name plus までお願いします, or hand over a note with the station, date and time."
+      },
+      "wordIds": [
+        "station"
+      ]
+    },
+    {
+      "id": "station-ticket-office.when",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問哪天、幾點搭車",
+        "zh-Hans": "听懂工作人员问哪天、几点上车",
+        "en": "Understand when the clerk asks what day and time you are travelling"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.when.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ご乗車はいつですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.when.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.when.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご乗車の日にちとお時間をお願いします。",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.when.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.when.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "何日の何時ごろのご乗車ですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.when.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "哪天、幾點搭車",
+            "zh-Hans": "哪天、几点上车",
+            "en": "What day and time are you travelling"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "想幾點到",
+            "zh-Hans": "想几点到",
+            "en": "What time do you want to arrive"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要買回程票",
+            "zh-Hans": "要不要买返程票",
+            "en": "Do you want a return ticket"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "今日の十時ごろです",
+        "audio": "station-ticket-office.when.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「ご乗車」是搭車，問的是出發的日期和時間，不是到達時間。回答例如「今日の十時ごろです」「明日の朝です」。",
+        "zh-Hans": "「ご乗車」是上车，问的是出发的日期和时间，不是到达时间。回答比如「今日の十時ごろです」「明日の朝です」。",
+        "en": "ご乗車 means boarding, so this asks when you leave, not when you arrive. Answer like 今日の十時ごろです or 明日の朝です."
+      },
+      "wordIds": [
+        "departure-board"
+      ]
+    },
+    {
+      "id": "station-ticket-office.how-many",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問幾個人",
+        "zh-Hans": "听懂工作人员问几个人",
+        "en": "Understand when the clerk asks how many are travelling"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.how-many.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "何名様ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.how-many.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.how-many.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "大人の方、何名様ですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.how-many.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.how-many.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご利用は何名様でしょうか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.how-many.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "幾個人",
+            "zh-Hans": "几个人",
+            "en": "How many people"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "有沒有小孩同行",
+            "zh-Hans": "有没有带小孩",
+            "en": "Are any children travelling"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要坐幾號車廂",
+            "zh-Hans": "要坐几号车厢",
+            "en": "Which car do you want"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "大人二人です",
+        "audio": "station-ticket-office.how-many.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「何名様」是問幾位，「大人」是成人。有小孩的話說「大人二人、子ども一人です」。",
+        "zh-Hans": "「何名様」是问几位，「大人」是成人。带小孩的话说「大人二人、子ども一人です」。",
+        "en": "何名様 asks how many, and 大人 means adult. With a child, say 大人二人、子ども一人です."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "station-ticket-office.seat-type",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問要對號座還是自由座",
+        "zh-Hans": "听懂工作人员问要指定席还是自由席",
+        "en": "Understand when the clerk asks reserved or non-reserved"
+      },
+      "reviewNote": "のぞみ等列車在旺季全車指定席，期間每年由 JR 公告；解說只寫「有些列車在特定期間沒有自由席」，需鐵路方面審稿確認說法。",
+      "phrasings": [
+        {
+          "id": "station-ticket-office.seat-type.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "指定席と自由席、どちらになさいますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.seat-type.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.seat-type.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "指定席でよろしいですか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.seat-type.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.seat-type.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お席は指定でお取りしますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.seat-type.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "對號座還是自由座",
+            "zh-Hans": "指定席还是自由席",
+            "en": "Reserved or non-reserved seat"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "靠窗還是靠走道",
+            "zh-Hans": "靠窗还是靠过道",
+            "en": "Window or aisle"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要坐商務車廂",
+            "zh-Hans": "要不要坐商务车厢",
+            "en": "Would you like first class"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "指定席で／自由席で",
+        "audio": "station-ticket-office.seat-type.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「指定席」是對號座，「自由席」是不對號、先到先坐。有些列車在特定期間沒有自由席，依列車和日期不同，以現場說明為準。",
+        "zh-Hans": "「指定席」是对号入座，「自由席」是不对号、先到先坐。有些列车在特定时期没有自由席，依列车和日期不同，以现场说明为准。",
+        "en": "指定席 is a reserved seat and 自由席 is first come, first served. Some trains have no non-reserved seats at certain times, so go by what the counter tells you."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "station-ticket-office.window-aisle",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問座位要靠窗還是靠走道",
+        "zh-Hans": "听懂工作人员问座位要靠窗还是靠过道",
+        "en": "Understand when the clerk asks window or aisle"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.window-aisle.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "窓側と通路側、どちらがよろしいですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.window-aisle.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.window-aisle.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お席のご希望はございますか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.window-aisle.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.window-aisle.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "窓側か通路側か、ご希望はありますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.window-aisle.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "靠窗還是靠走道",
+            "zh-Hans": "靠窗还是靠过道",
+            "en": "Window or aisle"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "對號座還是自由座",
+            "zh-Hans": "指定席还是自由席",
+            "en": "Reserved or non-reserved seat"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要坐前面還是後面的車廂",
+            "zh-Hans": "要坐前面还是后面的车厢",
+            "en": "A car near the front or the back"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "窓側で／どこでも大丈夫です",
+        "audio": "station-ticket-office.window-aisle.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「窓側」是靠窗，「通路側」是靠走道。「お席のご希望」是問座位有沒有偏好。沒有就說「どこでも大丈夫です」。",
+        "zh-Hans": "「窓側」是靠窗，「通路側」是靠过道。「お席のご希望」是问座位有没有偏好。没有就说「どこでも大丈夫です」。",
+        "en": "窓側 is the window side and 通路側 is the aisle side. お席のご希望 asks if you have a seat preference. If not, say どこでも大丈夫です."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "station-ticket-office.ticket-check",
+      "kind": "screen",
+      "goal": {
+        "zh-Hant": "站務員請你確認車票。在票面上按出你坐的車廂",
+        "zh-Hans": "工作人员请你确认车票。在票面上按出你坐的车厢",
+        "en": "The clerk asks you to check your ticket. Tap the car you will ride in"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.ticket-check.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "こちらでお間違いないですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "乗車券・新幹線特急券",
+            "detail": "11月20日　東京 → 京都",
+            "buttons": [
+              {
+                "choiceId": "train",
+                "ja": "のぞみ23号"
+              },
+              {
+                "choiceId": "departs",
+                "ja": "10:00発"
+              },
+              {
+                "choiceId": "car",
+                "ja": "7号車"
+              },
+              {
+                "choiceId": "seat",
+                "ja": "12番A席"
+              }
+            ]
+          },
+          "audio": "station-ticket-office.ticket-check.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.ticket-check.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご確認をお願いします。",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": {
+            "heading": "新幹線特急券（指定席）",
+            "detail": "11月20日　東京 → 京都　普通車",
+            "buttons": [
+              {
+                "choiceId": "car",
+                "ja": "7号車"
+              },
+              {
+                "choiceId": "seat",
+                "ja": "12番A席"
+              },
+              {
+                "choiceId": "train",
+                "ja": "のぞみ23号"
+              },
+              {
+                "choiceId": "departs",
+                "ja": "10時00分発"
+              }
+            ]
+          },
+          "audio": "station-ticket-office.ticket-check.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.ticket-check.p3",
+          "role": "review",
+          "speaker": "screen",
+          "text": null,
+          "voice": null,
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "乗車券・特急券",
+            "detail": "11月20日　東京 → 京都　指定席",
+            "buttons": [
+              {
+                "choiceId": "seat",
+                "ja": "12A"
+              },
+              {
+                "choiceId": "departs",
+                "ja": "東京 10:00"
+              },
+              {
+                "choiceId": "car",
+                "ja": "7号車"
+              },
+              {
+                "choiceId": "train",
+                "ja": "のぞみ 23"
+              }
+            ]
+          },
+          "audio": null
+        }
+      ],
+      "choices": [
+        {
+          "id": "car",
+          "text": {
+            "zh-Hant": "第 7 節車廂",
+            "zh-Hans": "第 7 节车厢",
+            "en": "Car 7"
+          },
+          "correct": true
+        },
+        {
+          "id": "seat",
+          "text": {
+            "zh-Hant": "12 排 A 座",
+            "zh-Hans": "12 排 A 座",
+            "en": "Row 12, seat A"
+          },
+          "correct": false
+        },
+        {
+          "id": "departs",
+          "text": {
+            "zh-Hant": "10:00 開車",
+            "zh-Hans": "10:00 发车",
+            "en": "Departs 10:00"
+          },
+          "correct": false
+        },
+        {
+          "id": "train",
+          "text": {
+            "zh-Hant": "車次名稱",
+            "zh-Hans": "车次名称",
+            "en": "Train name and number"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい、大丈夫です",
+        "audio": "station-ticket-office.ticket-check.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「号車」是第幾節車廂，「番」「席」是座位，「発」是開車時間。月台地上會標車廂號碼，照「7号車」的位置排隊。確認沒問題就說「はい、大丈夫です」。",
+        "zh-Hans": "「号車」是第几节车厢，「番」「席」是座位，「発」是发车时间。站台地上会标车厢号码，照「7号車」的位置排队。确认没问题就说「はい、大丈夫です」。",
+        "en": "号車 is the car number, 番 and 席 are the seat, and 発 is the departure time. The platform floor shows car numbers, so line up at 7号車. If it is all correct, say はい、大丈夫です."
+      },
+      "wordIds": [
+        "train-ticket",
+        "high-speed-train"
+      ]
+    },
+    {
+      "id": "station-ticket-office.payment",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂站務員問用什麼付款",
+        "zh-Hans": "听懂工作人员问用什么付款",
+        "en": "Understand when the clerk asks how you will pay"
+      },
+      "phrasings": [
+        {
+          "id": "station-ticket-office.payment.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お支払いは現金ですか、カードですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.payment.p1.mp3"
+        },
+        {
+          "id": "station-ticket-office.payment.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "カードでよろしいですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "station-ticket-office.payment.p2.mp3"
+        },
+        {
+          "id": "station-ticket-office.payment.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お支払い方法はどうなさいますか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "station-ticket-office.payment.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "用現金還是刷卡",
+            "zh-Hans": "用现金还是刷卡",
+            "en": "Cash or card"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要收據",
+            "zh-Hans": "要不要发票",
+            "en": "Do you want a receipt"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "一次付清還是分期",
+            "zh-Hans": "一次付清还是分期",
+            "en": "One payment or instalments"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "カードで",
+        "audio": "station-ticket-office.payment.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「現金」是現金，「カード」是信用卡。回「カードで」或「現金で」就好。",
+        "zh-Hans": "「現金」是现金，「カード」是信用卡。回「カードで」或「現金で」就好。",
+        "en": "現金 is cash and カード is a credit card. Answer カードで or 現金で."
+      },
+      "wordIds": []
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "東京到京都",
+          "zh-Hans": "东京到京都",
+          "en": "Tokyo to Kyoto"
+        },
+        "intent": {
+          "zh-Hant": "你和另一個大人今天想從東京搭新幹線去京都，大約 10 點出發。想要對號座、靠窗，刷卡付款。",
+          "zh-Hans": "你和另一个大人今天想从东京坐新干线去京都，大约 10 点出发。想要对号座、靠窗，刷卡付款。",
+          "en": "You and another adult want to take the shinkansen from Tokyo to Kyoto today, leaving around 10. You want reserved window seats and will pay by card."
+        },
+        "enter": {
+          "zh-Hant": "走到售票窗口",
+          "zh-Hans": "走到售票窗口",
+          "en": "Go up to the ticket window"
+        },
+        "questions": [
+          "station-ticket-office.destination",
+          "station-ticket-office.when",
+          "station-ticket-office.how-many",
+          "station-ticket-office.seat-type",
+          "station-ticket-office.window-aisle",
+          "station-ticket-office.ticket-check",
+          "station-ticket-office.payment"
+        ]
+      }
+    ],
+    "steps": {
+      "station-ticket-office.destination": {
+        "background": "scene-bg-station-ticket-office",
+        "replies": [
+          {
+            "id": "kyoto",
+            "ja": "京都までお願いします",
+            "meaning": {
+              "zh-Hant": "到京都",
+              "zh-Hans": "到京都",
+              "en": "To Kyoto, please"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員在電腦上輸入京都。",
+              "zh-Hans": "工作人员在电脑上输入京都。",
+              "en": "The clerk types Kyoto into the computer."
+            }
+          },
+          {
+            "id": "osaka",
+            "ja": "新大阪までお願いします",
+            "meaning": {
+              "zh-Hant": "到新大阪",
+              "zh-Hans": "到新大阪",
+              "en": "To Shin-Osaka, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員開始查到新大阪的車。你要去的是京都。",
+              "zh-Hans": "工作人员开始查到新大阪的车。你要去的是京都。",
+              "en": "The clerk looks up trains to Shin-Osaka. You're going to Kyoto."
+            }
+          },
+          {
+            "id": "two",
+            "ja": "大人二人です",
+            "meaning": {
+              "zh-Hant": "兩個大人",
+              "zh-Hans": "两个大人",
+              "en": "Two adults"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員還在等你說要去哪裡。",
+              "zh-Hans": "工作人员还在等你说要去哪里。",
+              "en": "The clerk is still waiting to hear where you're going."
+            }
+          }
+        ]
+      },
+      "station-ticket-office.when": {
+        "background": "scene-bg-station-ticket-office",
+        "note": {
+          "zh-Hant": "今天是 11 月 20 日。",
+          "zh-Hans": "今天是 11 月 20 日。",
+          "en": "Today is 20 November."
+        },
+        "replies": [
+          {
+            "id": "today",
+            "ja": "今日の十時ごろです",
+            "meaning": {
+              "zh-Hant": "今天 10 點左右",
+              "zh-Hans": "今天 10 点左右",
+              "en": "Today, around 10"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員找到今天 10:00 發車的のぞみ。",
+              "zh-Hans": "工作人员找到今天 10:00 发车的のぞみ。",
+              "en": "The clerk finds a Nozomi leaving at 10:00 today."
+            }
+          },
+          {
+            "id": "tomorrow",
+            "ja": "明日の朝です",
+            "meaning": {
+              "zh-Hant": "明天早上",
+              "zh-Hans": "明天早上",
+              "en": "Tomorrow morning"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員查了明天早上的車。你今天就要走。",
+              "zh-Hans": "工作人员查了明天早上的车。你今天就要走。",
+              "en": "The clerk looks up trains for tomorrow morning. You're leaving today."
+            }
+          },
+          {
+            "id": "kyoto",
+            "ja": "京都までお願いします",
+            "meaning": {
+              "zh-Hant": "到京都",
+              "zh-Hans": "到京都",
+              "en": "To Kyoto, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "目的地剛才說過了，站務員在問哪天幾點搭車。",
+              "zh-Hans": "目的地刚才说过了，工作人员在问哪天几点坐车。",
+              "en": "You've already said where. The clerk is asking when you're travelling."
+            }
+          }
+        ]
+      },
+      "station-ticket-office.how-many": {
+        "background": "scene-bg-station-ticket-office",
+        "replies": [
+          {
+            "id": "two",
+            "ja": "大人二人です",
+            "meaning": {
+              "zh-Hant": "兩個大人",
+              "zh-Hans": "两个大人",
+              "en": "Two adults"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員在畫面上選了大人 2 名。",
+              "zh-Hans": "工作人员在屏幕上选了大人 2 名。",
+              "en": "The clerk enters two adults."
+            }
+          },
+          {
+            "id": "one",
+            "ja": "大人一人です",
+            "meaning": {
+              "zh-Hant": "一個大人",
+              "zh-Hans": "一个大人",
+              "en": "One adult"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員只開一張票。你們有兩個人。",
+              "zh-Hans": "工作人员只出一张票。你们有两个人。",
+              "en": "The clerk issues only one ticket. There are two of you."
+            }
+          },
+          {
+            "id": "window",
+            "ja": "窓側で",
+            "meaning": {
+              "zh-Hant": "靠窗",
+              "zh-Hans": "靠窗",
+              "en": "Window"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員還在等你說幾個人。",
+              "zh-Hans": "工作人员还在等你说几个人。",
+              "en": "The clerk is still waiting to hear how many."
+            }
+          }
+        ]
+      },
+      "station-ticket-office.seat-type": {
+        "background": "scene-bg-station-ticket-office",
+        "replies": [
+          {
+            "id": "reserved",
+            "ja": "指定席で",
+            "meaning": {
+              "zh-Hant": "對號座",
+              "zh-Hans": "对号座",
+              "en": "Reserved"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員幫你們找對號座。",
+              "zh-Hans": "工作人员帮你们找对号座。",
+              "en": "The clerk looks for reserved seats."
+            }
+          },
+          {
+            "id": "unreserved",
+            "ja": "自由席で",
+            "meaning": {
+              "zh-Hant": "自由座",
+              "zh-Hans": "自由座",
+              "en": "Unreserved"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員開了自由座的票。你原本想要對號座。",
+              "zh-Hans": "工作人员出了自由座的票。你本来想要对号座。",
+              "en": "The clerk issues unreserved tickets. You wanted reserved seats."
+            }
+          },
+          {
+            "id": "two",
+            "ja": "大人二人です",
+            "meaning": {
+              "zh-Hant": "兩個大人",
+              "zh-Hans": "两个大人",
+              "en": "Two adults"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "人數剛才說過了，站務員在問座位種類。",
+              "zh-Hans": "人数刚才说过了，工作人员在问座位类型。",
+              "en": "You've already given the number. The clerk is asking which kind of seat."
+            }
+          }
+        ]
+      },
+      "station-ticket-office.window-aisle": {
+        "background": "scene-bg-station-ticket-office",
+        "replies": [
+          {
+            "id": "window",
+            "ja": "窓側で",
+            "meaning": {
+              "zh-Hant": "靠窗",
+              "zh-Hans": "靠窗",
+              "en": "Window"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員找了靠窗的位子。",
+              "zh-Hans": "工作人员找了靠窗的座位。",
+              "en": "The clerk picks window seats."
+            }
+          },
+          {
+            "id": "aisle",
+            "ja": "通路側で",
+            "meaning": {
+              "zh-Hant": "靠走道",
+              "zh-Hans": "靠过道",
+              "en": "Aisle"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "站務員給了靠走道的位子。你想坐靠窗。",
+              "zh-Hans": "工作人员给了靠过道的座位。你想坐靠窗。",
+              "en": "The clerk gives you aisle seats. You wanted the window."
+            }
+          },
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒到付款，站務員在問靠窗還是靠走道。",
+              "zh-Hans": "还没到付款，工作人员在问靠窗还是靠过道。",
+              "en": "It's not time to pay. The clerk is asking window or aisle."
+            }
+          }
+        ]
+      },
+      "station-ticket-office.ticket-check": {
+        "background": "scene-bg-station-ticket-office",
+        "note": {
+          "zh-Hant": "站務員把車票放在窗口，請你核對。",
+          "zh-Hans": "工作人员把车票放在窗口，请你核对。",
+          "en": "The clerk puts the tickets on the counter for you to check."
+        }
+      },
+      "station-ticket-office.payment": {
+        "background": "scene-bg-station-ticket-office",
+        "card": {
+          "title": "きっぷ",
+          "lines": [
+            "11月20日　東京 → 京都",
+            "のぞみ23号　10:00発",
+            "7号車　12番A席"
+          ]
+        },
+        "replies": [
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "站務員把刷卡機推過來，你刷了卡，拿到車票。",
+              "zh-Hans": "工作人员把刷卡机推过来，你刷了卡，拿到车票。",
+              "en": "The clerk slides over the card reader. You pay and get your tickets."
+            }
+          },
+          {
+            "id": "cash",
+            "ja": "現金で",
+            "meaning": {
+              "zh-Hant": "現金",
+              "zh-Hans": "现金",
+              "en": "Cash"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "你付了現金，錢包一下空了大半。你原本想刷卡。",
+              "zh-Hans": "你付了现金，钱包一下子空了大半。你本来想刷卡。",
+              "en": "You pay in cash and your wallet is suddenly half empty. You meant to use your card."
+            }
+          },
+          {
+            "id": "window",
+            "ja": "窓側で",
+            "meaning": {
+              "zh-Hant": "靠窗",
+              "zh-Hans": "靠窗",
+              "en": "Window"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "座位已經選好了，站務員在問怎麼付款。",
+              "zh-Hans": "座位已经选好了，工作人员在问怎么付款。",
+              "en": "Your seats are set. The clerk is asking how you'll pay."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "どちらまでご利用ですか？": [
+      {
+        "t": "どちらまで",
+        "m": {
+          "zh-Hant": "到哪裡",
+          "zh-Hans": "到哪里",
+          "en": "to where"
+        }
+      },
+      {
+        "t": "ご利用ですか",
+        "r": "ごりようですか",
+        "m": {
+          "zh-Hant": "要使用嗎（敬語）",
+          "zh-Hans": "要使用吗（敬语）",
+          "en": "will you use it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "行き先はどちらですか？": [
+      {
+        "t": "行き先",
+        "r": "いきさき",
+        "m": {
+          "zh-Hant": "目的地",
+          "zh-Hans": "目的地",
+          "en": "destination"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "どこまで行かれますか？": [
+      {
+        "t": "どこまで",
+        "m": {
+          "zh-Hant": "到哪裡",
+          "zh-Hans": "到哪里",
+          "en": "how far, to where"
+        }
+      },
+      {
+        "t": "行かれますか",
+        "r": "いかれますか",
+        "m": {
+          "zh-Hant": "要去嗎（尊敬語）",
+          "zh-Hans": "要去吗（尊敬语）",
+          "en": "are you going? (honorific)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "京都までお願いします": [
+      {
+        "t": "京都まで",
+        "r": "きょうとまで",
+        "m": {
+          "zh-Hant": "到京都",
+          "zh-Hans": "到京都",
+          "en": "to Kyoto"
+        }
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "ご乗車はいつですか？": [
+      {
+        "t": "ご乗車",
+        "r": "ごじょうしゃ",
+        "m": {
+          "zh-Hant": "搭車（敬語）",
+          "zh-Hans": "乘车（敬语）",
+          "en": "boarding (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "いつ",
+        "m": {
+          "zh-Hant": "什麼時候",
+          "zh-Hans": "什么时候",
+          "en": "when"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご乗車の日にちとお時間をお願いします。": [
+      {
+        "t": "ご乗車",
+        "r": "ごじょうしゃ",
+        "m": {
+          "zh-Hant": "搭車（敬語）",
+          "zh-Hans": "乘车（敬语）",
+          "en": "boarding (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "日にち",
+        "r": "ひにち",
+        "m": {
+          "zh-Hant": "日期",
+          "zh-Hans": "日期",
+          "en": "date"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "お時間",
+        "r": "おじかん",
+        "m": {
+          "zh-Hant": "時間（敬語）",
+          "zh-Hans": "时间（敬语）",
+          "en": "time (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "何日の何時ごろのご乗車ですか？": [
+      {
+        "t": "何日",
+        "r": "なんにち",
+        "m": {
+          "zh-Hant": "幾號",
+          "zh-Hans": "几号",
+          "en": "what date"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "何時ごろ",
+        "r": "なんじごろ",
+        "m": {
+          "zh-Hant": "大約幾點",
+          "zh-Hans": "大约几点",
+          "en": "about what time"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "ご乗車",
+        "r": "ごじょうしゃ",
+        "m": {
+          "zh-Hant": "搭車（敬語）",
+          "zh-Hans": "乘车（敬语）",
+          "en": "boarding (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "今日の十時ごろです": [
+      {
+        "t": "今日",
+        "r": "きょう",
+        "m": {
+          "zh-Hant": "今天",
+          "zh-Hans": "今天",
+          "en": "today"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "十時ごろ",
+        "r": "じゅうじごろ",
+        "m": {
+          "zh-Hant": "十點左右",
+          "zh-Hans": "十点左右",
+          "en": "around ten"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "何名様ですか？": [
+      {
+        "t": "何名様",
+        "r": "なんめいさま",
+        "m": {
+          "zh-Hant": "幾位（敬語）",
+          "zh-Hans": "几位（敬语）",
+          "en": "how many people? (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "大人の方、何名様ですか？": [
+      {
+        "t": "大人の方",
+        "r": "おとなのかた",
+        "m": {
+          "zh-Hant": "大人（敬語）",
+          "zh-Hans": "成人（敬语）",
+          "en": "adults (polite)"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "何名様",
+        "r": "なんめいさま",
+        "m": {
+          "zh-Hant": "幾位（敬語）",
+          "zh-Hans": "几位（敬语）",
+          "en": "how many people? (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご利用は何名様でしょうか？": [
+      {
+        "t": "ご利用",
+        "r": "ごりよう",
+        "m": {
+          "zh-Hant": "使用（敬語）",
+          "zh-Hans": "使用（敬语）",
+          "en": "use (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何名様",
+        "r": "なんめいさま",
+        "m": {
+          "zh-Hant": "幾位（敬語）",
+          "zh-Hans": "几位（敬语）",
+          "en": "how many people? (polite)"
+        }
+      },
+      {
+        "t": "でしょうか",
+        "m": {
+          "zh-Hant": "……嗎（更客氣）",
+          "zh-Hans": "……吗（更客气）",
+          "en": "is it…? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "大人二人です": [
+      {
+        "t": "大人二人です",
+        "r": "おとなふたりです",
+        "m": {
+          "zh-Hant": "兩個大人",
+          "zh-Hans": "两个成人",
+          "en": "two adults"
+        }
+      }
+    ],
+    "指定席と自由席、どちらになさいますか？": [
+      {
+        "t": "指定席",
+        "r": "していせき",
+        "m": {
+          "zh-Hant": "對號座",
+          "zh-Hans": "对号座",
+          "en": "reserved seat"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "自由席",
+        "r": "じゆうせき",
+        "m": {
+          "zh-Hant": "自由座",
+          "zh-Hans": "自由座",
+          "en": "unreserved seat"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "になさいますか",
+        "m": {
+          "zh-Hant": "要選……嗎（敬語）",
+          "zh-Hans": "要选……吗（敬语）",
+          "en": "would you like…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "指定席でよろしいですか？": [
+      {
+        "t": "指定席",
+        "r": "していせき",
+        "m": {
+          "zh-Hant": "對號座",
+          "zh-Hans": "对号座",
+          "en": "reserved seat"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お席は指定でお取りしますか？": [
+      {
+        "t": "お席",
+        "r": "おせき",
+        "m": {
+          "zh-Hant": "座位（敬語）",
+          "zh-Hans": "座位（敬语）",
+          "en": "seat (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "指定",
+        "r": "してい",
+        "m": {
+          "zh-Hant": "對號",
+          "zh-Hans": "对号",
+          "en": "reserved"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お取りしますか",
+        "r": "おとりしますか",
+        "m": {
+          "zh-Hant": "要幫您訂嗎（敬語）",
+          "zh-Hans": "要帮您订吗（敬语）",
+          "en": "shall I book it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "指定席で／自由席で": [
+      {
+        "t": "指定席",
+        "r": "していせき",
+        "m": {
+          "zh-Hant": "對號座",
+          "zh-Hans": "对号座",
+          "en": "reserved seat"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "自由席",
+        "r": "じゆうせき",
+        "m": {
+          "zh-Hant": "自由座",
+          "zh-Hans": "自由座",
+          "en": "unreserved seat"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "窓側と通路側、どちらがよろしいですか？": [
+      {
+        "t": "窓側",
+        "r": "まどがわ",
+        "m": {
+          "zh-Hant": "靠窗",
+          "zh-Hans": "靠窗",
+          "en": "window side"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "通路側",
+        "r": "つうろがわ",
+        "m": {
+          "zh-Hant": "靠走道",
+          "zh-Hans": "靠过道",
+          "en": "aisle side"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "がよろしいですか",
+        "m": {
+          "zh-Hant": "……比較好嗎（敬語）",
+          "zh-Hans": "……比较好吗（敬语）",
+          "en": "would you prefer…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お席のご希望はございますか？": [
+      {
+        "t": "お席",
+        "r": "おせき",
+        "m": {
+          "zh-Hant": "座位（敬語）",
+          "zh-Hans": "座位（敬语）",
+          "en": "seat (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "ご希望",
+        "r": "ごきぼう",
+        "m": {
+          "zh-Hant": "希望、需求（敬語）",
+          "zh-Hans": "希望、需求（敬语）",
+          "en": "preference (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "ございますか",
+        "m": {
+          "zh-Hant": "有嗎（敬語）",
+          "zh-Hans": "有吗（敬语）",
+          "en": "do you have…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "窓側か通路側か、ご希望はありますか？": [
+      {
+        "t": "窓側",
+        "r": "まどがわ",
+        "m": {
+          "zh-Hant": "靠窗",
+          "zh-Hans": "靠窗",
+          "en": "window side"
+        }
+      },
+      {
+        "t": "か"
+      },
+      {
+        "t": "通路側",
+        "r": "つうろがわ",
+        "m": {
+          "zh-Hant": "靠走道",
+          "zh-Hans": "靠过道",
+          "en": "aisle side"
+        }
+      },
+      {
+        "t": "か"
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "ご希望",
+        "r": "ごきぼう",
+        "m": {
+          "zh-Hant": "希望、需求（敬語）",
+          "zh-Hans": "希望、需求（敬语）",
+          "en": "preference (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "あります",
+        "m": {
+          "zh-Hant": "有",
+          "zh-Hans": "有",
+          "en": "there is, have"
+        }
+      },
+      {
+        "t": "か"
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "窓側で／どこでも大丈夫です": [
+      {
+        "t": "窓側",
+        "r": "まどがわ",
+        "m": {
+          "zh-Hant": "靠窗",
+          "zh-Hans": "靠窗",
+          "en": "window side"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "どこでも",
+        "m": {
+          "zh-Hant": "哪裡都可以",
+          "zh-Hans": "哪里都可以",
+          "en": "anywhere"
+        }
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "こちらでお間違いないですか？": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お間違いないですか",
+        "r": "おまちがいないですか",
+        "m": {
+          "zh-Hant": "沒錯吧（敬語）",
+          "zh-Hans": "没错吧（敬语）",
+          "en": "is this correct? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご確認をお願いします。": [
+      {
+        "t": "ご確認",
+        "r": "ごかくにん",
+        "m": {
+          "zh-Hant": "確認（敬語）",
+          "zh-Hans": "确认（敬语）",
+          "en": "checking (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "はい、大丈夫です": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "お支払いは現金ですか、カードですか？": [
+      {
+        "t": "お支払い",
+        "r": "おしはらい",
+        "m": {
+          "zh-Hant": "付款（敬語）",
+          "zh-Hans": "付款（敬语）",
+          "en": "payment (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "カードでよろしいですか？": [
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お支払い方法はどうなさいますか？": [
+      {
+        "t": "お支払い方法",
+        "r": "おしはらいほうほう",
+        "m": {
+          "zh-Hant": "付款方式",
+          "zh-Hans": "付款方式",
+          "en": "payment method"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どうなさいますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "カードで": [
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "新大阪までお願いします": [
+      {
+        "t": "新大阪まで",
+        "r": "しんおおさかまで",
+        "m": {
+          "zh-Hant": "到新大阪",
+          "zh-Hans": "到新大阪",
+          "en": "to Shin-Osaka"
+        }
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "明日の朝です": [
+      {
+        "t": "明日",
+        "r": "あした",
+        "m": {
+          "zh-Hant": "明天",
+          "zh-Hans": "明天",
+          "en": "tomorrow"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "朝",
+        "r": "あさ",
+        "m": {
+          "zh-Hant": "早上",
+          "zh-Hans": "早上",
+          "en": "morning"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "大人一人です": [
+      {
+        "t": "大人一人です",
+        "r": "おとなひとりです",
+        "m": {
+          "zh-Hant": "一個大人",
+          "zh-Hans": "一个成人",
+          "en": "one adult"
+        }
+      }
+    ],
+    "窓側で": [
+      {
+        "t": "窓側",
+        "r": "まどがわ",
+        "m": {
+          "zh-Hant": "靠窗",
+          "zh-Hans": "靠窗",
+          "en": "window side"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "指定席で": [
+      {
+        "t": "指定席",
+        "r": "していせき",
+        "m": {
+          "zh-Hant": "對號座",
+          "zh-Hans": "对号座",
+          "en": "reserved seat"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "自由席で": [
+      {
+        "t": "自由席",
+        "r": "じゆうせき",
+        "m": {
+          "zh-Hant": "自由座",
+          "zh-Hans": "自由座",
+          "en": "unreserved seat"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "通路側で": [
+      {
+        "t": "通路側",
+        "r": "つうろがわ",
+        "m": {
+          "zh-Hant": "靠走道",
+          "zh-Hans": "靠过道",
+          "en": "aisle side"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "現金で": [
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1746 @@
+{
+  "schemaVersion": 2,
+  "id": "luggage-delivery",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "寄送行李到機場",
+    "zh-Hans": "寄送行李到机场",
+    "en": "Sending luggage to the airport"
+  },
+  "summary": {
+    "zh-Hant": "寄行李到機場時櫃台會問的六件事",
+    "zh-Hans": "寄行李到机场时柜台会问的六件事",
+    "en": "Six things the counter asks when you send bags to the airport"
+  },
+  "questions": [
+    {
+      "id": "luggage-delivery.count",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問要寄幾件",
+        "zh-Hans": "听懂柜台问要寄几件",
+        "en": "Understand when you are asked how many bags to send"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.count.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お荷物は何個お送りしますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.count.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.count.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "何個口ですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.count.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.count.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お送りするのは全部で何点ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.count.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要寄到哪裡",
+            "zh-Hans": "要寄到哪里",
+            "en": "Where to send them"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要寄幾件",
+            "zh-Hans": "要寄几件",
+            "en": "How many bags to send"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "行李有多重",
+            "zh-Hans": "行李有多重",
+            "en": "How heavy the bags are"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "2つです",
+        "audio": "luggage-delivery.count.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「何個」「何点」都是問幾件，「個口」是宅配算件數的說法。說「2つです」，或用手指比。",
+        "zh-Hans": "「何個」「何点」都是问几件，「個口」是快递算件数的说法。说「2つです」，或用手指比。",
+        "en": "何個 and 何点 both ask how many. 個口 is the word couriers use to count parcels. Say 2つです, or show it with your fingers."
+      },
+      "wordIds": [
+        "suitcase"
+      ]
+    },
+    {
+      "id": "luggage-delivery.contents",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問有沒有貴重品或易碎物",
+        "zh-Hans": "听懂柜台问有没有贵重品或易碎物",
+        "en": "Understand when you are asked about valuables or fragile items"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.contents.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "貴重品や割れ物は入っていませんか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.contents.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.contents.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "壊れ物や貴重品、入っていませんよね？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.contents.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.contents.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "パソコンや現金、割れ物などは入っていませんか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.contents.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "有沒有貴重品或易碎物",
+            "zh-Hans": "有没有贵重品或易碎物",
+            "en": "Any valuables or fragile items"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "行李有沒有上鎖",
+            "zh-Hans": "行李有没有上锁",
+            "en": "Is your bag locked"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "裡面裝了什麼衣服",
+            "zh-Hans": "里面装了什么衣服",
+            "en": "What clothes are inside"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "入っていません",
+        "audio": "luggage-delivery.contents.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「貴重品」是現金、電腦這類東西，「割れ物」「壊れ物」是易碎物。這是否定問句，回「はい」是「對，沒有」，直接說「入っていません」。電池、噴霧罐等也可能不能寄，依業者規定不同，以現場說明為準。",
+        "zh-Hans": "「貴重品」是现金、电脑这类东西，「割れ物」「壊れ物」是易碎物。这是否定问句，回「はい」是「对，没有」，直接说「入っていません」。电池、喷雾罐等也可能不能寄，依快递公司规定不同，以现场说明为准。",
+        "en": "貴重品 means valuables like cash or a laptop, and 割れ物 or 壊れ物 means fragile items. This is a negative question, so はい means yes, there are none. Say 入っていません. Batteries and sprays may not be accepted either; rules differ by company, so follow what the staff tell you."
+      },
+      "wordIds": [],
+      "reviewNote": "Courier rules on valuables, batteries and sprays for airport delivery differ by company; check the explanation with someone who knows current practice."
+    },
+    {
+      "id": "luggage-delivery.airport",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問要寄到哪個機場",
+        "zh-Hans": "听懂柜台问要寄到哪个机场",
+        "en": "Understand when you are asked which airport"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.airport.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "どちらの空港をご利用ですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.airport.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.airport.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご出発の空港はどちらですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.airport.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.airport.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "成田と羽田、どちらでしょうか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.airport.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要從哪個航廈出發",
+            "zh-Hans": "要从哪个航站楼出发",
+            "en": "Which terminal you leave from"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "哪天出發",
+            "zh-Hans": "哪天出发",
+            "en": "Which day you leave"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要寄到哪個機場",
+            "zh-Hans": "要寄到哪个机场",
+            "en": "Which airport to send it to"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "成田です",
+        "audio": "luggage-delivery.airport.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「空港」是機場，「ご出発」是出發。說機場名加「です」，例如「成田です」「羽田です」「関空です」。寄到飯店的話，這裡會改問飯店名稱。",
+        "zh-Hans": "「空港」是机场，「ご出発」是出发。说机场名加「です」，例如「成田です」「羽田です」「関空です」。寄到酒店的话，这里会改问酒店名称。",
+        "en": "空港 is airport and ご出発 is departure. Say the airport name with です, like 成田です, 羽田です or 関空です. If you are sending to a hotel, they ask for the hotel name here instead."
+      },
+      "wordIds": [
+        "airport-terminal"
+      ]
+    },
+    {
+      "id": "luggage-delivery.date",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問哪天出發",
+        "zh-Hans": "听懂柜台问哪天出发",
+        "en": "Understand when you are asked your departure date"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.date.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ご出発は何日ですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.date.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.date.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご搭乗日はいつでしょうか？",
+          "voice": "Kore",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.date.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.date.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "何日の便にお乗りになりますか？",
+          "voice": "Puck",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.date.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "哪天出發",
+            "zh-Hans": "哪天出发",
+            "en": "Which day you leave"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "飛機幾點起飛",
+            "zh-Hans": "飞机几点起飞",
+            "en": "What time your flight leaves"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要寄幾件",
+            "zh-Hans": "要寄几件",
+            "en": "How many bags"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "15日です",
+        "audio": "luggage-delivery.date.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「何日」是幾號，「ご搭乗日」是搭機那天。說日期加「です」，例如「15日です」。寄到機場要提早幾天寄出，截止時間依業者不同，請先確認，以現場說明為準。",
+        "zh-Hans": "「何日」是几号，「ご搭乗日」是登机那天。说日期加「です」，例如「15日です」。寄到机场要提早几天寄出，截止时间依快递公司不同，请先确认，以现场说明为准。",
+        "en": "何日 asks which date and ご搭乗日 is the day you fly. Say the date with です, like 15日です. Bags must go out some days before your flight, and the cut-off differs by company, so check early and follow what the staff tell you."
+      },
+      "wordIds": [],
+      "reviewNote": "Cut-off for airport delivery (how many days before the flight) differs by courier and airport; the explanation deliberately gives no number. Confirm the wording."
+    },
+    {
+      "id": "luggage-delivery.flight",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問航班編號",
+        "zh-Hans": "听懂柜台问航班号",
+        "en": "Understand when you are asked your flight number"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.flight.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お便名はお分かりですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.flight.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.flight.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご搭乗の便名をお願いします",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.flight.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.flight.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "航空会社とお便名をお願いします",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.flight.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "你的名字是什麼",
+            "zh-Hans": "你的名字是什么",
+            "en": "What is your name"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "航班編號是多少",
+            "zh-Hans": "航班号是多少",
+            "en": "What is your flight number"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "飛機幾點起飛",
+            "zh-Hans": "飞机几点起飞",
+            "en": "What time your flight leaves"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "これです",
+        "audio": "luggage-delivery.flight.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「便名」是航班編號，例如 BR197，聽起來跟「お名前」很像。可以直接給他看電子機票，說「これです」。",
+        "zh-Hans": "「便名」是航班号，例如 BR197，听起来跟「お名前」很像。可以直接给他看电子机票，说「これです」。",
+        "en": "便名 is the flight number, like BR197, and it sounds close to お名前. You can just show your e-ticket and say これです."
+      },
+      "wordIds": [
+        "boarding-pass"
+      ]
+    },
+    {
+      "id": "luggage-delivery.form",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台請你填寄件單",
+        "zh-Hans": "听懂柜台请你填寄件单",
+        "en": "Understand when you are asked to fill in the delivery form"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-delivery.form.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "こちらの伝票にご記入をお願いします",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.form.p1.mp3"
+        },
+        {
+          "id": "luggage-delivery.form.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "送り状にお名前とお電話番号をお願いします",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-delivery.form.p2.mp3"
+        },
+        {
+          "id": "luggage-delivery.form.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "こちらの送り状にご記入いただけますか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-delivery.form.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "請給我看護照",
+            "zh-Hans": "请给我看护照",
+            "en": "May I see your passport"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請在這裡付款",
+            "zh-Hans": "请在这里付款",
+            "en": "Please pay here"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "請填寫這張單",
+            "zh-Hans": "请填写这张单",
+            "en": "Please fill in this form"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "はい",
+        "audio": "luggage-delivery.form.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「伝票」「送り状」是寄件單，要寫名字、電話、航班。填完交回櫃台，取件用的存根要收好。",
+        "zh-Hans": "「伝票」「送り状」是寄件单，要写名字、电话、航班。填完交回柜台，取件用的存根要收好。",
+        "en": "伝票 and 送り状 are the delivery form. It asks for your name, phone number and flight. Hand it back and keep your copy to collect the bags."
+      },
+      "wordIds": [
+        "shipping-label"
+      ]
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "行李寄到成田",
+          "zh-Hans": "行李寄到成田",
+          "en": "Bags to Narita"
+        },
+        "intent": {
+          "zh-Hant": "你是ワン，想從飯店把兩件行李寄到成田機場，15 日搭機。行李裡沒有貴重品或易碎物，航班在手機的電子機票上。",
+          "zh-Hans": "你是ワン，想从酒店把两件行李寄到成田机场，15 日坐飞机。行李里没有贵重物品或易碎品，航班在手机的电子机票上。",
+          "en": "You're ワン (Wang) and want to send two bags from the hotel to Narita Airport for your flight on the 15th. Nothing valuable or fragile is inside, and your flight is on the e-ticket on your phone."
+        },
+        "enter": {
+          "zh-Hant": "走到櫃台",
+          "zh-Hans": "走到前台",
+          "en": "Walk up to the desk"
+        },
+        "questions": [
+          "luggage-delivery.count",
+          "luggage-delivery.contents",
+          "luggage-delivery.airport",
+          "luggage-delivery.date",
+          "luggage-delivery.flight",
+          "luggage-delivery.form"
+        ]
+      }
+    ],
+    "steps": {
+      "luggage-delivery.count": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "two",
+            "ja": "2つです",
+            "meaning": {
+              "zh-Hant": "兩件",
+              "zh-Hans": "两件",
+              "en": "Two"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台拿出兩張寄件單。",
+              "zh-Hans": "前台拿出两张寄件单。",
+              "en": "The clerk takes out two shipping forms."
+            }
+          },
+          {
+            "id": "one",
+            "ja": "1つです",
+            "meaning": {
+              "zh-Hant": "一件",
+              "zh-Hans": "一件",
+              "en": "One"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台只拿出一張寄件單。你有兩件要寄。",
+              "zh-Hans": "前台只拿出一张寄件单。你有两件要寄。",
+              "en": "The clerk takes out just one form. You have two bags to send."
+            }
+          },
+          {
+            "id": "narita",
+            "ja": "成田です",
+            "meaning": {
+              "zh-Hant": "成田",
+              "zh-Hans": "成田",
+              "en": "Narita"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台還在等你說要寄幾件。",
+              "zh-Hans": "前台还在等你说要寄几件。",
+              "en": "The clerk is still waiting to hear how many bags."
+            }
+          }
+        ]
+      },
+      "luggage-delivery.contents": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "none",
+            "ja": "入っていません",
+            "meaning": {
+              "zh-Hant": "沒有",
+              "zh-Hans": "没有",
+              "en": "No, there aren't"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台點點頭，接著往下問。",
+              "zh-Hans": "前台点点头，接着往下问。",
+              "en": "The clerk nods and moves on."
+            }
+          },
+          {
+            "id": "laptop",
+            "ja": "パソコンが入っています",
+            "meaning": {
+              "zh-Hant": "裡面有電腦",
+              "zh-Hans": "里面有电脑",
+              "en": "There's a laptop in there"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台停下來，說要先確認一下。你的行李裡其實沒有電腦。",
+              "zh-Hans": "前台停下来，说要先确认一下。你的行李里其实没有电脑。",
+              "en": "The clerk stops to check first. There's no laptop in your bags."
+            }
+          },
+          {
+            "id": "two",
+            "ja": "2つです",
+            "meaning": {
+              "zh-Hant": "兩件",
+              "zh-Hans": "两件",
+              "en": "Two"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "件數剛才說過了，櫃台在問裡面有沒有貴重品或易碎物。",
+              "zh-Hans": "件数刚才说过了，前台在问里面有没有贵重物品或易碎品。",
+              "en": "You've already said how many. The clerk is asking about valuables and fragile items."
+            }
+          }
+        ]
+      },
+      "luggage-delivery.airport": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "narita",
+            "ja": "成田です",
+            "meaning": {
+              "zh-Hant": "成田",
+              "zh-Hans": "成田",
+              "en": "Narita"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台在單子上寫了成田空港。",
+              "zh-Hans": "前台在单子上写了成田空港。",
+              "en": "The clerk writes Narita Airport on the form."
+            }
+          },
+          {
+            "id": "haneda",
+            "ja": "羽田です",
+            "meaning": {
+              "zh-Hant": "羽田",
+              "zh-Hans": "羽田",
+              "en": "Haneda"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台寫了羽田空港。你的飛機是從成田出發。",
+              "zh-Hans": "前台写了羽田空港。你的飞机是从成田出发。",
+              "en": "The clerk writes Haneda. Your flight leaves from Narita."
+            }
+          },
+          {
+            "id": "15th",
+            "ja": "15日です",
+            "meaning": {
+              "zh-Hant": "15 號",
+              "zh-Hans": "15 号",
+              "en": "The 15th"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台還在等你說哪個機場。",
+              "zh-Hans": "前台还在等你说哪个机场。",
+              "en": "The clerk is still waiting to hear which airport."
+            }
+          }
+        ]
+      },
+      "luggage-delivery.date": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "15th",
+            "ja": "15日です",
+            "meaning": {
+              "zh-Hant": "15 號",
+              "zh-Hans": "15 号",
+              "en": "The 15th"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台在單子上寫了 15 日。",
+              "zh-Hans": "前台在单子上写了 15 日。",
+              "en": "The clerk writes the 15th on the form."
+            }
+          },
+          {
+            "id": "16th",
+            "ja": "16日です",
+            "meaning": {
+              "zh-Hant": "16 號",
+              "zh-Hans": "16 号",
+              "en": "The 16th"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台寫了 16 日。你是 15 日的飛機。",
+              "zh-Hans": "前台写了 16 日。你是 15 日的飞机。",
+              "en": "The clerk writes the 16th. Your flight is on the 15th."
+            }
+          },
+          {
+            "id": "narita",
+            "ja": "成田です",
+            "meaning": {
+              "zh-Hant": "成田",
+              "zh-Hans": "成田",
+              "en": "Narita"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "機場剛才說過了，櫃台在問哪天出發。",
+              "zh-Hans": "机场刚才说过了，前台在问哪天出发。",
+              "en": "You've already said the airport. The clerk is asking which day you fly."
+            }
+          }
+        ]
+      },
+      "luggage-delivery.flight": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "this",
+            "ja": "これです",
+            "meaning": {
+              "zh-Hant": "這個（給他看電子機票）",
+              "zh-Hans": "这个（给他看电子机票）",
+              "en": "This one (showing your e-ticket)"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台看了手機，抄下 BR197。",
+              "zh-Hans": "前台看了手机，抄下 BR197。",
+              "en": "The clerk looks at your phone and copies down BR197."
+            }
+          },
+          {
+            "id": "wang",
+            "ja": "ワンです",
+            "meaning": {
+              "zh-Hant": "我姓王",
+              "zh-Hans": "我姓王",
+              "en": "It's Wang"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台以為你在報名字，又問一次航班編號。",
+              "zh-Hans": "前台以为你在报名字，又问一次航班号。",
+              "en": "The clerk takes it as your name and asks again for the flight number."
+            }
+          },
+          {
+            "id": "15th",
+            "ja": "15日です",
+            "meaning": {
+              "zh-Hant": "15 號",
+              "zh-Hans": "15 号",
+              "en": "The 15th"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "日期剛才說過了，櫃台在問航班編號。",
+              "zh-Hans": "日期刚才说过了，前台在问航班号。",
+              "en": "You've already given the date. The clerk is asking for the flight number."
+            }
+          }
+        ]
+      },
+      "luggage-delivery.form": {
+        "background": "scene-bg-hotel-check-in",
+        "card": {
+          "title": "お届け先",
+          "lines": [
+            "成田空港",
+            "ご搭乗日　15日",
+            "便名　BR197",
+            "2個口"
+          ]
+        },
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "はい",
+            "meaning": {
+              "zh-Hant": "好",
+              "zh-Hans": "好",
+              "en": "Sure"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "你寫好名字、電話和航班交回，櫃台把存根遞給你。",
+              "zh-Hans": "你写好名字、电话和航班交回，前台把存根递给你。",
+              "en": "You fill in your name, phone and flight, hand it back, and get the stub."
+            }
+          },
+          {
+            "id": "write",
+            "ja": "書いてもらえますか",
+            "meaning": {
+              "zh-Hant": "可以幫我寫嗎",
+              "zh-Hans": "可以帮我写吗",
+              "en": "Could you write it for me?"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台把筆遞給你，請你自己填。",
+              "zh-Hans": "前台把笔递给你，请你自己填。",
+              "en": "The clerk hands you a pen and asks you to fill it in yourself."
+            }
+          },
+          {
+            "id": "narita",
+            "ja": "成田です",
+            "meaning": {
+              "zh-Hant": "成田",
+              "zh-Hans": "成田",
+              "en": "Narita"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "機場剛才說過了，櫃台在等你填寄件單。",
+              "zh-Hans": "机场刚才说过了，前台在等你填寄件单。",
+              "en": "You've already said the airport. The clerk is waiting for you to fill in the form."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "お荷物は何個お送りしますか？": [
+      {
+        "t": "お荷物",
+        "r": "おにもつ",
+        "m": {
+          "zh-Hant": "行李（敬語）",
+          "zh-Hans": "行李（敬语）",
+          "en": "luggage (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何個",
+        "r": "なんこ",
+        "m": {
+          "zh-Hant": "幾件、幾個",
+          "zh-Hans": "几件、几个",
+          "en": "how many"
+        }
+      },
+      {
+        "t": "お送りしますか",
+        "r": "おおくりしますか",
+        "m": {
+          "zh-Hant": "要寄嗎（敬語）",
+          "zh-Hans": "要寄吗（敬语）",
+          "en": "will you send? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "何個口ですか？": [
+      {
+        "t": "何個口",
+        "r": "なんこぐち",
+        "m": {
+          "zh-Hant": "幾件（寄送件數）",
+          "zh-Hans": "几件（寄送件数）",
+          "en": "how many parcels"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お送りするのは全部で何点ですか？": [
+      {
+        "t": "お送りするの",
+        "r": "おおくりするの",
+        "m": {
+          "zh-Hant": "要寄的東西",
+          "zh-Hans": "要寄的东西",
+          "en": "what's being sent"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "全部で",
+        "r": "ぜんぶで",
+        "m": {
+          "zh-Hant": "總共",
+          "zh-Hans": "总共",
+          "en": "in total"
+        }
+      },
+      {
+        "t": "何点",
+        "r": "なんてん",
+        "m": {
+          "zh-Hant": "幾件",
+          "zh-Hans": "几件",
+          "en": "how many items"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "2つです": [
+      {
+        "t": "2つです",
+        "r": "ふたつです",
+        "m": {
+          "zh-Hant": "兩件",
+          "zh-Hans": "两件",
+          "en": "two"
+        }
+      }
+    ],
+    "貴重品や割れ物は入っていませんか？": [
+      {
+        "t": "貴重品",
+        "r": "きちょうひん",
+        "m": {
+          "zh-Hant": "貴重物品",
+          "zh-Hans": "贵重物品",
+          "en": "valuables"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "割れ物",
+        "r": "われもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "壊れ物や貴重品、入っていませんよね？": [
+      {
+        "t": "壊れ物",
+        "r": "こわれもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "貴重品",
+        "r": "きちょうひん",
+        "m": {
+          "zh-Hant": "貴重物品",
+          "zh-Hans": "贵重物品",
+          "en": "valuables"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "入っていませんよね",
+        "r": "はいっていませんよね",
+        "m": {
+          "zh-Hant": "沒有放……對吧",
+          "zh-Hans": "没有放……对吧",
+          "en": "there isn't… in it, right?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "パソコンや現金、割れ物などは入っていませんか？": [
+      {
+        "t": "パソコン",
+        "m": {
+          "zh-Hant": "電腦",
+          "zh-Hans": "电脑",
+          "en": "computer"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "割れ物",
+        "r": "われもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "など",
+        "m": {
+          "zh-Hant": "……等等",
+          "zh-Hans": "……等等",
+          "en": "and so on"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "入っていません": [
+      {
+        "t": "入っていません",
+        "r": "はいっていません",
+        "m": {
+          "zh-Hant": "沒有放",
+          "zh-Hans": "没有放",
+          "en": "there isn't any"
+        }
+      }
+    ],
+    "どちらの空港をご利用ですか？": [
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "空港",
+        "r": "くうこう",
+        "m": {
+          "zh-Hant": "機場",
+          "zh-Hans": "机场",
+          "en": "airport"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "ご利用ですか",
+        "r": "ごりようですか",
+        "m": {
+          "zh-Hant": "要使用嗎（敬語）",
+          "zh-Hans": "要使用吗（敬语）",
+          "en": "will you use it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご出発の空港はどちらですか？": [
+      {
+        "t": "ご出発",
+        "r": "ごしゅっぱつ",
+        "m": {
+          "zh-Hant": "出發（敬語）",
+          "zh-Hans": "出发（敬语）",
+          "en": "departure (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "空港",
+        "r": "くうこう",
+        "m": {
+          "zh-Hant": "機場",
+          "zh-Hans": "机场",
+          "en": "airport"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "成田と羽田、どちらでしょうか？": [
+      {
+        "t": "成田",
+        "r": "なりた",
+        "m": {
+          "zh-Hant": "成田（機場）",
+          "zh-Hans": "成田（机场）",
+          "en": "Narita"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "羽田",
+        "r": "はねだ",
+        "m": {
+          "zh-Hant": "羽田（機場）",
+          "zh-Hans": "羽田（机场）",
+          "en": "Haneda"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "でしょうか",
+        "m": {
+          "zh-Hant": "……嗎（更客氣）",
+          "zh-Hans": "……吗（更客气）",
+          "en": "is it…? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "成田です": [
+      {
+        "t": "成田",
+        "r": "なりた",
+        "m": {
+          "zh-Hant": "成田（機場）",
+          "zh-Hans": "成田（机场）",
+          "en": "Narita"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "ご出発は何日ですか？": [
+      {
+        "t": "ご出発",
+        "r": "ごしゅっぱつ",
+        "m": {
+          "zh-Hant": "出發（敬語）",
+          "zh-Hans": "出发（敬语）",
+          "en": "departure (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何日",
+        "r": "なんにち",
+        "m": {
+          "zh-Hant": "幾號",
+          "zh-Hans": "几号",
+          "en": "what date"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご搭乗日はいつでしょうか？": [
+      {
+        "t": "ご搭乗日",
+        "r": "ごとうじょうび",
+        "m": {
+          "zh-Hant": "搭機日（敬語）",
+          "zh-Hans": "乘机日（敬语）",
+          "en": "flight date (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "いつ",
+        "m": {
+          "zh-Hant": "什麼時候",
+          "zh-Hans": "什么时候",
+          "en": "when"
+        }
+      },
+      {
+        "t": "でしょうか",
+        "m": {
+          "zh-Hant": "……嗎（更客氣）",
+          "zh-Hans": "……吗（更客气）",
+          "en": "is it…? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "何日の便にお乗りになりますか？": [
+      {
+        "t": "何日",
+        "r": "なんにち",
+        "m": {
+          "zh-Hant": "幾號",
+          "zh-Hans": "几号",
+          "en": "what date"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "便",
+        "r": "びん",
+        "m": {
+          "zh-Hant": "航班",
+          "zh-Hans": "航班",
+          "en": "flight"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "お乗りになりますか",
+        "r": "おのりになりますか",
+        "m": {
+          "zh-Hant": "要搭乘嗎（尊敬語）",
+          "zh-Hans": "要乘坐吗（尊敬语）",
+          "en": "will you be on…? (honorific)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "15日です": [
+      {
+        "t": "15日",
+        "r": "じゅうごにち",
+        "m": {
+          "zh-Hant": "15 號",
+          "zh-Hans": "15 号",
+          "en": "the 15th"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "お便名はお分かりですか？": [
+      {
+        "t": "お便名",
+        "r": "おびんめい",
+        "m": {
+          "zh-Hant": "航班號碼（敬語）",
+          "zh-Hans": "航班号（敬语）",
+          "en": "flight number (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お分かりですか",
+        "r": "おわかりですか",
+        "m": {
+          "zh-Hant": "知道嗎（敬語）",
+          "zh-Hans": "知道吗（敬语）",
+          "en": "do you know it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご搭乗の便名をお願いします": [
+      {
+        "t": "ご搭乗",
+        "r": "ごとうじょう",
+        "m": {
+          "zh-Hant": "搭機（敬語）",
+          "zh-Hans": "登机（敬语）",
+          "en": "boarding (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "便名",
+        "r": "びんめい",
+        "m": {
+          "zh-Hant": "航班號碼",
+          "zh-Hans": "航班号",
+          "en": "flight number"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "航空会社とお便名をお願いします": [
+      {
+        "t": "航空会社",
+        "r": "こうくうがいしゃ",
+        "m": {
+          "zh-Hant": "航空公司",
+          "zh-Hans": "航空公司",
+          "en": "airline"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "お便名",
+        "r": "おびんめい",
+        "m": {
+          "zh-Hant": "航班號碼（敬語）",
+          "zh-Hans": "航班号（敬语）",
+          "en": "flight number (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "これです": [
+      {
+        "t": "これ",
+        "m": {
+          "zh-Hant": "這個",
+          "zh-Hans": "这个",
+          "en": "this"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "こちらの伝票にご記入をお願いします": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "伝票",
+        "r": "でんぴょう",
+        "m": {
+          "zh-Hant": "單據、寄件單",
+          "zh-Hans": "单据、寄件单",
+          "en": "slip, form"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "ご記入",
+        "r": "ごきにゅう",
+        "m": {
+          "zh-Hant": "填寫（敬語）",
+          "zh-Hans": "填写（敬语）",
+          "en": "filling in (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "送り状にお名前とお電話番号をお願いします": [
+      {
+        "t": "送り状",
+        "r": "おくりじょう",
+        "m": {
+          "zh-Hant": "寄件單",
+          "zh-Hans": "寄件单",
+          "en": "shipping form"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "お電話番号",
+        "r": "おでんわばんごう",
+        "m": {
+          "zh-Hant": "電話號碼（敬語）",
+          "zh-Hans": "电话号码（敬语）",
+          "en": "phone number (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "こちらの送り状にご記入いただけますか？": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "送り状",
+        "r": "おくりじょう",
+        "m": {
+          "zh-Hant": "寄件單",
+          "zh-Hans": "寄件单",
+          "en": "shipping form"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "ご記入いただけますか",
+        "r": "ごきにゅういただけますか",
+        "m": {
+          "zh-Hant": "可以麻煩您填寫嗎（敬語）",
+          "zh-Hans": "可以麻烦您填写吗（敬语）",
+          "en": "could you fill in…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      }
+    ],
+    "1つです": [
+      {
+        "t": "1つです",
+        "r": "ひとつです",
+        "m": {
+          "zh-Hant": "一件",
+          "zh-Hans": "一件",
+          "en": "one"
+        }
+      }
+    ],
+    "パソコンが入っています": [
+      {
+        "t": "パソコン",
+        "m": {
+          "zh-Hant": "電腦",
+          "zh-Hans": "电脑",
+          "en": "computer"
+        }
+      },
+      {
+        "t": "が"
+      },
+      {
+        "t": "入っています",
+        "r": "はいっています",
+        "m": {
+          "zh-Hant": "有放",
+          "zh-Hans": "有放",
+          "en": "there is"
+        }
+      }
+    ],
+    "羽田です": [
+      {
+        "t": "羽田",
+        "r": "はねだ",
+        "m": {
+          "zh-Hant": "羽田（機場）",
+          "zh-Hans": "羽田（机场）",
+          "en": "Haneda"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "16日です": [
+      {
+        "t": "16日",
+        "r": "じゅうろくにち",
+        "m": {
+          "zh-Hant": "16 號",
+          "zh-Hans": "16 号",
+          "en": "the 16th"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "ワンです": [
+      {
+        "t": "ワンです",
+        "m": {
+          "zh-Hant": "我姓王（ワン）",
+          "zh-Hans": "我姓王（ワン）",
+          "en": "it's Wang"
+        }
+      }
+    ],
+    "書いてもらえますか": [
+      {
+        "t": "書いてもらえますか",
+        "r": "かいてもらえますか",
+        "m": {
+          "zh-Hant": "可以幫我寫嗎",
+          "zh-Hans": "可以帮我写吗",
+          "en": "could you write it for me?"
+        }
+      }
+    ]
+  }
+}
