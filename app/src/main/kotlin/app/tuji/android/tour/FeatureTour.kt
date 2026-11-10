@@ -15,7 +15,13 @@ enum class TourTarget {
 
     /** 拍照, in the bar. */
     Capture,
+
+    /** 場面練習's card beside the cat, for a Japanese learner. */
+    Scene,
 }
+
+/** What a step says. Apart from the id because the scene tour says the same things in another order. */
+enum class TourLine { Words, Moira, Capture, LearnFirstWord, Scene, TryScene }
 
 /** How the hole is cut. */
 enum class TourCutoutShape {
@@ -35,6 +41,12 @@ data class TourStep(
     /** Second choice when the target is not in the tree. */
     val fallback: TourTarget?,
     val shape: TourCutoutShape,
+    val line: TourLine = when (id) {
+        0 -> TourLine.Words
+        1 -> TourLine.Moira
+        2 -> TourLine.Capture
+        else -> TourLine.LearnFirstWord
+    },
 )
 
 /** What advancing means, once. */
@@ -56,7 +68,11 @@ sealed interface TourAdvance {
  * [steps] is a parameter so the cross-tab branch can still be pinned now that
  * the shipped script never leaves 今日.
  */
-class FeatureTourFlow(val steps: List<TourStep> = SCRIPT) {
+class FeatureTourFlow(
+    val steps: List<TourStep> = SCRIPT,
+    /** What the closing card's button opens. */
+    val routeAfterFinishing: AppRoute = AppRoute.LearnNew,
+) {
 
     /**
      * What happens when 下一步 is tapped on [index], given the tab on screen.
@@ -91,8 +107,29 @@ class FeatureTourFlow(val steps: List<TourStep> = SCRIPT) {
          */
         val tabAfterFinishing: AppRoute.Tab = AppRoute.Today
 
-        /** What 開始學習 on the closing card opens. */
-        val routeAfterFinishing: AppRoute = AppRoute.LearnNew
+        /** The scene the Japanese tour opens: free, and the one every trip starts with. */
+        const val TRIAL_SCENE = "konbini-checkout"
+
+        /**
+         * The tour for a learning direction. A Japanese learner has 場面練習,
+         * which is what a new user should try first: the tour opens on the
+         * scene card and closes in the free 便利商店結帳, with the word steps
+         * after it (tuji-ios `TourStep.sceneSteps`).
+         */
+        fun forDirection(hasScenes: Boolean): FeatureTourFlow {
+            if (!hasScenes) return FeatureTourFlow()
+            val words = SCRIPT
+            return FeatureTourFlow(
+                steps = listOf(
+                    TourStep(0, AppRoute.Today, TourTarget.Scene, TourTarget.Assistant, TourCutoutShape.Square, TourLine.Scene),
+                    words[0].copy(id = 1),
+                    words[1].copy(id = 2),
+                    words[2].copy(id = 3),
+                    TourStep(4, AppRoute.Today, null, null, TourCutoutShape.Square, TourLine.TryScene),
+                ),
+                routeAfterFinishing = AppRoute.ScenePractice(TRIAL_SCENE),
+            )
+        }
 
         /**
          * Only what a new user would not find alone, all on 今日 — iOS's

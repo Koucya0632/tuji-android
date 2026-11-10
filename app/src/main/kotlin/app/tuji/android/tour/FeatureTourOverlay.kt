@@ -191,7 +191,7 @@ private fun TourCard(
             )
             Spacer(Modifier.weight(1f))
             TujiButton(
-                text = stringResource(if (isLast) R.string.tour_start else R.string.tour_next),
+                text = stringResource(if (isLast) copy.action else R.string.tour_next),
                 onClick = onNext,
             )
         }

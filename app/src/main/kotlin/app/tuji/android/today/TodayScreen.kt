@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -122,6 +123,8 @@ fun TodayScreen(
     mascotPaused: Boolean = false,
     /** 試用點數 left on a free account; tags the four AI entries. */
     trialPoints: Int? = null,
+    /** 場面練習's card, beside the cat, for a Japanese learner. */
+    sceneCard: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val decisions = TodayDecisions(inputs)
     var showingCurve by rememberSaveable { mutableStateOf(false) }
@@ -150,7 +153,7 @@ fun TodayScreen(
             onUnlock = onUnlock,
             onOpenCurve = { showingCurve = true },
         )
-        MoiraSection(onOpenFeature, mascotPaused, trialPoints)
+        MoiraSection(onOpenFeature, mascotPaused, trialPoints, sceneCard)
     }
 
     if (showingCurve) ReviewCurveSheet(onDismiss = { showingCurve = false })
@@ -161,11 +164,29 @@ fun TodayScreen(
  * whose they are, so the cells carry titles and no detail.
  */
 @Composable
-private fun MoiraSection(onOpenFeature: (AssistantHomeFeature) -> Unit, paused: Boolean, trialPoints: Int?) {
+private fun MoiraSection(
+    onOpenFeature: (AssistantHomeFeature) -> Unit,
+    paused: Boolean,
+    trialPoints: Int?,
+    sceneCard: (@Composable (Modifier) -> Unit)?,
+) {
     Column(
         Modifier.fillMaxWidth().tourAnchor(TourTarget.Assistant),
         verticalArrangement = Arrangement.spacedBy(TujiSpace.S3),
     ) {
+        // A Japanese learner's cat moves right to give the scene card the left
+        // (tuji-ios: 貓和四格的位置不動，只是貓旁多一張卡).
+        if (sceneCard != null) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = TujiSpace.S3, end = 6.dp).offset(y = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            ) {
+                sceneCard(Modifier.weight(1f).tourAnchor(TourTarget.Scene))
+                AnimatedMascot(paused = paused, modifier = Modifier.width(170.dp).height(214.dp))
+            }
+            MoiraFeatureBand(onOpen = onOpenFeature, trialPoints = trialPoints)
+            return@Column
+        }
         // Her 580-unit canvas has ~24dp of nothing under the contact shadow.
         // It did not matter at the bottom of 助手; here it pushes the band down,
         // so the slot is laid out 24dp shorter than she is drawn.

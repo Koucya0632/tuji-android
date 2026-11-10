@@ -1,5 +1,12 @@
 package app.tuji.android
 
+import app.tuji.android.core.scenes.SceneId
+import app.tuji.android.scenes.SceneDetailScreen
+import app.tuji.android.scenes.SceneListScreen
+import app.tuji.android.scenes.SceneTodayCard
+import app.tuji.android.scenes.ScenePracticeScreen
+import app.tuji.android.scenes.WordSceneSection
+import app.tuji.android.scenes.hasScenes
 import app.tuji.android.core.model.MembershipTier
 import app.tuji.android.core.model.MemberAccess
 import app.tuji.android.core.model.MemberAccessLevel
@@ -573,6 +580,12 @@ private fun SignedInScreens(
     // account may study. The pick itself stays as chosen — 設定 shows it, and
     // it comes back whole the day the account becomes a member.
     val studyable = accountState.entitlement?.membership?.studyableCategories
+    // 場面練習: from the third scene on, practice is for 永久會員; progress is one file per account.
+    val sceneMember = (accountState.entitlement?.membershipTier ?: MembershipTier.Free) != MembershipTier.Free
+    val sceneAccount = (session.state as? AuthState.SignedIn)?.user?.id
+    LaunchedEffect(sceneAccount) {
+        if (sceneAccount != null) app.scenes.progress.use(sceneAccount) else app.scenes.progress.reset()
+    }
     val studyCategories = remember(settings.studyCategories, studyable) {
         StudyThemes.effective(settings.studyCategories, studyable)
     }
@@ -1057,7 +1070,7 @@ private fun SignedInScreens(
     // below report where they are; the overlay reads that and nothing else in
     // the shell knows the tour exists.
     val anchors = rememberTourAnchors()
-    val tour = remember { FeatureTourFlow() }
+    val tour = remember(direction) { FeatureTourFlow.forDirection(direction.hasScenes) }
     var tourStep by remember { mutableStateOf<Int?>(null) }
     // Mirrors of the store, which is a preference and not state the shell
     // recomposes for.
@@ -1156,6 +1169,20 @@ private fun SignedInScreens(
                     ),
                     trialPoints = checkInState.trialPoints,
                     onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
+                    sceneCard = if (direction.hasScenes) {
+                        { modifier ->
+                            SceneTodayCard(
+                                scenes = app.scenes,
+                                language = uiLanguage,
+                                isMember = sceneMember,
+                                onOpenList = { nav = nav.push(AppRoute.SceneList) },
+                                onOpen = { nav = nav.push(AppRoute.SceneDetail(it.raw)) },
+                                modifier = modifier,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                     onSpike = { showSpike = true },
                     onRefresh = {
                         val cause = LearningRefreshCause.PulledToday
@@ -1941,6 +1968,35 @@ private fun SignedInScreens(
                     )
                 }
 
+                AppRoute.SceneList -> SceneListScreen(
+                    scenes = app.scenes,
+                    language = uiLanguage,
+                    isMember = sceneMember,
+                    onBack = { nav = nav.pop() },
+                    onOpen = { nav = nav.push(AppRoute.SceneDetail(it.raw)) },
+                )
+
+                is AppRoute.SceneDetail -> SceneDetailScreen(
+                    scenes = app.scenes,
+                    sceneId = SceneId(route.sceneId),
+                    language = uiLanguage,
+                    isMember = sceneMember,
+                    onBack = { nav = nav.pop() },
+                    onPractise = { routeId -> nav = nav.push(AppRoute.ScenePractice(route.sceneId, routeId)) },
+                    onUnlock = openMembership,
+                )
+
+                is AppRoute.ScenePractice -> ScenePracticeScreen(
+                    scenes = app.scenes,
+                    sceneId = SceneId(route.sceneId),
+                    routeId = route.routeId,
+                    language = uiLanguage,
+                    isMember = sceneMember,
+                    onClose = { nav = nav.pop() },
+                    onDone = { nav = nav.select(AppRoute.Today) },
+                    onUnlock = openMembership,
+                )
+
                 is AppRoute.Shelf -> AtlasThemeScreen(
                     category = catalog.categories.firstOrNull { it.id == route.categoryId },
                     words = CategoryShelf.words(route.categoryId, studyWords),
@@ -2057,6 +2113,15 @@ private fun SignedInScreens(
                             // is worse than plain text.
                             canOpenWord = { id -> catalog.words.any { it.id == id } },
                             onLocked = openMembership,
+                            scenes = { modifier ->
+                                if (direction.hasScenes) {
+                                    Box(modifier) {
+                                        WordSceneSection(app.scenes, wordId, null, uiLanguage) {
+                                            nav = nav.push(AppRoute.SceneDetail(it.raw))
+                                        }
+                                    }
+                                }
+                            },
                             wordListButton = {
                                 if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
                                     var adding by rememberSaveable(wordId) { mutableStateOf(false) }
@@ -2154,7 +2219,7 @@ private fun SignedInScreens(
             // skipping stays put.
             if (finished) {
                 nav = nav.select(FeatureTourFlow.tabAfterFinishing)
-                    .push(FeatureTourFlow.routeAfterFinishing)
+                    .push(tour.routeAfterFinishing)
             }
         }
         FeatureTourOverlay(
@@ -2226,6 +2291,7 @@ private fun TodayColumn(
     onOpenStudyThemes: () -> Unit,
     onSpike: () -> Unit,
     onRefresh: suspend () -> Unit,
+    sceneCard: (@Composable (Modifier) -> Unit)? = null,
 ) {
     // `docs/SPIKE-FURIGANA.md` promises anyone who touches the fonts can re-run
     // it, so the door stays in debug builds — as a long press on the page, not
@@ -2257,6 +2323,7 @@ private fun TodayColumn(
             streakBadge = streakBadge,
             onOpenStudyThemes = onOpenStudyThemes,
             trialPoints = trialPoints,
+            sceneCard = sceneCard,
         )
     }
     }

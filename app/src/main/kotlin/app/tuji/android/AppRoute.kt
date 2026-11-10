@@ -112,6 +112,15 @@ sealed interface AppRoute {
      * list instead of 今日's themes.
      */
     data class WordListStudy(val listId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
+
+    /** 場面練習's list, from 今天's scene card. */
+    data object SceneList : AppRoute
+
+    /** One 場面's page, which is also 進店前看一眼. */
+    data class SceneDetail(val sceneId: String) : AppRoute
+
+    /** Practising one 場面; `routeId` picks an optional trip. Full screen, like a study session. */
+    data class ScenePractice(val sceneId: String, val routeId: String? = null) : AppRoute
 }
 
 /**
@@ -180,6 +189,7 @@ object TabShell {
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
         if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy ||
+            current is AppRoute.ScenePractice ||
             current is AppRoute.SearchFor || current is AppRoute.TopicChat
         ) {
             return false
