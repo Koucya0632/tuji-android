@@ -4,6 +4,9 @@ import app.tuji.android.core.scenes.SceneId
 import app.tuji.android.scenes.SceneDetailScreen
 import app.tuji.android.scenes.SceneListScreen
 import app.tuji.android.scenes.SceneTodayCard
+import app.tuji.android.scenes.SceneWord
+import app.tuji.android.scenes.SceneWords
+import app.tuji.android.scenes.TopicSceneEntries
 import app.tuji.android.scenes.ScenePracticeScreen
 import app.tuji.android.scenes.WordSceneSection
 import app.tuji.android.scenes.hasScenes
@@ -582,6 +585,7 @@ private fun SignedInScreens(
     val studyable = accountState.entitlement?.membership?.studyableCategories
     // 場面練習: from the third scene on, practice is for 永久會員; progress is one file per account.
     val sceneMember = (accountState.entitlement?.membershipTier ?: MembershipTier.Free) != MembershipTier.Free
+    val sceneWords: (List<String>) -> List<SceneWord> = { ids -> SceneWords.resolve(ids, catalog.words, studyable, direction) }
     val sceneAccount = (session.state as? AuthState.SignedIn)?.user?.id
     LaunchedEffect(sceneAccount) {
         if (sceneAccount != null) app.scenes.progress.use(sceneAccount) else app.scenes.progress.reset()
@@ -1984,6 +1988,8 @@ private fun SignedInScreens(
                     onBack = { nav = nav.pop() },
                     onPractise = { routeId -> nav = nav.push(AppRoute.ScenePractice(route.sceneId, routeId)) },
                     onUnlock = openMembership,
+                    relatedWords = sceneWords,
+                    onOpenWord = { nav = nav.push(AppRoute.Word(it, fromScene = route.sceneId)) },
                 )
 
                 is AppRoute.ScenePractice -> ScenePracticeScreen(
@@ -1995,6 +2001,8 @@ private fun SignedInScreens(
                     onClose = { nav = nav.pop() },
                     onDone = { nav = nav.select(AppRoute.Today) },
                     onUnlock = openMembership,
+                    relatedWords = sceneWords,
+                    onOpenWord = { nav = nav.push(AppRoute.Word(it, fromScene = route.sceneId)) },
                 )
 
                 is AppRoute.Shelf -> AtlasThemeScreen(
@@ -2007,6 +2015,18 @@ private fun SignedInScreens(
                     onOpen = openCard,
                     onChat = chatTopics.firstOrNull { it.id == route.categoryId && it.usable }?.let { topic ->
                         { nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Topic(topic.id))) }
+                    },
+                    sceneEntries = if (direction.hasScenes) {
+                        {
+                            val topicOf = remember(catalog.words) {
+                                catalog.words.mapNotNull { w -> w.category?.let { w.id to it } }.toMap()
+                            }
+                            TopicSceneEntries(app.scenes, route.categoryId, topicOf, uiLanguage) {
+                                nav = nav.push(AppRoute.SceneDetail(it.raw))
+                            }
+                        }
+                    } else {
+                        null
                     },
                 )
 
@@ -2116,7 +2136,7 @@ private fun SignedInScreens(
                             scenes = { modifier ->
                                 if (direction.hasScenes) {
                                     Box(modifier) {
-                                        WordSceneSection(app.scenes, wordId, null, uiLanguage) {
+                                        WordSceneSection(app.scenes, wordId, route.fromScene?.let(::SceneId), uiLanguage) {
                                             nav = nav.push(AppRoute.SceneDetail(it.raw))
                                         }
                                     }

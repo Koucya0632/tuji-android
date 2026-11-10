@@ -74,27 +74,43 @@ fun ScenePracticeScreen(
     onClose: () -> Unit,
     onDone: () -> Unit,
     onUnlock: () -> Unit,
+    relatedWords: (List<String>) -> List<SceneWord> = { emptyList() },
+    onOpenWord: (String) -> Unit = {},
 ) {
     val scene = scenes.catalog.scene(sceneId) ?: return
-    val session = remember(sceneId, routeId) {
-        ScenePracticeSession(scene, scenes.progress, scene.stage?.route(routeId))
-    }
+    val session = remember(sceneId, routeId) { scenes.session(scene, routeId) }
     val phase by session.phase.collectAsState()
-    var entered by remember { mutableStateOf(false) }
+    // Walked in already when coming back to a pass in progress from a word page.
+    var entered by remember {
+        val now = session.phase.value
+        mutableStateOf(now is Phase.Practising && (now.step > 0 || now.question !is QuestionPhase.Presenting))
+    }
     DisposableEffect(Unit) { onDispose { scenes.stop() } }
-    BackHandler(onBack = onClose)
+    val close = {
+        scenes.endSession()
+        onClose()
+    }
+    BackHandler(onBack = close)
 
     when (val now = phase) {
-        is Phase.Finished -> SceneDoneScreen(scenes, scene, now.summary, language, isMember, onLook = onClose, onDone = onDone, onUnlock = onUnlock)
+        is Phase.Finished -> SceneDoneScreen(
+            scenes, scene, now.summary, language, isMember,
+            onLook = close,
+            onDone = {
+                scenes.endSession()
+                onDone()
+            },
+            onUnlock = onUnlock,
+        )
         is Phase.Practising -> {
             val step = session.steps[now.step]
             val question = scene.questions[step.questionIndex]
             Column(Modifier.fillMaxSize().background(TujiColor.Paper)) {
-                TopBar(session, now, onClose)
+                TopBar(session, now, close)
                 val stageStep = scene.stageStep(question.id)
                 val route = session.route
                 key(now.step) {
-                    StagedQuestion(scenes, session, scene, step, question, stageStep, now.question, route, entered, language) { entered = true }
+                    StagedQuestion(scenes, session, scene, step, question, stageStep, now.question, route, entered, language, relatedWords(question.wordIds), onOpenWord) { entered = true }
                 }
             }
         }
@@ -137,6 +153,8 @@ private fun StagedQuestion(
     route: StageRoute?,
     entered: Boolean,
     language: UiLanguage,
+    related: List<SceneWord>,
+    onOpenWord: (String) -> Unit,
     onEnter: () -> Unit,
 ) {
     var line by remember { mutableStateOf<SpokenLine?>(null) }
@@ -286,6 +304,7 @@ private fun StagedQuestion(
                     chosen?.let { Result(it.result, fits = true, language) }
                     question.meaning?.let { Text(it.resolved(language), style = TujiType.bodySmStrong, color = TujiColor.Ink2) }
                     Text(question.explanation.resolved(language), style = TujiType.bodySm, color = TujiColor.Ink2)
+                    SceneWordList(related, onOpenWord)
                     Row(Modifier.defaultMinSize(minHeight = 44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
                         Text(stringResource(R.string.scene_you_can_say), style = TujiType.label, color = TujiColor.Ink3)
                         Box(Modifier.weight(1f)) { GlossedLine(question.response.ja, scene.gloss(question.response.ja), TujiType.bodyStrong) { glossed = it } }

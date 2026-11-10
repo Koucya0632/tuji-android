@@ -427,6 +427,8 @@ fun AtlasThemeScreen(
     onOpen: (String) -> Unit,
     /** 圖鑑主題對話's way in; null for a theme with too few words to talk about. */
     onChat: (() -> Unit)? = null,
+    /** 場面練習's ways in for this theme's words. Handed in: this page does not read the scenes. */
+    sceneEntries: (@Composable () -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxSize()) {
         BoxWithConstraints {
@@ -463,6 +465,12 @@ fun AtlasThemeScreen(
 
                 onChat?.let { chat ->
                     item(span = { GridItemSpan(maxLineSpan) }) { ThemeChatEntry(chat) }
+                }
+
+                sceneEntries?.let { entries ->
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) { entries() }
+                    }
                 }
 
                 item(span = { GridItemSpan(maxLineSpan) }) {

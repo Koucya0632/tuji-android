@@ -6,7 +6,9 @@ import android.media.PlaybackParams
 import android.util.Log
 import app.tuji.android.BuildConfig
 import app.tuji.android.core.model.TargetLanguage
+import app.tuji.android.core.scenes.PracticeScene
 import app.tuji.android.core.scenes.SceneCatalog
+import app.tuji.android.core.scenes.ScenePracticeSession
 import app.tuji.android.core.scenes.SceneProgressStore
 import app.tuji.android.core.scenes.SceneResponse
 import app.tuji.android.core.scenes.SpokenLine
@@ -33,6 +35,24 @@ class Scenes(private val context: Context, private val speech: TtsSpeaker) {
     val progress = SceneProgressStore(File(context.filesDir, "scenes")) { Log.e(TAG, it) }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    /**
+     * The pass on screen, kept here rather than in the composable so opening a
+     * word from it and coming back finds the same 問句 in the same state. A new
+     * scene or trip, or a finished pass, starts over.
+     */
+    private var active: Pair<String, ScenePracticeSession>? = null
+
+    fun session(scene: PracticeScene, routeId: String?): ScenePracticeSession {
+        val key = scene.id.raw + "|" + routeId
+        active?.let { (k, s) -> if (k == key && s.phase.value !is ScenePracticeSession.Phase.Finished) return s }
+        return ScenePracticeSession(scene, progress, scene.stage?.route(routeId)).also { active = key to it }
+    }
+
+    /** Leaving the practice screen on purpose (✕ or 完成) ends the pass. */
+    fun endSession() {
+        active = null
+    }
     private var player: MediaPlayer? = null
 
     private fun read(file: String): String = context.assets.open("scenes/$file").bufferedReader().use { it.readText() }

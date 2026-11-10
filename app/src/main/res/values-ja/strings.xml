@@ -1267,4 +1267,6 @@
     <string name="tour_try_scene_title">まず場面を一つ</string>
     <string name="tour_try_scene_text">コンビニのレジ、3分ほど。</string>
     <string name="tour_try_scene_action">練習を始める</string>
+    <string name="scene_related_words">関連する単語</string>
+    <string name="scene_word_locked">このテーマの学習には永久会員が必要です</string>
 </resources>
