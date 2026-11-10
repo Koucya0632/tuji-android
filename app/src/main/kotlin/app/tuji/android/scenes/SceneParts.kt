@@ -20,9 +20,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextLayoutResult
+import app.tuji.android.gloss.lineBoxes
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -33,17 +43,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -117,7 +124,7 @@ internal fun practisedSegments(practised: List<Boolean>) = practised.map { if (i
 
 /** The square speaker button every line uses. */
 @Composable
-internal fun ScenePlayButton(label: String, onClick: () -> Unit, filled: Boolean = true, glyph: String = "🔊") {
+internal fun ScenePlayButton(label: String, onClick: () -> Unit, filled: Boolean = true) {
     Box(
         Modifier
             .size(44.dp)
@@ -126,7 +133,7 @@ internal fun ScenePlayButton(label: String, onClick: () -> Unit, filled: Boolean
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        Text(glyph, style = TujiType.body)
+        TujiGlyph.Speaker(size = 20.dp)
     }
 }
 
@@ -169,6 +176,8 @@ internal fun SceneCall(title: String, onClick: () -> Unit, modifier: Modifier = 
 /**
  * A Japanese line whose words can be tapped for their reading and meaning.
  * `tokens` is null when the line is not to be opened yet (before answering).
+ * The rule under a word is dotted, as the dictionary's sentences draw it
+ * (`InteractiveSentenceText`): Compose's own underline is solid.
  */
 @Composable
 internal fun GlossedLine(text: String, tokens: List<GlossToken>?, style: TextStyle, onPick: (GlossToken) -> Unit) {
@@ -176,21 +185,37 @@ internal fun GlossedLine(text: String, tokens: List<GlossToken>?, style: TextSty
         Text(text, style = style, color = TujiColor.Ink)
         return
     }
-    val annotated = buildAnnotatedString {
-        tokens.forEachIndexed { index, token ->
-            if (token.m != null) {
-                pushStringAnnotation("gloss", index.toString())
-                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) { append(token.t) }
-                pop()
-            } else {
-                append(token.t)
+    val ranges = remember(tokens) {
+        var at = 0
+        tokens.map { token -> (at until at + token.t.length).also { at += token.t.length } }
+    }
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    Text(
+        text,
+        style = style,
+        color = TujiColor.Ink,
+        onTextLayout = { layout = it },
+        modifier = Modifier
+            .pointerInput(tokens) {
+                detectTapGestures { position ->
+                    val offset = layout?.getOffsetForPosition(position) ?: return@detectTapGestures
+                    val index = ranges.indexOfFirst { offset in it }
+                    tokens.getOrNull(index)?.takeIf { it.m != null }?.let(onPick)
+                }
             }
-        }
-    }
-    @Suppress("DEPRECATION")
-    ClickableText(annotated, style = style.copy(color = TujiColor.Ink)) { offset ->
-        annotated.getStringAnnotations("gloss", offset, offset).firstOrNull()?.let { onPick(tokens[it.item.toInt()]) }
-    }
+            .drawWithContent {
+                drawContent()
+                val result = layout ?: return@drawWithContent
+                val dash = PathEffect.dashPathEffect(floatArrayOf(1.5.dp.toPx(), 2.5.dp.toPx()), 0f)
+                tokens.forEachIndexed { index, token ->
+                    if (token.m == null) return@forEachIndexed
+                    lineBoxes(result, ranges[index]).forEach { (rect, baseline) ->
+                        val y = baseline + 3.dp.toPx()
+                        drawLine(TujiColor.Ink3, Offset(rect.left, y), Offset(rect.right, y), 1.dp.toPx(), pathEffect = dash)
+                    }
+                }
+            },
+    )
 }
 
 /** What a tapped word means. */

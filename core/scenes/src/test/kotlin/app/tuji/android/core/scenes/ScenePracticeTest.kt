@@ -94,6 +94,19 @@ class ScenePracticeTest {
         assertEquals(listOf("s.q1", "s.q2", "s.q0"), results.map { it.question.id.raw })
     }
 
+    @Test fun `the reply last said on a step is kept, and nothing is said once revealed`() {
+        val session = ScenePracticeSession(scene, store(), today = { nov8 })
+        val no = StageReply("no", "大丈夫です", LocalizedText("", "", ""), false, LocalizedText("", "", ""))
+        val yes = StageReply("yes", "お願いします", LocalizedText("", "", ""), true, LocalizedText("", "", ""))
+        session.reply(no)
+        assertEquals("no", session.chosenReply(0))
+        session.reply(yes)
+        assertEquals("yes", session.chosenReply(0))
+        session.reply(no)
+        assertEquals("yes", session.chosenReply(0))
+        assertNull(session.chosenReply(1))
+    }
+
     @Test fun `asking again plays an unheard phrasing and marks it heard`() {
         val store = store()
         val session = ScenePracticeSession(scene, store, today = { nov8 })
