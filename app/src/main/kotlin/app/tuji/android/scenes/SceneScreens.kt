@@ -159,6 +159,8 @@ fun SceneDetailScreen(
     onBack: () -> Unit,
     onPractise: (routeId: String?) -> Unit,
     onUnlock: () -> Unit,
+    relatedWords: (List<String>) -> List<SceneWord> = { emptyList() },
+    onOpenWord: (String) -> Unit = {},
 ) {
     val scene = scenes.catalog.scene(sceneId) ?: return
     val book by scenes.progress.book.collectAsState()
@@ -217,7 +219,7 @@ fun SceneDetailScreen(
             }
             SceneRule()
             scene.questions.forEachIndexed { index, question ->
-                LookRow(scenes, scene, question, index + 1, language) { glossed = it }
+                LookRow(scenes, scene, question, index + 1, language, relatedWords(question.wordIds), onOpenWord) { glossed = it }
                 SceneRule()
             }
         }
@@ -244,7 +246,16 @@ private fun StartCall(title: String, trailing: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LookRow(scenes: Scenes, scene: PracticeScene, question: SceneQuestion, number: Int, language: UiLanguage, onPick: (GlossToken) -> Unit) {
+private fun LookRow(
+    scenes: Scenes,
+    scene: PracticeScene,
+    question: SceneQuestion,
+    number: Int,
+    language: UiLanguage,
+    related: List<SceneWord>,
+    onOpenWord: (String) -> Unit,
+    onPick: (GlossToken) -> Unit,
+) {
     Row(Modifier.padding(start = TujiSpace.S4, end = 12.dp, top = 18.dp, bottom = 18.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("$number", style = TujiType.label, color = TujiColor.Ink3, modifier = Modifier.width(16.dp).padding(top = 2.dp))
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -270,6 +281,9 @@ private fun LookRow(scenes: Scenes, scene: PracticeScene, question: SceneQuestio
             }
             if (question.kind == SceneQuestion.Kind.Screen) {
                 Text(stringResource(R.string.scene_screens_vary), style = TujiType.label, color = TujiColor.Ink3)
+            }
+            if (related.isNotEmpty()) {
+                Box(Modifier.padding(top = TujiSpace.S2)) { SceneWordList(related, onOpenWord) }
             }
         }
     }

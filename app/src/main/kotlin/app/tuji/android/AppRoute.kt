@@ -79,8 +79,11 @@ sealed interface AppRoute {
     /** One theme's page: its hero, its description, its words. */
     data class Shelf(val categoryId: String, val title: String) : AppRoute
 
-    /** One catalogue entry. */
-    data class Word(val wordId: String) : AppRoute
+    /**
+     * One catalogue entry. `fromScene` is the 場面 it was opened from, which
+     * its 場面 section leaves out so it does not lead straight back.
+     */
+    data class Word(val wordId: String, val fromScene: String? = null) : AppRoute
 
     /** One published 物見 word. */
     data class PublicItem(val slug: String) : AppRoute
