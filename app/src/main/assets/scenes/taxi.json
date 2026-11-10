@@ -1,0 +1,1924 @@
+{
+  "schemaVersion": 2,
+  "id": "taxi",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "計程車",
+    "zh-Hans": "出租车",
+    "en": "Taxi"
+  },
+  "summary": {
+    "zh-Hant": "搭計程車時司機會問的七件事",
+    "zh-Hans": "坐出租车时司机会问的七件事",
+    "en": "Seven things the driver asks on a taxi ride"
+  },
+  "questions": [
+    {
+      "id": "taxi.luggage",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂司機問行李要不要放後車廂",
+        "zh-Hans": "听懂司机问行李要不要放后备箱",
+        "en": "Understand when the driver offers to put your luggage in the trunk"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.luggage.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お荷物はトランクにお入れしますか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.luggage.p1.mp3"
+        },
+        {
+          "id": "taxi.luggage.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "トランク開けますね、お荷物入れましょうか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.luggage.p2.mp3"
+        },
+        {
+          "id": "taxi.luggage.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "スーツケースは後ろに積みましょうか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.luggage.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "行李要放後車廂嗎",
+            "zh-Hans": "行李要放后备箱吗",
+            "en": "Shall I put your bags in the trunk"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "總共幾個人",
+            "zh-Hans": "一共几个人",
+            "en": "How many of you are there"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要去哪裡",
+            "zh-Hans": "去哪里",
+            "en": "Where to"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "お願いします／大丈夫です",
+        "audio": "taxi.luggage.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「トランク」是後車廂，「お荷物」是行李。要放就說「お願いします」，自己拿著就說「大丈夫です」。",
+        "zh-Hans": "「トランク」是后备箱，「お荷物」是行李。要放就说「お願いします」，自己拿着就说「大丈夫です」。",
+        "en": "トランク is the trunk and お荷物 is your luggage. Say お願いします for yes, or 大丈夫です if you will keep it with you."
+      },
+      "wordIds": [
+        "suitcase"
+      ]
+    },
+    {
+      "id": "taxi.destination",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂司機問要去哪裡",
+        "zh-Hans": "听懂司机问去哪里",
+        "en": "Understand when the driver asks where you are going"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.destination.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "どちらまでですか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.destination.p1.mp3"
+        },
+        {
+          "id": "taxi.destination.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "どちらまで行かれますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.destination.p2.mp3"
+        },
+        {
+          "id": "taxi.destination.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "行き先はどちらでしょうか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.destination.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要去哪裡",
+            "zh-Hans": "去哪里",
+            "en": "Where to"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "從哪裡來的",
+            "zh-Hans": "从哪里来的",
+            "en": "Where are you from"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要走哪條路",
+            "zh-Hans": "走哪条路",
+            "en": "Which way should I take"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "ここまでお願いします",
+        "audio": "taxi.destination.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「どちらまで」是問到哪裡，不是「どちらから」（從哪裡來）。給司機看手機地圖或寫好的地址，說「ここまでお願いします」。用叫車 App 先設好目的地的話，司機通常不會再問。",
+        "zh-Hans": "「どちらまで」是问到哪里，不是「どちらから」（从哪里来）。给司机看手机地图或写好的地址，说「ここまでお願いします」。用打车 App 先设好目的地的话，司机通常不会再问。",
+        "en": "どちらまで asks where to, not どちらから (where from). Show a map or a written address and say ここまでお願いします. If you booked through a taxi app, the driver usually already knows."
+      },
+      "wordIds": [
+        "taxi",
+        "taxi-stand"
+      ]
+    },
+    {
+      "id": "taxi.seatbelt",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂車上提醒繫安全帶",
+        "zh-Hans": "听懂车上提醒系安全带",
+        "en": "Understand the reminder to fasten your seatbelt"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.seatbelt.p1",
+          "role": "first",
+          "speaker": "register",
+          "text": "シートベルトをお締めください。",
+          "voice": "Leda",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.seatbelt.p1.mp3"
+        },
+        {
+          "id": "taxi.seatbelt.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ベルトお願いしますね。",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.seatbelt.p2.mp3"
+        },
+        {
+          "id": "taxi.seatbelt.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "後ろの席もシートベルトの着用をお願いいたします。",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.seatbelt.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "請繫安全帶",
+            "zh-Hans": "请系安全带",
+            "en": "Please fasten your seatbelt"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請關好車門",
+            "zh-Hans": "请关好车门",
+            "en": "Please close the door"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "下車時別忘了東西",
+            "zh-Hans": "下车时别忘了东西",
+            "en": "Don't leave anything behind"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい",
+        "audio": "taxi.seatbelt.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「シートベルト」是安全帶，「締める」是繫上。後座也會被提醒。繫好之後說「はい」就好。",
+        "zh-Hans": "「シートベルト」是安全带，「締める」是系上。后座也会被提醒。系好之后说「はい」就好。",
+        "en": "シートベルト is the seatbelt and 締める means to fasten it. You will be reminded in the back seat too. Buckle up and say はい."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "taxi.highway",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂司機問要不要走高速公路",
+        "zh-Hans": "听懂司机问要不要走高速公路",
+        "en": "Understand when the driver asks about taking the expressway"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.highway.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "高速を使ってもよろしいですか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.highway.p1.mp3"
+        },
+        {
+          "id": "taxi.highway.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "高速乗りますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.highway.p2.mp3"
+        },
+        {
+          "id": "taxi.highway.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "高速道路を使うと早いですが、どうされますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.highway.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要走高速公路",
+            "zh-Hans": "要不要走高速公路",
+            "en": "Shall we take the expressway"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "可以開快一點嗎",
+            "zh-Hans": "可以开快一点吗",
+            "en": "Can I drive a bit faster"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要抄近路",
+            "zh-Hans": "要不要抄近路",
+            "en": "Shall I take a shortcut"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "お願いします／下の道でお願いします",
+        "audio": "taxi.highway.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「高速」是高速公路，不是開快。走高速通常比較快，但要另外付過路費。這裡回「大丈夫です」意思不清楚：要走就說「お願いします」，不走就說「下の道でお願いします」（走一般道路）。",
+        "zh-Hans": "「高速」是高速公路，不是开快。走高速通常比较快，但要另外付过路费。这里回「大丈夫です」意思不清楚：要走就说「お願いします」，不走就说「下の道でお願いします」（走普通道路）。",
+        "en": "高速 here means the expressway, not driving fast. It is usually quicker but the tolls are extra. 大丈夫です is unclear here: say お願いします to take it, or 下の道でお願いします for ordinary roads."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "taxi.stop-here",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂司機問停這裡可不可以",
+        "zh-Hans": "听懂司机问停这里行不行",
+        "en": "Understand when the driver asks if here is a good place to stop"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.stop-here.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "このあたりでよろしいですか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.stop-here.p1.mp3"
+        },
+        {
+          "id": "taxi.stop-here.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "こちらで大丈夫ですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.stop-here.p2.mp3"
+        },
+        {
+          "id": "taxi.stop-here.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ここで停めてもよろしいでしょうか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.stop-here.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "停這裡可以嗎",
+            "zh-Hans": "停这里可以吗",
+            "en": "Is here all right"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要在這裡等你",
+            "zh-Hans": "要不要在这里等你",
+            "en": "Shall I wait for you here"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要從哪一邊下車",
+            "zh-Hans": "从哪一边下车",
+            "en": "Which side will you get out on"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "ここで大丈夫です",
+        "audio": "taxi.stop-here.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「このあたり」是這附近，「よろしいですか」是問可不可以。可以就說「ここで大丈夫です」，想再往前一點就說「もう少し先でお願いします」。",
+        "zh-Hans": "「このあたり」是这附近，「よろしいですか」是问行不行。可以就说「ここで大丈夫です」，想再往前一点就说「もう少し先でお願いします」。",
+        "en": "このあたり means around here, and よろしいですか asks if that is all right. Say ここで大丈夫です, or もう少し先でお願いします to go a little further."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "taxi.payment",
+      "kind": "screen",
+      "goal": {
+        "zh-Hant": "你想刷信用卡。在後座的付款螢幕上按對的按鈕",
+        "zh-Hans": "你想刷信用卡。在后座的付款屏幕上按对的按钮",
+        "en": "You want to pay by credit card. Tap the right button on the back-seat screen"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.payment.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お支払いは後ろの画面でお願いします。",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "お支払い方法をお選びください",
+            "detail": "料金 ¥2,340",
+            "buttons": [
+              {
+                "choiceId": "credit",
+                "ja": "クレジットカード"
+              },
+              {
+                "choiceId": "ic",
+                "ja": "交通系IC"
+              },
+              {
+                "choiceId": "qr",
+                "ja": "QRコード決済"
+              },
+              {
+                "choiceId": "cash",
+                "ja": "現金"
+              }
+            ]
+          },
+          "audio": "taxi.payment.p1.mp3"
+        },
+        {
+          "id": "taxi.payment.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お支払いは現金ですか、カードですか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": {
+            "heading": "お支払い",
+            "detail": "運賃 ¥2,340",
+            "buttons": [
+              {
+                "choiceId": "qr",
+                "ja": "QR・バーコード"
+              },
+              {
+                "choiceId": "credit",
+                "ja": "カード（タッチ・差し込み）"
+              },
+              {
+                "choiceId": "cash",
+                "ja": "現金（乗務員へ）"
+              },
+              {
+                "choiceId": "ic",
+                "ja": "交通系IC・電子マネー"
+              }
+            ]
+          },
+          "audio": "taxi.payment.p2.mp3"
+        },
+        {
+          "id": "taxi.payment.p3",
+          "role": "review",
+          "speaker": "screen",
+          "text": null,
+          "voice": null,
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "お支払い方法を選んでください",
+            "detail": "合計 ¥2,340",
+            "buttons": [
+              {
+                "choiceId": "cash",
+                "ja": "現金"
+              },
+              {
+                "choiceId": "ic",
+                "ja": "IC"
+              },
+              {
+                "choiceId": "credit",
+                "ja": "カード"
+              },
+              {
+                "choiceId": "qr",
+                "ja": "コード決済"
+              }
+            ]
+          },
+          "audio": null
+        }
+      ],
+      "choices": [
+        {
+          "id": "credit",
+          "text": {
+            "zh-Hant": "信用卡",
+            "zh-Hans": "信用卡",
+            "en": "Credit card"
+          },
+          "correct": true
+        },
+        {
+          "id": "ic",
+          "text": {
+            "zh-Hant": "交通卡",
+            "zh-Hans": "交通卡",
+            "en": "Transit card"
+          },
+          "correct": false
+        },
+        {
+          "id": "qr",
+          "text": {
+            "zh-Hant": "條碼支付",
+            "zh-Hans": "二维码支付",
+            "en": "QR code payment"
+          },
+          "correct": false
+        },
+        {
+          "id": "cash",
+          "text": {
+            "zh-Hant": "現金（付給司機）",
+            "zh-Hans": "现金（付给司机）",
+            "en": "Cash, paid to the driver"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "カードで",
+        "audio": "taxi.payment.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "後座的螢幕可以自己選付款方式。「クレジットカード」「カード」是信用卡，選了之後依提示感應或插卡；「現金」是付現，把錢交給司機。司機開口問的話，說「カードで」就好。",
+        "zh-Hans": "后座的屏幕可以自己选付款方式。「クレジットカード」「カード」是信用卡，选了之后按提示感应或插卡；「現金」是付现金，把钱交给司机。司机开口问的话，说「カードで」就好。",
+        "en": "You can choose how to pay on the back-seat screen. クレジットカード or カード is credit card; tap or insert it when the screen asks. 現金 is cash, which you hand to the driver. If the driver asks, just say カードで."
+      },
+      "wordIds": [
+        "transit-ic-card"
+      ]
+    },
+    {
+      "id": "taxi.receipt",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂司機問要不要收據",
+        "zh-Hans": "听懂司机问要不要发票",
+        "en": "Understand when the driver asks if you want a receipt"
+      },
+      "phrasings": [
+        {
+          "id": "taxi.receipt.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "領収書はご入用ですか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.receipt.p1.mp3"
+        },
+        {
+          "id": "taxi.receipt.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "レシートお出ししますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "taxi.receipt.p2.mp3"
+        },
+        {
+          "id": "taxi.receipt.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "領収書、要りますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "taxi.receipt.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要收據",
+            "zh-Hans": "要不要发票",
+            "en": "Do you want a receipt"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "東西都帶了嗎",
+            "zh-Hans": "东西都带了吗",
+            "en": "Do you have all your things"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要幫你拿行李",
+            "zh-Hans": "要不要帮你拿行李",
+            "en": "Shall I get your luggage"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "お願いします／大丈夫です",
+        "audio": "taxi.receipt.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「領収書」「レシート」都是收據。要就說「お願いします」，不用就說「大丈夫です」。",
+        "zh-Hans": "「領収書」「レシート」都是发票或小票。要就说「お願いします」，不用就说「大丈夫です」。",
+        "en": "領収書 and レシート both mean a receipt. Say お願いします for yes, or 大丈夫です for no."
+      },
+      "wordIds": [
+        "receipt"
+      ]
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "搭計程車",
+          "zh-Hans": "打车",
+          "en": "Taking a taxi"
+        },
+        "intent": {
+          "zh-Hant": "你帶著一個大行李箱，想放後車廂。要去的地址存在手機上；不想走高速，想刷卡，要收據。",
+          "zh-Hans": "你带着一个大行李箱，想放后备箱。要去的地址存在手机上；不想走高速，想刷卡，要收据。",
+          "en": "You have a big suitcase for the trunk, and the address is saved on your phone. You don't want the expressway, and you'll pay by card and want a receipt."
+        },
+        "enter": {
+          "zh-Hant": "攔下一台計程車",
+          "zh-Hans": "拦下一辆出租车",
+          "en": "Flag down a taxi"
+        },
+        "questions": [
+          "taxi.luggage",
+          "taxi.destination",
+          "taxi.seatbelt",
+          "taxi.highway",
+          "taxi.stop-here",
+          "taxi.payment",
+          "taxi.receipt"
+        ]
+      }
+    ],
+    "steps": {
+      "taxi.luggage": {
+        "background": "scene-bg-taxi",
+        "replies": [
+          {
+            "id": "yes",
+            "ja": "お願いします",
+            "meaning": {
+              "zh-Hant": "麻煩了（放後車廂）",
+              "zh-Hans": "麻烦了（放后备箱）",
+              "en": "Yes, please (in the trunk)"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "司機打開後車廂，把行李箱放進去。",
+              "zh-Hans": "司机打开后备箱，把行李箱放进去。",
+              "en": "The driver opens the trunk and puts your suitcase in."
+            }
+          },
+          {
+            "id": "no",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "No, thanks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機關上後車廂。你抱著大行李箱擠進後座。",
+              "zh-Hans": "司机关上后备箱。你抱着大行李箱挤进后座。",
+              "en": "The driver shuts the trunk. You squeeze into the back seat with your suitcase."
+            }
+          },
+          {
+            "id": "here",
+            "ja": "ここまでお願いします",
+            "meaning": {
+              "zh-Hant": "到這裡麻煩了（給他看手機）",
+              "zh-Hans": "到这里麻烦了（给他看手机）",
+              "en": "Here, please (showing your phone)"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機點頭，還在問行李要不要放後車廂。",
+              "zh-Hans": "司机点头，还在问行李要不要放后备箱。",
+              "en": "The driver nods, still asking about the trunk."
+            }
+          }
+        ]
+      },
+      "taxi.destination": {
+        "background": "scene-bg-taxi",
+        "replies": [
+          {
+            "id": "here",
+            "ja": "ここまでお願いします",
+            "meaning": {
+              "zh-Hant": "到這裡麻煩了（給他看手機上的地址）",
+              "zh-Hans": "到这里麻烦了（给他看手机上的地址）",
+              "en": "Here, please (showing the address on your phone)"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "司機看了地址，輸入導航。",
+              "zh-Hans": "司机看了地址，输进导航。",
+              "en": "The driver reads the address and puts it into the navigation."
+            }
+          },
+          {
+            "id": "station",
+            "ja": "駅までお願いします",
+            "meaning": {
+              "zh-Hant": "到車站",
+              "zh-Hans": "到车站",
+              "en": "To the station, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機往車站開。你要去的是手機上的地址。",
+              "zh-Hans": "司机往车站开。你要去的是手机上的地址。",
+              "en": "The driver heads for the station. You wanted the address on your phone."
+            }
+          },
+          {
+            "id": "local",
+            "ja": "下の道でお願いします",
+            "meaning": {
+              "zh-Hant": "走一般道路",
+              "zh-Hans": "走普通道路",
+              "en": "Local roads, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機還不知道要去哪裡，又問一次。",
+              "zh-Hans": "司机还不知道要去哪里，又问一次。",
+              "en": "The driver still doesn't know where to go and asks again."
+            }
+          }
+        ]
+      },
+      "taxi.seatbelt": {
+        "background": "scene-bg-taxi",
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "はい",
+            "meaning": {
+              "zh-Hant": "好",
+              "zh-Hans": "好",
+              "en": "OK"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "你繫上安全帶，車子開動。",
+              "zh-Hans": "你系上安全带，车子开动。",
+              "en": "You buckle up and the car pulls away."
+            }
+          },
+          {
+            "id": "fine",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "I'm fine"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機沒有開車，等你繫好安全帶。",
+              "zh-Hans": "司机没有开车，等你系好安全带。",
+              "en": "The driver waits for you to buckle up before moving."
+            }
+          },
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒到付款，司機在提醒你繫安全帶。",
+              "zh-Hans": "还没到付款，司机在提醒你系安全带。",
+              "en": "It's not time to pay. The driver is reminding you about the seatbelt."
+            }
+          }
+        ]
+      },
+      "taxi.highway": {
+        "background": "scene-bg-taxi",
+        "replies": [
+          {
+            "id": "local",
+            "ja": "下の道でお願いします",
+            "meaning": {
+              "zh-Hant": "走一般道路",
+              "zh-Hans": "走普通道路",
+              "en": "Local roads, please"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "司機走一般道路，沒有過路費。",
+              "zh-Hans": "司机走普通道路，没有过路费。",
+              "en": "The driver takes local roads, with no toll."
+            }
+          },
+          {
+            "id": "yes",
+            "ja": "お願いします",
+            "meaning": {
+              "zh-Hant": "麻煩了（走高速）",
+              "zh-Hans": "麻烦了（走高速）",
+              "en": "Yes, please (the expressway)"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機開上高速，車資多了 ¥700。你原本不想走高速。",
+              "zh-Hans": "司机开上高速，车费多了 ¥700。你本来不想走高速。",
+              "en": "The driver takes the expressway and the fare goes up ¥700. You didn't want the expressway."
+            }
+          },
+          {
+            "id": "stop",
+            "ja": "ここで大丈夫です",
+            "meaning": {
+              "zh-Hant": "停這裡就好",
+              "zh-Hans": "停这里就好",
+              "en": "Here is fine"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒到，司機在問要不要走高速。",
+              "zh-Hans": "还没到，司机在问要不要走高速。",
+              "en": "You're not there yet. The driver is asking about the expressway."
+            }
+          }
+        ]
+      },
+      "taxi.stop-here": {
+        "background": "scene-bg-taxi",
+        "note": {
+          "zh-Hant": "手機上的地址就在右手邊。",
+          "zh-Hans": "手机上的地址就在右手边。",
+          "en": "The address on your phone is right there on the right."
+        },
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "ここで大丈夫です",
+            "meaning": {
+              "zh-Hant": "停這裡就好",
+              "zh-Hans": "停这里就好",
+              "en": "Here is fine"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "司機在路邊停車，按下計費結束。",
+              "zh-Hans": "司机在路边停车，按下计费结束。",
+              "en": "The driver pulls over and stops the meter."
+            }
+          },
+          {
+            "id": "further",
+            "ja": "もう少し先でお願いします",
+            "meaning": {
+              "zh-Hant": "再往前一點",
+              "zh-Hans": "再往前一点",
+              "en": "A bit further, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機又往前開了一段，你得拖著行李走回來。",
+              "zh-Hans": "司机又往前开了一段，你得拖着行李走回来。",
+              "en": "The driver goes on a bit, and you drag your suitcase back."
+            }
+          },
+          {
+            "id": "receipt",
+            "ja": "領収書お願いします",
+            "meaning": {
+              "zh-Hant": "我要收據",
+              "zh-Hans": "我要收据",
+              "en": "A receipt, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "還沒結帳，司機在問停這裡可不可以。",
+              "zh-Hans": "还没结账，司机在问停这里可不可以。",
+              "en": "You haven't paid yet. The driver is asking if here is OK."
+            }
+          }
+        ]
+      },
+      "taxi.payment": {
+        "background": "scene-bg-taxi",
+        "note": {
+          "zh-Hant": "後座前方的螢幕亮了。你想刷信用卡。",
+          "zh-Hans": "后座前面的屏幕亮了。你想刷信用卡。",
+          "en": "The screen in front of the back seat lights up. You want to pay by credit card."
+        },
+        "machine": {
+          "kind": "payment",
+          "total": 2340,
+          "item": "運賃",
+          "brand": "後部座席 お支払い",
+          "expect": "card"
+        }
+      },
+      "taxi.receipt": {
+        "background": "scene-bg-taxi",
+        "card": {
+          "title": "領収書",
+          "lines": [
+            "運賃　¥2,340",
+            "クレジット"
+          ]
+        },
+        "replies": [
+          {
+            "id": "yes",
+            "ja": "お願いします",
+            "meaning": {
+              "zh-Hant": "麻煩了（要收據）",
+              "zh-Hans": "麻烦了（要收据）",
+              "en": "Yes, please (a receipt)"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "司機把收據遞給你。",
+              "zh-Hans": "司机把收据递给你。",
+              "en": "The driver hands you the receipt."
+            }
+          },
+          {
+            "id": "no",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "No, thanks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "司機沒有給收據。你原本要留收據。",
+              "zh-Hans": "司机没有给收据。你本来要留收据。",
+              "en": "The driver gives you no receipt. You wanted one."
+            }
+          },
+          {
+            "id": "card",
+            "ja": "カードで",
+            "meaning": {
+              "zh-Hant": "刷卡",
+              "zh-Hans": "刷卡",
+              "en": "By card"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "已經刷卡付好了，司機在問要不要收據。",
+              "zh-Hans": "已经刷卡付好了，司机在问要不要收据。",
+              "en": "You've already paid by card. The driver is asking about a receipt."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "お荷物はトランクにお入れしますか？": [
+      {
+        "t": "お荷物",
+        "r": "おにもつ",
+        "m": {
+          "zh-Hant": "行李（敬語）",
+          "zh-Hans": "行李（敬语）",
+          "en": "luggage (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "トランク",
+        "m": {
+          "zh-Hant": "後車廂",
+          "zh-Hans": "后备箱",
+          "en": "boot, trunk"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "お入れしますか",
+        "r": "おいれしますか",
+        "m": {
+          "zh-Hant": "要幫您放進去嗎（敬語）",
+          "zh-Hans": "要帮您放进去吗（敬语）",
+          "en": "shall I put it in? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "トランク開けますね、お荷物入れましょうか？": [
+      {
+        "t": "トランク",
+        "m": {
+          "zh-Hant": "後車廂",
+          "zh-Hans": "后备箱",
+          "en": "boot, trunk"
+        }
+      },
+      {
+        "t": "開けますね",
+        "r": "あけますね",
+        "m": {
+          "zh-Hant": "我打開喔",
+          "zh-Hans": "我打开哦",
+          "en": "I'll open it"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "お荷物",
+        "r": "おにもつ",
+        "m": {
+          "zh-Hant": "行李（敬語）",
+          "zh-Hans": "行李（敬语）",
+          "en": "luggage (polite)"
+        }
+      },
+      {
+        "t": "入れましょうか",
+        "r": "いれましょうか",
+        "m": {
+          "zh-Hant": "要幫您放嗎",
+          "zh-Hans": "要帮您放吗",
+          "en": "shall I put it in?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "スーツケースは後ろに積みましょうか？": [
+      {
+        "t": "スーツケース",
+        "m": {
+          "zh-Hant": "行李箱",
+          "zh-Hans": "行李箱",
+          "en": "suitcase"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "後ろ",
+        "r": "うしろ",
+        "m": {
+          "zh-Hant": "後面",
+          "zh-Hans": "后面",
+          "en": "the back"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "積みましょうか",
+        "r": "つみましょうか",
+        "m": {
+          "zh-Hant": "要幫您放上去嗎",
+          "zh-Hans": "要帮您放上去吗",
+          "en": "shall I load it?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お願いします／大丈夫です": [
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "どちらまでですか？": [
+      {
+        "t": "どちらまで",
+        "m": {
+          "zh-Hant": "到哪裡",
+          "zh-Hans": "到哪里",
+          "en": "to where"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "どちらまで行かれますか？": [
+      {
+        "t": "どちらまで",
+        "m": {
+          "zh-Hant": "到哪裡",
+          "zh-Hans": "到哪里",
+          "en": "to where"
+        }
+      },
+      {
+        "t": "行かれますか",
+        "r": "いかれますか",
+        "m": {
+          "zh-Hant": "要去嗎（尊敬語）",
+          "zh-Hans": "要去吗（尊敬语）",
+          "en": "are you going? (honorific)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "行き先はどちらでしょうか？": [
+      {
+        "t": "行き先",
+        "r": "いきさき",
+        "m": {
+          "zh-Hant": "目的地",
+          "zh-Hans": "目的地",
+          "en": "destination"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どちら",
+        "m": {
+          "zh-Hant": "哪一個",
+          "zh-Hans": "哪一个",
+          "en": "which one"
+        }
+      },
+      {
+        "t": "でしょうか",
+        "m": {
+          "zh-Hant": "……嗎（更客氣）",
+          "zh-Hans": "……吗（更客气）",
+          "en": "is it…? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ここまでお願いします": [
+      {
+        "t": "ここまで",
+        "m": {
+          "zh-Hant": "到這裡",
+          "zh-Hans": "到这里",
+          "en": "to here"
+        }
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "シートベルトをお締めください。": [
+      {
+        "t": "シートベルト",
+        "m": {
+          "zh-Hant": "安全帶",
+          "zh-Hans": "安全带",
+          "en": "seat belt"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お締めください",
+        "r": "おしめください",
+        "m": {
+          "zh-Hant": "請繫上",
+          "zh-Hans": "请系上",
+          "en": "please fasten"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "ベルトお願いしますね。": [
+      {
+        "t": "ベルト",
+        "m": {
+          "zh-Hant": "安全帶",
+          "zh-Hans": "安全带",
+          "en": "belt"
+        }
+      },
+      {
+        "t": "お願いしますね",
+        "r": "おねがいしますね",
+        "m": {
+          "zh-Hant": "麻煩囉",
+          "zh-Hans": "麻烦了哦",
+          "en": "please (friendly)"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "後ろの席もシートベルトの着用をお願いいたします。": [
+      {
+        "t": "後ろの席",
+        "r": "うしろのせき",
+        "m": {
+          "zh-Hant": "後座",
+          "zh-Hans": "后座",
+          "en": "back seat"
+        }
+      },
+      {
+        "t": "も"
+      },
+      {
+        "t": "シートベルト",
+        "m": {
+          "zh-Hant": "安全帶",
+          "zh-Hans": "安全带",
+          "en": "seat belt"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "着用",
+        "r": "ちゃくよう",
+        "m": {
+          "zh-Hant": "繫上、穿戴",
+          "zh-Hans": "系上、穿戴",
+          "en": "wearing"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いいたします",
+        "r": "おねがいいたします",
+        "m": {
+          "zh-Hant": "麻煩了（更客氣）",
+          "zh-Hans": "麻烦了（更客气）",
+          "en": "please (more polite)"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "はい": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      }
+    ],
+    "高速を使ってもよろしいですか？": [
+      {
+        "t": "高速",
+        "r": "こうそく",
+        "m": {
+          "zh-Hant": "高速公路",
+          "zh-Hans": "高速公路",
+          "en": "expressway"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "使っても",
+        "r": "つかっても",
+        "m": {
+          "zh-Hant": "用……也",
+          "zh-Hans": "用……也",
+          "en": "even if we use"
+        }
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "高速乗りますか？": [
+      {
+        "t": "高速",
+        "r": "こうそく",
+        "m": {
+          "zh-Hant": "高速公路",
+          "zh-Hans": "高速公路",
+          "en": "expressway"
+        }
+      },
+      {
+        "t": "乗りますか",
+        "r": "のりますか",
+        "m": {
+          "zh-Hant": "要走嗎、要上嗎",
+          "zh-Hans": "要走吗、要上吗",
+          "en": "shall we take it?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "高速道路を使うと早いですが、どうされますか？": [
+      {
+        "t": "高速道路",
+        "r": "こうそくどうろ",
+        "m": {
+          "zh-Hant": "高速公路",
+          "zh-Hans": "高速公路",
+          "en": "expressway"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "使うと",
+        "r": "つかうと",
+        "m": {
+          "zh-Hant": "走的話",
+          "zh-Hans": "走的话",
+          "en": "if we use it"
+        }
+      },
+      {
+        "t": "早いですが",
+        "r": "はやいですが",
+        "m": {
+          "zh-Hant": "比較快，不過",
+          "zh-Hans": "比较快，不过",
+          "en": "it's quicker, but"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "どうされますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お願いします／下の道でお願いします": [
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "下の道",
+        "r": "したのみち",
+        "m": {
+          "zh-Hant": "一般道路（不走高速）",
+          "zh-Hans": "普通道路（不走高速）",
+          "en": "local roads"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "このあたりでよろしいですか？": [
+      {
+        "t": "このあたり",
+        "m": {
+          "zh-Hant": "這附近",
+          "zh-Hans": "这附近",
+          "en": "around here"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "こちらで大丈夫ですか？": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "大丈夫ですか",
+        "r": "だいじょうぶですか",
+        "m": {
+          "zh-Hant": "可以嗎、沒問題嗎",
+          "zh-Hans": "可以吗、没问题吗",
+          "en": "is that OK?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ここで停めてもよろしいでしょうか？": [
+      {
+        "t": "ここで",
+        "m": {
+          "zh-Hant": "在這裡",
+          "zh-Hans": "在这里",
+          "en": "here"
+        }
+      },
+      {
+        "t": "停めても",
+        "r": "とめても",
+        "m": {
+          "zh-Hant": "停車也",
+          "zh-Hans": "停车也",
+          "en": "stopping"
+        }
+      },
+      {
+        "t": "よろしいでしょうか",
+        "m": {
+          "zh-Hant": "可以嗎（更客氣）",
+          "zh-Hans": "可以吗（更客气）",
+          "en": "would that be all right? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ここで大丈夫です": [
+      {
+        "t": "ここで",
+        "m": {
+          "zh-Hant": "在這裡",
+          "zh-Hans": "在这里",
+          "en": "here"
+        }
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "お支払いは後ろの画面でお願いします。": [
+      {
+        "t": "お支払い",
+        "r": "おしはらい",
+        "m": {
+          "zh-Hant": "付款（敬語）",
+          "zh-Hans": "付款（敬语）",
+          "en": "payment (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "後ろ",
+        "r": "うしろ",
+        "m": {
+          "zh-Hant": "後面",
+          "zh-Hans": "后面",
+          "en": "the back"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "画面",
+        "r": "がめん",
+        "m": {
+          "zh-Hant": "畫面、螢幕",
+          "zh-Hans": "画面、屏幕",
+          "en": "screen"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "お支払いは現金ですか、カードですか？": [
+      {
+        "t": "お支払い",
+        "r": "おしはらい",
+        "m": {
+          "zh-Hant": "付款（敬語）",
+          "zh-Hans": "付款（敬语）",
+          "en": "payment (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "カードで": [
+      {
+        "t": "カード",
+        "m": {
+          "zh-Hant": "卡（信用卡）",
+          "zh-Hans": "卡（信用卡）",
+          "en": "card"
+        }
+      },
+      {
+        "t": "で"
+      }
+    ],
+    "領収書はご入用ですか？": [
+      {
+        "t": "領収書",
+        "r": "りょうしゅうしょ",
+        "m": {
+          "zh-Hant": "收據",
+          "zh-Hans": "收据",
+          "en": "receipt"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "ご入用ですか",
+        "r": "ごいりようですか",
+        "m": {
+          "zh-Hant": "需要嗎（敬語）",
+          "zh-Hans": "需要吗（敬语）",
+          "en": "do you need it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "レシートお出ししますか？": [
+      {
+        "t": "レシート",
+        "m": {
+          "zh-Hant": "收據",
+          "zh-Hans": "小票",
+          "en": "receipt"
+        }
+      },
+      {
+        "t": "お出ししますか",
+        "r": "おだししますか",
+        "m": {
+          "zh-Hant": "要給您嗎（敬語）",
+          "zh-Hans": "要给您吗（敬语）",
+          "en": "shall I give you one? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "領収書、要りますか？": [
+      {
+        "t": "領収書",
+        "r": "りょうしゅうしょ",
+        "m": {
+          "zh-Hant": "收據",
+          "zh-Hans": "收据",
+          "en": "receipt"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "要りますか",
+        "r": "いりますか",
+        "m": {
+          "zh-Hant": "要嗎",
+          "zh-Hans": "要吗",
+          "en": "do you need it?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お願いします": [
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "大丈夫です": [
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "駅までお願いします": [
+      {
+        "t": "駅まで",
+        "r": "えきまで",
+        "m": {
+          "zh-Hant": "到車站",
+          "zh-Hans": "到车站",
+          "en": "to the station"
+        }
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "下の道でお願いします": [
+      {
+        "t": "下の道",
+        "r": "したのみち",
+        "m": {
+          "zh-Hant": "一般道路（不走高速）",
+          "zh-Hans": "普通道路（不走高速）",
+          "en": "local roads"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "もう少し先でお願いします": [
+      {
+        "t": "もう少し先",
+        "r": "もうすこしさき",
+        "m": {
+          "zh-Hant": "再往前一點",
+          "zh-Hans": "再往前一点",
+          "en": "a bit further on"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "領収書お願いします": [
+      {
+        "t": "領収書",
+        "r": "りょうしゅうしょ",
+        "m": {
+          "zh-Hant": "收據",
+          "zh-Hans": "收据",
+          "en": "receipt"
+        }
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ]
+  }
+}

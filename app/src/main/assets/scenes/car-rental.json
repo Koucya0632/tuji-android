@@ -1,0 +1,2037 @@
+{
+  "schemaVersion": 2,
+  "id": "car-rental",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "租車取車",
+    "zh-Hans": "租车取车",
+    "en": "Picking up a rental car"
+  },
+  "summary": {
+    "zh-Hant": "取車時櫃台會問的七件事",
+    "zh-Hans": "取车时柜台会问的七件事",
+    "en": "Seven things the counter asks when you pick up a car"
+  },
+  "questions": [
+    {
+      "id": "car-rental.reservation",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問預約資料",
+        "zh-Hans": "听懂柜台问预约信息",
+        "en": "Understand when the counter asks about your booking"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.reservation.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ご予約のお名前をお願いします。",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.reservation.p1.mp3"
+        },
+        {
+          "id": "car-rental.reservation.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご予約番号をお願いできますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "car-rental.reservation.p2.mp3"
+        },
+        {
+          "id": "car-rental.reservation.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ご予約のお名前を頂戴できますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.reservation.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "預約的名字或號碼",
+            "zh-Hans": "预约的名字或号码",
+            "en": "The name or number on your booking"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請出示駕照",
+            "zh-Hans": "请出示驾照",
+            "en": "Your driving licence, please"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "有幾個人要開車",
+            "zh-Hans": "有几个人要开车",
+            "en": "How many people will drive"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "予約の画面はこちらです",
+        "audio": "car-rental.reservation.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「ご予約」是預約，「お名前」是名字，「番号」是號碼。報上名字，或給櫃台看手機上的預約畫面。",
+        "zh-Hans": "「ご予約」是预约，「お名前」是名字，「番号」是号码。报上名字，或给柜台看手机上的预约画面。",
+        "en": "ご予約 is your booking, お名前 your name, and 番号 the number. Give your name or show the booking on your phone."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "car-rental.licence",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台請你出示駕照",
+        "zh-Hans": "听懂柜台请你出示驾照",
+        "en": "Understand when the counter asks for your driving licence"
+      },
+      "reviewNote": "駕照資格有法律後果：能否在日本開車依發照國不同（國際駕照、特定國家地區的駕照＋日文譯本等）。回應與解說不列國家清單，需熟悉日本道路交通法的人審稿。",
+      "phrasings": [
+        {
+          "id": "car-rental.licence.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "免許証を拝見してもよろしいですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.licence.p1.mp3"
+        },
+        {
+          "id": "car-rental.licence.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "国際免許証とパスポートをお願いします。",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "car-rental.licence.p2.mp3"
+        },
+        {
+          "id": "car-rental.licence.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "免許証と翻訳文はお持ちですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.licence.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "請出示駕照",
+            "zh-Hans": "请出示驾照",
+            "en": "Your driving licence, please"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請出示信用卡",
+            "zh-Hans": "请出示信用卡",
+            "en": "Your credit card, please"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "請出示預約確認",
+            "zh-Hans": "请出示预约确认",
+            "en": "Your booking confirmation, please"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい、こちらです",
+        "audio": "car-rental.licence.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「免許証」是駕照，「国際免許証」是國際駕照，「翻訳文」是日文譯本。要帶哪些文件才能在日本開車，依發照國家或地區不同，以官方公告和租車公司的說明為準。",
+        "zh-Hans": "「免許証」是驾照，「国際免許証」是国际驾照，「翻訳文」是日文译本。要带哪些文件才能在日本开车，依发证国家或地区不同，以官方公告和租车公司的说明为准。",
+        "en": "免許証 is a driving licence, 国際免許証 an international permit, and 翻訳文 a Japanese translation. Which documents you need to drive in Japan depends on where your licence was issued, so check the official notices and the rental company."
+      },
+      "wordIds": [
+        "drivers-license",
+        "international-driving-permit",
+        "passport"
+      ]
+    },
+    {
+      "id": "car-rental.coverage",
+      "kind": "screen",
+      "goal": {
+        "zh-Hant": "櫃台問你要不要加補償方案。你只想加免責補償。在說明單上按對的方案",
+        "zh-Hans": "柜台问你要不要加补偿方案。你只想加免责补偿。在说明单上按对的方案",
+        "en": "The counter asks about coverage. You want the collision damage waiver only. Tap the right plan"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.coverage.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "補償はどうされますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "補償プランのご案内",
+            "detail": "ご希望のプランをお選びください",
+            "buttons": [
+              {
+                "choiceId": "none",
+                "ja": "加入しない"
+              },
+              {
+                "choiceId": "cdw",
+                "ja": "免責補償のみ"
+              },
+              {
+                "choiceId": "full",
+                "ja": "免責補償＋NOC補償"
+              }
+            ]
+          },
+          "audio": "car-rental.coverage.p1.mp3"
+        },
+        {
+          "id": "car-rental.coverage.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "免責補償にはご加入されますか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": {
+            "heading": "補償制度",
+            "detail": "料金は1日あたりです",
+            "buttons": [
+              {
+                "choiceId": "full",
+                "ja": "安心パック（免責補償＋NOC補償）"
+              },
+              {
+                "choiceId": "cdw",
+                "ja": "免責補償"
+              },
+              {
+                "choiceId": "none",
+                "ja": "補償なし"
+              }
+            ]
+          },
+          "audio": "car-rental.coverage.p2.mp3"
+        },
+        {
+          "id": "car-rental.coverage.p3",
+          "role": "review",
+          "speaker": "screen",
+          "text": null,
+          "voice": null,
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "補償プランを選択してください",
+            "buttons": [
+              {
+                "choiceId": "cdw",
+                "ja": "免責補償に加入する"
+              },
+              {
+                "choiceId": "full",
+                "ja": "NOC補償も付ける"
+              },
+              {
+                "choiceId": "none",
+                "ja": "加入しない"
+              }
+            ]
+          },
+          "audio": null
+        }
+      ],
+      "choices": [
+        {
+          "id": "none",
+          "text": {
+            "zh-Hant": "不加補償",
+            "zh-Hans": "不加补偿",
+            "en": "No coverage"
+          },
+          "correct": false
+        },
+        {
+          "id": "cdw",
+          "text": {
+            "zh-Hant": "只加免責補償",
+            "zh-Hans": "只加免责补偿",
+            "en": "Collision damage waiver only"
+          },
+          "correct": true
+        },
+        {
+          "id": "full",
+          "text": {
+            "zh-Hant": "免責補償加營業損失補償（NOC）",
+            "zh-Hans": "免责补偿加营业损失补偿（NOC）",
+            "en": "Damage waiver plus loss-of-use cover (NOC)"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "これでお願いします",
+        "audio": "car-rental.coverage.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「免責補償」是出事時減免你自付金額的方案，「NOC」是車子修理期間的營業損失。方案名稱、內容和價格各家租車公司不同，以櫃台說明為準。看不懂可以指著方案說「これでお願いします」。",
+        "zh-Hans": "「免責補償」是出事时减免你自付金额的方案，「NOC」是车子维修期间的营业损失。方案名称、内容和价格各家租车公司不同，以柜台说明为准。看不懂可以指着方案说「これでお願いします」。",
+        "en": "免責補償 reduces what you pay yourself after an accident, and NOC covers the company's loss while the car is repaired. Names, terms and prices differ by company, so go by what the counter explains. You can point and say これでお願いします."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "car-rental.etc-card",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問要不要借 ETC 卡",
+        "zh-Hans": "听懂柜台问要不要借 ETC 卡",
+        "en": "Understand when the counter asks about an ETC card"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.etc-card.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ETCカードはお持ちですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.etc-card.p1.mp3"
+        },
+        {
+          "id": "car-rental.etc-card.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ETCカードのお貸し出しはご利用になりますか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "car-rental.etc-card.p2.mp3"
+        },
+        {
+          "id": "car-rental.etc-card.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ETCカード、お付けしますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.etc-card.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要不要借 ETC 卡",
+            "zh-Hans": "要不要借 ETC 卡",
+            "en": "Do you need an ETC card"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要不要加導航",
+            "zh-Hans": "要不要加导航",
+            "en": "Do you want a navigation unit"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "要不要兒童座椅",
+            "zh-Hans": "要不要儿童座椅",
+            "en": "Do you need a child seat"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "持っていません。お願いします／大丈夫です",
+        "audio": "car-rental.etc-card.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「ETCカード」是在高速公路收費站自動扣過路費的卡。沒有自己的卡又要走高速，就說「持っていません。お願いします」；不用就說「大丈夫です」。",
+        "zh-Hans": "「ETCカード」是在高速公路收费站自动扣过路费的卡。没有自己的卡又要走高速，就说「持っていません。お願いします」；不用就说「大丈夫です」。",
+        "en": "An ETC card pays expressway tolls automatically at the gate. If you will use the expressway and have no card, say 持っていません。お願いします. Otherwise, 大丈夫です."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "car-rental.damage-check",
+      "kind": "screen",
+      "goal": {
+        "zh-Hant": "你和店員一起看過車，沒有新的傷。在確認單上按對的按鈕",
+        "zh-Hans": "你和店员一起看过车，没有新的划痕。在确认单上按对的按钮",
+        "en": "You checked the car with the clerk and found nothing new. Tap the right button"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.damage-check.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お車の傷を一緒に確認させてください。",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "車両確認書",
+            "detail": "× ＝ 出発前からある傷",
+            "buttons": [
+              {
+                "choiceId": "add",
+                "ja": "傷を追加"
+              },
+              {
+                "choiceId": "sign",
+                "ja": "確認してサイン"
+              },
+              {
+                "choiceId": "back",
+                "ja": "戻る"
+              }
+            ]
+          },
+          "audio": "car-rental.damage-check.p1.mp3"
+        },
+        {
+          "id": "car-rental.damage-check.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "ほかに気になる傷はございますか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": {
+            "heading": "お車の状態確認",
+            "detail": "×印の箇所をご確認ください",
+            "buttons": [
+              {
+                "choiceId": "sign",
+                "ja": "確認しました"
+              },
+              {
+                "choiceId": "add",
+                "ja": "傷を追加する"
+              },
+              {
+                "choiceId": "back",
+                "ja": "やり直す"
+              }
+            ]
+          },
+          "audio": "car-rental.damage-check.p2.mp3"
+        },
+        {
+          "id": "car-rental.damage-check.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "よろしければ、こちらにサインをお願いします。",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": {
+            "heading": "車両チェックシート",
+            "detail": "出発前の傷 ×",
+            "buttons": [
+              {
+                "choiceId": "back",
+                "ja": "前に戻る"
+              },
+              {
+                "choiceId": "add",
+                "ja": "ほかの傷を記入"
+              },
+              {
+                "choiceId": "sign",
+                "ja": "サインする"
+              }
+            ]
+          },
+          "audio": "car-rental.damage-check.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "sign",
+          "text": {
+            "zh-Hant": "確認並簽名",
+            "zh-Hans": "确认并签名",
+            "en": "Confirm and sign"
+          },
+          "correct": true
+        },
+        {
+          "id": "add",
+          "text": {
+            "zh-Hant": "加上新發現的傷",
+            "zh-Hans": "加上新发现的划痕",
+            "en": "Add a scratch you found"
+          },
+          "correct": false
+        },
+        {
+          "id": "back",
+          "text": {
+            "zh-Hant": "返回",
+            "zh-Hans": "返回",
+            "en": "Back"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "大丈夫です",
+        "audio": "car-rental.damage-check.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「傷」是刮痕或凹痕。單子上標「×」的是原本就有的傷。發現沒標到的傷，先指給店員看；沒問題就說「大丈夫です」再簽名。",
+        "zh-Hans": "「傷」是划痕或凹痕。单子上标「×」的是原本就有的伤。发现没标到的划痕，先指给店员看；没问题就说「大丈夫です」再签名。",
+        "en": "傷 means a scratch or dent. Marks with × were already there. If you find one that isn't marked, point it out first. If all is fine, say 大丈夫です and sign."
+      },
+      "wordIds": [
+        "car"
+      ]
+    },
+    {
+      "id": "car-rental.full-tank",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂還車前要加滿油",
+        "zh-Hans": "听懂还车前要加满油",
+        "en": "Understand that you must refuel before returning the car"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.full-tank.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ご返却の際は、ガソリンを満タンにしてお戻しください。",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.full-tank.p1.mp3"
+        },
+        {
+          "id": "car-rental.full-tank.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "満タン返しでお願いします。",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "car-rental.full-tank.p2.mp3"
+        },
+        {
+          "id": "car-rental.full-tank.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "返却前に近くのスタンドで給油をお願いします。",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.full-tank.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "還車前要加滿油",
+            "zh-Hans": "还车前要加满油",
+            "en": "Fill the tank before you return it"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "還車前要洗車",
+            "zh-Hans": "还车前要洗车",
+            "en": "Wash the car before you return it"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "油已經加滿了",
+            "zh-Hans": "油已经加满了",
+            "en": "The tank is already full"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "わかりました",
+        "audio": "car-rental.full-tank.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「満タン」是加滿，「ガソリン」是汽油，「スタンド」是加油站，「返却」是還車。聽懂就說「わかりました」。",
+        "zh-Hans": "「満タン」是加满，「ガソリン」是汽油，「スタンド」是加油站，「返却」是还车。听懂就说「わかりました」。",
+        "en": "満タン means a full tank, ガソリン is petrol, スタンド is a petrol station, and 返却 is returning the car. Say わかりました."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "car-rental.return-time",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台確認還車時間",
+        "zh-Hans": "听懂柜台确认还车时间",
+        "en": "Understand when the counter checks your return time"
+      },
+      "phrasings": [
+        {
+          "id": "car-rental.return-time.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "ご返却は三日の午後五時でよろしいですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.return-time.p1.mp3"
+        },
+        {
+          "id": "car-rental.return-time.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "返却時間はお間違いないですか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "car-rental.return-time.p2.mp3"
+        },
+        {
+          "id": "car-rental.return-time.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お戻りは何時ごろのご予定ですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "car-rental.return-time.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "確認還車時間",
+            "zh-Hans": "确认还车时间",
+            "en": "Confirming when you return the car"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "要在哪家店還車",
+            "zh-Hans": "要在哪家店还车",
+            "en": "Which branch you return it to"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "什麼時候要出發",
+            "zh-Hans": "什么时候出发",
+            "en": "When you are setting off"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい、大丈夫です",
+        "audio": "car-rental.return-time.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「返却」「お戻り」是還車。「三日」是三號，不是三天。時間對就說「はい、大丈夫です」。",
+        "zh-Hans": "「返却」「お戻り」是还车。「三日」是三号，不是三天。时间对就说「はい、大丈夫です」。",
+        "en": "返却 and お戻り mean returning the car. 三日 here is the 3rd of the month, not three days. If the time is right, say はい、大丈夫です."
+      },
+      "wordIds": []
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "租一台車",
+          "zh-Hans": "租一辆车",
+          "en": "Picking up a rental car"
+        },
+        "intent": {
+          "zh-Hant": "你在網路上訂了車，預約畫面存在手機裡，駕照和護照都帶著。只想加免責補償。沒有自己的 ETC 卡，這趟會走高速。3 號下午 5 點還車。",
+          "zh-Hans": "你在网上订了车，预约页面存在手机里，驾照和护照都带着。只想加免责补偿。没有自己的 ETC 卡，这趟会走高速。3 号下午 5 点还车。",
+          "en": "You booked a car online and have the booking on your phone, plus your licence and passport. You only want the damage waiver. You don't have an ETC card and will use the expressway. You'll return the car on the 3rd at 5 p.m."
+        },
+        "enter": {
+          "zh-Hant": "走到租車櫃台",
+          "zh-Hans": "走到租车柜台",
+          "en": "Walk up to the rental counter"
+        },
+        "questions": [
+          "car-rental.reservation",
+          "car-rental.licence",
+          "car-rental.coverage",
+          "car-rental.etc-card",
+          "car-rental.damage-check",
+          "car-rental.full-tank",
+          "car-rental.return-time"
+        ]
+      }
+    ],
+    "steps": {
+      "car-rental.reservation": {
+        "background": "scene-bg-car-rental",
+        "replies": [
+          {
+            "id": "screen",
+            "ja": "予約の画面はこちらです",
+            "meaning": {
+              "zh-Hant": "這是預約畫面",
+              "zh-Hans": "这是预约页面",
+              "en": "Here's my booking"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員看了手機畫面，找到你的預約。",
+              "zh-Hans": "店员看了手机页面，找到你的预约。",
+              "en": "The clerk looks at your phone and finds the booking."
+            }
+          },
+          {
+            "id": "none",
+            "ja": "予約していません",
+            "meaning": {
+              "zh-Hant": "沒有預約",
+              "zh-Hans": "没有预约",
+              "en": "I don't have a booking"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員開始幫你查還有沒有空車。你其實訂好了。",
+              "zh-Hans": "店员开始帮你查还有没有空车。你其实订好了。",
+              "en": "The clerk starts checking for a free car. You did book one."
+            }
+          },
+          {
+            "id": "no-etc",
+            "ja": "持っていません。お願いします",
+            "meaning": {
+              "zh-Hant": "沒有，麻煩借我",
+              "zh-Hans": "没有，麻烦借我",
+              "en": "I don't have one. Yes, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員還在等你的預約資料。",
+              "zh-Hans": "店员还在等你的预约信息。",
+              "en": "The clerk is still waiting for your booking details."
+            }
+          }
+        ]
+      },
+      "car-rental.licence": {
+        "background": "scene-bg-car-rental",
+        "replies": [
+          {
+            "id": "here",
+            "ja": "はい、こちらです",
+            "meaning": {
+              "zh-Hant": "好，在這裡",
+              "zh-Hans": "好，在这里",
+              "en": "Yes, here you are"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "你遞出駕照和護照，店員接過去核對。",
+              "zh-Hans": "你递出驾照和护照，店员接过去核对。",
+              "en": "You hand over your licence and passport, and the clerk checks them."
+            }
+          },
+          {
+            "id": "none",
+            "ja": "持っていません",
+            "meaning": {
+              "zh-Hant": "沒有帶",
+              "zh-Hans": "没有带",
+              "en": "I don't have it"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員停下手續，等你拿出駕照。你的駕照其實在包包裡。",
+              "zh-Hans": "店员停下手续，等你拿出驾照。你的驾照其实在包里。",
+              "en": "The clerk stops and waits for your licence. It's in your bag."
+            }
+          },
+          {
+            "id": "ok",
+            "ja": "わかりました",
+            "meaning": {
+              "zh-Hant": "知道了",
+              "zh-Hans": "知道了",
+              "en": "Understood"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員還在等你拿出駕照。",
+              "zh-Hans": "店员还在等你拿出驾照。",
+              "en": "The clerk is still waiting for your licence."
+            }
+          }
+        ]
+      },
+      "car-rental.coverage": {
+        "background": "scene-bg-car-rental",
+        "note": {
+          "zh-Hant": "店員把補償方案的說明單放到櫃台上。你只想加免責補償。",
+          "zh-Hans": "店员把补偿方案的说明单放到柜台上。你只想加免责补偿。",
+          "en": "The clerk puts the coverage sheet on the counter. You only want the damage waiver."
+        }
+      },
+      "car-rental.etc-card": {
+        "background": "scene-bg-car-rental",
+        "replies": [
+          {
+            "id": "borrow",
+            "ja": "持っていません。お願いします",
+            "meaning": {
+              "zh-Hant": "沒有，麻煩借我",
+              "zh-Hans": "没有，麻烦借我",
+              "en": "I don't have one. Yes, please"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員在租車單上加了 ETC 卡。",
+              "zh-Hans": "店员在租车单上加了 ETC 卡。",
+              "en": "The clerk adds an ETC card to your rental form."
+            }
+          },
+          {
+            "id": "no",
+            "ja": "大丈夫です",
+            "meaning": {
+              "zh-Hant": "不用了",
+              "zh-Hans": "不用了",
+              "en": "No, thanks"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員沒有借你卡。你沒有自己的 ETC 卡，這趟又要走高速。",
+              "zh-Hans": "店员没有借你卡。你没有自己的 ETC 卡，这趟又要走高速。",
+              "en": "The clerk doesn't lend you a card. You don't have your own, and you'll be on the expressway."
+            }
+          },
+          {
+            "id": "screen",
+            "ja": "予約の画面はこちらです",
+            "meaning": {
+              "zh-Hant": "這是預約畫面",
+              "zh-Hans": "这是预约页面",
+              "en": "Here's my booking"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "預約剛才看過了，店員在問 ETC 卡。",
+              "zh-Hans": "预约刚才看过了，店员在问 ETC 卡。",
+              "en": "The booking's been checked. The clerk is asking about an ETC card."
+            }
+          }
+        ]
+      },
+      "car-rental.damage-check": {
+        "background": "scene-bg-car-rental",
+        "note": {
+          "zh-Hant": "你和店員繞車一圈，沒有看到新的傷。",
+          "zh-Hans": "你和店员绕车一圈，没有看到新的划痕。",
+          "en": "You walk around the car with the clerk and find no new scratches."
+        }
+      },
+      "car-rental.full-tank": {
+        "background": "scene-bg-car-rental",
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "わかりました",
+            "meaning": {
+              "zh-Hant": "知道了",
+              "zh-Hans": "知道了",
+              "en": "Understood"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員在單子上圈了「満タン返し」。",
+              "zh-Hans": "店员在单子上圈了「満タン返し」。",
+              "en": "The clerk circles 満タン返し on the form."
+            }
+          },
+          {
+            "id": "no",
+            "ja": "いりません",
+            "meaning": {
+              "zh-Hant": "不需要",
+              "zh-Hans": "不需要",
+              "en": "I don't need that"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員愣了一下，又說一次還車前要加滿油。",
+              "zh-Hans": "店员愣了一下，又说一次还车前要加满油。",
+              "en": "The clerk pauses, then says again that the tank must be full when you return it."
+            }
+          },
+          {
+            "id": "no-etc",
+            "ja": "持っていません。お願いします",
+            "meaning": {
+              "zh-Hant": "沒有，麻煩借我",
+              "zh-Hans": "没有，麻烦借我",
+              "en": "I don't have one. Yes, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "ETC 卡剛才說過了，店員在說還車前要加滿油。",
+              "zh-Hans": "ETC 卡刚才说过了，店员在说还车前要加满油。",
+              "en": "The ETC card is settled. The clerk is telling you to fill up before returning."
+            }
+          }
+        ]
+      },
+      "car-rental.return-time": {
+        "background": "scene-bg-car-rental",
+        "card": {
+          "title": "貸渡票",
+          "lines": [
+            "ご返却　3日 17:00",
+            "燃料　満タン返し",
+            "ETCカード　貸出"
+          ]
+        },
+        "replies": [
+          {
+            "id": "ok",
+            "ja": "はい、大丈夫です",
+            "meaning": {
+              "zh-Hant": "好，沒問題",
+              "zh-Hans": "好，没问题",
+              "en": "Yes, that's fine"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "店員把鑰匙交給你。",
+              "zh-Hans": "店员把钥匙交给你。",
+              "en": "The clerk hands you the keys."
+            }
+          },
+          {
+            "id": "4th",
+            "ja": "四日でお願いします",
+            "meaning": {
+              "zh-Hant": "改成 4 號",
+              "zh-Hans": "改成 4 号",
+              "en": "The 4th, please"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員把還車日改成 4 號，租金多了一天。你原本 3 號還車。",
+              "zh-Hans": "店员把还车日改成 4 号，租金多了一天。你原本 3 号还车。",
+              "en": "The clerk changes the return to the 4th and adds a day's charge. You meant to return on the 3rd."
+            }
+          },
+          {
+            "id": "understood",
+            "ja": "わかりました",
+            "meaning": {
+              "zh-Hant": "知道了",
+              "zh-Hans": "知道了",
+              "en": "Understood"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "店員還在等你確認 3 號下午 5 點對不對。",
+              "zh-Hans": "店员还在等你确认 3 号下午 5 点对不对。",
+              "en": "The clerk is still waiting for you to confirm 5 p.m. on the 3rd."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "ご予約のお名前をお願いします。": [
+      {
+        "t": "ご予約",
+        "r": "ごよやく",
+        "m": {
+          "zh-Hant": "預約（敬語）",
+          "zh-Hans": "预约（敬语）",
+          "en": "booking (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "ご予約番号をお願いできますか？": [
+      {
+        "t": "ご予約番号",
+        "r": "ごよやくばんごう",
+        "m": {
+          "zh-Hant": "預約號碼（敬語）",
+          "zh-Hans": "预约号码（敬语）",
+          "en": "booking number (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いできますか",
+        "r": "おねがいできますか",
+        "m": {
+          "zh-Hant": "可以麻煩您嗎",
+          "zh-Hans": "可以麻烦您吗",
+          "en": "could you please?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ご予約のお名前を頂戴できますか？": [
+      {
+        "t": "ご予約",
+        "r": "ごよやく",
+        "m": {
+          "zh-Hant": "預約（敬語）",
+          "zh-Hans": "预约（敬语）",
+          "en": "booking (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "頂戴できますか",
+        "r": "ちょうだいできますか",
+        "m": {
+          "zh-Hant": "可以給我嗎（謙讓語）",
+          "zh-Hans": "可以给我吗（谦让语）",
+          "en": "may I have it? (humble)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "予約の画面はこちらです": [
+      {
+        "t": "予約",
+        "r": "よやく",
+        "m": {
+          "zh-Hant": "預約",
+          "zh-Hans": "预约",
+          "en": "booking"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "画面",
+        "r": "がめん",
+        "m": {
+          "zh-Hant": "畫面、螢幕",
+          "zh-Hans": "画面、屏幕",
+          "en": "screen"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "免許証を拝見してもよろしいですか？": [
+      {
+        "t": "免許証",
+        "r": "めんきょしょう",
+        "m": {
+          "zh-Hant": "駕照",
+          "zh-Hans": "驾照",
+          "en": "driving licence"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "拝見しても",
+        "r": "はいけんしても",
+        "m": {
+          "zh-Hant": "可以看一下（謙讓語）",
+          "zh-Hans": "可以看一下（谦让语）",
+          "en": "may I see (humble)"
+        }
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "国際免許証とパスポートをお願いします。": [
+      {
+        "t": "国際免許証",
+        "r": "こくさいめんきょしょう",
+        "m": {
+          "zh-Hant": "國際駕照",
+          "zh-Hans": "国际驾照",
+          "en": "international driving permit"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "パスポート",
+        "m": {
+          "zh-Hant": "護照",
+          "zh-Hans": "护照",
+          "en": "passport"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "免許証と翻訳文はお持ちですか？": [
+      {
+        "t": "免許証",
+        "r": "めんきょしょう",
+        "m": {
+          "zh-Hant": "駕照",
+          "zh-Hans": "驾照",
+          "en": "driving licence"
+        }
+      },
+      {
+        "t": "と"
+      },
+      {
+        "t": "翻訳文",
+        "r": "ほんやくぶん",
+        "m": {
+          "zh-Hant": "（駕照的）日文譯本",
+          "zh-Hans": "（驾照的）日文译本",
+          "en": "official Japanese translation"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お持ちですか",
+        "r": "おもちですか",
+        "m": {
+          "zh-Hant": "有帶嗎（敬語）",
+          "zh-Hans": "有带吗（敬语）",
+          "en": "do you have it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい、こちらです": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "補償はどうされますか？": [
+      {
+        "t": "補償",
+        "r": "ほしょう",
+        "m": {
+          "zh-Hant": "補償方案、保險",
+          "zh-Hans": "补偿方案、保险",
+          "en": "coverage"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "どうされますか",
+        "m": {
+          "zh-Hant": "要怎麼做（敬語）",
+          "zh-Hans": "要怎么做（敬语）",
+          "en": "what would you like to do? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "免責補償にはご加入されますか？": [
+      {
+        "t": "免責補償",
+        "r": "めんせきほしょう",
+        "m": {
+          "zh-Hant": "免責補償（減免自付額）",
+          "zh-Hans": "免责补偿（减免自付额）",
+          "en": "collision damage waiver"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "ご加入されますか",
+        "r": "ごかにゅうされますか",
+        "m": {
+          "zh-Hant": "要加入嗎（敬語）",
+          "zh-Hans": "要加入吗（敬语）",
+          "en": "will you take it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "これでお願いします": [
+      {
+        "t": "これ",
+        "m": {
+          "zh-Hant": "這個",
+          "zh-Hans": "这个",
+          "en": "this"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "ETCカードはお持ちですか？": [
+      {
+        "t": "ETCカード",
+        "r": "イーティーシーカード",
+        "m": {
+          "zh-Hant": "ETC 卡（高速公路自動扣款）",
+          "zh-Hans": "ETC 卡（高速公路自动扣款）",
+          "en": "ETC toll card"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お持ちですか",
+        "r": "おもちですか",
+        "m": {
+          "zh-Hant": "有帶嗎（敬語）",
+          "zh-Hans": "有带吗（敬语）",
+          "en": "do you have it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ETCカードのお貸し出しはご利用になりますか？": [
+      {
+        "t": "ETCカード",
+        "r": "イーティーシーカード",
+        "m": {
+          "zh-Hant": "ETC 卡（高速公路自動扣款）",
+          "zh-Hans": "ETC 卡（高速公路自动扣款）",
+          "en": "ETC toll card"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "お貸し出し",
+        "r": "おかしだし",
+        "m": {
+          "zh-Hant": "出借（敬語）",
+          "zh-Hans": "出借（敬语）",
+          "en": "rental (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "ご利用になりますか",
+        "r": "ごりようになりますか",
+        "m": {
+          "zh-Hant": "要使用嗎（敬語）",
+          "zh-Hans": "要使用吗（敬语）",
+          "en": "will you use it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ETCカード、お付けしますか？": [
+      {
+        "t": "ETCカード",
+        "r": "イーティーシーカード",
+        "m": {
+          "zh-Hant": "ETC 卡（高速公路自動扣款）",
+          "zh-Hans": "ETC 卡（高速公路自动扣款）",
+          "en": "ETC toll card"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "お付けしますか",
+        "r": "おつけしますか",
+        "m": {
+          "zh-Hant": "要幫您附上嗎（敬語）",
+          "zh-Hans": "要帮您附上吗（敬语）",
+          "en": "shall I add it? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "持っていません。お願いします／大丈夫です": [
+      {
+        "t": "持っていません",
+        "r": "もっていません",
+        "m": {
+          "zh-Hant": "沒有",
+          "zh-Hans": "没有",
+          "en": "I don't have one"
+        }
+      },
+      {
+        "t": "。"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "／"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "お車の傷を一緒に確認させてください。": [
+      {
+        "t": "お車",
+        "r": "おくるま",
+        "m": {
+          "zh-Hant": "車（敬語）",
+          "zh-Hans": "车（敬语）",
+          "en": "car (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "傷",
+        "r": "きず",
+        "m": {
+          "zh-Hant": "刮痕、凹痕",
+          "zh-Hans": "划痕、凹痕",
+          "en": "scratch, dent"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "一緒に",
+        "r": "いっしょに",
+        "m": {
+          "zh-Hant": "一起",
+          "zh-Hans": "一起",
+          "en": "together"
+        }
+      },
+      {
+        "t": "確認させてください",
+        "r": "かくにんさせてください",
+        "m": {
+          "zh-Hant": "請讓我確認",
+          "zh-Hans": "请让我确认",
+          "en": "let me check"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "ほかに気になる傷はございますか？": [
+      {
+        "t": "ほかに",
+        "m": {
+          "zh-Hant": "其他",
+          "zh-Hans": "其他",
+          "en": "other, anything else"
+        }
+      },
+      {
+        "t": "気になる",
+        "r": "きになる",
+        "m": {
+          "zh-Hant": "在意的",
+          "zh-Hans": "在意的",
+          "en": "that bothers you"
+        }
+      },
+      {
+        "t": "傷",
+        "r": "きず",
+        "m": {
+          "zh-Hant": "刮痕、凹痕",
+          "zh-Hans": "划痕、凹痕",
+          "en": "scratch, dent"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "ございますか",
+        "m": {
+          "zh-Hant": "有嗎（敬語）",
+          "zh-Hans": "有吗（敬语）",
+          "en": "do you have…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "よろしければ、こちらにサインをお願いします。": [
+      {
+        "t": "よろしければ",
+        "m": {
+          "zh-Hant": "如果方便、需要的話",
+          "zh-Hans": "如果方便、需要的话",
+          "en": "if you like"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "サイン",
+        "m": {
+          "zh-Hant": "簽名",
+          "zh-Hans": "签名",
+          "en": "signature"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "大丈夫です": [
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "ご返却の際は、ガソリンを満タンにしてお戻しください。": [
+      {
+        "t": "ご返却",
+        "r": "ごへんきゃく",
+        "m": {
+          "zh-Hant": "還車（敬語）",
+          "zh-Hans": "还车（敬语）",
+          "en": "return (polite)"
+        }
+      },
+      {
+        "t": "の際は",
+        "r": "のさいは",
+        "m": {
+          "zh-Hant": "……的時候",
+          "zh-Hans": "……的时候",
+          "en": "when"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "ガソリン",
+        "m": {
+          "zh-Hant": "汽油",
+          "zh-Hans": "汽油",
+          "en": "petrol"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "満タン",
+        "r": "まんタン",
+        "m": {
+          "zh-Hant": "加滿",
+          "zh-Hans": "加满",
+          "en": "full tank"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "して",
+        "m": {
+          "zh-Hant": "弄成……",
+          "zh-Hans": "弄成……",
+          "en": "making it"
+        }
+      },
+      {
+        "t": "お戻しください",
+        "r": "おもどしください",
+        "m": {
+          "zh-Hant": "請歸還",
+          "zh-Hans": "请归还",
+          "en": "please return it"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "満タン返しでお願いします。": [
+      {
+        "t": "満タン返し",
+        "r": "まんタンがえし",
+        "m": {
+          "zh-Hant": "加滿油再還",
+          "zh-Hans": "加满油再还",
+          "en": "return with a full tank"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "返却前に近くのスタンドで給油をお願いします。": [
+      {
+        "t": "返却前",
+        "r": "へんきゃくまえ",
+        "m": {
+          "zh-Hant": "還車前",
+          "zh-Hans": "还车前",
+          "en": "before returning"
+        }
+      },
+      {
+        "t": "に"
+      },
+      {
+        "t": "近く",
+        "r": "ちかく",
+        "m": {
+          "zh-Hant": "附近",
+          "zh-Hans": "附近",
+          "en": "nearby"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "スタンド",
+        "m": {
+          "zh-Hant": "加油站",
+          "zh-Hans": "加油站",
+          "en": "petrol station"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "給油",
+        "r": "きゅうゆ",
+        "m": {
+          "zh-Hant": "加油",
+          "zh-Hans": "加油",
+          "en": "refuelling"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      },
+      {
+        "t": "。"
+      }
+    ],
+    "わかりました": [
+      {
+        "t": "わかりました",
+        "m": {
+          "zh-Hant": "知道了",
+          "zh-Hans": "知道了",
+          "en": "understood"
+        }
+      }
+    ],
+    "ご返却は三日の午後五時でよろしいですか？": [
+      {
+        "t": "ご返却",
+        "r": "ごへんきゃく",
+        "m": {
+          "zh-Hant": "還車（敬語）",
+          "zh-Hans": "还车（敬语）",
+          "en": "return (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "三日",
+        "r": "みっか",
+        "m": {
+          "zh-Hant": "3 號",
+          "zh-Hans": "3 号",
+          "en": "the 3rd"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "午後五時",
+        "r": "ごごごじ",
+        "m": {
+          "zh-Hant": "下午 5 點",
+          "zh-Hans": "下午 5 点",
+          "en": "5 p.m."
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "返却時間はお間違いないですか？": [
+      {
+        "t": "返却時間",
+        "r": "へんきゃくじかん",
+        "m": {
+          "zh-Hant": "還車時間",
+          "zh-Hans": "还车时间",
+          "en": "return time"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お間違いないですか",
+        "r": "おまちがいないですか",
+        "m": {
+          "zh-Hant": "沒錯吧（敬語）",
+          "zh-Hans": "没错吧（敬语）",
+          "en": "is this correct? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お戻りは何時ごろのご予定ですか？": [
+      {
+        "t": "お戻り",
+        "r": "おもどり",
+        "m": {
+          "zh-Hant": "回來、歸還（敬語）",
+          "zh-Hans": "回来、归还（敬语）",
+          "en": "return (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何時ごろ",
+        "r": "なんじごろ",
+        "m": {
+          "zh-Hant": "大約幾點",
+          "zh-Hans": "大约几点",
+          "en": "about what time"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "ご予定",
+        "r": "ごよてい",
+        "m": {
+          "zh-Hant": "預定（敬語）",
+          "zh-Hans": "预定（敬语）",
+          "en": "plan (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい、大丈夫です": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "大丈夫です",
+        "r": "だいじょうぶです",
+        "m": {
+          "zh-Hant": "沒關係、不用了",
+          "zh-Hans": "没关系、不用了",
+          "en": "it's fine / no thanks"
+        }
+      }
+    ],
+    "予約していません": [
+      {
+        "t": "予約していません",
+        "r": "よやくしていません",
+        "m": {
+          "zh-Hant": "沒有預約",
+          "zh-Hans": "没有预约",
+          "en": "I don't have a booking"
+        }
+      }
+    ],
+    "持っていません。お願いします": [
+      {
+        "t": "持っていません",
+        "r": "もっていません",
+        "m": {
+          "zh-Hant": "沒有",
+          "zh-Hans": "没有",
+          "en": "I don't have one"
+        }
+      },
+      {
+        "t": "。"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "持っていません": [
+      {
+        "t": "持っていません",
+        "r": "もっていません",
+        "m": {
+          "zh-Hant": "沒有",
+          "zh-Hans": "没有",
+          "en": "I don't have one"
+        }
+      }
+    ],
+    "いりません": [
+      {
+        "t": "いりません",
+        "m": {
+          "zh-Hant": "不需要",
+          "zh-Hans": "不需要",
+          "en": "I don't need it"
+        }
+      }
+    ],
+    "四日でお願いします": [
+      {
+        "t": "四日",
+        "r": "よっか",
+        "m": {
+          "zh-Hant": "4 號",
+          "zh-Hans": "4 号",
+          "en": "the 4th"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ]
+  }
+}

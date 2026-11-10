@@ -1,0 +1,1416 @@
+{
+  "schemaVersion": 2,
+  "id": "luggage-storage",
+  "revision": 1,
+  "access": "lifetime",
+  "title": {
+    "zh-Hant": "寄放行李",
+    "zh-Hans": "寄存行李",
+    "en": "Leaving your luggage"
+  },
+  "summary": {
+    "zh-Hant": "在櫃台寄放行李時會問的五件事",
+    "zh-Hans": "在前台寄存行李时会问的五件事",
+    "en": "Five things the desk asks when you leave your bags"
+  },
+  "questions": [
+    {
+      "id": "luggage-storage.checked-out",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問你退房了沒",
+        "zh-Hans": "听懂前台问你退房了没",
+        "en": "Understand when you are asked if you have checked out"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-storage.checked-out.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "チェックアウトはお済みですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.checked-out.p1.mp3"
+        },
+        {
+          "id": "luggage-storage.checked-out.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "チェックアウト、もうされましたか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-storage.checked-out.p2.mp3"
+        },
+        {
+          "id": "luggage-storage.checked-out.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "チェックアウトのお手続きはお済みでしょうか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.checked-out.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "幾點要退房",
+            "zh-Hans": "几点要退房",
+            "en": "What time you will check out"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "已經退房了嗎",
+            "zh-Hans": "已经退房了吗",
+            "en": "Have you checked out"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "有沒有預約",
+            "zh-Hans": "有没有预约",
+            "en": "Do you have a booking"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "はい、済みました",
+        "audio": "luggage-storage.checked-out.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「お済み」是已經辦好了。退房了說「はい、済みました」，還沒的話說「まだです」，櫃台會先幫你辦退房。",
+        "zh-Hans": "「お済み」是已经办好了。退房了说「はい、済みました」，还没的话说「まだです」，前台会先帮你办退房。",
+        "en": "お済み means already done. Say はい、済みました if you have checked out, or まだです if not, and they will check you out first."
+      },
+      "wordIds": [
+        "hotel-receptionist"
+      ]
+    },
+    {
+      "id": "luggage-storage.count",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問行李有幾件",
+        "zh-Hans": "听懂前台问行李有几件",
+        "en": "Understand when you are asked how many bags"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-storage.count.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お荷物は何個ですか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.count.p1.mp3"
+        },
+        {
+          "id": "luggage-storage.count.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お荷物はおいくつですか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-storage.count.p2.mp3"
+        },
+        {
+          "id": "luggage-storage.count.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "こちら全部で3点でよろしいですか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.count.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "行李有幾件",
+            "zh-Hans": "行李有几件",
+            "en": "How many bags"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "行李有多重",
+            "zh-Hans": "行李有多重",
+            "en": "How heavy the bags are"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "行李要放到幾點",
+            "zh-Hans": "行李要放到几点",
+            "en": "Until what time to keep them"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "2つです",
+        "audio": "luggage-storage.count.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「何個」「おいくつ」都是問幾件，「3点」是三件。說「2つです」「3つです」，或用手指比。",
+        "zh-Hans": "「何個」「おいくつ」都是问几件，「3点」是三件。说「2つです」「3つです」，或用手指比。",
+        "en": "何個 and おいくつ both ask how many, and 3点 means three items. Say 2つです or 3つです, or show it with your fingers."
+      },
+      "wordIds": [
+        "suitcase"
+      ]
+    },
+    {
+      "id": "luggage-storage.valuables",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問有沒有貴重品或易碎物",
+        "zh-Hans": "听懂前台问有没有贵重品或易碎物",
+        "en": "Understand when you are asked about valuables or fragile items"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-storage.valuables.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "貴重品や割れ物は入っていませんか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.valuables.p1.mp3"
+        },
+        {
+          "id": "luggage-storage.valuables.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "貴重品や壊れ物、入っていませんか？",
+          "voice": "Puck",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-storage.valuables.p2.mp3"
+        },
+        {
+          "id": "luggage-storage.valuables.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "現金やパソコン、割れ物などは入っていませんか？",
+          "voice": "Charon",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.valuables.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "有沒有電池或噴霧罐",
+            "zh-Hans": "有没有电池或喷雾罐",
+            "en": "Any batteries or spray cans"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "行李有沒有上鎖",
+            "zh-Hans": "行李有没有上锁",
+            "en": "Is your bag locked"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "有沒有貴重品或易碎物",
+            "zh-Hans": "有没有贵重品或易碎物",
+            "en": "Any valuables or fragile items"
+          },
+          "correct": true
+        }
+      ],
+      "response": {
+        "ja": "入っていません",
+        "audio": "luggage-storage.valuables.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「貴重品」是現金、電腦這類貴重的東西，「割れ物」「壊れ物」是易碎物。這是否定問句，回「はい」是「對，沒有」，很容易答反，直接說「入っていません」。貴重品通常建議自己帶著，規定依店家不同，以現場說明為準。",
+        "zh-Hans": "「貴重品」是现金、电脑这类贵重的东西，「割れ物」「壊れ物」是易碎物。这是否定问句，回「はい」是「对，没有」，很容易答反，直接说「入っていません」。贵重品通常建议自己带着，规定依店家不同，以现场说明为准。",
+        "en": "貴重品 means valuables like cash or a laptop, and 割れ物 or 壊れ物 means fragile items. This is a negative question, so はい means yes, there are none, which is easy to get backwards. Say 入っていません. Keeping valuables with you is usually best, and rules vary by place, so follow what the staff tell you."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "luggage-storage.return-time",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問幾點回來拿",
+        "zh-Hans": "听懂前台问几点回来拿",
+        "en": "Understand when you are asked what time you will be back"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-storage.return-time.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "何時頃お戻りになりますか？",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.return-time.p1.mp3"
+        },
+        {
+          "id": "luggage-storage.return-time.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お引き取りは何時頃のご予定ですか？",
+          "voice": "Kore",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-storage.return-time.p2.mp3"
+        },
+        {
+          "id": "luggage-storage.return-time.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "何時までお預かりしましょうか？",
+          "voice": "Puck",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.return-time.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "要寄放幾天",
+            "zh-Hans": "要寄存几天",
+            "en": "How many days to keep them"
+          },
+          "correct": false
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "幾點回來拿",
+            "zh-Hans": "几点回来拿",
+            "en": "What time you will pick them up"
+          },
+          "correct": true
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "幾點要退房",
+            "zh-Hans": "几点要退房",
+            "en": "What time you will check out"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "5時ごろです",
+        "audio": "luggage-storage.return-time.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「お戻り」是回來，「お引き取り」是來領。說大概的時間加「ごろです」。寄放後會拿到一張牌子，回來時出示給櫃台。",
+        "zh-Hans": "「お戻り」是回来，「お引き取り」是来领。说大概的时间加「ごろです」。寄存后会拿到一张牌子，回来时出示给前台。",
+        "en": "お戻り means coming back and お引き取り means picking up. Give a rough time with ごろです. You get a tag when you leave the bags; show it when you come back."
+      },
+      "wordIds": []
+    },
+    {
+      "id": "luggage-storage.name",
+      "kind": "listening",
+      "goal": {
+        "zh-Hant": "聽懂櫃台問名字",
+        "zh-Hans": "听懂前台问名字",
+        "en": "Understand when you are asked your name"
+      },
+      "phrasings": [
+        {
+          "id": "luggage-storage.name.p1",
+          "role": "first",
+          "speaker": "clerk",
+          "text": "お名前をお願いします",
+          "voice": "Aoede",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.name.p1.mp3"
+        },
+        {
+          "id": "luggage-storage.name.p2",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お名前、伺ってもよろしいですか？",
+          "voice": "Charon",
+          "speed": "fast",
+          "ambience": true,
+          "screen": null,
+          "audio": "luggage-storage.name.p2.mp3"
+        },
+        {
+          "id": "luggage-storage.name.p3",
+          "role": "review",
+          "speaker": "clerk",
+          "text": "お預かりのお名前を頂戴できますか？",
+          "voice": "Kore",
+          "speed": "normal",
+          "ambience": false,
+          "screen": null,
+          "audio": "luggage-storage.name.p3.mp3"
+        }
+      ],
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "zh-Hant": "請問你的名字",
+            "zh-Hans": "请问你的名字",
+            "en": "What is your name"
+          },
+          "correct": true
+        },
+        {
+          "id": "b",
+          "text": {
+            "zh-Hant": "請問你的房號",
+            "zh-Hans": "请问你的房间号",
+            "en": "What is your room number"
+          },
+          "correct": false
+        },
+        {
+          "id": "c",
+          "text": {
+            "zh-Hant": "請問你的電話號碼",
+            "zh-Hans": "请问你的电话号码",
+            "en": "What is your phone number"
+          },
+          "correct": false
+        }
+      ],
+      "response": {
+        "ja": "ワンです",
+        "audio": "luggage-storage.name.response.mp3",
+        "voice": "Orus"
+      },
+      "explanation": {
+        "zh-Hant": "「お名前」是名字，「頂戴」「伺う」都是客氣地問。說名字加「です」，櫃台會寫在行李牌上。",
+        "zh-Hans": "「お名前」是名字，「頂戴」「伺う」都是客气地问。说名字加「です」，前台会写在行李牌上。",
+        "en": "お名前 is your name; 頂戴 and 伺う are polite ways of asking. Say your name with です and they will write it on the tag."
+      },
+      "wordIds": []
+    }
+  ],
+  "stage": {
+    "routes": [
+      {
+        "id": "main",
+        "title": {
+          "zh-Hant": "寄放到傍晚",
+          "zh-Hans": "寄存到傍晚",
+          "en": "Bags until this evening"
+        },
+        "intent": {
+          "zh-Hant": "你是ワン，剛退好房，想把兩件行李寄放在櫃台，傍晚 5 點左右回來拿。護照和電腦帶在身上，行李裡沒有貴重品或易碎物。",
+          "zh-Hans": "你是ワン，刚退好房，想把两件行李寄存在前台，傍晚 5 点左右回来拿。护照和电脑带在身上，行李里没有贵重物品或易碎品。",
+          "en": "You're ワン (Wang) and have just checked out. You want to leave two bags at the desk and pick them up around 5. Your passport and laptop are with you, and the bags hold nothing valuable or fragile."
+        },
+        "enter": {
+          "zh-Hant": "走回櫃台",
+          "zh-Hans": "走回前台",
+          "en": "Go back to the desk"
+        },
+        "questions": [
+          "luggage-storage.checked-out",
+          "luggage-storage.count",
+          "luggage-storage.valuables",
+          "luggage-storage.return-time",
+          "luggage-storage.name"
+        ]
+      }
+    ],
+    "steps": {
+      "luggage-storage.checked-out": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "done",
+            "ja": "はい、済みました",
+            "meaning": {
+              "zh-Hant": "退好了",
+              "zh-Hans": "退好了",
+              "en": "Yes, I have"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台點點頭，看了看你的行李。",
+              "zh-Hans": "前台点点头，看了看你的行李。",
+              "en": "The clerk nods and looks at your bags."
+            }
+          },
+          {
+            "id": "not-yet",
+            "ja": "まだです",
+            "meaning": {
+              "zh-Hant": "還沒",
+              "zh-Hans": "还没",
+              "en": "Not yet"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台開始幫你辦退房，問你房號。你其實已經退好房了。",
+              "zh-Hans": "前台开始帮你办退房，问你房号。你其实已经退好房了。",
+              "en": "The clerk starts checking you out and asks your room number. You already checked out."
+            }
+          },
+          {
+            "id": "two",
+            "ja": "2つです",
+            "meaning": {
+              "zh-Hant": "兩件",
+              "zh-Hans": "两件",
+              "en": "Two"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台還在等你說退房了沒。",
+              "zh-Hans": "前台还在等你说退房了没。",
+              "en": "The clerk is still waiting to hear if you've checked out."
+            }
+          }
+        ]
+      },
+      "luggage-storage.count": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "two",
+            "ja": "2つです",
+            "meaning": {
+              "zh-Hant": "兩件",
+              "zh-Hans": "两件",
+              "en": "Two"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台在兩件行李上各掛一張牌子。",
+              "zh-Hans": "前台在两件行李上各挂一张牌子。",
+              "en": "The clerk hangs a tag on each of your two bags."
+            }
+          },
+          {
+            "id": "three",
+            "ja": "3つです",
+            "meaning": {
+              "zh-Hant": "三件",
+              "zh-Hans": "三件",
+              "en": "Three"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台四處找第三件行李。你只有兩件。",
+              "zh-Hans": "前台四处找第三件行李。你只有两件。",
+              "en": "The clerk looks around for a third bag. You only have two."
+            }
+          },
+          {
+            "id": "five",
+            "ja": "5時ごろです",
+            "meaning": {
+              "zh-Hant": "5 點左右",
+              "zh-Hans": "5 点左右",
+              "en": "Around 5"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台還在等你說有幾件。",
+              "zh-Hans": "前台还在等你说有几件。",
+              "en": "The clerk is still waiting to hear how many bags."
+            }
+          }
+        ]
+      },
+      "luggage-storage.valuables": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "none",
+            "ja": "入っていません",
+            "meaning": {
+              "zh-Hant": "沒有",
+              "zh-Hans": "没有",
+              "en": "No, there aren't"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台點點頭，把行李推到後面。",
+              "zh-Hans": "前台点点头，把行李推到后面。",
+              "en": "The clerk nods and wheels the bags into the back."
+            }
+          },
+          {
+            "id": "laptop",
+            "ja": "パソコンが入っています",
+            "meaning": {
+              "zh-Hant": "裡面有電腦",
+              "zh-Hans": "里面有电脑",
+              "en": "There's a laptop in there"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台請你先把電腦拿出來。你的電腦其實在背包裡。",
+              "zh-Hans": "前台请你先把电脑拿出来。你的电脑其实在背包里。",
+              "en": "The clerk asks you to take the laptop out. It's actually in your backpack."
+            }
+          },
+          {
+            "id": "two",
+            "ja": "2つです",
+            "meaning": {
+              "zh-Hant": "兩件",
+              "zh-Hans": "两件",
+              "en": "Two"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "件數剛才說過了，櫃台在問裡面有沒有貴重品或易碎物。",
+              "zh-Hans": "件数刚才说过了，前台在问里面有没有贵重物品或易碎品。",
+              "en": "You've already said how many. The clerk is asking about valuables and fragile items."
+            }
+          }
+        ]
+      },
+      "luggage-storage.return-time": {
+        "background": "scene-bg-hotel-check-in",
+        "replies": [
+          {
+            "id": "five",
+            "ja": "5時ごろです",
+            "meaning": {
+              "zh-Hant": "5 點左右",
+              "zh-Hans": "5 点左右",
+              "en": "Around 5"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台在牌子上寫了 17:00。",
+              "zh-Hans": "前台在牌子上写了 17:00。",
+              "en": "The clerk writes 17:00 on the tag."
+            }
+          },
+          {
+            "id": "nine",
+            "ja": "夜の9時ごろです",
+            "meaning": {
+              "zh-Hant": "晚上 9 點左右",
+              "zh-Hans": "晚上 9 点左右",
+              "en": "Around 9 tonight"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台在牌子上寫了 21:00。你原本 5 點左右就要回來。",
+              "zh-Hans": "前台在牌子上写了 21:00。你本来 5 点左右就要回来。",
+              "en": "The clerk writes 21:00 on the tag. You meant to be back around 5."
+            }
+          },
+          {
+            "id": "wang",
+            "ja": "ワンです",
+            "meaning": {
+              "zh-Hant": "我姓王",
+              "zh-Hans": "我姓王",
+              "en": "It's Wang"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台還在等你說幾點回來拿。",
+              "zh-Hans": "前台还在等你说几点回来拿。",
+              "en": "The clerk is still waiting to hear when you'll be back."
+            }
+          }
+        ]
+      },
+      "luggage-storage.name": {
+        "background": "scene-bg-hotel-check-in",
+        "card": {
+          "title": "お荷物お預り票",
+          "lines": [
+            "No. 32",
+            "お荷物　2個",
+            "お引き取り　17:00頃"
+          ]
+        },
+        "replies": [
+          {
+            "id": "wang",
+            "ja": "ワンです",
+            "meaning": {
+              "zh-Hant": "我姓王",
+              "zh-Hans": "我姓王",
+              "en": "It's Wang"
+            },
+            "fits": true,
+            "result": {
+              "zh-Hant": "櫃台在牌子上寫上「ワン様」，把存根遞給你。",
+              "zh-Hans": "前台在牌子上写上「ワン様」，把存根递给你。",
+              "en": "The clerk writes ワン様 on the tag and hands you the stub."
+            }
+          },
+          {
+            "id": "room",
+            "ja": "805です",
+            "meaning": {
+              "zh-Hant": "805（房號）",
+              "zh-Hans": "805（房号）",
+              "en": "805 (your room number)"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "櫃台說已經退房了，還是要名字，又問一次。",
+              "zh-Hans": "前台说已经退房了，还是要名字，又问一次。",
+              "en": "The clerk says you've checked out, so they need a name, and asks again."
+            }
+          },
+          {
+            "id": "five",
+            "ja": "5時ごろです",
+            "meaning": {
+              "zh-Hant": "5 點左右",
+              "zh-Hans": "5 点左右",
+              "en": "Around 5"
+            },
+            "fits": false,
+            "result": {
+              "zh-Hant": "回來的時間剛才說過了，櫃台在問名字。",
+              "zh-Hans": "回来的时间刚才说过了，前台在问名字。",
+              "en": "You've already given the time. The clerk is asking your name."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "gloss": {
+    "チェックアウトはお済みですか？": [
+      {
+        "t": "チェックアウト",
+        "m": {
+          "zh-Hant": "退房",
+          "zh-Hans": "退房",
+          "en": "check-out"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お済みですか",
+        "r": "おすみですか",
+        "m": {
+          "zh-Hant": "辦好了嗎（敬語）",
+          "zh-Hans": "办好了吗（敬语）",
+          "en": "have you finished? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "チェックアウト、もうされましたか？": [
+      {
+        "t": "チェックアウト",
+        "m": {
+          "zh-Hant": "退房",
+          "zh-Hans": "退房",
+          "en": "check-out"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "もう",
+        "m": {
+          "zh-Hant": "已經",
+          "zh-Hans": "已经",
+          "en": "already"
+        }
+      },
+      {
+        "t": "されましたか",
+        "m": {
+          "zh-Hant": "辦了嗎（敬語）",
+          "zh-Hans": "办了吗（敬语）",
+          "en": "did you…? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "チェックアウトのお手続きはお済みでしょうか？": [
+      {
+        "t": "チェックアウト",
+        "m": {
+          "zh-Hant": "退房",
+          "zh-Hans": "退房",
+          "en": "check-out"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "お手続き",
+        "r": "おてつづき",
+        "m": {
+          "zh-Hant": "手續（敬語）",
+          "zh-Hans": "手续（敬语）",
+          "en": "procedure (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "お済みでしょうか",
+        "r": "おすみでしょうか",
+        "m": {
+          "zh-Hant": "辦好了嗎（更客氣）",
+          "zh-Hans": "办好了吗（更客气）",
+          "en": "have you finished? (more polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "はい、済みました": [
+      {
+        "t": "はい",
+        "m": {
+          "zh-Hant": "是、好",
+          "zh-Hans": "是、好",
+          "en": "yes"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "済みました",
+        "r": "すみました",
+        "m": {
+          "zh-Hant": "辦好了",
+          "zh-Hans": "办好了",
+          "en": "it's done"
+        }
+      }
+    ],
+    "お荷物は何個ですか？": [
+      {
+        "t": "お荷物",
+        "r": "おにもつ",
+        "m": {
+          "zh-Hant": "行李（敬語）",
+          "zh-Hans": "行李（敬语）",
+          "en": "luggage (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何個",
+        "r": "なんこ",
+        "m": {
+          "zh-Hant": "幾件、幾個",
+          "zh-Hans": "几件、几个",
+          "en": "how many"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お荷物はおいくつですか？": [
+      {
+        "t": "お荷物",
+        "r": "おにもつ",
+        "m": {
+          "zh-Hant": "行李（敬語）",
+          "zh-Hans": "行李（敬语）",
+          "en": "luggage (polite)"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "おいくつ",
+        "m": {
+          "zh-Hant": "幾個（敬語）",
+          "zh-Hans": "几个（敬语）",
+          "en": "how many (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "こちら全部で3点でよろしいですか？": [
+      {
+        "t": "こちら",
+        "m": {
+          "zh-Hant": "這邊、這個",
+          "zh-Hans": "这边、这个",
+          "en": "here, this"
+        }
+      },
+      {
+        "t": "全部で",
+        "r": "ぜんぶで",
+        "m": {
+          "zh-Hant": "總共",
+          "zh-Hans": "总共",
+          "en": "in total"
+        }
+      },
+      {
+        "t": "3点",
+        "r": "さんてん",
+        "m": {
+          "zh-Hant": "三件",
+          "zh-Hans": "三件",
+          "en": "three items"
+        }
+      },
+      {
+        "t": "で"
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "2つです": [
+      {
+        "t": "2つです",
+        "r": "ふたつです",
+        "m": {
+          "zh-Hant": "兩件",
+          "zh-Hans": "两件",
+          "en": "two"
+        }
+      }
+    ],
+    "貴重品や割れ物は入っていませんか？": [
+      {
+        "t": "貴重品",
+        "r": "きちょうひん",
+        "m": {
+          "zh-Hant": "貴重物品",
+          "zh-Hans": "贵重物品",
+          "en": "valuables"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "割れ物",
+        "r": "われもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "貴重品や壊れ物、入っていませんか？": [
+      {
+        "t": "貴重品",
+        "r": "きちょうひん",
+        "m": {
+          "zh-Hant": "貴重物品",
+          "zh-Hans": "贵重物品",
+          "en": "valuables"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "壊れ物",
+        "r": "こわれもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "現金やパソコン、割れ物などは入っていませんか？": [
+      {
+        "t": "現金",
+        "r": "げんきん",
+        "m": {
+          "zh-Hant": "現金",
+          "zh-Hans": "现金",
+          "en": "cash"
+        }
+      },
+      {
+        "t": "や"
+      },
+      {
+        "t": "パソコン",
+        "m": {
+          "zh-Hant": "電腦",
+          "zh-Hans": "电脑",
+          "en": "computer"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "割れ物",
+        "r": "われもの",
+        "m": {
+          "zh-Hant": "易碎品",
+          "zh-Hans": "易碎品",
+          "en": "fragile items"
+        }
+      },
+      {
+        "t": "など",
+        "m": {
+          "zh-Hant": "……等等",
+          "zh-Hans": "……等等",
+          "en": "and so on"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "入っていませんか",
+        "r": "はいっていませんか",
+        "m": {
+          "zh-Hant": "沒有放……吧（否定問句）",
+          "zh-Hans": "没有放……吧（否定问句）",
+          "en": "there isn't… in it, is there?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "入っていません": [
+      {
+        "t": "入っていません",
+        "r": "はいっていません",
+        "m": {
+          "zh-Hant": "沒有放",
+          "zh-Hans": "没有放",
+          "en": "there isn't any"
+        }
+      }
+    ],
+    "何時頃お戻りになりますか？": [
+      {
+        "t": "何時頃",
+        "r": "なんじごろ",
+        "m": {
+          "zh-Hant": "大約幾點",
+          "zh-Hans": "大约几点",
+          "en": "about what time"
+        }
+      },
+      {
+        "t": "お戻りになりますか",
+        "r": "おもどりになりますか",
+        "m": {
+          "zh-Hant": "回來嗎（尊敬語）",
+          "zh-Hans": "回来吗（尊敬语）",
+          "en": "will you be back? (honorific)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お引き取りは何時頃のご予定ですか？": [
+      {
+        "t": "お引き取り",
+        "r": "おひきとり",
+        "m": {
+          "zh-Hant": "領取",
+          "zh-Hans": "领取",
+          "en": "collection"
+        }
+      },
+      {
+        "t": "は"
+      },
+      {
+        "t": "何時頃",
+        "r": "なんじごろ",
+        "m": {
+          "zh-Hant": "大約幾點",
+          "zh-Hans": "大约几点",
+          "en": "about what time"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "ご予定",
+        "r": "ごよてい",
+        "m": {
+          "zh-Hant": "預定（敬語）",
+          "zh-Hans": "预定（敬语）",
+          "en": "plan (polite)"
+        }
+      },
+      {
+        "t": "ですか",
+        "m": {
+          "zh-Hant": "……嗎",
+          "zh-Hans": "……吗",
+          "en": "is it…?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "何時までお預かりしましょうか？": [
+      {
+        "t": "何時まで",
+        "r": "なんじまで",
+        "m": {
+          "zh-Hant": "到幾點",
+          "zh-Hans": "到几点",
+          "en": "until what time"
+        }
+      },
+      {
+        "t": "お預かりしましょうか",
+        "r": "おあずかりしましょうか",
+        "m": {
+          "zh-Hant": "要幫您保管嗎",
+          "zh-Hans": "要帮您保管吗",
+          "en": "shall we keep it for you?"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "5時ごろです": [
+      {
+        "t": "5時ごろ",
+        "r": "ごじごろ",
+        "m": {
+          "zh-Hant": "5 點左右",
+          "zh-Hans": "5 点左右",
+          "en": "around five"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "お名前をお願いします": [
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "お願いします",
+        "r": "おねがいします",
+        "m": {
+          "zh-Hant": "麻煩了、拜託",
+          "zh-Hans": "麻烦了、拜托",
+          "en": "please"
+        }
+      }
+    ],
+    "お名前、伺ってもよろしいですか？": [
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "、"
+      },
+      {
+        "t": "伺っても",
+        "r": "うかがっても",
+        "m": {
+          "zh-Hant": "可以請問（謙讓語）",
+          "zh-Hans": "可以请问（谦让语）",
+          "en": "may I ask (humble)"
+        }
+      },
+      {
+        "t": "よろしいですか",
+        "m": {
+          "zh-Hant": "可以嗎（敬語）",
+          "zh-Hans": "可以吗（敬语）",
+          "en": "is that all right? (polite)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "お預かりのお名前を頂戴できますか？": [
+      {
+        "t": "お預かり",
+        "r": "おあずかり",
+        "m": {
+          "zh-Hant": "寄放（敬語）",
+          "zh-Hans": "寄存（敬语）",
+          "en": "keeping (polite)"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "お名前",
+        "r": "おなまえ",
+        "m": {
+          "zh-Hant": "名字（敬語）",
+          "zh-Hans": "名字（敬语）",
+          "en": "name (polite)"
+        }
+      },
+      {
+        "t": "を"
+      },
+      {
+        "t": "頂戴できますか",
+        "r": "ちょうだいできますか",
+        "m": {
+          "zh-Hant": "可以給我嗎（謙讓語）",
+          "zh-Hans": "可以给我吗（谦让语）",
+          "en": "may I have it? (humble)"
+        }
+      },
+      {
+        "t": "？"
+      }
+    ],
+    "ワンです": [
+      {
+        "t": "ワンです",
+        "m": {
+          "zh-Hant": "我姓王（ワン）",
+          "zh-Hans": "我姓王（ワン）",
+          "en": "it's Wang"
+        }
+      }
+    ],
+    "まだです": [
+      {
+        "t": "まだです",
+        "m": {
+          "zh-Hant": "還沒",
+          "zh-Hans": "还没",
+          "en": "not yet"
+        }
+      }
+    ],
+    "3つです": [
+      {
+        "t": "3つです",
+        "r": "みっつです",
+        "m": {
+          "zh-Hant": "三件",
+          "zh-Hans": "三件",
+          "en": "three"
+        }
+      }
+    ],
+    "パソコンが入っています": [
+      {
+        "t": "パソコン",
+        "m": {
+          "zh-Hant": "電腦",
+          "zh-Hans": "电脑",
+          "en": "computer"
+        }
+      },
+      {
+        "t": "が"
+      },
+      {
+        "t": "入っています",
+        "r": "はいっています",
+        "m": {
+          "zh-Hant": "有放",
+          "zh-Hans": "有放",
+          "en": "there is"
+        }
+      }
+    ],
+    "夜の9時ごろです": [
+      {
+        "t": "夜",
+        "r": "よる",
+        "m": {
+          "zh-Hant": "晚上",
+          "zh-Hans": "晚上",
+          "en": "evening, night"
+        }
+      },
+      {
+        "t": "の"
+      },
+      {
+        "t": "9時ごろ",
+        "r": "くじごろ",
+        "m": {
+          "zh-Hant": "9 點左右",
+          "zh-Hans": "9 点左右",
+          "en": "around nine"
+        }
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ],
+    "805です": [
+      {
+        "t": "805"
+      },
+      {
+        "t": "です",
+        "m": {
+          "zh-Hant": "是",
+          "zh-Hans": "是",
+          "en": "is"
+        }
+      }
+    ]
+  }
+}
