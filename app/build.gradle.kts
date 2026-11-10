@@ -118,6 +118,7 @@ dependencies {
     implementation(project(":core:design"))
     implementation(project(":core:model"))
     implementation(project(":core:network"))
+    implementation(project(":core:scenes"))
     implementation(project(":core:study"))
 
     implementation(platform(libs.compose.bom))

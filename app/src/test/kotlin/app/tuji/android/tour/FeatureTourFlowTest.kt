@@ -87,7 +87,18 @@ class FeatureTourFlowTest {
 
     @Test fun `finishing opens new words, which is what the closing card offers`() {
         assertEquals(AppRoute.Today, FeatureTourFlow.tabAfterFinishing)
-        assertEquals(AppRoute.LearnNew, FeatureTourFlow.routeAfterFinishing)
+        assertEquals(AppRoute.LearnNew, FeatureTourFlow.forDirection(hasScenes = false).routeAfterFinishing)
+    }
+
+    /** A Japanese learner tries a free scene first; the word steps are still in it. */
+    @Test fun `a Japanese learner's tour opens on the scene card and ends in 便利商店結帳`() {
+        val flow = FeatureTourFlow.forDirection(hasScenes = true)
+        assertEquals(TourTarget.Scene, flow.steps.first().target)
+        assertTrue(flow.steps.any { it.target == TourTarget.HeroCtas })
+        assertEquals(null, flow.steps.last().target)
+        assertEquals(flow.steps.indices.toList(), flow.steps.map { it.id })
+        assertEquals(AppRoute.ScenePractice("konbini-checkout"), flow.routeAfterFinishing)
+        assertEquals(TourLine.TryScene, flow.steps.last().line)
     }
 }
 

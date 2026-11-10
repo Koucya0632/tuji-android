@@ -268,6 +268,11 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
         app.tuji.android.study.TtsSpeaker(this)
     }
 
+    /** 場面練習: the bundled catalog, this device's progress, and the clip player. */
+    val scenes: app.tuji.android.scenes.Scenes by lazy {
+        app.tuji.android.scenes.Scenes(this, speech)
+    }
+
     /** Google Play's in-app updates: the lookup, and the install. */
     val playUpdates: app.tuji.android.update.PlayAppUpdates by lazy {
         app.tuji.android.update.PlayAppUpdates(this)

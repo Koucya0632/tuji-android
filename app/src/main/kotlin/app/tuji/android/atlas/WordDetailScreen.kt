@@ -122,6 +122,8 @@ fun WordDetailScreen(
     note: @Composable (Modifier) -> Unit = {},
     /** 加入詞表, beside 書籤 over the picture. */
     wordListButton: @Composable () -> Unit = {},
+    /** 場面: the 問句 that ask about this word. Handed in, like `note`. */
+    scenes: @Composable (Modifier) -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
 
@@ -211,6 +213,8 @@ fun WordDetailScreen(
                 onLocked = onLocked,
                 modifier = Modifier.padding(horizontal = TujiSpace.S4),
             )
+
+            scenes(Modifier.padding(horizontal = TujiSpace.S4))
 
             Spacer(Modifier.height(bottomPadding + TujiSpace.S5))
         }
