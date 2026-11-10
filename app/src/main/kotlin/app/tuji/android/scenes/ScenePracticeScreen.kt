@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -110,7 +111,7 @@ fun ScenePracticeScreen(
                 val stageStep = scene.stageStep(question.id)
                 val route = session.route
                 key(now.step) {
-                    StagedQuestion(scenes, session, scene, step, question, stageStep, now.question, route, entered, language, relatedWords(question.wordIds), onOpenWord) { entered = true }
+                    StagedQuestion(scenes, session, scene, now.step, step, question, stageStep, now.question, route, entered, language, relatedWords(question.wordIds), onOpenWord) { entered = true }
                 }
             }
         }
@@ -124,7 +125,7 @@ private fun TopBar(session: ScenePracticeSession, phase: Phase.Practising, onClo
     Row(Modifier.fillMaxWidth().height(44.dp).padding(start = TujiSpace.S2, end = TujiSpace.S3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         val closeLabel = stringResource(if (review) R.string.scene_end_review else R.string.scene_end_practice)
         Box(Modifier.size(44.dp).tujiClickable(onClick = onClose).semantics { contentDescription = closeLabel }, contentAlignment = Alignment.Center) {
-            Text("✕", style = TujiType.h3, color = TujiColor.Ink)
+            TujiGlyph.Close(size = 20.dp)
         }
         SceneSegments(
             session.steps.indices.map { i ->
@@ -146,6 +147,7 @@ private fun StagedQuestion(
     scenes: Scenes,
     session: ScenePracticeSession,
     scene: PracticeScene,
+    stepIndex: Int,
     step: PracticeStep,
     question: SceneQuestion,
     stage: StageStep?,
@@ -159,7 +161,8 @@ private fun StagedQuestion(
 ) {
     var line by remember { mutableStateOf<SpokenLine?>(null) }
     var subtitles by remember { mutableStateOf(false) }
-    var chosen by remember { mutableStateOf<StageReply?>(null) }
+    // From the session, so coming back from a word page still shows what the reply did.
+    var chosen by remember { mutableStateOf(session.chosenReply(stepIndex)?.let { id -> stage?.replies?.firstOrNull { it.id == id } }) }
     var glossed by remember { mutableStateOf<GlossToken?>(null) }
     var machine by remember { mutableStateOf<SceneMachine?>(stage?.machine?.makeMachine()) }
     val revealed = phase is QuestionPhase.Revealed

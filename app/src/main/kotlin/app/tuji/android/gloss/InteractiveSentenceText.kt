@@ -176,7 +176,7 @@ private fun annotate(
 }
 
 /** One box per line the span crosses, with that line's baseline. */
-private fun lineBoxes(layout: TextLayoutResult, range: IntRange): List<Pair<Rect, Float>> {
+internal fun lineBoxes(layout: TextLayoutResult, range: IntRange): List<Pair<Rect, Float>> {
     if (range.isEmpty()) return emptyList()
     val end = (range.last + 1).coerceAtMost(layout.layoutInput.text.length)
     val first = layout.getLineForOffset(range.first)

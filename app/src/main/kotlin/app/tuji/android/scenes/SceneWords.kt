@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiGlyph
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.tujiClickable
@@ -72,7 +73,7 @@ internal fun SceneWordList(words: List<SceneWord>, onOpen: (String) -> Unit) {
                         Text(word.word, style = TujiType.bodyStrong, color = TujiColor.Ink)
                         if (item.isLocked) {
                             val label = stringResource(R.string.scene_word_locked)
-                            Text("🔒", style = TujiType.label, color = TujiColor.Ink3, modifier = Modifier.semantics { contentDescription = label })
+                            TujiGlyph.Lock(size = 11.dp, tint = TujiColor.Ink3, modifier = Modifier.semantics { contentDescription = label })
                         }
                     }
                     OneLine(listOfNotNull(reading, word.chinese).joinToString(" · "), TujiType.label, TujiColor.Ink3)

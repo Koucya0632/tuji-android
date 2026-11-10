@@ -51,6 +51,7 @@ class ScenePracticeSession(
 
     private val wrongTries = mutableMapOf<Int, Int>()
     private val hinted = mutableSetOf<Int>()
+    private val replies = mutableMapOf<Int, String>()
 
     init {
         if (steps.isNotEmpty()) show(0)
@@ -69,7 +70,15 @@ class ScenePracticeSession(
     }
 
     /** A reply said on a staged listening 問句. One that does not fit this trip counts as a try. */
-    fun reply(reply: StageReply) = settle("reply:" + reply.id, reply.fits)
+    fun reply(reply: StageReply) {
+        val phase = _phase.value as? Phase.Practising ?: return
+        if (phase.question is QuestionPhase.Revealed) return
+        replies[phase.step] = reply.id
+        settle("reply:" + reply.id, reply.fits)
+    }
+
+    /** The reply last said on step `step`, so a screen rebuilt mid-pass shows what happened. */
+    fun chosenReply(step: Int): String? = replies[step]
 
     /** A machine run to its end. Only a finish reaches the session, once. */
     fun finish(outcome: MachineOutcome, fits: Boolean) = settle("machine:$outcome", fits)
