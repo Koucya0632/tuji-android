@@ -633,6 +633,43 @@ interface Endpoint {
     }
 
     /**
+     * 跟著 Moira 去旅遊: destinations, their maps and 景點. Public and the same
+     * for everyone, so it caches like the catalogue. Empty unless learning 日文.
+     */
+    data class Travel(val lang: String, val learning: LearningDirection) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/travel",
+            query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    /**
+     * A study queue drawn from one 景點. `spot` replaces the theme filter, as
+     * `list` does: the spot's words are the whole selection.
+     */
+    data class StudySpotQueue(
+        val spotId: String,
+        val mode: StudyMode,
+        val limit: Int,
+        val lang: String,
+        val learning: LearningDirection,
+    ) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/study/queue",
+            query = listOf(
+                "mode" to mode.wire,
+                "limit" to limit.toString(),
+                "new" to limit.toString(),
+                "spot" to spotId,
+                "lang" to lang,
+                "learning" to learning.wire,
+            ),
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
+    /**
      * A study session's cards.
      *
      * `lang` and `learning` are the **live** UI language and direction, not the
