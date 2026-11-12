@@ -1,5 +1,8 @@
 package app.tuji.android.core.network
 
+import org.junit.Assert.assertEquals
+import app.tuji.android.core.model.StudyMode
+import app.tuji.android.core.model.LearningDirection
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,5 +57,24 @@ class EndpointPolicyTest {
     fun `the collection detail is asked as the reader, not from a shared cache`() {
         assertTrue(Endpoint.AtlasCollection("c").descriptor.policy.access == EndpointAccess.OptionalToken)
         assertFalse(Endpoint.AtlasCollection("c").descriptor.policy.access.mayBeCachedAcrossCallers)
+    }
+
+    /** 跟著 Moira 去旅遊: the map is everyone's; a spot's queue is the caller's own progress. */
+    @Test
+    fun `the travel map is public and scoped by both languages`() {
+        val d = Endpoint.Travel(lang = "zh-Hant", learning = LearningDirection.ZH_JA).descriptor
+        assertEquals("/api/travel", d.path)
+        assertEquals(listOf("lang" to "zh-Hant", "learning" to "zh-ja"), d.query)
+        assertTrue(d.policy.access.mayBeCachedAcrossCallers)
+    }
+
+    @Test
+    fun `a spot queue names the spot, no theme and no list, and is never cached`() {
+        val d = Endpoint.StudySpotQueue("akihabara", StudyMode.New, 30, "zh-Hant", LearningDirection.ZH_JA).descriptor
+        assertEquals("/api/study/queue", d.path)
+        assertEquals("akihabara", d.query.toMap()["spot"])
+        assertFalse(d.query.any { it.first == "category" || it.first == "list" })
+        assertTrue(d.policy.access.requiresToken)
+        assertEquals(CachePolicy.ReloadIgnoringCache, d.policy.cachePolicy)
     }
 }

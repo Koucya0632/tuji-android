@@ -1269,4 +1269,22 @@
     <string name="tour_try_scene_action">开始练习</string>
     <string name="scene_related_words">相关词条</string>
     <string name="scene_word_locked">学习这个主题需要永久会员</string>
+    <string name="travel_title">跟着 Moira 去旅游</string>
+    <string name="travel_see_map">看地图</string>
+    <string name="travel_place_spots">%1$s · %2$d 个景点</string>
+    <string name="travel_map_of">%1$s地图</string>
+    <string name="travel_other_regions">其他地区</string>
+    <string name="travel_not_open">还没开</string>
+    <string name="travel_not_open_here">这里还没开</string>
+    <string name="travel_spot_locked">学习这个景点需要永久会员</string>
+    <string name="travel_free">免费</string>
+    <string name="travel_studied_of">学过 %1$d / %2$d</string>
+    <string name="travel_things">%1$d 样东西</string>
+    <string name="travel_spot_closed">%1$s，还没开</string>
+    <string name="travel_seen_here">这里会看到</string>
+    <string name="travel_words_of">%1$d / %2$d 字</string>
+    <string name="travel_spot_needs_membership">学这里的字需要永久会员</string>
+    <string name="travel_words_on_the_way">字还在路上</string>
+    <string name="travel_all_studied">这里的字都学过了，到期会出现在复习</string>
+    <string name="travel_study_here">学这里的字</string>
 </resources>

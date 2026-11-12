@@ -402,7 +402,7 @@ private fun SourceRow(selected: CardsSource, onSelect: (CardsSource) -> Unit) {
 
 /** The five-segment scale, with its copy resolved. */
 @Composable
-private fun MasteryScale(score: Int?) {
+internal fun MasteryScale(score: Int?) {
     val level = MasteryLevel.of(score)
     MasteryBadge(level = level, label = level.label(), spoken = masterySpoken(score))
 }

@@ -1269,4 +1269,22 @@
     <string name="tour_try_scene_action">練習を始める</string>
     <string name="scene_related_words">関連する単語</string>
     <string name="scene_word_locked">このテーマの学習には永久会員が必要です</string>
+    <string name="travel_title">Moiraと旅に出る</string>
+    <string name="travel_see_map">地図を見る</string>
+    <string name="travel_place_spots">%1$s · スポット %2$d件</string>
+    <string name="travel_map_of">%1$sの地図</string>
+    <string name="travel_other_regions">ほかの地域</string>
+    <string name="travel_not_open">準備中</string>
+    <string name="travel_not_open_here">ここは準備中です</string>
+    <string name="travel_spot_locked">このスポットの学習には永久会員が必要です</string>
+    <string name="travel_free">無料</string>
+    <string name="travel_studied_of">学習済み %1$d / %2$d</string>
+    <string name="travel_things">%1$d個</string>
+    <string name="travel_spot_closed">%1$s、準備中</string>
+    <string name="travel_seen_here">ここで見かけるもの</string>
+    <string name="travel_words_of">%1$d / %2$d語</string>
+    <string name="travel_spot_needs_membership">このスポットは永久会員で学べます</string>
+    <string name="travel_words_on_the_way">単語は準備中です</string>
+    <string name="travel_all_studied">すべて学習済みです。期限が来たら復習に出ます。</string>
+    <string name="travel_study_here">ここの単語を学ぶ</string>
 </resources>
