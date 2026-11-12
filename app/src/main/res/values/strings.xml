@@ -1271,7 +1271,7 @@
     <string name="scene_word_locked">Studying this topic needs Lifetime Membership</string>
     <string name="travel_title">Travel with Moira</string>
     <string name="travel_see_map">See the map</string>
-    <string name="travel_place_spots">%1$s · %2$d spots</string>
+    <string name="travel_place_spots">%1$s · %2$d to visit</string>
     <string name="travel_map_of">Map of %1$s</string>
     <string name="travel_other_regions">Other regions</string>
     <string name="travel_not_open">Not open yet</string>
