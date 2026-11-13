@@ -1279,7 +1279,6 @@
     <string name="travel_spot_locked">学习这个景点需要永久会员</string>
     <string name="travel_free">免费</string>
     <string name="travel_studied_of">学过 %1$d / %2$d</string>
-    <string name="travel_things">%1$d 样东西</string>
     <string name="travel_spot_closed">%1$s，还没开</string>
     <string name="travel_seen_here">这里会看到</string>
     <string name="travel_words_of">%1$d / %2$d 字</string>
