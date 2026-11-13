@@ -591,6 +591,14 @@ interface Endpoint {
         )
     }
 
+    /** A card's 景點: PUT `{spotId, shared}` tags it, DELETE takes the tag off. */
+    data class AtlasItemSpot(val itemId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/atlas/items/$itemId/spot",
+            policy = EndpointPolicy.PrivateFresh,
+        )
+    }
+
     /** 我's 需要加強: the reviewed words with the lowest mastery. */
     data class UsersTopWords(val type: String, val limit: Int) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
@@ -640,6 +648,17 @@ interface Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/travel",
             query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PublicCached,
+        )
+    }
+
+    /**
+     * 「大家拍的」 at one 景點: 物見 cards their owners shared there. The same
+     * answer for everyone — the client hides its own and blocked authors.
+     */
+    data class TravelSpotPhotos(val spotId: String) : Endpoint {
+        override val descriptor get() = EndpointDescriptor(
+            path = "/api/travel/spots/$spotId/photos",
             policy = EndpointPolicy.PublicCached,
         )
     }

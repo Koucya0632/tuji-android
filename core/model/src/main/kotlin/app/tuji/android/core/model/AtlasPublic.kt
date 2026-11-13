@@ -38,10 +38,16 @@ data class AtlasPublicItem(
     val imageUrl: String? = null,
     val author: AtlasAuthor? = null,
     val publishedAt: String? = null,
+    /** The 景點 its owner shares it to; null when not shared (or from an older server). */
+    val spotId: String? = null,
 )
 
 @Serializable
 data class AtlasPublicFeed(val items: List<AtlasPublicItem> = emptyList())
+
+/** 「大家拍的」 at one 景點 (`/api/travel/spots/{spot}/photos`). */
+@Serializable
+data class TravelSpotPhotos(val spot: String = "", val items: List<AtlasPublicItem> = emptyList())
 
 /**
  * One published word in full.
@@ -61,6 +67,8 @@ data class AtlasPublicDetail(
     val author: AtlasAuthor? = null,
     val publishedAt: String? = null,
     val learningWord: WordDetail? = null,
+    /** The 景點 its owner shares it to — what offers 「不是在這裡拍的」. */
+    val spotId: String? = null,
 )
 
 @Serializable

@@ -63,8 +63,32 @@ data class AtlasItem(
     val status: String? = null,
     /** Where it sits in public review: `draft`, `pending_auto`, `approved`, `withdrawn`… */
     val reviewStatus: String? = null,
+    /** `public` once submitted to 物見; `private` otherwise. */
+    val visibility: String? = null,
+    /** The 物見 address once published — how 「大家拍的」 knows a card is this account's own. */
+    val publicSlug: String? = null,
     val deletedAt: String? = null,
+    /**
+     * The 景點 this card is tagged to (跟著 Moira 去旅遊). Private to the owner;
+     * absent from a server that predates it.
+     */
+    val spotId: String? = null,
+    /** The owner shares it there: others see it in that spot's 「大家拍的」 while it is public. */
+    val spotShared: Boolean = false,
+    /** An admin took it off this spot after a 「不是在這裡拍的」 report; it may not go back. */
+    val spotShareBlocked: Boolean = false,
 )
+
+/** A card's 景點 as the server now holds it, after PUT / DELETE `/api/atlas/items/{id}/spot`. */
+@Serializable
+data class AtlasItemSpotState(
+    val spotId: String? = null,
+    val spotShared: Boolean = false,
+    val spotShareBlocked: Boolean = false,
+)
+
+@Serializable
+data class AtlasItemSpotResponse(val item: AtlasItemSpotState = AtlasItemSpotState())
 
 /**
  * `/api/atlas/sync` — every photo this account took and every card made from

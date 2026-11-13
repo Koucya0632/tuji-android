@@ -405,6 +405,16 @@
     <string name="manage_withdraw_title">公開をやめますか？</string>
     <string name="manage_withdraw_message">カードは物見から外れますが、カードと学習履歴は残ります。</string>
     <string name="manage_withdraw_detail">いつでもまた公開できます。</string>
+    <string name="spot_field">スポット</string>
+    <string name="spot_none_set">スポットなし</string>
+    <string name="spot_pick">スポットを選ぶ</string>
+    <string name="spot_change">スポットを変える</string>
+    <string name="spot_pick_title">どこで撮った？</string>
+    <string name="spot_none_of_these">このどれでもない</string>
+    <string name="spot_share">スポットのページに載せる</string>
+    <string name="spot_unshare">スポットのページから外す</string>
+    <string name="spot_share_note">ほかの人が%1$sのページ（アプリとウェブサイト）で、この写真とあなたのニックネームを見られます。</string>
+    <string name="spot_share_blocked">%1$sのページから外されたため、もう載せられません。</string>
     <string name="manage_not_now">やめておく</string>
     <string name="me_weak_title">要強化</string>
     <string name="manage_section_cards">図鑑カード</string>
@@ -479,6 +489,7 @@
     <string name="community_reason_copyright">著作権侵害</string>
     <string name="community_reason_wrong">内容が正しくない</string>
     <string name="community_reason_other">その他</string>
+    <string name="community_reason_not_here">ここで撮ったものではない</string>
     <string name="cancel">キャンセル</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="collection_save">保存</string>
@@ -1286,4 +1297,7 @@
     <string name="travel_words_on_the_way">単語は準備中です</string>
     <string name="travel_all_studied">すべて学習済みです。期限が来たら復習に出ます。</string>
     <string name="travel_study_here">ここの単語を学ぶ</string>
+    <string name="travel_shot_here_mine">あなたがここで撮ったもの</string>
+    <string name="travel_shot_here_others">みんなが撮ったもの</string>
+    <string name="travel_spot_photographed">%1$s、ここで撮ったことがあります</string>
 </resources>

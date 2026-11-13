@@ -7,9 +7,15 @@ class ReportTargetTest {
 
     @Test fun `the wire values are the ones the moderation queue stores`() {
         assertEquals(
-            listOf("spam", "inappropriate", "copyright", "wrong", "other"),
+            listOf("spam", "inappropriate", "copyright", "wrong", "other", "not_here"),
             ReportReason.entries.map { it.wire },
         )
+    }
+
+    @Test fun `不是在這裡拍的 is offered only for a card shared to a spot`() {
+        assertEquals(false, ReportReason.NotHere in ReportReason.choices(atSpot = false))
+        assertEquals(ReportReason.NotHere, ReportReason.choices(atSpot = true).last())
+        assertEquals(5, ReportReason.choices(atSpot = false).size)
     }
 
     @Test fun `an author is addressed by UID and the other two by slug`() {

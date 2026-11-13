@@ -79,6 +79,9 @@ class TujiApiClient(
     suspend inline fun <reified T> patch(endpoint: Endpoint, body: Any?): T =
         call(endpoint, HttpMethod.Patch, body)
 
+    suspend inline fun <reified T> put(endpoint: Endpoint, body: Any?): T =
+        call(endpoint, HttpMethod.Put, body)
+
     suspend inline fun <reified T> delete(endpoint: Endpoint): T =
         call(endpoint, HttpMethod.Delete, body = null)
 
