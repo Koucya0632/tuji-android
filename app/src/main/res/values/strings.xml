@@ -1279,7 +1279,6 @@
     <string name="travel_spot_locked">Studying this spot needs Lifetime Membership</string>
     <string name="travel_free">Free</string>
     <string name="travel_studied_of">%1$d / %2$d studied</string>
-    <string name="travel_things">%1$d things</string>
     <string name="travel_spot_closed">%1$s, not open yet</string>
     <string name="travel_seen_here">You\'ll see here</string>
     <string name="travel_words_of">%1$d / %2$d words</string>

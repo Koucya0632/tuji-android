@@ -315,8 +315,6 @@ private fun SpotRowTrailing(spot: TravelSpot, scores: Map<String, Int>, studyabl
                 style = TujiType.bodySmStrong,
                 color = TujiColor.AccumulationDeep,
             )
-        } else {
-            Text(stringResource(R.string.travel_things, spot.wordIds.size), style = TujiType.bodySm, color = TujiColor.Ink2)
         }
         TujiGlyph.ArrowRight(size = 14.dp, tint = TujiColor.Ink3)
     }
