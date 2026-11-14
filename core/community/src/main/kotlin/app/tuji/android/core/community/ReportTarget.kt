@@ -31,4 +31,19 @@ enum class ReportReason(val wire: String) {
     Copyright("copyright"),
     Wrong("wrong"),
     Other("other"),
+
+    /**
+     * 「不是在這裡拍的」 — only against a card its owner shared to a 景點. An admin
+     * takes it off that spot; it never counts toward removing it from 物見.
+     */
+    NotHere("not_here"),
+    ;
+
+    companion object {
+        /** What a report sheet offers. [atSpot] only for a public card shared to a 景點. */
+        fun choices(atSpot: Boolean): List<ReportReason> {
+            val general = listOf(Spam, Inappropriate, Copyright, Wrong, Other)
+            return if (atSpot) general + NotHere else general
+        }
+    }
 }

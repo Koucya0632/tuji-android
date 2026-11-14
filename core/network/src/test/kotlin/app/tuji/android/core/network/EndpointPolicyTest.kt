@@ -77,4 +77,18 @@ class EndpointPolicyTest {
         assertTrue(d.policy.access.requiresToken)
         assertEquals(CachePolicy.ReloadIgnoringCache, d.policy.cachePolicy)
     }
+
+    /** 自製圖鑑掛景點: a card's spot is the owner's; 「大家拍的」 is everyone's. */
+    @Test
+    fun `a card's spot is private and a spot's shared photos are public`() {
+        val tag = Endpoint.AtlasItemSpot("i1").descriptor
+        assertEquals("/api/atlas/items/i1/spot", tag.path)
+        assertTrue(tag.policy.access.requiresToken)
+        assertEquals(CachePolicy.ReloadIgnoringCache, tag.policy.cachePolicy)
+
+        val photos = Endpoint.TravelSpotPhotos("asakusa").descriptor
+        assertEquals("/api/travel/spots/asakusa/photos", photos.path)
+        assertTrue(photos.policy.access.mayBeCachedAcrossCallers)
+    }
 }
+

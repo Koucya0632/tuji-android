@@ -25,6 +25,11 @@ data class TravelResponse(val destinations: List<TravelDestination> = emptyList(
 data class TravelDestination(
     val id: String,
     val name: String,
+    /**
+     * The place's language (`ja`). A 自製圖鑑 card may be tagged to a spot here
+     * only when it is a card for this language. Absent from an older server.
+     */
+    val language: String? = null,
     val grid: TravelGrid,
     val regions: List<TravelRegion> = emptyList(),
     val cities: List<TravelCity> = emptyList(),

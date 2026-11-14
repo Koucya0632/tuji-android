@@ -4,6 +4,7 @@ import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.model.AtlasImageSummary
 import app.tuji.android.core.model.AtlasItem
+import app.tuji.android.core.model.AtlasItemSpotState
 import app.tuji.android.core.model.AtlasPublishResult
 import app.tuji.android.core.model.AtlasSyncResponse
 import app.tuji.android.core.model.TargetLanguage
@@ -61,6 +62,20 @@ class AtlasManageViewModelTest {
             items = items.map { if (it.id == itemId) it.copy(reviewStatus = "pending") else it }
             return AtlasPublishResult(moderation = null)
         }
+        var failSpot = false
+        val spotWrites = mutableListOf<Triple<String, String?, Boolean>>()
+        override suspend fun setSpot(itemId: String, spotId: String, shared: Boolean): AtlasItemSpotState {
+            if (failSpot) throw IOException("nope")
+            spotWrites += Triple(itemId, spotId, shared)
+            items = items.map { if (it.id == itemId) it.copy(spotId = spotId, spotShared = shared) else it }
+            return AtlasItemSpotState(spotId, shared)
+        }
+        override suspend fun clearSpot(itemId: String): AtlasItemSpotState {
+            if (failSpot) throw IOException("nope")
+            spotWrites += Triple(itemId, null, false)
+            items = items.map { if (it.id == itemId) it.copy(spotId = null, spotShared = false) else it }
+            return AtlasItemSpotState()
+        }
     }
 
     private fun image(id: String) = AtlasImageSummary(id = id, status = "cards_ready", createdAt = id)
@@ -115,4 +130,35 @@ class AtlasManageViewModelTest {
         assertEquals(ReviewStatus.Withdrawn, vm.state.value.row("a")?.review)
         assertEquals(1, told)
     }
+
+    /** 景點 on the card page: written, then read back from sync like 取消公開. */
+    @Test fun `a spot is set, shared and taken off, and the shelf reads each back`() = runTest(dispatcher) {
+        val shelf = Shelf(listOf(image("a")), listOf(item("a", review = "approved")))
+        val vm = vm(shelf)
+        vm.load(); advanceUntilIdle()
+
+        vm.setSpot("ia", "asakusa", shared = false); advanceUntilIdle()
+        assertEquals("asakusa", vm.state.value.items.single().spotId)
+        vm.setSpot("ia", "asakusa", shared = true); advanceUntilIdle()
+        assertTrue(vm.state.value.items.single().spotShared)
+        vm.setSpot("ia", null, shared = false); advanceUntilIdle()
+        assertEquals(null, vm.state.value.items.single().spotId)
+
+        assertEquals(
+            listOf(Triple("ia", "asakusa", false), Triple("ia", "asakusa", true), Triple("ia", null, false)),
+            shelf.spotWrites,
+        )
+        assertFalse(vm.state.value.savingSpot)
+        assertFalse(vm.state.value.actionFailed)
+    }
+
+    @Test fun `a refused spot change says so and changes nothing`() = runTest(dispatcher) {
+        val shelf = Shelf(listOf(image("a")), listOf(item("a"))).apply { failSpot = true }
+        val vm = vm(shelf)
+        vm.load(); advanceUntilIdle()
+        vm.setSpot("ia", "asakusa", shared = false); advanceUntilIdle()
+        assertTrue(vm.state.value.actionFailed)
+        assertEquals(null, vm.state.value.items.single().spotId)
+    }
 }
+

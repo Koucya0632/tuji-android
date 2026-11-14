@@ -46,7 +46,9 @@ class AtlasManageViewModel(
         val deleting: Boolean = false,
         val publishing: Boolean = false,
         val withdrawing: Boolean = false,
-        /** The last delete or withdraw failed. */
+        /** A 景點 change on the card page is on its way. */
+        val savingSpot: Boolean = false,
+        /** The last delete, withdraw or 景點 change failed. */
         val actionFailed: Boolean = false,
         val language: TargetLanguage = TargetLanguage.EN,
         /** Over the slot cap after Pro ended; the server's whole list, every sync. */
@@ -184,6 +186,33 @@ class AtlasManageViewModel(
                 onChanged()
                 load()
             }
+        }
+    }
+
+    /**
+     * 選景點 / 放到景點頁 on the card page; [spotId] null takes the tag off.
+     * Like [withdraw], the shelf re-reads what the server decided.
+     */
+    fun setSpot(itemId: String, spotId: String?, shared: Boolean) {
+        if (_state.value.savingSpot) return
+        _state.value = _state.value.copy(savingSpot = true, actionFailed = false)
+        work.launch {
+            val ok = try {
+                if (spotId == null) shelf.clearSpot(itemId) else shelf.setSpot(itemId, spotId, shared)
+                true
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                Log.w(TAG, "spot change failed: $itemId", failure)
+                if (MembershipRefusal.isRefusal(failure)) {
+                    _state.value = _state.value.copy(savingSpot = false)
+                    onNeedsMembership()
+                    return@launch
+                }
+                false
+            }
+            _state.value = _state.value.copy(savingSpot = false, actionFailed = !ok)
+            if (ok) load()
         }
     }
 

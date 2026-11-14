@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,6 +63,8 @@ import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordTile
 import app.tuji.android.core.design.tujiClickable
+import app.tuji.android.community.PublicItemTile
+import app.tuji.android.core.model.AtlasPublicItem
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.TravelCity
 import app.tuji.android.core.model.TravelDecisions
@@ -70,6 +73,7 @@ import app.tuji.android.core.model.TravelMapShape
 import app.tuji.android.core.model.TravelSpot
 import app.tuji.android.core.model.TravelSpotAccess
 import app.tuji.android.core.model.TravelSpotState
+import app.tuji.android.core.model.Word
 import app.tuji.android.wordlists.BlankState
 
 /**
@@ -263,6 +267,8 @@ fun TravelCityScreen(
     onBack: () -> Unit,
     onRetry: () -> Unit,
     onOpenSpot: (String) -> Unit,
+    /** Spots where this account has tagged a 自製圖鑑 card — marked 拍過. */
+    photographed: Set<String> = emptySet(),
 ) {
     TravelScaffold(onBack, bottomPadding) {
         val city = state.city(cityId, destinationId)
@@ -271,7 +277,7 @@ fun TravelCityScreen(
             return@TravelScaffold
         }
         TujiScreenTitle(city.name)
-        TravelCityMap(city, onOpenSpot)
+        TravelCityMap(city, photographed, onOpenSpot)
         Spacer(Modifier.height(TujiSpace.S3))
         city.spots.forEachIndexed { index, spot ->
             if (index > 0) TujiRowDivider()
@@ -280,7 +286,7 @@ fun TravelCityScreen(
                 trailing = { SpotRowTrailing(spot, scores, studyable) },
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
-                    SpotMarker(index + 1, spot.open)
+                    SpotMarker(index + 1, spot.open, spot.id in photographed)
                     Text(spot.name, style = TujiType.bodyStrong, color = if (spot.open) TujiColor.Ink else TujiColor.Ink3)
                 }
             }
@@ -320,19 +326,34 @@ private fun SpotRowTrailing(spot: TravelSpot, scores: Map<String, Int>, studyabl
     }
 }
 
-/** The numbered square that stands for a spot, on the map and in the list. */
+/**
+ * The numbered square that stands for a spot, on the map and in the list. A
+ * small camera on its corner says this account has tagged a card there.
+ */
 @Composable
-private fun SpotMarker(number: Int, open: Boolean) {
-    Box(
-        Modifier.size(28.dp).background(if (open) TujiColor.Ink else TujiColor.Paper3).clearAndSetSemantics {},
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(number.toString(), style = TujiType.bodySmStrong, color = if (open) TujiColor.Paper else TujiColor.Ink3)
+private fun SpotMarker(number: Int, open: Boolean, photographed: Boolean = false) {
+    Box(Modifier.size(28.dp).clearAndSetSemantics {}) {
+        Box(
+            Modifier.fillMaxSize().background(if (open) TujiColor.Ink else TujiColor.Paper3),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(number.toString(), style = TujiType.bodySmStrong, color = if (open) TujiColor.Paper else TujiColor.Ink3)
+        }
+        if (photographed) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 6.dp, y = (-6).dp)
+                    .size(16.dp)
+                    .background(TujiColor.BrandPrimary, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { TujiGlyph.Camera(size = 9.dp, tint = TujiColor.Ink) }
+        }
     }
 }
 
 @Composable
-private fun TravelCityMap(city: TravelCity, onOpenSpot: (String) -> Unit) {
+private fun TravelCityMap(city: TravelCity, photographed: Set<String>, onOpenSpot: (String) -> Unit) {
     BoxWithConstraints(
         Modifier.fillMaxWidth().aspectRatio(city.aspect).background(TujiColor.Paper2).clipToBounds(),
     ) {
@@ -354,7 +375,7 @@ private fun TravelCityMap(city: TravelCity, onOpenSpot: (String) -> Unit) {
             }
         }
         city.spots.forEachIndexed { index, spot ->
-            SpotPin(spot, index + 1, width * spot.at.x, height * spot.at.y, onOpenSpot)
+            SpotPin(spot, index + 1, width * spot.at.x, height * spot.at.y, spot.id in photographed, onOpenSpot)
         }
     }
 }
@@ -365,8 +386,9 @@ private fun TravelCityMap(city: TravelCity, onOpenSpot: (String) -> Unit) {
  * separately instead of centring the pair.
  */
 @Composable
-private fun SpotPin(spot: TravelSpot, number: Int, x: Dp, y: Dp, onOpenSpot: (String) -> Unit) {
+private fun SpotPin(spot: TravelSpot, number: Int, x: Dp, y: Dp, photographed: Boolean, onOpenSpot: (String) -> Unit) {
     val closed = stringResource(R.string.travel_spot_closed, spot.name)
+    val named = if (photographed) stringResource(R.string.travel_spot_photographed, spot.name) else spot.name
     val (px, py) = with(LocalDensity.current) { x.roundToPx() to y.roundToPx() }
     val gap = with(LocalDensity.current) { 6.dp.roundToPx() }
     Layout(
@@ -375,9 +397,9 @@ private fun SpotPin(spot: TravelSpot, number: Int, x: Dp, y: Dp, onOpenSpot: (St
                 Modifier
                     .size(44.dp)
                     .then(if (spot.open) Modifier.tujiClickable { onOpenSpot(spot.id) } else Modifier)
-                    .clearAndSetSemantics { contentDescription = if (spot.open) spot.name else closed },
+                    .clearAndSetSemantics { contentDescription = if (spot.open) named else closed },
                 contentAlignment = Alignment.Center,
-            ) { SpotMarker(number, spot.open) }
+            ) { SpotMarker(number, spot.open, photographed) }
             Text(
                 spot.name,
                 style = TujiType.bodySmStrong,
@@ -469,6 +491,12 @@ fun TravelSpotScreen(
     onOpenWord: (String) -> Unit,
     onStudy: (StudyMode) -> Unit,
     onNeedsMembership: () -> Unit,
+    /** This account's own cards tagged here, in word shape (`atlas:<itemId>`). */
+    ownWords: List<Word> = emptyList(),
+    /** 「大家拍的」, already without this account's own and blocked authors. */
+    shared: List<AtlasPublicItem> = emptyList(),
+    onOpenShared: (String) -> Unit = {},
+    onOpenAuthor: (String) -> Unit = {},
 ) {
     TravelScaffold(onBack, bottomPadding) {
         val spot = state.spot(spotId)
@@ -518,7 +546,54 @@ fun TravelSpotScreen(
                 }
             }
         }
+        // The 自製圖鑑 cards taken here. Each section is absent when empty.
+        if (ownWords.isNotEmpty()) {
+            SpotSectionTitle(stringResource(R.string.travel_shot_here_mine))
+            Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+                ownWords.chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                        row.forEach { word ->
+                            WordTile(
+                                word = word,
+                                modifier = Modifier.weight(1f).tujiClickable { onOpenWord(word.id) },
+                                badge = { MasteryScale(score(word.id)) },
+                            )
+                        }
+                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
+        if (shared.isNotEmpty()) {
+            SpotSectionTitle(stringResource(R.string.travel_shot_here_others))
+            Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+                shared.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                        row.forEach { item ->
+                            PublicItemTile(
+                                item = item,
+                                enabled = true,
+                                onOpen = { onOpenShared(item.slug) },
+                                onOpenAuthor = item.author?.let { author -> { onOpenAuthor(author.handle) } },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun SpotSectionTitle(text: String) {
+    Text(
+        text,
+        style = TujiType.label,
+        color = TujiColor.Ink3,
+        modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S4, bottom = TujiSpace.S2),
+    )
 }
 
 @Composable

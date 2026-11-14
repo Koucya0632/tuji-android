@@ -26,6 +26,8 @@ import app.tuji.android.core.model.AtlasPublicFeed
 import app.tuji.android.core.model.AtlasCard
 import app.tuji.android.core.model.AtlasCardsResponse
 import app.tuji.android.core.model.AtlasItem
+import app.tuji.android.core.model.AtlasItemSpotResponse
+import app.tuji.android.core.model.AtlasItemSpotState
 import app.tuji.android.core.model.AtlasPublishResult
 import app.tuji.android.core.model.BlockedHandles
 import app.tuji.android.core.model.TargetLanguage
@@ -165,6 +167,18 @@ interface AtlasShelfManaging {
      * could not be published at all.
      */
     suspend fun publishItem(itemId: String): AtlasPublishResult
+
+    /**
+     * Tag the card to a 景點 and say whether it is shared there. Only the spot
+     * id travels (parent repo docs/adr/0002).
+     */
+    suspend fun setSpot(itemId: String, spotId: String, shared: Boolean): AtlasItemSpotState
+
+    /**
+     * Take the card's 景點 off, and any sharing with it. Its own DELETE rather
+     * than `spotId: null`: `TujiJson` drops nulls from a body.
+     */
+    suspend fun clearSpot(itemId: String): AtlasItemSpotState
 }
 
 /** 我的合集: making one, filling it, and putting it up for review. */
@@ -324,6 +338,12 @@ class AtlasRepository(private val api: TujiApiClient) :
         api.post<Empty>(Endpoint.AtlasItemWithdraw(itemId), Empty())
     }
 
+    override suspend fun setSpot(itemId: String, spotId: String, shared: Boolean): AtlasItemSpotState =
+        api.put<AtlasItemSpotResponse>(Endpoint.AtlasItemSpot(itemId), SpotBody(spotId, shared)).item
+
+    override suspend fun clearSpot(itemId: String): AtlasItemSpotState =
+        api.delete<AtlasItemSpotResponse>(Endpoint.AtlasItemSpot(itemId)).item
+
     override suspend fun weakWords(limit: Int): List<TopWord> =
         api.get<TopWordsResponse>(Endpoint.UsersTopWords(type = "weak", limit = limit)).words
 
@@ -405,3 +425,6 @@ class AtlasRepository(private val api: TujiApiClient) :
         api.delete<Empty>(Endpoint.Block(handle))
     }
 }
+
+@Serializable
+internal data class SpotBody(val spotId: String, val shared: Boolean)

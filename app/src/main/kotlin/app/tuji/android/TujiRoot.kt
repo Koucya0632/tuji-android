@@ -197,6 +197,9 @@ import app.tuji.android.community.PublicItemViewModel
 import app.tuji.android.community.AuthorViewModel
 import app.tuji.android.core.community.ViewerRelationship
 import app.tuji.android.core.catalog.CardsSourceRules
+import app.tuji.android.core.model.AtlasPublicItem
+import app.tuji.android.core.model.SpotTagging
+import app.tuji.android.core.network.TravelRepository
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.catalog.StudyThemes
 import app.tuji.android.core.study.CompletionReadout
@@ -575,8 +578,10 @@ private fun SignedInScreens(
     // exists only for the other being 日文.
     val travel by app.travelStore.state.collectAsStateWithLifecycle()
     val onCommunity = nav.tab == AppRoute.Community
-    LaunchedEffect(onCommunity, uiLang, direction) {
-        if (onCommunity) app.travelStore.loadIfNeeded(uiLang, direction)
+    // A card's page offers the 景點 the map names, wherever it is opened from.
+    val onManageCard = nav.current is AppRoute.ManageCard
+    LaunchedEffect(onCommunity, onManageCard, uiLang, direction) {
+        if (onCommunity || onManageCard) app.travelStore.loadIfNeeded(uiLang, direction)
     }
     // 我做的 on request — iOS's `cardsSourceRequest`. Set when a capture is
     // handed to 生成佇列, so the 圖鑑 tab opens where its 生成中 tile is.
@@ -710,6 +715,10 @@ private fun SignedInScreens(
         )
     }
     val manageState by manage.state.collectAsStateWithLifecycle()
+    // The map and a spot's page show this account's own tagged cards, which
+    // arrive with 圖鑑管理's sync — not run at launch.
+    val onTravelMap = nav.current is AppRoute.TravelCity || nav.current is AppRoute.TravelSpot
+    LaunchedEffect(onTravelMap, direction) { if (onTravelMap) manage.load() }
     val myCollections = remember(direction) {
         MyCollectionsViewModel(
             authoring = app.atlas,
@@ -1502,6 +1511,10 @@ private fun SignedInScreens(
                     onDelete = { manage.delete(setOf(route.imageId)) { if (nav.current == route) nav = nav.pop() } },
                     onWithdraw = manage::withdraw,
                     onPublish = manage::publish,
+                    spots = row?.item?.let { SpotTagging.taggableSpots(it, travel.destinations) }.orEmpty(),
+                    spotName = { travel.spot(it)?.name },
+                    savingSpot = manageState.savingSpot,
+                    onSetSpot = manage::setSpot,
                     )
                 }
 
@@ -1617,9 +1630,16 @@ private fun SignedInScreens(
                     onBack = { nav = nav.pop() },
                     onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
                     onOpenSpot = { nav = nav.push(AppRoute.TravelSpot(it)) },
+                    photographed = SpotTagging.photographedSpotIds(manageState.items),
                 )
 
-                is AppRoute.TravelSpot -> TravelSpotScreen(
+                is AppRoute.TravelSpot -> {
+                    // 「大家拍的」: the same answer for everyone, so it is filtered here.
+                    val shared by produceState(emptyList<AtlasPublicItem>(), route.spotId) {
+                        value = runCatching { TravelRepository(app.api).spotPhotos(route.spotId) }.getOrDefault(emptyList())
+                    }
+                    val ownIds = manageState.items.filter { it.spotId == route.spotId }.map { it.id }.toSet()
+                    TravelSpotScreen(
                     state = travel,
                     spotId = route.spotId,
                     spotState = { spot ->
@@ -1635,7 +1655,12 @@ private fun SignedInScreens(
                     onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
                     onStudy = { mode -> nav = nav.push(AppRoute.TravelSpotStudy(route.spotId, mode)) },
                     onNeedsMembership = openMembership,
-                )
+                    ownWords = personal.mine.filter { it.id.removePrefix(CardsSourceRules.CUSTOM_PREFIX) in ownIds },
+                    shared = SpotTagging.othersShared(shared, manageState.items) { communityBlocked.hides(it) },
+                    onOpenShared = { nav = nav.push(AppRoute.PublicItem(it)) },
+                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
+                    )
+                }
 
                 AppRoute.WordLists -> WordListsScreen(
                     store = app.wordListsStore,

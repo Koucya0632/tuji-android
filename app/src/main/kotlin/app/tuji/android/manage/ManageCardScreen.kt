@@ -27,7 +27,12 @@ import app.tuji.android.R
 import app.tuji.android.core.community.DeleteWarning
 import app.tuji.android.core.community.CaptureCorrectionFields
 import app.tuji.android.core.community.ShelfRow
+import app.tuji.android.core.model.SpotTagging
+import app.tuji.android.core.model.TravelSpot
 import app.tuji.android.core.model.UiLanguage
+import app.tuji.android.core.design.TujiRow
+import app.tuji.android.core.design.TujiRowDivider
+import app.tuji.android.form.TujiSheet
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiPrompt
 import app.tuji.android.core.design.TujiPromptStyle
@@ -54,6 +59,13 @@ fun ManageCardScreen(
     onDelete: () -> Unit,
     onWithdraw: (String) -> Unit,
     onPublish: (String) -> Unit,
+    /** The 景點 this card may be tagged to (SpotTagging.taggableSpots); empty hides the section. */
+    spots: List<TravelSpot> = emptyList(),
+    /** Any spot's name by id, for the one the card carries. */
+    spotName: (String) -> String? = { null },
+    savingSpot: Boolean = false,
+    /** Tag the card ([spotId] null takes the tag off) and say whether it is shared there. */
+    onSetSpot: (itemId: String, spotId: String?, shared: Boolean) -> Unit = { _, _, _ -> },
 ) {
     if (row == null) {
         // Deleted from under the page, or a sync that dropped it.
@@ -63,6 +75,7 @@ fun ManageCardScreen(
     var askDelete by remember { mutableStateOf(false) }
     var askWithdraw by remember { mutableStateOf(false) }
     var askPublish by remember { mutableStateOf(false) }
+    var askSpot by remember { mutableStateOf(false) }
     val item = row.item
 
     Column(
@@ -120,6 +133,38 @@ fun ManageCardScreen(
             }
         }
 
+        if (item != null && (spots.isNotEmpty() || item.spotId != null)) {
+            // Where the photo was taken, among the 跟著 Moira 去旅遊 spots —
+            // private until 放到景點頁 shares a public card there. Picked by
+            // hand: the photo picker hands Android no location.
+            val current = item.spotId?.let(spotName)
+            Column(Modifier.padding(top = TujiSpace.S2), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                Field(stringResource(R.string.spot_field), current ?: stringResource(R.string.spot_none_set))
+                ActionBar(
+                    text = stringResource(if (item.spotId == null) R.string.spot_pick else R.string.spot_change),
+                    ground = TujiColor.Paper2,
+                    ink = TujiColor.Ink,
+                    enabled = !savingSpot && spots.isNotEmpty(),
+                    onClick = { askSpot = true },
+                )
+                val spotId = item.spotId
+                if (spotId != null && current != null) {
+                    if (item.spotShareBlocked) {
+                        Text(stringResource(R.string.spot_share_blocked, current), style = TujiType.bodySm, color = TujiColor.Ink3)
+                    } else if (SpotTagging.isPublic(item)) {
+                        ActionBar(
+                            text = stringResource(if (item.spotShared) R.string.spot_unshare else R.string.spot_share),
+                            ground = if (item.spotShared) TujiColor.Paper2 else TujiColor.BrandPrimary,
+                            ink = TujiColor.Ink,
+                            enabled = !savingSpot && (item.spotShared || SpotTagging.canShare(item)),
+                            onClick = { onSetSpot(item.id, spotId, !item.spotShared) },
+                        )
+                        Text(stringResource(R.string.spot_share_note, current), style = TujiType.bodySm, color = TujiColor.Ink3)
+                    }
+                }
+            }
+        }
+
         if (resumable) {
             ActionBar(
                 text = stringResource(R.string.manage_resume),
@@ -159,6 +204,29 @@ fun ManageCardScreen(
             onConfirm = { askDelete = false; onDelete() },
             onCancel = { askDelete = false },
         )
+    }
+    if (askSpot && item != null) {
+        TujiSheet(title = stringResource(R.string.spot_pick_title), onDismiss = { askSpot = false }) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(top = TujiSpace.S3, bottom = TujiSpace.S5)) {
+                spots.forEachIndexed { index, spot ->
+                    if (index > 0) TujiRowDivider()
+                    TujiRow(onClick = { askSpot = false; onSetSpot(item.id, spot.id, false) }) {
+                        Text(spot.name, style = TujiType.h3, color = TujiColor.Ink, modifier = Modifier.padding(vertical = TujiSpace.S2))
+                    }
+                }
+                if (item.spotId != null) {
+                    TujiRowDivider()
+                    TujiRow(onClick = { askSpot = false; onSetSpot(item.id, null, false) }) {
+                        Text(
+                            stringResource(R.string.spot_none_of_these),
+                            style = TujiType.h3,
+                            color = TujiColor.Alert,
+                            modifier = Modifier.padding(vertical = TujiSpace.S2),
+                        )
+                    }
+                }
+            }
+        }
     }
     if (askPublish && item != null) {
         TujiPrompt(

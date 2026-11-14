@@ -405,6 +405,16 @@
     <string name="manage_withdraw_title">Unpublish this card?</string>
     <string name="manage_withdraw_message">The card leaves Sightings. Your card and study history stay.</string>
     <string name="manage_withdraw_detail">You can publish it again at any time.</string>
+    <string name="spot_field">Spot</string>
+    <string name="spot_none_set">No spot</string>
+    <string name="spot_pick">Choose a spot</string>
+    <string name="spot_change">Change spot</string>
+    <string name="spot_pick_title">Where was it taken?</string>
+    <string name="spot_none_of_these">None of these</string>
+    <string name="spot_share">Show on the spot page</string>
+    <string name="spot_unshare">Take off the spot page</string>
+    <string name="spot_share_note">Others will see this and your nickname on the %1$s page, in the app and on the website.</string>
+    <string name="spot_share_blocked">This was taken off the %1$s page and can\'t go back.</string>
     <string name="manage_not_now">Not now</string>
     <string name="me_weak_title">Needs work</string>
     <string name="manage_section_cards">Atlas Cards</string>
@@ -479,6 +489,7 @@
     <string name="community_reason_copyright">Copyright</string>
     <string name="community_reason_wrong">Incorrect content</string>
     <string name="community_reason_other">Other</string>
+    <string name="community_reason_not_here">Not taken here</string>
     <string name="cancel">Cancel</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="collection_save">Save</string>
@@ -1286,4 +1297,7 @@
     <string name="travel_words_on_the_way">Words are on the way</string>
     <string name="travel_all_studied">All studied. They\'ll come back in review when due.</string>
     <string name="travel_study_here">Study these words</string>
+    <string name="travel_shot_here_mine">Your photos here</string>
+    <string name="travel_shot_here_others">Shot here by others</string>
+    <string name="travel_spot_photographed">%1$s, you\'ve taken photos here</string>
 </resources>

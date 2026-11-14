@@ -405,6 +405,16 @@
     <string name="manage_withdraw_title">要取消公开吗？</string>
     <string name="manage_withdraw_message">这张卡片会从物见移除，你的卡片和学习记录都会保留。</string>
     <string name="manage_withdraw_detail">之后随时可以再公开一次。</string>
+    <string name="spot_field">景点</string>
+    <string name="spot_none_set">没有挂景点</string>
+    <string name="spot_pick">选景点</string>
+    <string name="spot_change">换景点</string>
+    <string name="spot_pick_title">在哪里拍的？</string>
+    <string name="spot_none_of_these">不在这些地方</string>
+    <string name="spot_share">放到景点页</string>
+    <string name="spot_unshare">从景点页拿下</string>
+    <string name="spot_share_note">其他人会在%1$s页（App 和网站）看到这张和你的昵称。</string>
+    <string name="spot_share_blocked">这张已从%1$s页撤下，不能再放回去。</string>
     <string name="manage_not_now">先不要</string>
     <string name="me_weak_title">需要加强</string>
     <string name="manage_section_cards">图鉴卡片</string>
@@ -479,6 +489,7 @@
     <string name="community_reason_copyright">侵犯版权</string>
     <string name="community_reason_wrong">内容有误</string>
     <string name="community_reason_other">其他</string>
+    <string name="community_reason_not_here">不是在这里拍的</string>
     <string name="cancel">取消</string>
     <string name="community_author_uid">UID: %1$s</string>
     <string name="collection_save">收藏</string>
@@ -1286,4 +1297,7 @@
     <string name="travel_words_on_the_way">字还在路上</string>
     <string name="travel_all_studied">这里的字都学过了，到期会出现在复习</string>
     <string name="travel_study_here">学这里的字</string>
+    <string name="travel_shot_here_mine">你在这里拍的</string>
+    <string name="travel_shot_here_others">大家拍的</string>
+    <string name="travel_spot_photographed">%1$s，你在这里拍过</string>
 </resources>

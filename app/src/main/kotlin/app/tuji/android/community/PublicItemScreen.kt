@@ -262,8 +262,18 @@ fun PublicItemScreen(
         ReportSheet(
             onPick = { reason -> reporting = false; onReport(reason) },
             onDismiss = { reporting = false },
+            atSpot = item.spotId != null,
         )
     }
+}
+
+private fun reasonLabel(reason: ReportReason): Int = when (reason) {
+    ReportReason.Spam -> R.string.community_reason_spam
+    ReportReason.Inappropriate -> R.string.community_reason_inappropriate
+    ReportReason.Copyright -> R.string.community_reason_copyright
+    ReportReason.Wrong -> R.string.community_reason_wrong
+    ReportReason.Other -> R.string.community_reason_other
+    ReportReason.NotHere -> R.string.community_reason_not_here
 }
 
 /** The author, how many are learning it, and the one pill — 加入學習, 學習中, or 你的分享. */
@@ -337,16 +347,19 @@ private fun LearnPillLabel(icon: (@Composable () -> Unit)?, text: String, active
  * and the line that says who will see it. Picking sends.
  */
 @Composable
-fun ReportSheet(onPick: (ReportReason) -> Unit, onDismiss: () -> Unit) =
-    TujiSheet(title = stringResource(R.string.community_report_title), onDismiss = onDismiss, maxHeight = 460.dp) {
+fun ReportSheet(
+    onPick: (ReportReason) -> Unit,
+    onDismiss: () -> Unit,
+    /** A public card shared to a 景點: 「不是在這裡拍的」 is offered too. */
+    atSpot: Boolean = false,
+) =
+    TujiSheet(
+        title = stringResource(R.string.community_report_title),
+        onDismiss = onDismiss,
+        maxHeight = if (atSpot) 516.dp else 460.dp,
+    ) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(top = TujiSpace.S3, bottom = TujiSpace.S5)) {
-            listOf(
-                ReportReason.Spam to R.string.community_reason_spam,
-                ReportReason.Inappropriate to R.string.community_reason_inappropriate,
-                ReportReason.Copyright to R.string.community_reason_copyright,
-                ReportReason.Wrong to R.string.community_reason_wrong,
-                ReportReason.Other to R.string.community_reason_other,
-            ).forEachIndexed { index, (reason, label) ->
+            ReportReason.choices(atSpot).map { it to reasonLabel(it) }.forEachIndexed { index, (reason, label) ->
                 if (index > 0) TujiRowDivider()
                 TujiRow(onClick = { onPick(reason) }) {
                     Text(
