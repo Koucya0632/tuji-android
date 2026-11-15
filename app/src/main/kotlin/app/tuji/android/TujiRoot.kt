@@ -1,237 +1,147 @@
 package app.tuji.android
 
-import app.tuji.android.core.scenes.SceneId
-import app.tuji.android.scenes.SceneDetailScreen
-import app.tuji.android.scenes.SceneListScreen
-import app.tuji.android.scenes.SceneTodayCard
-import app.tuji.android.scenes.SceneWord
-import app.tuji.android.scenes.SceneWords
-import app.tuji.android.scenes.TopicSceneEntries
-import app.tuji.android.scenes.ScenePracticeScreen
-import app.tuji.android.scenes.WordSceneSection
-import app.tuji.android.scenes.hasScenes
-import app.tuji.android.core.model.MembershipTier
-import app.tuji.android.core.model.MemberAccess
-import app.tuji.android.core.model.MemberAccessLevel
-import app.tuji.android.core.model.MemberFeature
-import app.tuji.android.atlas.WordNoteSection
-import app.tuji.android.wordlists.AddToWordListSheet
-import app.tuji.android.wordlists.MeWordListsRow
-import app.tuji.android.wordlists.WordListButton
-import app.tuji.android.wordlists.WordListDetailScreen
-import app.tuji.android.wordlists.WordListDetailViewModel
-import app.tuji.android.travel.TravelCityScreen
-import app.tuji.android.travel.TravelDestinationScreen
-import app.tuji.android.travel.TravelEntryBand
-import app.tuji.android.travel.TravelSpotScreen
-import app.tuji.android.core.model.TravelDecisions
-import app.tuji.android.wordlists.WordListsScreen
-import app.tuji.android.membership.MembershipOffer
-import app.tuji.android.membership.CreditPackButtons
-import app.tuji.android.membership.MembershipPurchase
-import app.tuji.android.membership.MembershipScreen
-import app.tuji.android.core.catalog.CardsSource
-import app.tuji.android.core.community.ImageStatus
-import app.tuji.android.core.network.CreditRepository
-import app.tuji.android.credits.CreditCaptureModel
-import app.tuji.android.credits.CreditCaptureScreen
-import app.tuji.android.reminders.ReminderTexts
-import app.tuji.android.settings.ReminderSettingsSection
-import app.tuji.android.credits.CreditWalletCard
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.Arrangement
-import app.tuji.android.core.design.TujiGlyph
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.IntOffset
-import app.tuji.android.core.design.TujiMotion
-import app.tuji.android.core.design.rememberReduceMotion
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tuji.android.BuildConfig
+import app.tuji.android.account.AccountHost
+import app.tuji.android.account.AccountScreen
+import app.tuji.android.account.AccountViewModel
+import app.tuji.android.assistant.AssistantHomeFeature
+import app.tuji.android.assistant.AssistantHost
+import app.tuji.android.assistant.TopicChatEntry
+import app.tuji.android.assistant.prefetchAssistant
+import app.tuji.android.atlas.AtlasCardsScreen
+import app.tuji.android.atlas.AtlasHost
+import app.tuji.android.atlas.SearchViewModel
 import app.tuji.android.auth.WelcomeScreen
+import app.tuji.android.checkin.CheckInSheet
+import app.tuji.android.community.CommunityHost
+import app.tuji.android.community.CommunityScreen
+import app.tuji.android.community.CommunitySearchViewModel
+import app.tuji.android.community.CommunityViewModel
 import app.tuji.android.core.auth.AuthState
+import app.tuji.android.core.catalog.CardsSource
+import app.tuji.android.core.catalog.CategoryShelf
+import app.tuji.android.core.catalog.StudyThemes
+import app.tuji.android.core.design.LockupEntrance
+import app.tuji.android.core.design.TujiBrandLockup
+import app.tuji.android.core.design.TujiColor
+import app.tuji.android.core.design.TujiFace
+import app.tuji.android.core.design.TujiGlyph
+import app.tuji.android.core.design.TujiMotion
+import app.tuji.android.core.design.TujiNavBar
+import app.tuji.android.core.design.TujiNavLeading
+import app.tuji.android.core.design.TujiPullToRefresh
+import app.tuji.android.core.design.TujiSpace
+import app.tuji.android.core.design.TujiTheme
+import app.tuji.android.core.design.TujiType
+import app.tuji.android.core.design.rememberReduceMotion
+import app.tuji.android.core.design.rememberTujiHaptics
+import app.tuji.android.core.model.CheckInDecision
 import app.tuji.android.core.model.LaunchAccountState
 import app.tuji.android.core.model.LaunchContext
+import app.tuji.android.core.model.LaunchDestination
+import app.tuji.android.core.model.LaunchRouting
+import app.tuji.android.core.model.LearningDirection
+import app.tuji.android.core.model.MemberAccess
+import app.tuji.android.core.model.MemberAccessLevel
+import app.tuji.android.core.model.MemberFeature
+import app.tuji.android.core.model.StudyMode
+import app.tuji.android.core.model.UiLanguage
+import app.tuji.android.core.study.AppMutation
+import app.tuji.android.core.study.CompletionReadout
+import app.tuji.android.core.study.FreeThemesProgress
+import app.tuji.android.core.study.LearningRefreshCause
+import app.tuji.android.core.study.MasteryDistribution
+import app.tuji.android.core.study.RefreshTarget
 import app.tuji.android.core.study.SetupChoices
+import app.tuji.android.core.study.TodayCall
+import app.tuji.android.core.study.TodayDecisions
+import app.tuji.android.core.study.TodayInputs
+import app.tuji.android.core.study.targets
+import app.tuji.android.manage.AtlasManageViewModel
+import app.tuji.android.manage.ManageHost
+import app.tuji.android.manage.MyCollectionsViewModel
+import app.tuji.android.onboarding.AutoSetupScreen
+import app.tuji.android.onboarding.LearningDirectionScreen
+import app.tuji.android.reminders.ReminderTexts
+import app.tuji.android.scenes.SceneHost
+import app.tuji.android.scenes.SceneProgressAccount
+import app.tuji.android.scenes.hasScenes
+import app.tuji.android.scenes.sceneTodayCard
+import app.tuji.android.spike.FuriganaSpikeScreen
+import app.tuji.android.study.StudySessionHost
+import app.tuji.android.today.TodayScreen
+import app.tuji.android.today.TodayViewModel
 import app.tuji.android.tour.FeatureTourFlow
 import app.tuji.android.tour.FeatureTourOverlay
+import app.tuji.android.tour.ProvideTourAnchors
 import app.tuji.android.tour.TabTip
 import app.tuji.android.tour.TabTipBubble
-import app.tuji.android.tour.ProvideTourAnchors
 import app.tuji.android.tour.TourAdvance
 import app.tuji.android.tour.TourCopy
 import app.tuji.android.tour.rememberTourAnchors
+import app.tuji.android.travel.TravelEntry
+import app.tuji.android.travel.TravelHost
 import app.tuji.android.update.AppUpdatePrompt
-import kotlinx.coroutines.delay
-import app.tuji.android.onboarding.AutoSetupScreen
-import app.tuji.android.core.design.TujiFace
-import app.tuji.android.core.design.LockupEntrance
-import app.tuji.android.core.design.TujiBrandLockup
-import app.tuji.android.core.design.TujiTheme
-import app.tuji.android.core.design.rememberTujiHaptics
-import app.tuji.android.gloss.GlossBookmarks
-import app.tuji.android.core.model.LaunchDestination
-import app.tuji.android.core.model.LaunchRouting
-import app.tuji.android.settings.SettingsBusy
-import app.tuji.android.settings.SettingsReadiness
-import app.tuji.android.settings.SettingsScreen
-import app.tuji.android.core.model.LearningDirection
-import app.tuji.android.core.study.MasteryDistribution
-import app.tuji.android.core.design.TujiPullToRefresh
-import app.tuji.android.core.study.targets
-import app.tuji.android.core.study.RefreshTarget
-import app.tuji.android.core.study.LearningRefreshCause
-import app.tuji.android.core.study.AppMutation
-import app.tuji.android.core.model.UiLanguage
-import app.tuji.android.onboarding.LearningDirectionScreen
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.draw.shadow
-import app.tuji.android.atlas.AtlasSearchScreen
-import app.tuji.android.assistant.AssistantHomeFeature
-import app.tuji.android.account.ProgressStatsScreen
-import app.tuji.android.core.study.FreeThemesProgress
-import app.tuji.android.core.study.TodayCall
-import app.tuji.android.assistant.CreditStatementScreen
-import app.tuji.android.assistant.GrammarModel
-import app.tuji.android.assistant.GrammarScreen
-import app.tuji.android.assistant.StoryBuilderModel
-import app.tuji.android.assistant.StoryScreen
-import app.tuji.android.assistant.TopicChatEntry
-import app.tuji.android.assistant.TopicChatHistoryScreen
-import app.tuji.android.assistant.TopicChatModel
-import app.tuji.android.assistant.TopicChatScreen
-import app.tuji.android.assistant.TopicChoice
-import app.tuji.android.core.network.TopicChatRepository
-import app.tuji.android.core.network.StoryRepository
-import app.tuji.android.core.network.GrammarRepository
-import app.tuji.android.assistant.VocabularyModel
-import app.tuji.android.assistant.VocabularyScreen
-import app.tuji.android.core.network.CreditLedgerRepository
-import app.tuji.android.core.network.VocabularyRepository
-import app.tuji.android.atlas.WordDetailPanel
-import app.tuji.android.atlas.SearchViewModel
-import app.tuji.android.atlas.AtlasCardsScreen
-import app.tuji.android.atlas.AtlasThemeScreen
-import app.tuji.android.atlas.WordDetailScreen
-import app.tuji.android.atlas.WordDetailViewModel
-import app.tuji.android.account.AccountScreen
-import app.tuji.android.account.AccountViewModel
-import app.tuji.android.core.model.CaptureEntry
-import app.tuji.android.core.design.TujiIndeterminateBar
-import app.tuji.android.community.AuthorScreen
-import app.tuji.android.community.CommunityScreen
-import app.tuji.android.community.CollectionScreen
-import app.tuji.android.community.CommunityViewModel
-import app.tuji.android.community.CommunitySearchScreen
-import app.tuji.android.community.CommunitySearchViewModel
-import app.tuji.android.community.CollectionDetailViewModel
-import app.tuji.android.core.community.ReportTarget
-import app.tuji.android.community.PublicItemScreen
-import app.tuji.android.profile.BlockedAuthorsScreen
-import app.tuji.android.manage.AtlasManageScreen
-import app.tuji.android.manage.AtlasManageViewModel
-import app.tuji.android.manage.CollectionEditScreen
-import app.tuji.android.manage.CreateCollectionSheet
-import app.tuji.android.manage.CollectionEditViewModel
-import app.tuji.android.manage.MyCollectionsViewModel
-import app.tuji.android.core.community.DeleteWarning
-import app.tuji.android.core.model.AtlasMyCollection
-import app.tuji.android.manage.ManageCardScreen
-import app.tuji.android.profile.EditProfileScreen
-import app.tuji.android.profile.EditProfileViewModel
-import app.tuji.android.community.PublicItemViewModel
-import app.tuji.android.community.AuthorViewModel
-import app.tuji.android.core.community.ViewerRelationship
-import app.tuji.android.core.catalog.CardsSourceRules
-import app.tuji.android.core.model.AtlasPublicItem
-import app.tuji.android.core.model.SpotTagging
-import app.tuji.android.core.network.TravelRepository
-import app.tuji.android.core.catalog.CategoryShelf
-import app.tuji.android.core.catalog.StudyThemes
-import app.tuji.android.core.study.CompletionReadout
-import app.tuji.android.core.study.ThemeStatus
-import app.tuji.android.settings.StudyThemesScreen
-import app.tuji.android.core.study.TodayInputs
-import app.tuji.android.core.design.TujiColor
-import app.tuji.android.core.design.TujiNavBar
-import app.tuji.android.core.design.TujiNavLeading
-import app.tuji.android.core.design.TujiSpace
-import app.tuji.android.core.design.TujiType
-import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.BuildConfig
-import app.tuji.android.spike.FuriganaSpikeScreen
-import app.tuji.android.study.AnswerDrainWorker
-import app.tuji.android.study.NewFlowScreen
-import app.tuji.android.study.NewFlowViewModel
-import app.tuji.android.today.TodayScreen
-import app.tuji.android.today.TodayViewModel
-import app.tuji.android.study.isOnline
-import app.tuji.android.study.ReviewScreen
-import app.tuji.android.study.ReviewViewModel
-import app.tuji.android.study.StudyReporter
-import app.tuji.android.study.StudySource
-import app.tuji.android.study.SessionCheckInCard
-import app.tuji.android.checkin.CheckInSheet
-import app.tuji.android.core.study.TodayDecisions
-import app.tuji.android.core.model.CheckInDecision
-import app.tuji.android.settings.FeedbackSender
-import app.tuji.android.settings.shareApp
-import app.tuji.android.core.model.StudyMode
-import app.tuji.android.core.model.Word
+import app.tuji.android.wordlists.MeWordLists
+import app.tuji.android.wordlists.WordListHost
+import app.tuji.android.wordlists.WordListsPreload
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -467,10 +377,15 @@ private fun SignedInShell(app: TujiApplication, identity: String?) {
 }
 
 /**
- * The signed-in app: the tabs, one back stack, and the study flows on top.
+ * The signed-in app: the tabs, one back stack, and the pages pushed over them.
  *
  * The stack is [NavStack] and nothing else — the hardware back button and 返回
  * pop the same list, so the two can never disagree about where "back" is.
+ *
+ * What lives here is what belongs to the whole shell: the stores' loads, the
+ * view models held above the pages, the four tab roots, the tour and the bar.
+ * Each page is its feature's: this builds one [ShellContext] and hands every
+ * family of [AppRoute.Page] to that feature's host.
  */
 @Composable
 private fun SignedInScreens(
@@ -519,8 +434,6 @@ private fun SignedInScreens(
     val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
     val session by app.auth.session.collectAsStateWithLifecycle()
     val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
-    val settingsLoadFailed by app.settingsStore.loadFailed.collectAsStateWithLifecycle()
-    val settingsReadiness = SettingsReadiness.of(settingsLoaded, settingsLoadFailed)
 
     // Also the one holder of the entitlement for the whole shell: 學習主題's
     // locks, 今日's numbers and 會員方案 read it from here, so a purchase seen
@@ -534,70 +447,28 @@ private fun SignedInScreens(
     val myUid = accountState.me?.username
 
     // Play purchases paid but not yet granted (a crash, a pending payment that
-    // cleared while Tuji was closed) are sent on entering the shell; every
-    // grant, from here or from 會員方案, re-reads the entitlement.
-    val billing by app.playBilling.state.collectAsStateWithLifecycle()
+    // cleared while Tuji was closed) are sent on entering the shell; a grant
+    // reports itself as an [AppMutation].
     LaunchedEffect(Unit) { app.playBilling.reconcile() }
 
     // 個人筆記, once the entitlement says the feature exists: the review reveal
     // reads them with no request of its own. Loaded here, not on the word page,
     // so the first review of the day already has them.
-    val wordNotes by app.wordNotesStore.notes.collectAsStateWithLifecycle()
     val notesExist = MemberAccess.level(
         MemberFeature.WordNote, accountState.entitlement, hasOwnData = true,
     ) != MemberAccessLevel.Hidden
     LaunchedEffect(notesExist) { if (notesExist) app.wordNotesStore.loadIfNeeded() }
 
-    // 個人詞表: whether a non-member still has lists decides between the lock
-    // and the way in, so they are read whenever the feature exists at all —
-    // and again when the learning language changes, since lists are per
-    // language.
-    val wordLists by app.wordListsStore.state.collectAsStateWithLifecycle()
-    val listsExist = MemberAccess.level(
-        MemberFeature.WordListBrowse, accountState.entitlement, hasOwnData = true,
-    ) != MemberAccessLevel.Hidden
-    LaunchedEffect(listsExist, direction) { if (listsExist) app.wordListsStore.loadIfNeeded() }
-
     var nav by remember { mutableStateOf(NavStack()) }
 
-    // 跟著 Moira 去旅遊: asked for when 物見 is on screen, and again when the
-    // interface or learning language changes — the map is named in one and
-    // exists only for the other being 日文.
-    val travel by app.travelStore.state.collectAsStateWithLifecycle()
-    val onCommunity = nav.tab == AppRoute.Community
-    // A card's page offers the 景點 the map names, wherever it is opened from.
-    val onManageCard = nav.current is AppRoute.ManageCard
-    LaunchedEffect(onCommunity, onManageCard, uiLang, direction) {
-        if (onCommunity || onManageCard) app.travelStore.loadIfNeeded(uiLang, direction)
-    }
     // 我做的 on request — iOS's `cardsSourceRequest`. Set when a capture is
     // handed to 生成佇列, so the 圖鑑 tab opens where its 生成中 tile is.
     var cardsSourceRequest by remember { mutableStateOf<CardsSource?>(null) }
-    // The photo 圖片詳情's 繼續確認 opens 拍照新增 on; null for the camera button.
-    var captureResume by rememberSaveable { mutableStateOf<String?>(null) }
-
-    fun showQueuedCapture() {
-        nav = nav.pop().select(AppRoute.Atlas)
-        cardsSourceRequest = CardsSource.Mine
-    }
-
-    // Where every lock and every 402 leads. Not pushed twice: two refusals in
-    // a row would otherwise stack two copies of the same page.
-    val openMembership: () -> Unit = {
-        if (nav.current != AppRoute.Membership) nav = nav.push(AppRoute.Membership)
-    }
 
     // The themes that actually get studied: the pick, narrowed to what this
     // account may study. The pick itself stays as chosen — 設定 shows it, and
     // it comes back whole the day the account becomes a member.
     val studyable = accountState.entitlement?.membership?.studyableCategories
-    // 場面練習: from the third scene on, practice is for 永久會員; progress is one file per account.
-    val sceneMember = (accountState.entitlement?.membershipTier ?: MembershipTier.Free) != MembershipTier.Free
-    val sceneWords: (List<String>) -> List<SceneWord> = { ids -> SceneWords.resolve(ids, catalog.words, studyable, direction) }
-    val sceneAccount = (session.state as? AuthState.SignedIn)?.user?.id
-    LaunchedEffect(sceneAccount) {
-        if (sceneAccount != null) app.scenes.progress.use(sceneAccount) else app.scenes.progress.reset()
-    }
     val studyCategories = remember(settings.studyCategories, studyable) {
         StudyThemes.effective(settings.studyCategories, studyable)
     }
@@ -608,20 +479,6 @@ private fun SignedInScreens(
     // catalogue alone leaves both out while showing them ticked in 設定.
     val studyWords = remember(catalog.words, personal.mine, personal.taken) {
         StudyThemes.words(catalog.words, personal.mine, personal.taken)
-    }
-    // 主題對話's topics: the catalogue's themes (not 自製 or 物見), with how many
-    // official words each has — a theme needs enough of them to talk about.
-    val chatTopics = remember(catalog.shelves, catalog.words, uiLang) {
-        catalog.shelves
-            .filter { it.category.id != "custom" && it.category.id != "community" }
-            .map { shelf ->
-                TopicChoice(
-                    id = shelf.category.id,
-                    name = CategoryShelf.title(shelf.category, uiLang),
-                    imageUrl = shelf.category.imageUrl,
-                    wordCount = CategoryShelf.words(shelf.category.id, catalog.words).size,
-                )
-            }
     }
     // 完成度, once, for 今日's 主題進度 and 我's card: two screens printing two
     // numbers for one account read as a server bug for a week.
@@ -635,15 +492,7 @@ private fun SignedInScreens(
             ),
         )
     }
-    val themeStatus: (String) -> ThemeStatus = { id ->
-        ThemeStatus.of(
-            wordIds = CategoryShelf.words(id, studyWords).map { it.id },
-            masteryScore = scores::score,
-            seenAndTotal = progress.seenAndTotal(id),
-        )
-    }
 
-    var settingsBusy by remember { mutableStateOf(SettingsBusy()) }
     val community = remember(direction) {
         CommunityViewModel(
             atlas = app.atlas,
@@ -670,8 +519,11 @@ private fun SignedInScreens(
     // A block made on a pushed page applies to the results on the way back.
     LaunchedEffect(communityBlocked) { communitySearch.refilter() }
 
-    // 圖鑑管理's shelf, above both screens that draw it, so a card deleted on
-    // its own page is already gone from the list behind.
+    // 圖鑑管理's shelf and 合集, above every page that draws them, so a card
+    // deleted on its own page is already gone from the list behind.
+    val openMembership: () -> Unit = {
+        if (nav.current != AccountRoute.Membership) nav = nav.push(AccountRoute.Membership)
+    }
     val manage = remember(direction) {
         AtlasManageViewModel(
             shelf = app.atlas,
@@ -680,11 +532,6 @@ private fun SignedInScreens(
             onNeedsMembership = { openMembership() },
         )
     }
-    val manageState by manage.state.collectAsStateWithLifecycle()
-    // The map and a spot's page show this account's own tagged cards, which
-    // arrive with 圖鑑管理's sync — not run at launch.
-    val onTravelMap = nav.current is AppRoute.TravelCity || nav.current is AppRoute.TravelSpot
-    LaunchedEffect(onTravelMap, direction) { if (onTravelMap) manage.load() }
     val myCollections = remember(direction) {
         MyCollectionsViewModel(
             authoring = app.atlas,
@@ -693,8 +540,6 @@ private fun SignedInScreens(
             onNeedsMembership = { openMembership() },
         )
     }
-    val myCollectionsState by myCollections.state.collectAsStateWithLifecycle()
-    val communityReported by community.reported.collectAsStateWithLifecycle()
 
     val today = remember(direction) {
         TodayViewModel(
@@ -702,6 +547,16 @@ private fun SignedInScreens(
             direction = direction,
         )
     }
+    val todayStats by today.inputs.collectAsStateWithLifecycle()
+    // 今日's verdicts read the selected themes too, as iOS's do: what is left
+    // to learn is counted over them once their progress has landed.
+    val todayInputs = todayStats.copy(
+        completion = completion,
+        progressLoaded = progress.loaded,
+        // 解鎖全部主題 rather than 換幾個主題, once a non-member has learned
+        // every free theme.
+        freeThemes = remember(studyable, progress.categories) { FreeThemesProgress.of(studyable, progress.categories) },
+    )
 
     // What to re-read is [LearningRefreshCause]'s to say for a pull and
     // [AppMutation]'s for a write; this only knows which store answers each
@@ -738,16 +593,6 @@ private fun SignedInScreens(
     LaunchedEffect(Unit) {
         app.invalidator.targets.collect { latestRefresh(it) }
     }
-    val todayStats by today.inputs.collectAsStateWithLifecycle()
-    // 今日's verdicts read the selected themes too, as iOS's do: what is left
-    // to learn is counted over them once their progress has landed.
-    val todayInputs = todayStats.copy(
-        completion = completion,
-        progressLoaded = progress.loaded,
-        // 解鎖全部主題 rather than 換幾個主題, once a non-member has learned
-        // every free theme.
-        freeThemes = remember(studyable, progress.categories) { FreeThemesProgress.of(studyable, progress.categories) },
-    )
 
     // 每日學習提醒: laid out again whenever what they say could change — the
     // due count, whether today has been studied, the language they are in —
@@ -765,7 +610,7 @@ private fun SignedInScreens(
         app.studyReminders.reschedule(reminderDue, studiedToday, reminderTexts)
     }
 
-    // Held above the routes rather than inside 搜尋's branch, so opening a
+    // Held above the routes rather than inside 搜尋's page, so opening a
     // result and coming back finds the results still there — as it does on
     // iOS, where the search screen stays on the stack under the word. Keyed on
     // both, because both are in the request's URL, and a model held across a
@@ -783,6 +628,40 @@ private fun SignedInScreens(
         )
     }
 
+    val shell = ShellContext(
+        app = app,
+        stack = { nav },
+        setStack = { nav = it },
+        settings = settings,
+        uiLanguage = uiLanguage,
+        ownerId = (session.state as? AuthState.SignedIn)?.user?.id,
+        entitlement = accountState.entitlement,
+        learning = LearningData(
+            catalog = catalog,
+            scores = scores,
+            personal = personal,
+            progress = progress,
+            studyCategories = studyCategories,
+            studyWords = studyWords,
+            completion = completion,
+            today = todayInputs,
+        ),
+        models = ShellModels(
+            account = account,
+            accountState = accountState,
+            today = today,
+            community = community,
+            communitySearch = communitySearch,
+            search = search,
+            manage = manage,
+            myCollections = myCollections,
+        ),
+        scope = scope,
+    )
+    // What features keep loaded for the whole shell, not for one page.
+    WordListsPreload(shell)
+    SceneProgressAccount(shell)
+
     var showSpike by remember { mutableStateOf(false) }
 
     // 打卡, from 今日's streak chip. The store is the app's, so the chip's dot,
@@ -797,13 +676,6 @@ private fun SignedInScreens(
         val before = seenTodayCount
         seenTodayCount = todayCount
         if (before != null && todayCount != null && todayCount > before) app.checkInStore.loadReward()
-    }
-
-    // A 已收進 card belongs to somebody else, and its page has an author, a
-    // 取消收藏 and a 檢舉 that the dictionary's entry has none of. The id says
-    // which — for 圖鑑's grid and for a theme page alike.
-    val openCard: (String) -> Unit = { id ->
-        nav = nav.push(CardsSourceRules.savedSlug(id)?.let { AppRoute.PublicItem(it) } ?: AppRoute.Word(id))
     }
 
     // One saved-state slot per stack entry. Only the current entry is ever
@@ -849,9 +721,9 @@ private fun SignedInScreens(
             onStudy = {
                 showCheckIn = false
                 when (val call = TodayDecisions(todayInputs).call) {
-                    is TodayCall.Study -> nav = nav.push(AppRoute.Study(call.mode))
-                    TodayCall.PickThemes -> nav = nav.push(AppRoute.StudyThemes)
-                    TodayCall.Unknown -> nav = nav.push(AppRoute.Study(StudyMode.Review))
+                    is TodayCall.Study -> nav = nav.push(StudyRoute(call.mode))
+                    TodayCall.PickThemes -> nav = nav.push(AccountRoute.StudyThemes)
+                    TodayCall.Unknown -> nav = nav.push(StudyRoute(StudyMode.Review))
                     is TodayCall.Blocked -> Unit
                 }
             },
@@ -859,163 +731,11 @@ private fun SignedInScreens(
         )
     }
 
-    // The study flows own the whole screen — no tab bar, no account row: a
+    // The study flows own the whole window — no tab bar, no account row: a
     // session that can be left by tapping a tab is a session that gets left by
     // accident.
-    // 報錯 from inside either session. Built once here so both screens send
-    // the same version string and the same interface language.
-    val studyReporter = remember(uiLang) {
-        StudyReporter(
-            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-            uiLang = uiLang,
-            submit = app.study::submitReport,
-        )
-    }
-    // 意見收集 in 設定 sends the same version string.
-    val feedbackSender = remember(uiLang) {
-        FeedbackSender(
-            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-            uiLang = uiLang,
-            submit = app.study::submitFeedback,
-        )
-    }
-    val context = LocalContext.current
-    val studyRoute = nav.current as? AppRoute.Study
-    if (studyRoute != null) {
-        // Everything about the session that is not the flow itself — which
-        // queue, how many, whether there is another round — is the source's.
-        val source = studyRoute.source
-        val queue = source.queue(themes = app.study, lists = app.study, travel = app.travel)
-        when (studyRoute.mode) {
-        StudyMode.Review -> {
-            val haptics = rememberTujiHaptics()
-            val vm = remember(studyRoute) {
-                ReviewViewModel(
-                    queues = queue,
-                    writer = app.answerWriter,
-                    direction = direction,
-                    uiLang = uiLang,
-                    accent = settings.accent,
-                    pool = { app.catalog.words },
-                    requestDrain = { AnswerDrainWorker.enqueue(app) },
-                    audio = app.clipPlayer,
-                    online = { app.isOnline() },
-                    hints = app.onboarding,
-                    haptics = haptics,
-                ).also { it.load(StudyMode.Review, limit = source.reviewLimit) }
-            }
-            // 再來一輪's count: what is still due once this round's answers have
-            // landed. Re-read every time a round finishes, so a second round's
-            // summary does not offer the first round's number.
-            val reviewState by vm.state.collectAsStateWithLifecycle()
-            val roundFinished = reviewState is ReviewViewModel.State.Done
-            var remainingDue by remember(vm) { mutableIntStateOf(0) }
-            LaunchedEffect(vm, roundFinished) {
-                remainingDue = 0
-                if (!roundFinished || !source.offersAnotherRound) return@LaunchedEffect
-                vm.awaitWrites()
-                remainingDue = runCatching { app.study.stats(direction).stats?.due ?: 0 }
-                    .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
-                    .getOrDefault(0)
-            }
-            ReviewScreen(
-                vm = vm,
-                remainingDue = remainingDue,
-                onAnotherRound = if (source.offersAnotherRound) ({ vm.anotherRound() }) else null,
-                noteFor = { id -> if (notesExist) wordNotes.byWordId[id]?.body else null },
-                showChinese = settings.showZh,
-                fullDetail = { wordId ->
-                    WordDetailPanel(
-                        wordId = wordId,
-                        catalog = app.catalogReading,
-                        atlas = app.atlas,
-                        audio = app.clipPlayer,
-                        speech = app.speech,
-                        direction = direction,
-                        uiLang = uiLang,
-                        accent = settings.accent,
-                        showChinese = settings.showZh,
-                        session = direction.targetLanguage,
-                        insights = rememberWordInsights(
-                            app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
-                        ),
-                    )
-                },
-                bookmarked = { id -> id in personal.bookmarked },
-                onBookmark = app.cardsSourceStore::toggle,
-                checkIn = { FinishCheckIn(app, direction, vm::awaitWrites, it) },
-                reporter = studyReporter,
-                onClose = {
-                    // A session just moved the scores every badge in 圖鑑
-                    // draws. Without this the user finishes twenty cards,
-                    // opens 圖鑑, and sees the tiers they had before they
-                    // started — on the screen they went to in order to see
-                    // the change.
-                    app.invalidator.post(AppMutation.StudySessionClosed)
-                    nav = nav.pop()
-                },
-            )
-        }
-        StudyMode.New -> {
-            val haptics = rememberTujiHaptics()
-            val vm = remember(studyRoute) {
-                NewFlowViewModel(
-                    queues = queue,
-                    writer = app.answerWriter,
-                    direction = direction,
-                    uiLang = uiLang,
-                    pool = { app.catalog.words },
-                    requestDrain = { AnswerDrainWorker.enqueue(app) },
-                    audio = app.clipPlayer,
-                    accent = settings.accent,
-                    online = { app.isOnline() },
-                    haptics = haptics,
-                    catalog = app.catalogReading,
-                ).also {
-                    it.load(
-                        source.newQueue(
-                            goal = settings.dailyGoal,
-                            due = todayInputs.stats?.due ?: 0,
-                            themes = studyCategories,
-                        ),
-                    )
-                }
-            }
-            NewFlowScreen(
-                vm = vm,
-                showChinese = settings.showZh,
-                session = direction.targetLanguage,
-                uiLang = uiLang,
-                fullDetail = { wordId ->
-                    WordDetailPanel(
-                        wordId = wordId,
-                        catalog = app.catalogReading,
-                        atlas = app.atlas,
-                        audio = app.clipPlayer,
-                        speech = app.speech,
-                        direction = direction,
-                        uiLang = uiLang,
-                        accent = settings.accent,
-                        showChinese = settings.showZh,
-                        session = direction.targetLanguage,
-                        insights = rememberWordInsights(
-                            app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
-                        ),
-                    )
-                },
-                bookmarked = { it in personal.bookmarked },
-                onBookmark = app.cardsSourceStore::toggle,
-                speech = app.speech,
-                accent = settings.accent,
-                reporter = studyReporter,
-                checkIn = { FinishCheckIn(app, direction, vm::awaitWrites, it) },
-                onClose = {
-                    app.invalidator.post(AppMutation.StudySessionClosed)
-                    nav = nav.pop()
-                },
-            )
-        }
-        }
+    (nav.current as? StudyRoute)?.let { route ->
+        StudySessionHost(route, shell)
         return
     }
 
@@ -1027,7 +747,7 @@ private fun SignedInScreens(
     LaunchedEffect(nav.current, reconnects) {
         // 設定 and 學習主題 stay inert until the account's settings are here.
         // A launch whose read failed asks nowhere else, so arriving asks again.
-        val editsSettings = nav.current == AppRoute.Settings || nav.current == AppRoute.StudyThemes
+        val editsSettings = nav.current == AccountRoute.Settings || nav.current == AccountRoute.StudyThemes
         if (editsSettings && !app.settingsStore.loaded.value) {
             app.settingsStore.load(deviceLanguage)
         }
@@ -1056,11 +776,18 @@ private fun SignedInScreens(
         // anyone who never opened that tab.
         if (nav.current == AppRoute.Community) account.refresh()
         // A purchase made on another device shows the moment the page opens.
-        if (nav.current == AppRoute.Membership || nav.current == AppRoute.StudyThemes) {
+        if (nav.current == AccountRoute.Membership || nav.current == AccountRoute.StudyThemes) {
             account.refreshEntitlement()
         }
     }
     LaunchedEffect(myUid) { if (myUid != null) community.loadMe(myUid) }
+
+    // 拍照 handed a card to 生成佇列: close onto 圖鑑's 我做的, where its tile is.
+    val onCaptureQueued = {
+        val landing = TabShell.afterCaptureQueued(nav)
+        nav = landing.nav
+        cardsSourceRequest = landing.cardsSource
+    }
 
     // The first-run tour, on the first launch only. The marked composables
     // below report where they are; the overlay reads that and nothing else in
@@ -1117,7 +844,7 @@ private fun SignedInScreens(
     ) {
         Spacer(Modifier.height(insets.calculateTopPadding()))
 
-        // The four tab roots live in the pager, not in the route `when` below.
+        // The four tab roots live in the pager, not in the page hosts below.
         // A page that only exists while it is the current route cannot be
         // swiped to — the neighbour has to be composable before the finger
         // arrives at it.
@@ -1126,19 +853,19 @@ private fun SignedInScreens(
                 AppRoute.Today -> TodayColumn(
                     inputs = todayInputs,
                     identity = identity,
-                    onStudy = { mode -> nav = nav.push(AppRoute.Study(mode)) },
-                    onSearch = { nav = nav.push(AppRoute.Search) },
+                    onStudy = { mode -> shell.push(StudyRoute(mode)) },
+                    onSearch = { shell.push(AtlasRoute.Search) },
                     themeName = { id -> catalog.categories.firstOrNull { it.id == id }?.let { CategoryShelf.title(it, uiLang) } },
-                    onOpenStats = { nav = nav.push(AppRoute.ProgressStats) },
-                    onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
+                    onOpenStats = { shell.push(AccountRoute.ProgressStats) },
+                    onOpenStatement = { shell.push(AssistantRoute.CreditStatement) },
                     onUnlock = openMembership,
                     onOpenFeature = { feature ->
-                        nav = nav.push(
+                        shell.push(
                             when (feature) {
-                                AssistantHomeFeature.Lookup -> AppRoute.Vocabulary
-                                AssistantHomeFeature.Grammar -> AppRoute.Grammar
-                                AssistantHomeFeature.Story -> AppRoute.Story
-                                AssistantHomeFeature.TopicChat -> AppRoute.TopicChat(TopicChatEntry.Choose)
+                                AssistantHomeFeature.Lookup -> AssistantRoute.Vocabulary
+                                AssistantHomeFeature.Grammar -> AssistantRoute.Grammar
+                                AssistantHomeFeature.Story -> AssistantRoute.Story
+                                AssistantHomeFeature.TopicChat -> AssistantRoute.TopicChat(TopicChatEntry.Choose)
                             },
                         )
                     },
@@ -1146,17 +873,7 @@ private fun SignedInScreens(
                     // So 情境故事 opens on its choices and AI 查詞／AI 語法 on
                     // their prices. It hung off 助手's page; the ways in moved
                     // here, so the warm-up did too.
-                    prefetchAssistant = {
-                        val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                        val vocabulary = VocabularyRepository(app.api)
-                        val grammar = GrammarRepository(app.api)
-                        val story = StoryRepository(app.api)
-                        coroutineScope {
-                            launch { app.assistantCaches.vocabularyOffer.prefetch(owner) { vocabulary.offer() } }
-                            launch { app.assistantCaches.grammarOffer.prefetch(owner) { grammar.offer() } }
-                            launch { app.assistantCaches.storyOffer.prefetch(uiLang) { story.storyOffer(uiLang) } }
-                        }
-                    },
+                    prefetchAssistant = { prefetchAssistant(shell) },
                     completion = completion,
                     streak = progress.streak?.current ?: 0,
                     onStreak = { showCheckIn = true },
@@ -1164,21 +881,8 @@ private fun SignedInScreens(
                         checkInState.reward(fallbackStudiedToday = (progress.streak?.todayCount ?: 0) > 0),
                     ),
                     trialPoints = checkInState.trialPoints,
-                    onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
-                    sceneCard = if (direction.hasScenes) {
-                        { modifier ->
-                            SceneTodayCard(
-                                scenes = app.scenes,
-                                language = uiLanguage,
-                                isMember = sceneMember,
-                                onOpenList = { nav = nav.push(AppRoute.SceneList) },
-                                onOpen = { nav = nav.push(AppRoute.SceneDetail(it.raw)) },
-                                modifier = modifier,
-                            )
-                        }
-                    } else {
-                        null
-                    },
+                    onOpenStudyThemes = { shell.push(AccountRoute.StudyThemes) },
+                    sceneCard = sceneTodayCard(shell),
                     onSpike = { showSpike = true },
                     onRefresh = { refresh(LearningRefreshCause.PulledToday.targets) },
                 )
@@ -1187,7 +891,7 @@ private fun SignedInScreens(
                     sourceRequest = cardsSourceRequest,
                     onSourceRequestHandled = { cardsSourceRequest = null },
                     words = catalog.words,
-                    onSearch = { nav = nav.push(AppRoute.Search) },
+                    onSearch = { shell.push(AtlasRoute.Search) },
                     personal = personal,
                     scores = scores,
                     loading = !catalog.loaded,
@@ -1197,13 +901,11 @@ private fun SignedInScreens(
                     uiLang = uiLang,
                     onOpenTheme = { id ->
                         val shelf = catalog.shelves.first { it.category.id == id }
-                        nav = nav.push(
-                            AppRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)),
-                        )
+                        shell.push(AtlasRoute.Shelf(id, CategoryShelf.title(shelf.category, uiLang)))
                     },
                     onRetry = { scope.launch { app.catalog.load(direction, force = true) } },
-                    onOpen = openCard,
-                    onOpenManage = { nav = nav.push(AppRoute.AtlasManage) },
+                    onOpen = shell::openCard,
+                    onOpenManage = { shell.push(ManageRoute.Home) },
                     session = direction.targetLanguage,
                     showChinese = settings.showZh,
                     onBookmark = app.cardsSourceStore::toggle,
@@ -1219,15 +921,13 @@ private fun SignedInScreens(
                     language = direction.targetLanguage,
                     onShowSaved = community::loadSaved,
                     onRetry = community::load,
-                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
-                    onOpenMyPage = { nav = nav.push(AppRoute.Author(it)) },
-                    onSearch = { nav = nav.push(AppRoute.CommunitySearch) },
+                    onOpenCollection = { shell.push(CommunityRoute.Collection(it)) },
+                    onOpenMyPage = { shell.push(CommunityRoute.Author(it)) },
+                    onSearch = { shell.push(CommunityRoute.Search) },
                     // Not the learning policy: 物見 is other people's shelves,
                     // and none of the numbers this table is about are on it.
                     onRefresh = { community.reload(withSaved = true) },
-                    exploreHeader = travel.destinations.firstOrNull()?.let { destination ->
-                        { TravelEntryBand(destination) { nav = nav.push(AppRoute.TravelDestination(destination.id)) } }
-                    },
+                    exploreHeader = { TravelEntry(shell) },
                 )
 
                 AppRoute.Me -> AccountScreen(
@@ -1240,9 +940,9 @@ private fun SignedInScreens(
                     categories = catalog.categories,
                     studyCategories = settings.studyCategories,
                     bottomPadding = 0.dp,
-                    onOpenSettings = { nav = nav.push(AppRoute.Settings) },
+                    onOpenSettings = { shell.push(AccountRoute.Settings) },
                     showChinese = settings.showZh,
-                    onOpenWord = openCard,
+                    onOpenWord = shell::openCard,
                     onRefresh = {
                         refresh(LearningRefreshCause.PulledMe.targets)
                         // 我's own payload — the weakest words and the plan —
@@ -1250,20 +950,8 @@ private fun SignedInScreens(
                         account.reload()
                     },
                     onOpenMembership = openMembership,
-                    wordLists = {
-                        when (MemberAccess.level(MemberFeature.WordListBrowse, accountState.entitlement, wordLists.lists.isNotEmpty())) {
-                            MemberAccessLevel.Hidden -> Unit
-                            MemberAccessLevel.Locked -> MeWordListsRow(locked = true, listCount = 0, onClick = openMembership)
-                            // A refund keeps the lists: open them read-only.
-                            MemberAccessLevel.ReadOnly, MemberAccessLevel.Open -> MeWordListsRow(
-                                locked = false,
-                                listCount = wordLists.lists.size,
-                                onClick = { nav = nav.push(AppRoute.WordLists) },
-                            )
-                        }
-                    },
+                    wordLists = { MeWordLists(shell) },
                 )
-
             }
         }
 
@@ -1281,7 +969,10 @@ private fun SignedInScreens(
             var lastDepth by remember { mutableIntStateOf(depth) }
             val forward = depth >= lastDepth
             LaunchedEffect(depth) { lastDepth = depth }
-            val layer: Any = nav.current.takeIf { it !is AppRoute.Tab } ?: TabsLayer
+            val layer: ShellLayer = when (val current = nav.current) {
+                is AppRoute.Tab -> ShellLayer.Tabs
+                is AppRoute.Page -> ShellLayer.Pushed(current)
+            }
             AnimatedContent(
                 targetState = layer,
                 transitionSpec = {
@@ -1329,888 +1020,55 @@ private fun SignedInScreens(
             // Part of the page, so it slides with it: drawn above the pages it
             // vanished the instant 返回 was pressed and the leaving page jumped
             // up into the gap.
-            if (shown is AppRoute && hasBackBar(shown)) {
+            if (shown is ShellLayer.Pushed && hasBackBar(shown.page)) {
+                val capture = shown.page is ManageRoute.Capture
                 TujiNavBar(
                     // A page on its way out keeps its arrow, but only the page
                     // on top may pop.
-                    onLeading = { if (nav.current == shown) nav = nav.pop() },
-                    leading = if (shown == AppRoute.Capture) TujiNavLeading.Close else TujiNavLeading.Back,
-                    leadingLabel = stringResource(
-                        if (shown == AppRoute.Capture) R.string.nav_close else R.string.atlas_back,
-                    ),
-                    title = if (shown == AppRoute.Capture) stringResource(R.string.capture_add_title) else null,
+                    onLeading = { shell.from(shown.page).pop() },
+                    leading = if (capture) TujiNavLeading.Close else TujiNavLeading.Back,
+                    leadingLabel = stringResource(if (capture) R.string.nav_close else R.string.atlas_back),
+                    title = if (capture) stringResource(R.string.capture_add_title) else null,
                 )
             }
             Box(Modifier.weight(1f)) {
-            if (shown === TabsLayer) {
-                val atTab = nav.tab ?: AppRoute.Today
-                val pager = rememberPagerState(
-                    initialPage = TabShell.tabs.indexOf(atTab).coerceAtLeast(0),
-                    pageCount = { TabShell.tabs.size },
-                )
-                // Both ways, and each guarded against the other: the bar moves
-                // the pager, a settled swipe moves the stack, and neither may
-                // answer its own move or the two chase each other across the
-                // screen.
-                LaunchedEffect(atTab) {
-                    val target = TabShell.tabs.indexOf(atTab)
-                    if (target >= 0 && target != pager.currentPage) pager.animateScrollToPage(target)
-                }
-                LaunchedEffect(pager) {
-                    snapshotFlow { pager.settledPage }.collect { page ->
-                        val tab = TabShell.tabs.getOrNull(page) ?: return@collect
-                        if (nav.current != tab) nav = nav.select(tab)
-                    }
-                }
-                HorizontalPager(
-                    state = pager,
-                    userScrollEnabled = TabShell.swipeEnabled(nav),
-                    modifier = Modifier.fillMaxSize(),
-                ) { page ->
-                    // Keyed by the tab rather than by its place in the stack,
-                    // so a scroll position survives being swiped past — which
-                    // is the whole reason the four are side by side.
-                    routeState.SaveableStateProvider("tab:${TabShell.tabs[page]}") {
-                        tabContent(TabShell.tabs[page])
-                    }
-                }
-            } else {
-            routeState.SaveableStateProvider("route:$shown") {
-            when (val route = shown) {
-                AppRoute.AtlasManage -> {
-                    LaunchedEffect(Unit) { manage.load() }
-                    // The slot count in the header: on arrival, and again
-                    // whenever a delete changes how many cards there are.
-                    LaunchedEffect(manageState.rows.size) { account.refreshEntitlement() }
-                    AtlasManageScreen(
-                        state = manageState,
-                        uiLanguage = uiLanguage,
-                        onBack = { nav = nav.pop() },
-                        onRetry = manage::load,
-                        onSelecting = manage::setSelecting,
-                        onToggle = manage::toggle,
-                        onOpen = { nav = nav.push(AppRoute.ManageCard(it)) },
-                        onDelete = { ids -> manage.delete(ids) },
-                        collections = myCollectionsState,
-                        onLoadCollections = myCollections::load,
-                        onRefreshCollections = { myCollections.reload() },
-                        onCreateCollection = { title, description, onCreated -> myCollections.create(title, description) { onCreated() } },
-                        onDismissCreateError = myCollections::dismissCreateError,
-                        onOpenCollection = { nav = nav.push(AppRoute.CollectionEdit(it)) },
-                        slots = accountState.entitlement?.let { it.usage.atlasSlots to it.atlasSlotsLimit },
-                        onSwitchDirection = {
-                            val other = LearningDirection.entries.first { it != direction }
-                            app.settingsStore.update { it.copy(learningDirection = other.wire) }
-                        },
-                        inFlight = remember(captureJobs) { captureJobs.associate { it.imageId to it.progress } },
-                    )
-                }
-
-                is AppRoute.CollectionEdit -> {
-                    val vm = remember(route.collectionId) {
-                        CollectionEditViewModel(
-                            collectionId = route.collectionId,
-                            authoring = app.atlas,
-                            onMutation = app.invalidator::post,
-                            onNeedsMembership = { openMembership() },
-                        ).also { it.load() }
-                    }
-                    val editState by vm.state.collectAsStateWithLifecycle()
-                    CollectionEditScreen(
-                        state = editState,
-                        deleteWarning = DeleteWarning.of(editState.review),
-                        deleting = myCollectionsState.deleting,
-                        onBack = { nav = nav.pop() },
-                        onRetry = vm::load,
-                        onTitle = vm::setTitle,
-                        onDescription = vm::setDescription,
-                        onSaveMeta = { vm.saveMeta() },
-                        onSaveThenLeave = { vm.saveMeta { if (nav.current == route) nav = nav.pop() } },
-                        onAvatar = vm::uploadAvatar,
-                        onOpenPicker = vm::loadCandidates,
-                        onAdd = vm::addMember,
-                        onRemove = vm::removeMember,
-                        onSubmit = vm::submit,
-                        onWithdraw = vm::withdraw,
-                        onDelete = {
-                            myCollections.delete(
-                                AtlasMyCollection(id = route.collectionId, reviewStatus = editState.collection?.reviewStatus),
-                            ) { if (nav.current == route) nav = nav.pop() }
-                        },
-                    )
-                }
-
-                is AppRoute.ManageCard -> {
-                    val row = manageState.row(route.imageId)
-                    // 待確認 alone does not say the result can still be picked from: a
-                    // photo left by the retired pre-credit flow reads the same and has
-                    // no run to reopen.
-                    val waiting = row != null && row.item == null && row.imageStatus == ImageStatus.NeedsReview
-                    val resumable by produceState(false, route.imageId, waiting) {
-                        value = waiting && runCatching { CreditRepository(app.api).history() }.getOrNull()?.let {
-                            CreditCaptureModel.resumable(route.imageId, it, app.captureQueue.creditOperationIds)
-                        } != null
-                    }
-                    ManageCardScreen(
-                    row = row,
-                    uiLanguage = uiLanguage,
-                    withdrawing = manageState.withdrawing,
-                    publishing = manageState.publishing,
-                    actionFailed = manageState.actionFailed,
-                    resumable = resumable,
-                    onResume = { if (nav.current == route) { captureResume = route.imageId; nav = nav.push(AppRoute.Capture) } },
-                    onDelete = { manage.delete(setOf(route.imageId)) { if (nav.current == route) nav = nav.pop() } },
-                    onWithdraw = manage::withdraw,
-                    onPublish = manage::publish,
-                    spots = row?.item?.let { SpotTagging.taggableSpots(it, travel.destinations) }.orEmpty(),
-                    spotName = { travel.spot(it)?.name },
-                    savingSpot = manageState.savingSpot,
-                    onSetSpot = manage::setSpot,
-                    )
-                }
-
-                AppRoute.Settings -> SettingsScreen(
-                    readiness = settingsReadiness,
-                    onRetryLoad = { scope.launch { app.settingsStore.load(deviceLanguage) } },
-                    settings = settings,
-                    busy = settingsBusy,
-                    bottomPadding = 0.dp,
-                    onChange = { change -> app.settingsStore.update(change) },
-                    onClearProgress = {
-                        scope.launch {
-                            settingsBusy = settingsBusy.copy(clearing = true)
-                            runCatching { app.study.clearProgress() }
-                            settingsBusy = settingsBusy.copy(clearing = false)
-                            // Everything this screen just erased is drawn
-                            // somewhere else, and none of those stores can
-                            // know it happened.
-                            app.invalidator.post(AppMutation.ProgressCleared)
-                            nav = nav.pop()
-                        }
-                    },
-                    onDeleteAccount = {
-                        scope.launch {
-                            settingsBusy = settingsBusy.copy(deleting = true)
-                            runCatching { app.study.deleteAccount() }
-                            settingsBusy = settingsBusy.copy(deleting = false)
-                            // Signing out is what takes the user off this
-                            // screen; the account it belonged to is gone.
-                            app.auth.signOut()
-                        }
-                    },
-                    onSignOut = { scope.launch { app.auth.signOut() } },
-                    onOpenStudyThemes = { nav = nav.push(AppRoute.StudyThemes) },
-                    onEditProfile = { nav = nav.push(AppRoute.EditProfile) },
-                    onOpenBlocked = { nav = nav.push(AppRoute.BlockedAuthors) },
-                    onOpenMembership = openMembership,
-                    tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
-                    offer = MembershipOffer.from(accountState.entitlement),
-                    feedback = feedbackSender,
-                    onShareApp = {
-                        app.analytics.shareApp()
-                        shareApp(context)
-                    },
-                    reminders = { ReminderSettingsSection(app.studyReminders) },
-                )
-
-                AppRoute.Membership -> {
-                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    val activity = LocalActivity.current
-                    LaunchedEffect(owner) {
-                        if (owner != null) {
-                            app.playBilling.load()
-                            app.playBilling.reconcile()
-                        }
-                    }
-                    DisposableEffect(Unit) { onDispose { app.playBilling.dismissNotice() } }
-                    val purchase = if (owner != null && activity != null) {
-                        MembershipPurchase(
-                            state = billing,
-                            onBuy = { app.playBilling.purchase(activity, it) },
-                            onReload = { scope.launch { app.playBilling.load() } },
-                            onRestore = {
-                                scope.launch {
-                                    app.playBilling.reconcile(quiet = false)
-                                    app.playBilling.load()
-                                }
-                            },
-                        )
-                    } else {
-                        null
-                    }
-                    MembershipScreen(
-                        offer = MembershipOffer.from(accountState.entitlement),
-                        walletCard = if (accountState.entitlement?.billingMode == "credits" && owner != null) {
-                            {
-                                CreditWalletCard(
-                                    app.api, app.atlas, owner,
-                                    { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
-                                    refreshKey = billing.deliveries,
-                                    packs = purchase?.let { p -> { CreditPackButtons(p) } },
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                        purchase = purchase,
-                        firstPurchaseGift = checkInState.catalog?.policy?.let { policy ->
-                            val gift = policy.firstPurchaseGift ?: 0
-                            policy.monthlyGift?.takeIf { gift > 0 }?.let { gift to it }
-                        },
-                    )
-                }
-
-                is AppRoute.TravelDestination -> TravelDestinationScreen(
-                    state = travel,
-                    destinationId = route.destinationId,
-                    bottomPadding = 0.dp,
-                    onBack = { nav = nav.pop() },
-                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
-                    onOpenCity = { nav = nav.push(AppRoute.TravelCity(it, route.destinationId)) },
-                )
-
-                is AppRoute.TravelCity -> TravelCityScreen(
-                    state = travel,
-                    cityId = route.cityId,
-                    destinationId = route.destinationId,
-                    scores = scores.byId,
-                    studyable = studyable,
-                    bottomPadding = 0.dp,
-                    onBack = { nav = nav.pop() },
-                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
-                    onOpenSpot = { nav = nav.push(AppRoute.TravelSpot(it)) },
-                    photographed = SpotTagging.photographedSpotIds(manageState.items),
-                )
-
-                is AppRoute.TravelSpot -> {
-                    // 「大家拍的」: the same answer for everyone, so it is filtered here.
-                    val shared by produceState(emptyList<AtlasPublicItem>(), route.spotId) {
-                        value = runCatching { TravelRepository(app.api).spotPhotos(route.spotId) }.getOrDefault(emptyList())
-                    }
-                    val ownIds = manageState.items.filter { it.spotId == route.spotId }.map { it.id }.toSet()
-                    TravelSpotScreen(
-                    state = travel,
-                    spotId = route.spotId,
-                    spotState = { spot ->
-                        TravelDecisions.state(
-                            spot, catalog.words, scores.byId, scores.nextReviewById, studyable,
-                            now = System.currentTimeMillis(),
-                        )
-                    },
-                    score = scores::score,
-                    bottomPadding = 0.dp,
-                    onBack = { nav = nav.pop() },
-                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
-                    onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                    onStudy = { mode -> nav = nav.push(AppRoute.Study(mode, StudySource.Spot(route.spotId))) },
-                    onNeedsMembership = openMembership,
-                    ownWords = personal.mine.filter { it.id.removePrefix(CardsSourceRules.CUSTOM_PREFIX) in ownIds },
-                    shared = SpotTagging.othersShared(shared, manageState.items) { communityBlocked.hides(it) },
-                    onOpenShared = { nav = nav.push(AppRoute.PublicItem(it)) },
-                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
-                    )
-                }
-
-                AppRoute.WordLists -> WordListsScreen(
-                    store = app.wordListsStore,
-                    tier = accountState.entitlement?.membershipTier ?: MembershipTier.Free,
-                    bottomPadding = 0.dp,
-                    onBack = { nav = nav.pop() },
-                    onOpenList = { nav = nav.push(AppRoute.WordList(it)) },
-                    onNeedsMembership = openMembership,
-                )
-
-                is AppRoute.WordList -> {
-                    val vm = remember(route.listId) {
-                        WordListDetailViewModel(route.listId, app.study).also { it.load() }
-                    }
-                    WordListDetailScreen(
-                        vm = vm,
-                        store = app.wordListsStore,
-                        resolve = { id -> catalog.words.firstOrNull { it.id == id } },
-                        showChinese = settings.showZh,
-                        bottomPadding = 0.dp,
-                        onBack = { nav = nav.pop() },
-                        onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                        onStudy = { mode -> nav = nav.push(AppRoute.Study(mode, StudySource.WordList(route.listId))) },
-                        onNeedsMembership = openMembership,
-                    )
-                }
-
-                AppRoute.EditProfile -> {
-                    val vm = remember {
-                        EditProfileViewModel(
-                            accounts = app.atlas,
-                            profiles = app.atlas,
-                            onSaved = { author ->
-                                // The name and face other people see changed:
-                                // the session's greeting, 我's row and 物見's
-                                // own-page row all draw it.
-                                app.auth.applyProfile(
-                                    nickname = author.displayName?.takeIf { it != author.handle },
-                                    avatar = author.avatar,
-                                )
-                                app.invalidator.post(AppMutation.ProfileSaved)
-                                if (nav.current == AppRoute.EditProfile) nav = nav.pop()
-                            },
-                        ).also { it.load() }
-                    }
-                    val profileState by vm.state.collectAsStateWithLifecycle()
-                    EditProfileScreen(
-                        state = profileState,
-                        onBack = { nav = nav.pop() },
-                        onSave = vm::save,
-                        onNickname = vm::setNickname,
-                        onBio = vm::setBio,
-                        onImage = vm::stageImage,
-                        onUseDefaultAvatar = vm::useDefaultAvatar,
-                    )
-                }
-
-                AppRoute.BlockedAuthors -> {
-                    var working by remember { mutableStateOf<String?>(null) }
-                    LaunchedEffect(Unit) { community.loadBlocksIfNeeded() }
-                    BlockedAuthorsScreen(
-                        handles = communityBlocked.sorted,
-                        working = working,
-                        onUnblock = { handle ->
-                            working = handle
-                            community.unblock(handle) { working = null }
-                        },
-                    )
-                }
-
-                AppRoute.StudyThemes -> StudyThemesScreen(
-                    readiness = settingsReadiness,
-                    onRetryLoad = { scope.launch { app.settingsStore.load(deviceLanguage) } },
-                    selected = settings.studyCategories,
-                    categories = catalog.categories,
-                    presets = catalog.presets,
-                    uiLang = uiLang,
-                    onChange = { picked -> app.settingsStore.update { it.copy(studyCategories = picked) } },
-                    studyable = studyable,
-                    onLocked = openMembership,
-                    // Locked themes too: 圖鑑 is browsable without membership.
-                    onOpenTheme = { category ->
-                        nav = nav.push(AppRoute.Shelf(category.id, CategoryShelf.title(category, uiLang)))
-                    },
-                )
-
-                is AppRoute.PublicItem -> {
-                    val vm = remember(route.slug) {
-                        PublicItemViewModel(
-                            slug = route.slug,
-                            atlas = app.atlas,
-                            saver = app.atlas,
-                            audio = app.clipPlayer,
-                            direction = direction,
-                            uiLang = uiLang,
-                            accent = settings.accent,
-                            speech = app.speech,
-                            onMutation = app.invalidator::post,
-                            onNeedsMembership = { openMembership() },
-                        ).also { it.open() }
-                    }
-                    val itemState by vm.state.collectAsStateWithLifecycle()
-                    val authorHandle = itemState.item?.author?.handle
-                    PublicItemScreen(
-                        state = itemState,
-                        relationship = ViewerRelationship.of(authorHandle, viewerHandle = myUid),
-                        authorBlocked = communityBlocked.hides(authorHandle),
-                        reported = communityReported == ReportTarget.Item(route.slug),
-                        canPlay = vm.canPlay(),
-                        session = direction.targetLanguage,
-                        uiLang = uiLang,
-                        showChinese = settings.showZh,
-                        scores = scores,
-                        onRetry = vm::open,
-                        onToggleSave = {
-                            // iOS #234: a non-member's 加入學習 would be refused
-                            // (402), so go where that answer would have sent them.
-                            // 學習中 → 停止 is theirs to undo either way.
-                            if (!itemState.saved &&
-                                MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked
-                            ) {
-                                openMembership()
-                            } else {
-                                vm.toggleSave()
-                            }
-                        },
-                        onPlay = vm::play,
-                        onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
-                        onReport = { reason -> community.report(ReportTarget.Item(route.slug), reason) },
-                        onBlock = {
-                            authorHandle?.let { handle ->
-                                // Only the screen that asked leaves, and only
-                                // if it is still the one on top.
-                                community.block(handle) { if (nav.current == route) nav = nav.pop() }
-                            }
-                        },
-                        onUnblock = { authorHandle?.let(community::unblock) },
-                        speech = app.speech,
-                        accent = settings.accent,
-                    )
-                }
-
-                is AppRoute.Collection -> {
-                    val vm = remember(route.slug, myUid) {
-                        CollectionDetailViewModel(
-                            slug = route.slug,
-                            atlas = app.atlas,
-                            bookmarks = app.atlas,
-                            learning = app.atlas,
-                            viewerHandle = myUid,
-                            blocked = { community.blockList },
-                            onMutation = app.invalidator::post,
-                            onNeedsMembership = { openMembership() },
-                        ).also { it.open() }
-                    }
-                    val collectionState by vm.state.collectAsStateWithLifecycle()
-                    CollectionScreen(
-                        state = collectionState,
-                        reported = communityReported == ReportTarget.Collection(route.slug),
-                        onBack = { nav = nav.pop() },
-                        onRetry = vm::open,
-                        onSave = {
-                            // iOS #234: a non-member's 收藏 would be refused (402),
-                            // so go where that answer would have sent them first.
-                            if (MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked) {
-                                openMembership()
-                            } else {
-                                vm.save()
-                            }
-                        },
-                        onUnsave = vm::unsave,
-                        onLearn = vm::learnRemaining,
-                        onDismissError = vm::dismissError,
-                        onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
-                        onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
-                        onReport = { reason -> community.report(ReportTarget.Collection(route.slug), reason) },
-                        onEdit = { nav = nav.push(AppRoute.CollectionEdit(it)) },
-                    )
-                }
-
-                is AppRoute.Author -> {
-                    var creatingCollection by remember { mutableStateOf(false) }
-                    val vm = remember(route.handle) {
-                        AuthorViewModel(handle = route.handle, atlas = app.atlas).also { it.load() }
-                    }
-                    val authorState by vm.state.collectAsStateWithLifecycle()
-                    AuthorScreen(
-                        state = authorState,
-                        relationship = ViewerRelationship.of(route.handle, viewerHandle = myUid)
-                            ?: ViewerRelationship.Theirs,
-                        blocked = communityBlocked.hides(route.handle),
-                        reported = communityReported == ReportTarget.Author(route.handle),
-                        onBack = { nav = nav.pop() },
-                        onRetry = vm::load,
-                        onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
-                        onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
-                        onReport = { reason -> community.report(ReportTarget.Author(route.handle), reason) },
-                        onBlock = { community.block(route.handle) { if (nav.current == route) nav = nav.pop() } },
-                        onUnblock = { community.unblock(route.handle) },
-                        onEditProfile = { nav = nav.push(AppRoute.EditProfile) },
-                        onCreateCollection = {
-                            // A non-member's 合集 would be refused (402), so the
-                            // button goes where that answer would have sent them.
-                            if (MemberAccess.level(MemberFeature.CommunityWrite, accountState.entitlement) == MemberAccessLevel.Locked) {
-                                openMembership()
-                            } else {
-                                creatingCollection = true
-                            }
-                        },
-                    )
-                    // A new 合集 is a draft, and this page shows only what is
-                    // public — so the editor opens, which is also where its cards
-                    // and 公開合集 are.
-                    if (creatingCollection) {
-                        CreateCollectionSheet(
-                            state = myCollectionsState,
-                            onCreate = { title, description ->
-                                myCollections.create(title, description) { created ->
-                                    creatingCollection = false
-                                    if (nav.current == route) nav = nav.push(AppRoute.CollectionEdit(created.id))
-                                }
-                            },
-                            onDismiss = { creatingCollection = false; myCollections.dismissCreateError() },
-                        )
-                    }
-                }
-
-                AppRoute.Capture -> {
-                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    when (CaptureEntry.of(accountState.entitlement)) {
-                        CaptureEntry.Capture -> if (owner != null) {
-                            CreditCaptureScreen(
-                                api = app.api,
-                                atlas = app.atlas,
-                                owner = owner,
-                                currentOwner = { (app.auth.session.value.state as? AuthState.SignedIn)?.user?.id },
-                                direction = direction,
-                                uiLanguage = uiLanguage,
-                                enqueue = { request, imageId, thumbUrl -> app.captureQueue.enqueue(request, imageId, thumbUrl) },
-                                queuedOperations = { app.captureQueue.creditOperationIds },
-                                onOpenWallet = { nav = nav.push(AppRoute.Membership) },
-                                onDone = { if (nav.current == route) nav = nav.pop() },
-                                onCardQueued = { if (nav.current == route) showQueuedCapture() },
-                                resume = captureResume,
-                                // Opened from 圖鑑管理 already: back is the way there.
-                                onManage = if (captureResume != null) null else ({
-                                    if (nav.current == route) nav = nav.pop().select(AppRoute.Atlas).push(AppRoute.AtlasManage)
-                                }),
-                            )
-                        }
-                        // Replaces this page rather than stacking on it: back
-                        // from 會員 should not land on an empty capture screen.
-                        CaptureEntry.Membership -> LaunchedEffect(Unit) {
-                            if (nav.current == route) nav = nav.pop().push(AppRoute.Membership)
-                        }
-                        CaptureEntry.Resolving -> {
-                            LaunchedEffect(Unit) { account.refreshEntitlement() }
-                            Column(Modifier.fillMaxSize().padding(TujiSpace.S4)) {
-                                TujiIndeterminateBar(label = stringResource(R.string.study_loading))
-                            }
-                        }
-                    }
-                }
-
-                AppRoute.CommunitySearch -> CommunitySearchScreen(
-                    vm = communitySearch,
-                    onCancel = { nav = nav.pop() },
-                    onOpenCollection = { nav = nav.push(AppRoute.Collection(it)) },
-                    onOpenItem = { nav = nav.push(AppRoute.PublicItem(it)) },
-                    onOpenAuthor = { nav = nav.push(AppRoute.Author(it)) },
-                )
-
-                AppRoute.Search -> AtlasSearchScreen(
-                    vm = search,
-                    direction = direction,
-                    showChinese = settings.showZh,
-                    recents = app.recentSearches,
-                    onCancel = { nav = nav.pop() },
-                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
-                )
-
-                is AppRoute.SearchFor -> AtlasSearchScreen(
-                    vm = search,
-                    direction = direction,
-                    showChinese = settings.showZh,
-                    recents = app.recentSearches,
-                    onCancel = { nav = nav.pop() },
-                    onOpen = { nav = nav.push(AppRoute.Word(it)) },
-                    initialQuery = route.query,
-                )
-
-                AppRoute.ProgressStats -> ProgressStatsScreen(
-                    completion = completion,
-                    progress = progress,
-                    spread = remember(scores) { MasteryDistribution.of(scores.byId) },
-                    masteryLoaded = scores.loaded,
-                    categories = catalog.categories,
-                    studyCategories = settings.studyCategories,
-                    onBack = { if (nav.current == route) nav = nav.pop() },
-                )
-
-                AppRoute.CreditStatement -> CreditStatementScreen(
-                    repository = remember { CreditLedgerRepository(app.api) },
-                    locale = uiLanguage.locale,
-                    onBack = { if (nav.current == route) nav = nav.pop() },
-                    onOpenMembership = openMembership,
-                )
-
-                AppRoute.Vocabulary -> {
-                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    val model = remember(owner, direction) {
-                        VocabularyModel(
-                            repository = VocabularyRepository(app.api),
-                            offerCache = app.assistantCaches.vocabularyOffer,
-                            historyCache = app.assistantCaches.vocabularyHistory,
-                            journal = app.vocabularyJournal,
-                            owner = owner,
-                            uiLanguage = { app.settingsStore.current.value.language.wire },
-                            learning = direction.wire,
-                            catalog = { app.catalog.words },
-                        )
-                    }
-                    val offerRevision by app.assistantCaches.vocabularyOffer.revision.collectAsStateWithLifecycle()
-                    VocabularyScreen(
-                        model = model,
-                        speech = app.speech,
-                        accent = settings.accent,
-                        offerRevision = offerRevision,
-                        uiLanguage = uiLanguage.wire,
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
-                        onOpenMembership = openMembership,
-                        onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                        onSearch = { nav = nav.push(AppRoute.SearchFor(it)) },
-                    )
-                }
-
-                AppRoute.Story -> {
-                    val model = remember(direction) {
-                        StoryBuilderModel(
-                            repository = StoryRepository(app.api),
-                            offerCache = app.assistantCaches.storyOffer,
-                            candidates = { app.catalog.words + personal.mine + personal.taken },
-                            uiLanguage = { app.settingsStore.current.value.language.wire },
-                            learning = direction.wire,
-                            language = direction.targetLanguage,
-                        )
-                    }
-                    val offerRevision by app.assistantCaches.storyOffer.revision.collectAsStateWithLifecycle()
-                    StoryScreen(
-                        model = model,
-                        offerRevision = offerRevision,
-                        speech = app.speech,
-                        accent = settings.accent,
-                        shelves = catalog.shelves,
-                        themeStatus = themeStatus,
-                        bookmarked = personal.bookmarked,
-                        uiLang = uiLang,
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpenWord = openCard,
-                    )
-                }
-
-                AppRoute.Grammar -> {
-                    val owner = (session.state as? AuthState.SignedIn)?.user?.id
-                    val model = remember(owner, direction) {
-                        GrammarModel(
-                            repository = GrammarRepository(app.api),
-                            offerCache = app.assistantCaches.grammarOffer,
-                            historyCache = app.assistantCaches.grammarHistory,
-                            journal = app.grammarJournal,
-                            progress = app.grammarProgress,
-                            owner = owner,
-                            uiLanguage = { app.settingsStore.current.value.language.wire },
-                            learning = direction.wire,
-                        )
-                    }
-                    val offerRevision by app.assistantCaches.grammarOffer.revision.collectAsStateWithLifecycle()
-                    GrammarScreen(
-                        model = model,
-                        speech = app.speech,
-                        accent = settings.accent,
-                        offerRevision = offerRevision,
-                        uiLanguage = uiLanguage.wire,
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
-                        onOpenMembership = openMembership,
-                    )
-                }
-
-                AppRoute.SceneList -> SceneListScreen(
-                    scenes = app.scenes,
-                    language = uiLanguage,
-                    isMember = sceneMember,
-                    onBack = { nav = nav.pop() },
-                    onOpen = { nav = nav.push(AppRoute.SceneDetail(it.raw)) },
-                )
-
-                is AppRoute.SceneDetail -> SceneDetailScreen(
-                    scenes = app.scenes,
-                    sceneId = SceneId(route.sceneId),
-                    language = uiLanguage,
-                    isMember = sceneMember,
-                    onBack = { nav = nav.pop() },
-                    onPractise = { routeId -> nav = nav.push(AppRoute.ScenePractice(route.sceneId, routeId)) },
-                    onUnlock = openMembership,
-                    relatedWords = sceneWords,
-                    onOpenWord = { nav = nav.push(AppRoute.Word(it, fromScene = route.sceneId)) },
-                )
-
-                is AppRoute.ScenePractice -> ScenePracticeScreen(
-                    scenes = app.scenes,
-                    sceneId = SceneId(route.sceneId),
-                    routeId = route.routeId,
-                    language = uiLanguage,
-                    isMember = sceneMember,
-                    onClose = { nav = nav.pop() },
-                    onDone = { nav = nav.select(AppRoute.Today) },
-                    onUnlock = openMembership,
-                    relatedWords = sceneWords,
-                    onOpenWord = { nav = nav.push(AppRoute.Word(it, fromScene = route.sceneId)) },
-                )
-
-                is AppRoute.Shelf -> AtlasThemeScreen(
-                    category = catalog.categories.firstOrNull { it.id == route.categoryId },
-                    words = CategoryShelf.words(route.categoryId, studyWords),
-                    scores = scores,
-                    uiLang = uiLang,
-                    bottomPadding = 0.dp,
-                    onBack = { nav = nav.pop() },
-                    onOpen = openCard,
-                    onChat = chatTopics.firstOrNull { it.id == route.categoryId && it.usable }?.let { topic ->
-                        { nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Topic(topic.id))) }
-                    },
-                    sceneEntries = if (direction.hasScenes) {
-                        {
-                            val topicOf = remember(catalog.words) {
-                                catalog.words.mapNotNull { w -> w.category?.let { w.id to it } }.toMap()
-                            }
-                            TopicSceneEntries(app.scenes, route.categoryId, topicOf, uiLanguage) {
-                                nav = nav.push(AppRoute.SceneDetail(it.raw))
-                            }
-                        }
-                    } else {
-                        null
-                    },
-                )
-
-                is AppRoute.TopicChat -> {
-                    val chatScope = rememberCoroutineScope()
-                    val model = remember(route, direction) {
-                        TopicChatModel(
-                            entry = route.entry,
-                            repository = TopicChatRepository(app.api),
-                            preferences = app.topicChatPreferences,
-                            uiLanguage = { app.settingsStore.current.value.language.wire },
-                            direction = direction.wire,
-                            scope = chatScope,
-                        )
-                    }
-                    TopicChatScreen(
-                        model = model,
-                        topics = chatTopics,
-                        speech = app.speech,
-                        accent = settings.accent,
-                        uiLanguage = uiLanguage,
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpenHistory = { nav = nav.push(AppRoute.TopicChatHistory) },
-                        onOpenStatement = { nav = nav.push(AppRoute.CreditStatement) },
-                        onOpenMembership = openMembership,
-                    )
-                }
-
-                AppRoute.TopicChatHistory -> {
-                    val chatScope = rememberCoroutineScope()
-                    val model = remember(direction) {
-                        TopicChatModel(
-                            entry = TopicChatEntry.Saved(""),
-                            repository = TopicChatRepository(app.api),
-                            preferences = app.topicChatPreferences,
-                            uiLanguage = { app.settingsStore.current.value.language.wire },
-                            direction = direction.wire,
-                            scope = chatScope,
-                        )
-                    }
-                    TopicChatHistoryScreen(
-                        model = model,
-                        onBack = { if (nav.current == route) nav = nav.pop() },
-                        onOpen = { nav = nav.push(AppRoute.TopicChat(TopicChatEntry.Saved(it))) },
-                    )
-                }
-
-                is AppRoute.Word -> {
-                    // The whole catalogue in store order — the 官方 grid's own
-                    // order — so the next word is the one that was beside it.
-                    // A word the catalogue has never heard of (a 自製 card, a
-                    // 物見 item) is its own single page rather than no page.
-                    val ids = remember(catalog.words, route.wordId) {
-                        val all = catalog.words.map { it.id }
-                        if (route.wordId in all) all else listOf(route.wordId)
-                    }
+            when (shown) {
+                ShellLayer.Tabs -> {
+                    val atTab = nav.tab ?: AppRoute.Today
                     val pager = rememberPagerState(
-                        initialPage = ids.indexOf(route.wordId).coerceAtLeast(0),
-                        pageCount = { ids.size },
+                        initialPage = TabShell.tabs.indexOf(atTab).coerceAtLeast(0),
+                        pageCount = { TabShell.tabs.size },
                     )
-                    // Deliberately **not** pushed into the stack, as on iOS:
-                    // swiping is reading on, not navigating, and a stack that
-                    // grew a step per swipe would make 返回 walk back through
-                    // every word the reader passed.
-                    HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-                        val wordId = ids[page]
-                        val vm = remember(wordId) {
-                            WordDetailViewModel(
-                                catalog = app.catalogReading,
-                                atlas = app.atlas,
-                                audio = app.clipPlayer,
-                                direction = direction,
-                                uiLang = uiLang,
-                                accent = settings.accent,
-                                speech = app.speech,
-                            ).also { it.load(wordId) }
+                    // Both ways, and each guarded against the other: the bar moves
+                    // the pager, a settled swipe moves the stack, and neither may
+                    // answer its own move or the two chase each other across the
+                    // screen.
+                    LaunchedEffect(atTab) {
+                        val target = TabShell.tabs.indexOf(atTab)
+                        if (target >= 0 && target != pager.currentPage) pager.animateScrollToPage(target)
+                    }
+                    LaunchedEffect(pager) {
+                        snapshotFlow { pager.settledPage }.collect { page ->
+                            val tab = TabShell.tabs.getOrNull(page) ?: return@collect
+                            if (nav.current != tab) nav = nav.select(tab)
                         }
-                        WordDetailScreen(
-                            vm = vm,
-                            bottomPadding = 0.dp,
-                            session = direction.targetLanguage,
-                            uiLang = uiLang,
-                            showChinese = settings.showZh,
-                            onBack = { nav = nav.pop() },
-                            bookmarked = wordId in personal.bookmarked,
-                            // 書籤 filters the *catalogue* by marked id, so a
-                            // mark on a card the catalogue never had would go
-                            // nowhere.
-                            onBookmark = if (CardsSourceRules.isCustom(wordId)) null
-                            else ({ app.cardsSourceStore.toggle(wordId) }),
-                            scores = scores,
-                            onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                            speech = app.speech,
-                            accent = settings.accent,
-                            glossBookmarks = GlossBookmarks(
-                                isMarked = { it in personal.bookmarked },
-                                toggle = app.cardsSourceStore::toggle,
-                            ),
-                            insights = rememberWordInsights(
-                                app.wordInsightsStore, wordId, direction, uiLang, accountState.entitlement,
-                            ),
-                            // A confusable whose id the catalogue does not
-                            // know is not a link: a row that opens onto a 404
-                            // is worse than plain text.
-                            canOpenWord = { id -> catalog.words.any { it.id == id } },
-                            onLocked = openMembership,
-                            scenes = { modifier ->
-                                if (direction.hasScenes) {
-                                    Box(modifier) {
-                                        WordSceneSection(app.scenes, wordId, route.fromScene?.let(::SceneId), uiLanguage) {
-                                            nav = nav.push(AppRoute.SceneDetail(it.raw))
-                                        }
-                                    }
-                                }
-                            },
-                            wordListButton = {
-                                if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
-                                    var adding by rememberSaveable(wordId) { mutableStateOf(false) }
-                                    WordListButton(
-                                        level = MemberAccess.level(MemberFeature.WordListAdd, accountState.entitlement),
-                                        onOpen = { adding = true },
-                                        onLocked = openMembership,
-                                    )
-                                    if (adding) {
-                                        AddToWordListSheet(
-                                            wordId = wordId,
-                                            store = app.wordListsStore,
-                                            onDismiss = { adding = false },
-                                            onNeedsUpgrade = {
-                                                adding = false
-                                                openMembership()
-                                            },
-                                        )
-                                    }
-                                }
-                            },
-                            note = { modifier ->
-                                // Official words only: the server refuses a
-                                // note on a 自製 or 物見 id.
-                                if (!CardsSourceRules.isCustom(wordId) && !CardsSourceRules.isSaved(wordId)) {
-                                    WordNoteSection(
-                                        wordId = wordId,
-                                        store = app.wordNotesStore,
-                                        entitlement = accountState.entitlement,
-                                        onLocked = openMembership,
-                                        modifier = modifier,
-                                    )
-                                }
-                            },
-                        )
+                    }
+                    HorizontalPager(
+                        state = pager,
+                        userScrollEnabled = TabShell.swipeEnabled(nav),
+                        modifier = Modifier.fillMaxSize(),
+                    ) { page ->
+                        // Keyed by the tab rather than by its place in the stack,
+                        // so a scroll position survives being swiped past — which
+                        // is the whole reason the four are side by side.
+                        routeState.SaveableStateProvider("tab:${TabShell.tabs[page]}") {
+                            tabContent(TabShell.tabs[page])
+                        }
                     }
                 }
-
-                else -> Unit
-            }
-            }
+                is ShellLayer.Pushed -> routeState.SaveableStateProvider("route:${shown.page}") {
+                    PageHost(shown.page, shell, onCaptureQueued)
+                }
             }
             }
             }
@@ -2240,7 +1098,7 @@ private fun SignedInScreens(
                 selected = nav.tab,
                 bottomInset = insets.calculateBottomPadding(),
                 onSelect = { nav = nav.select(it) },
-                onCapture = { captureResume = null; nav = nav.push(AppRoute.Capture) },
+                onCapture = { shell.push(ManageRoute.Capture()) },
             )
         }
         if (!TabShell.tabBarVisible(nav)) {
@@ -2299,22 +1157,57 @@ private fun SignedInScreens(
     }
 }
 
+/**
+ * Every pushed page, by the feature that owns it. One arm per family and no
+ * `else`: a page with no host does not compile — it used to compile to a
+ * blank screen.
+ */
+@Composable
+private fun PageHost(page: AppRoute.Page, shell: ShellContext, onCaptureQueued: () -> Unit) {
+    when (page) {
+        is AtlasRoute -> AtlasHost(page, shell)
+        is ManageRoute -> ManageHost(page, shell, onCaptureQueued)
+        is CommunityRoute -> CommunityHost(page, shell)
+        is TravelRoute -> TravelHost(page, shell)
+        is SceneRoute -> SceneHost(page, shell)
+        is WordListRoute -> WordListHost(page, shell)
+        is AssistantRoute -> AssistantHost(page, shell)
+        is AccountRoute -> AccountHost(page, shell)
+        // Drawn over the whole window before the shell gets this far; named so
+        // the `when` stays whole.
+        is StudyRoute -> StudySessionHost(page, shell)
+    }
+}
+
 /** Long enough for the shell to have laid out and measured its anchors. */
 private const val TOUR_START_DELAY = 900L
 
 /** One D2 page slide, plus a frame for the anchors to settle where they land. */
 private const val TOUR_CROSS_SETTLE = 320L
 
-/** Whether the shell draws a back bar over [route]. */
-private fun hasBackBar(route: AppRoute): Boolean = when (route) {
-    // Not 單字詳情: its picture is the first thing on the page, with 返回 and
-    // 書籤 floating over it.
-    // Nor a 合集, whose cover bleeds and floats its own arrow, nor 作者主頁,
-    // whose bar carries 更多.
-    is AppRoute.PublicItem,
-    AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors, AppRoute.Membership,
-    is AppRoute.ManageCard -> true
+/**
+ * Whether the shell draws a back bar over [page]. The rest draw their own way
+ * back: 單字詳情's picture is the first thing on the page, with 返回 and 書籤
+ * floating over it; a 合集's cover bleeds and floats its own arrow; 作者主頁's
+ * bar carries 更多; 搜尋's field carries 取消.
+ */
+private fun hasBackBar(page: AppRoute.Page): Boolean = when (page) {
+    is CommunityRoute.Item, is ManageRoute.Card, is ManageRoute.Capture,
+    AccountRoute.Settings, AccountRoute.StudyThemes, AccountRoute.BlockedAuthors, AccountRoute.Membership -> true
     else -> false
+}
+
+/** What the push transition animates between: the pager, or one pushed page. */
+private sealed interface ShellLayer {
+    /**
+     * The four tabs, as one thing to animate to and from. They are already a
+     * pager, and a pager is its own transition; naming each tab as its own
+     * target would slide a whole shell sideways underneath a swipe that is
+     * already sliding.
+     */
+    data object Tabs : ShellLayer
+
+    data class Pushed(val page: AppRoute.Page) : ShellLayer
 }
 
 /** 今日, plus the debug-only door to the font spike. */
@@ -2378,52 +1271,6 @@ private fun TodayColumn(
 }
 
 /** iOS's `OfflineBanner`: an alert-red pill under the status bar while the device is offline. */
-/**
- * 今天已打卡 on a study finish screen — the refresh iOS's
- * `refreshesFinishedSession` runs, then the card.
- *
- * Waits for the session's answers to land, then re-reads the streak and the
- * wallet: before that the server may not count today, and the streak handed
- * in at the start is yesterday's number. Draws nothing until the server says
- * today was studied, so answers parked offline never claim a check-in.
- */
-@Composable
-private fun FinishCheckIn(
-    app: TujiApplication,
-    direction: LearningDirection,
-    awaitWrites: suspend () -> Unit,
-    modifier: Modifier,
-) {
-    var refreshed by remember { mutableStateOf(false) }
-    val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
-    val checkIn by app.checkInStore.snapshot.collectAsStateWithLifecycle()
-    val haptics = rememberTujiHaptics()
-    val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) {
-        awaitWrites()
-        app.progressStore.load(direction)
-        app.checkInStore.loadReward()
-        refreshed = true
-    }
-    val streak = progress.streak
-    // Fades in, as iOS's `.transition(.opacity)`: it arrives a beat after the
-    // screen, once the server counts today.
-    AnimatedVisibility(
-        visible = refreshed && streak != null && streak.todayCount > 0,
-        enter = fadeIn(TujiMotion.ease(TujiMotion.D2)),
-        exit = fadeOut(TujiMotion.ease(TujiMotion.D2)),
-        modifier = modifier,
-    ) {
-        SessionCheckInCard(
-            streak = streak?.current ?: 0,
-            reward = CheckInDecision.finishReward(checkIn.reward(fallbackStudiedToday = true)),
-            claiming = checkIn.claiming,
-            claimFailed = checkIn.claimFailed,
-            onClaim = { scope.launch { if (app.checkInStore.claim()) haptics.success() } },
-        )
-    }
-}
-
 @Composable
 private fun OfflineBanner(modifier: Modifier = Modifier) {
     Row(
@@ -2449,30 +1296,3 @@ private const val BANNER_MS = 250
 
 /** UIKit's push, which is what iOS's `NavigationStack` uses. */
 private const val PUSH_MS = 350
-
-/**
- * The four tabs, as one thing to animate to and from.
- *
- * They are already a pager, and a pager is its own transition; naming each tab
- * as its own target would slide a whole shell sideways underneath a swipe that
- * is already sliding.
- */
-private data object TabsLayer
-
-/**
- * One word's 詞條延伸內容, asked for when the word is shown. The key carries the
- * tier, so a purchase made from the lock fetches the unlocked text on return.
- */
-@Composable
-private fun rememberWordInsights(
-    store: app.tuji.android.atlas.WordInsightsStore,
-    wordId: String,
-    direction: app.tuji.android.core.model.LearningDirection,
-    uiLang: String,
-    entitlement: app.tuji.android.core.model.Entitlement?,
-): app.tuji.android.core.model.WordInsights? {
-    val answers by store.answers.collectAsStateWithLifecycle()
-    val key = app.tuji.android.atlas.WordInsightsStore.key(wordId, direction, uiLang, entitlement)
-    LaunchedEffect(key) { store.load(wordId, direction, uiLang, entitlement) }
-    return answers[key]
-}

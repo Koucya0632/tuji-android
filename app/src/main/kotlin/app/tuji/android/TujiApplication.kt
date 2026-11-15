@@ -78,12 +78,35 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
         app.tuji.android.core.network.AppAnalytics(api, appScope)
     }
 
+    /** 罐頭點數: the catalog, the wallet, 打卡 and the capture's confirm all read one client. */
+    val credits: app.tuji.android.core.network.CreditRepository by lazy {
+        app.tuji.android.core.network.CreditRepository(api)
+    }
+
+    /** 點數明細. */
+    val creditLedger: app.tuji.android.core.network.CreditLedgerRepository by lazy {
+        app.tuji.android.core.network.CreditLedgerRepository(api)
+    }
+
+    /** 助手's four features, one client each. */
+    val vocabulary: app.tuji.android.core.network.VocabularyRepository by lazy {
+        app.tuji.android.core.network.VocabularyRepository(api)
+    }
+    val grammar: app.tuji.android.core.network.GrammarRepository by lazy {
+        app.tuji.android.core.network.GrammarRepository(api)
+    }
+    val story: app.tuji.android.core.network.StoryRepository by lazy {
+        app.tuji.android.core.network.StoryRepository(api)
+    }
+    val topicChat: app.tuji.android.core.network.TopicChatRepository by lazy {
+        app.tuji.android.core.network.TopicChatRepository(api)
+    }
+
     /** The transport. [catalog] is the store that holds what it fetched. */
     val catalogReading: CatalogRepository by lazy { CatalogRepository(api) }
 
     /** 永久會員 and 罐頭點數 packs through Google Play; the server grants. */
     val playBilling: app.tuji.android.billing.PlayBilling by lazy {
-        val credits = app.tuji.android.core.network.CreditRepository(api)
         val billing = app.tuji.android.core.network.BillingRepository(api)
         app.tuji.android.billing.PlayBilling(
             context = this,
@@ -142,7 +165,6 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
 
     /** 打卡: the catalog, the wallet and the calendar — 今日's chip, its sheet, and the study finish screens. */
     val checkInStore: app.tuji.android.account.CheckInStore by lazy {
-        val credits = app.tuji.android.core.network.CreditRepository(api)
         app.tuji.android.account.CheckInStore(
             loadCatalog = credits::catalog,
             loadWallet = credits::wallet,
@@ -195,7 +217,7 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
             // Queued until the shell reads it, so a capture finishing while no
             // screen is up still reaches 圖鑑 when one is.
             onCompleted = { invalidator.post(app.tuji.android.core.study.AppMutation.CaptureCompleted) },
-            credits = app.tuji.android.capture.LiveCreditCardConfirming(app.tuji.android.core.network.CreditRepository(api)),
+            credits = app.tuji.android.capture.LiveCreditCardConfirming(credits),
         )
     }
 
