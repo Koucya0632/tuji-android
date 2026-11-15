@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.core.model.AtlasCollectionAvatarResponse
 import app.tuji.android.core.model.AtlasCollectionEdit
 import app.tuji.android.core.model.AtlasCollectionEditResponse
@@ -72,13 +73,13 @@ class CollectionEditViewModelTest {
 
     private fun member(id: String, state: String = "private") = AtlasCollectionMember(id = id, lemma = id, publicationState = state)
 
-    private fun vm(fake: Fake, onChanged: () -> Unit = {}) = CollectionEditViewModel("c1", fake, onChanged, TestScope(dispatcher))
+    private fun vm(fake: Fake, onMutation: (AppMutation) -> Unit = {}) = CollectionEditViewModel("c1", fake, onMutation, TestScope(dispatcher))
 
     /** What goes to review is what is on screen: the words are written first. */
     @Test fun `publishing saves the words first and reads back the review state`() = runTest(dispatcher) {
-        var told = 0
+        val told = mutableListOf<AppMutation>()
         val fake = Fake(members = mutableListOf(member("a")))
-        val vm = vm(fake) { told++ }
+        val vm = vm(fake) { told += it }
         vm.load(); advanceUntilIdle()
         vm.setTitle(" 我的廚房 ")
         vm.submit(); advanceUntilIdle()
@@ -86,7 +87,7 @@ class CollectionEditViewModelTest {
         assertEquals(listOf("update:我的廚房:null", "publish"), fake.calls)
         assertEquals(false, vm.state.value.published)
         assertFalse("pending now, so no second submit", vm.state.value.canSubmit)
-        assertEquals(1, told)
+        assertEquals(listOf(AppMutation.CollectionPublished), told)
     }
 
     @Test fun `an empty collection cannot be put up for review`() = runTest(dispatcher) {

@@ -1,5 +1,7 @@
 package app.tuji.android.manage
 
+import app.tuji.android.core.community.ReviewStatus
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -23,8 +25,8 @@ import kotlinx.coroutines.launch
 class MyCollectionsViewModel(
     private val authoring: CollectionAuthoring,
     private val language: TargetLanguage,
-    /** A public collection went away or appeared — 物見 and the author's page draw it. */
-    private val onChanged: () -> Unit = {},
+    /** A collection was deleted — what that reaches is [AppMutation]'s to say. */
+    private val onMutation: (AppMutation) -> Unit = {},
     private val scope: CoroutineScope? = null,
     /** A write refused by plan (402) — 會員方案, beside the usual failure line. */
     private val onNeedsMembership: () -> Unit = {},
@@ -84,7 +86,7 @@ class MyCollectionsViewModel(
             attempt { authoring.deleteCollection(collection.id) }
                 .onSuccess {
                     _state.value = _state.value.copy(deleting = false, collections = _state.value.collections.filterNot { it.id == collection.id })
-                    onChanged()
+                    onMutation(AppMutation.CollectionDeleted(wasPublic = ReviewStatus.of(collection.reviewStatus) == ReviewStatus.Approved))
                     onDone()
                 }
                 .onFailure { _state.value = _state.value.copy(deleting = false, deleteFailed = true) }

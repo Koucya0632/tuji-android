@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.core.community.CollectionLearnAction
 import app.tuji.android.core.model.AtlasAuthor
 import app.tuji.android.core.model.AtlasAuthorPage
@@ -159,18 +160,18 @@ class CollectionDetailViewModelTest {
             collection = collection,
             access = AtlasCollectionAccess(unlocked = true, isSaved = true, totalCount = 12, learningCount = 8),
         )
-        var learned = false
+        val told = mutableListOf<AppMutation>()
         val vm = CollectionDetailViewModel(
             slug = "kitchen-set", atlas = Reader { detail }, bookmarks = Bookmarks(),
             learning = { AtlasCollectionLearnResult(addedCount = 4, learningCount = 12, totalCount = 12) },
-            viewerHandle = "TJ1", onLearned = { learned = true }, scope = TestScope(dispatcher),
+            viewerHandle = "TJ1", onMutation = { told += it }, scope = TestScope(dispatcher),
         )
         vm.open(); advanceUntilIdle()
         assertEquals(CollectionLearnAction.AddRemaining(4), vm.state.value.learnAction)
 
         vm.learnRemaining(); advanceUntilIdle()
         assertEquals(CollectionLearnAction.AllLearning, vm.state.value.learnAction)
-        assertTrue(learned)
+        assertEquals(listOf(AppMutation.CollectionLearned), told)
     }
 
     /** The one learn failure with something to do about it gets its own sentence. */

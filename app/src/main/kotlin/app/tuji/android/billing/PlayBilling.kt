@@ -49,6 +49,8 @@ class PlayBilling(
     private val catalog: suspend () -> CreditCatalog,
     private val currentUser: () -> String?,
     private val scope: CoroutineScope,
+    /** A grant landed. What it refreshes is not this class's decision. */
+    private val onDelivered: () -> Unit = {},
 ) {
     /** A product Play will sell, with its price as Play formats it for this account. */
     data class Offer(val productId: String, val price: String, internal val details: ProductDetails)
@@ -255,7 +257,10 @@ class PlayBilling(
         // What is for sale depends on what was just bought: the point packs
         // are sold only to a 永久會員, so the catalog read before the purchase
         // is stale the moment one is granted.
-        if (granted) load()
+        if (granted) {
+            onDelivered()
+            load()
+        }
     }
 
     fun dismissNotice() = _state.update { it.copy(notice = null) }

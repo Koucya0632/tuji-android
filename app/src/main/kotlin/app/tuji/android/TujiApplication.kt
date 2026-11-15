@@ -91,8 +91,16 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
             catalog = { credits.catalog() },
             currentUser = { (auth.session.value.state as? app.tuji.android.core.auth.AuthState.SignedIn)?.user?.id },
             scope = appScope,
+            onDelivered = { invalidator.post(app.tuji.android.core.study.AppMutation.PurchaseDelivered) },
         )
     }
+
+    /**
+     * Where a write that other screens draw is reported — a view model's, the
+     * capture queue's, Play's. The shell is the one reader; see
+     * [app.tuji.android.core.study.AppMutation] for what each write refreshes.
+     */
+    val invalidator: app.tuji.android.core.study.Invalidator by lazy { app.tuji.android.core.study.Invalidator() }
 
     /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
     val catalog: app.tuji.android.atlas.CatalogStore by lazy {
@@ -184,15 +192,9 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
             authoring = atlas,
             journal = app.tuji.android.capture.FileCaptureJobJournal(this),
             scope = appScope,
-            // What a finished capture refreshes: the shelf it landed on.
-            // Forced, because the server has a word it did not have a moment
-            // ago and the store's own freshness window would hide it. The two
-            // arguments come from settings rather than from a screen, which is
-            // the only reason this can live here at all.
-            onCompleted = {
-                val settings = settingsStore.current.value
-                cardsSourceStore.load(settings.language.wire, settings.direction, force = true)
-            },
+            // Queued until the shell reads it, so a capture finishing while no
+            // screen is up still reaches 圖鑑 when one is.
+            onCompleted = { invalidator.post(app.tuji.android.core.study.AppMutation.CaptureCompleted) },
             credits = app.tuji.android.capture.LiveCreditCardConfirming(app.tuji.android.core.network.CreditRepository(api)),
         )
     }

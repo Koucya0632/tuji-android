@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.core.community.ReviewStatus
 import app.tuji.android.core.community.ShelfState
 import app.tuji.android.core.model.AtlasImageSummary
@@ -82,8 +83,8 @@ class AtlasManageViewModelTest {
     private fun item(id: String, lang: TargetLanguage = TargetLanguage.JA, review: String? = null) =
         AtlasItem(id = "i$id", imageId = id, targetLanguage = lang, lemma = id, reviewStatus = review)
 
-    private fun vm(shelf: Shelf, onChanged: () -> Unit = {}) =
-        AtlasManageViewModel(shelf, TargetLanguage.JA, onChanged, TestScope(dispatcher))
+    private fun vm(shelf: Shelf, onMutation: (AppMutation) -> Unit = {}) =
+        AtlasManageViewModel(shelf, TargetLanguage.JA, onMutation, TestScope(dispatcher))
 
     @Test fun `a failed sync says so rather than claiming there are no cards`() = runTest(dispatcher) {
         val vm = vm(Shelf(emptyList(), emptyList(), failSync = true))
@@ -92,9 +93,9 @@ class AtlasManageViewModelTest {
     }
 
     @Test fun `a batch delete keeps what failed selected and tells the other tabs once`() = runTest(dispatcher) {
-        var told = 0
+        val told = mutableListOf<AppMutation>()
         val shelf = Shelf(listOf(image("a"), image("b"), image("c")), listOf(item("a"), item("b"), item("c")), failDelete = setOf("b"))
-        val vm = vm(shelf) { told++ }
+        val vm = vm(shelf) { told += it }
         vm.load(); advanceUntilIdle()
         vm.setSelecting(true)
         listOf("a", "b", "c").forEach(vm::toggle)
@@ -105,7 +106,7 @@ class AtlasManageViewModelTest {
         assertEquals(setOf("b"), s.selected)
         assertTrue("still selecting, so the failure can be retried", s.selecting)
         assertTrue(s.actionFailed)
-        assertEquals(1, told)
+        assertEquals(listOf(AppMutation.ItemsDeleted), told)
     }
 
     @Test fun `a clean delete ends selection`() = runTest(dispatcher) {
@@ -121,14 +122,14 @@ class AtlasManageViewModelTest {
 
     /** The server owns what a withdrawn card is; the shelf reads it back. */
     @Test fun `withdrawing re-reads the card's review state`() = runTest(dispatcher) {
-        var told = 0
+        val told = mutableListOf<AppMutation>()
         val shelf = Shelf(listOf(image("a")), listOf(item("a", review = "approved")))
-        val vm = vm(shelf) { told++ }
+        val vm = vm(shelf) { told += it }
         vm.load(); advanceUntilIdle()
         vm.withdraw("ia"); advanceUntilIdle()
         assertEquals(listOf("ia"), shelf.withdrawn)
         assertEquals(ReviewStatus.Withdrawn, vm.state.value.row("a")?.review)
-        assertEquals(1, told)
+        assertEquals(listOf(AppMutation.ItemWithdrawn), told)
     }
 
     /** 景點 on the card page: written, then read back from sync like 取消公開. */

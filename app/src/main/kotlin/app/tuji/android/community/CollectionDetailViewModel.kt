@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -36,10 +37,8 @@ class CollectionDetailViewModel(
     /** Who is looking, so an author opening their own collection sees 你的合集 rather than 收藏. */
     private val viewerHandle: String?,
     private val blocked: () -> BlockList = { BlockList.none },
-    /** A bookmark landed — 物見's 已收藏 shelf is drawn from the same answer. */
-    private val onBookmarkChanged: () -> Unit = {},
-    /** Members went into the queue — 今日 and 圖鑑 count them. */
-    private val onLearned: () -> Unit = {},
+    /** A bookmark landed, or members went into the queue — what each reaches is [AppMutation]'s to say. */
+    private val onMutation: (AppMutation) -> Unit = {},
     private val scope: CoroutineScope? = null,
     /** 收藏 or 加入學習 refused by plan (402) — 會員方案, not an error line. */
     private val onNeedsMembership: () -> Unit = {},
@@ -101,7 +100,7 @@ class CollectionDetailViewModel(
             val outcome = attempt { learning.learnCollection(slug) }
             _state.value = outcome.fold(
                 onSuccess = { result ->
-                    onLearned()
+                    onMutation(AppMutation.CollectionLearned)
                     _state.value.copy(
                         learningBusy = false,
                         learningCount = result.learningCount,
@@ -147,7 +146,7 @@ class CollectionDetailViewModel(
                 saved = result.saved,
                 collection = _state.value.collection?.copy(saveCount = result.saveCount),
             )
-            onBookmarkChanged()
+            onMutation(AppMutation.CollectionBookmarked)
             // 收藏 is what unlocks the members, and a locked response carries a
             // preview of them rather than all — so flipping a flag here would
             // open a list the screen does not have. Re-read, but only when the

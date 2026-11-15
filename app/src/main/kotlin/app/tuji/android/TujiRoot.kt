@@ -66,6 +66,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
@@ -123,6 +124,7 @@ import app.tuji.android.core.design.TujiPullToRefresh
 import app.tuji.android.core.study.targets
 import app.tuji.android.core.study.RefreshTarget
 import app.tuji.android.core.study.LearningRefreshCause
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.core.model.UiLanguage
 import app.tuji.android.onboarding.LearningDirectionScreen
 import androidx.activity.compose.BackHandler
@@ -514,14 +516,6 @@ private fun SignedInScreens(
         app.captureQueue.celebrations.collect { captureHaptics.success() }
     }
 
-    // 收藏 happens in 物見 and lands on a shelf 圖鑑 draws. A tick rather than a
-    // call from inside the view model, for the same reason `refreshTick` is one:
-    // the effect that reloads has to be the thing the composition owns.
-    var savedTick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(savedTick) {
-        if (savedTick == 0) return@LaunchedEffect
-        app.cardsSourceStore.load(uiLang, direction, force = true)
-    }
     val progress by app.progressStore.snapshot.collectAsStateWithLifecycle()
     val session by app.auth.session.collectAsStateWithLifecycle()
     val settingsLoaded by app.settingsStore.loaded.collectAsStateWithLifecycle()
@@ -535,19 +529,15 @@ private fun SignedInScreens(
         AccountViewModel(accounts = app.atlas, entitlements = app.atlas, weakWords = app.atlas)
     }
     val accountState by account.state.collectAsStateWithLifecycle()
+    // The row at the top of 物見 is this account's public page, and it needs
+    // the UID to find it — which arrives with 我的's account read.
+    val myUid = accountState.me?.username
 
     // Play purchases paid but not yet granted (a crash, a pending payment that
     // cleared while Tuji was closed) are sent on entering the shell; every
     // grant, from here or from 會員方案, re-reads the entitlement.
     val billing by app.playBilling.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { app.playBilling.reconcile() }
-    LaunchedEffect(billing.deliveries) {
-        if (billing.deliveries > 0) {
-            account.refreshEntitlement()
-            // A purchase moved the balance 助手 keeps.
-            app.assistantCaches.balanceChanged()
-        }
-    }
 
     // 個人筆記, once the entitlement says the feature exists: the review reveal
     // reads them with no request of its own. Loaded here, not on the word page,
@@ -653,23 +643,7 @@ private fun SignedInScreens(
         )
     }
 
-    // Bumped as a study flow closes. A signal here rather than a call at the
-    // close site, because the fetch has to outlive the composable that asked
-    // for it — and that composable is the one being popped.
-    //
-    // **A counter, not a flag.** The first version was a `Boolean` the effect
-    // reset on entry, which changed the very key it was launched on: Compose
-    // cancelled the effect mid-flight and restarted it with the new key, which
-    // returned immediately. The refresh never ran once. A key that only ever
-    // moves forward, and nothing inside the effect touching it, is the shape
-    // that cannot do that.
     var settingsBusy by remember { mutableStateOf(SettingsBusy()) }
-    var refreshTick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(refreshTick) {
-        if (refreshTick == 0) return@LaunchedEffect
-        app.masteryStore.load(direction, force = true)
-        app.progressStore.load(direction)
-    }
     val community = remember(direction) {
         CommunityViewModel(
             atlas = app.atlas,
@@ -702,12 +676,7 @@ private fun SignedInScreens(
         AtlasManageViewModel(
             shelf = app.atlas,
             language = direction.targetLanguage,
-            // A card went, or came off 物見: 我做的, the study queue and the
-            // counts on 今日 all include it.
-            onChanged = {
-                savedTick++
-                refreshTick++
-            },
+            onMutation = app.invalidator::post,
             onNeedsMembership = { openMembership() },
         )
     }
@@ -720,36 +689,54 @@ private fun SignedInScreens(
         MyCollectionsViewModel(
             authoring = app.atlas,
             language = direction.targetLanguage,
-            // A public collection came or went: 物見's shelves and the
-            // author's own row count it.
-            onChanged = { community.load() },
+            onMutation = app.invalidator::post,
             onNeedsMembership = { openMembership() },
         )
     }
     val myCollectionsState by myCollections.state.collectAsStateWithLifecycle()
     val communityReported by community.reported.collectAsStateWithLifecycle()
 
-    // What a pull re-reads is [LearningRefreshCause]'s to say; this only
-    // knows which store answers each target. Written once, because the two
-    // pulls used to be two lists and two lists drift.
-    val refreshLearning: suspend (LearningRefreshCause) -> Unit = { cause ->
-        cause.targets.forEach { target ->
-            when (target) {
-                RefreshTarget.Progress -> app.progressStore.load(direction)
-                RefreshTarget.Mastery -> app.masteryStore.load(direction, force = true)
-                RefreshTarget.Catalogue -> app.catalog.load(direction, force = true)
-                // Held by 今日's own model rather than a store, so it is asked
-                // rather than loaded.
-                RefreshTarget.Stats -> Unit
-            }
-        }
-    }
-
     val today = remember(direction) {
         TodayViewModel(
             stats = app.study,
             direction = direction,
         )
+    }
+
+    // What to re-read is [LearningRefreshCause]'s to say for a pull and
+    // [AppMutation]'s for a write; this only knows which store answers each
+    // target. One `when`, so a pull and a write cannot answer the same target
+    // with two different stores, and a new target does not compile until it
+    // has one.
+    val refreshTarget: suspend (RefreshTarget) -> Unit = { target ->
+        when (target) {
+            RefreshTarget.Progress -> app.progressStore.load(direction)
+            RefreshTarget.Mastery -> app.masteryStore.load(direction, force = true)
+            RefreshTarget.Catalogue -> app.catalog.load(direction, force = true)
+            // Held by 今日's own model rather than a store, so it is asked
+            // rather than loaded.
+            RefreshTarget.Stats -> today.refresh()
+            // Forced: the server has a word it did not have a moment ago, and
+            // the store's own freshness window would hide it.
+            RefreshTarget.PersonalShelves -> app.cardsSourceStore.load(uiLang, direction, force = true)
+            RefreshTarget.Entitlement -> account.refreshEntitlement()
+            RefreshTarget.CreditBalance -> app.assistantCaches.balanceChanged()
+            RefreshTarget.Account -> account.refresh()
+            RefreshTarget.CommunityFeed -> community.load()
+            RefreshTarget.CommunitySaved -> community.loadSaved()
+            RefreshTarget.CommunityMe -> myUid?.let { community.loadMe(it, force = true) }
+            RefreshTarget.MyCollections -> myCollections.load()
+        }
+    }
+    val refresh: suspend (Set<RefreshTarget>) -> Unit = { targets ->
+        coroutineScope { targets.forEach { launch { refreshTarget(it) } } }
+    }
+    // Every write reported anywhere in the app lands here. Above the study
+    // flows' early return, so a capture finishing mid-session is not left
+    // waiting for the session to end.
+    val latestRefresh by rememberUpdatedState(refresh)
+    LaunchedEffect(Unit) {
+        app.invalidator.targets.collect { latestRefresh(it) }
     }
     val todayStats by today.inputs.collectAsStateWithLifecycle()
     // 今日's verdicts read the selected themes too, as iOS's do: what is left
@@ -964,7 +951,7 @@ private fun SignedInScreens(
                     // opens 圖鑑, and sees the tiers they had before they
                     // started — on the screen they went to in order to see
                     // the change.
-                    refreshTick++
+                    app.invalidator.post(AppMutation.StudySessionClosed)
                     nav = nav.pop()
                 },
             )
@@ -1023,7 +1010,7 @@ private fun SignedInScreens(
                 reporter = studyReporter,
                 checkIn = { FinishCheckIn(app, direction, vm::awaitWrites, it) },
                 onClose = {
-                    refreshTick++
+                    app.invalidator.post(AppMutation.StudySessionClosed)
                     nav = nav.pop()
                 },
             )
@@ -1073,9 +1060,6 @@ private fun SignedInScreens(
             account.refreshEntitlement()
         }
     }
-    // The row at the top of 物見 is this account's public page, and it needs
-    // the UID to find it — which arrives with 我的's account read.
-    val myUid = accountState.me?.username
     LaunchedEffect(myUid) { if (myUid != null) community.loadMe(myUid) }
 
     // The first-run tour, on the first launch only. The marked composables
@@ -1196,11 +1180,7 @@ private fun SignedInScreens(
                         null
                     },
                     onSpike = { showSpike = true },
-                    onRefresh = {
-                        val cause = LearningRefreshCause.PulledToday
-                        if (RefreshTarget.Stats in cause.targets) today.refresh()
-                        refreshLearning(cause)
-                    },
+                    onRefresh = { refresh(LearningRefreshCause.PulledToday.targets) },
                 )
 
                 AppRoute.Atlas -> AtlasCardsScreen(
@@ -1264,7 +1244,7 @@ private fun SignedInScreens(
                     showChinese = settings.showZh,
                     onOpenWord = openCard,
                     onRefresh = {
-                        refreshLearning(LearningRefreshCause.PulledMe)
+                        refresh(LearningRefreshCause.PulledMe.targets)
                         // 我's own payload — the weakest words and the plan —
                         // which no learning store holds.
                         account.reload()
@@ -1431,10 +1411,7 @@ private fun SignedInScreens(
                         CollectionEditViewModel(
                             collectionId = route.collectionId,
                             authoring = app.atlas,
-                            onChanged = {
-                                myCollections.load()
-                                community.load()
-                            },
+                            onMutation = app.invalidator::post,
                             onNeedsMembership = { openMembership() },
                         ).also { it.load() }
                     }
@@ -1507,9 +1484,7 @@ private fun SignedInScreens(
                             // Everything this screen just erased is drawn
                             // somewhere else, and none of those stores can
                             // know it happened.
-                            app.masteryStore.load(direction, force = true)
-                            app.progressStore.load(direction)
-                            today.refresh()
+                            app.invalidator.post(AppMutation.ProgressCleared)
                             nav = nav.pop()
                         }
                     },
@@ -1675,8 +1650,7 @@ private fun SignedInScreens(
                                     nickname = author.displayName?.takeIf { it != author.handle },
                                     avatar = author.avatar,
                                 )
-                                account.refresh()
-                                community.loadMe(author.handle, force = true)
+                                app.invalidator.post(AppMutation.ProfileSaved)
                                 if (nav.current == AppRoute.EditProfile) nav = nav.pop()
                             },
                         ).also { it.load() }
@@ -1733,13 +1707,7 @@ private fun SignedInScreens(
                             uiLang = uiLang,
                             accent = settings.accent,
                             speech = app.speech,
-                            // The card went into, or out of, the reader's own
-                            // 圖鑑 and study queue — 已收進 and the counts on 今日
-                            // are drawn from those.
-                            onSaveChanged = {
-                                savedTick++
-                                refreshTick++
-                            },
+                            onMutation = app.invalidator::post,
                             onNeedsMembership = { openMembership() },
                         ).also { it.open() }
                     }
@@ -1793,13 +1761,7 @@ private fun SignedInScreens(
                             learning = app.atlas,
                             viewerHandle = myUid,
                             blocked = { community.blockList },
-                            onBookmarkChanged = community::loadSaved,
-                            // Members went into the study queue: 已收進 and the
-                            // counts on 今日 and 我 are drawn from it.
-                            onLearned = {
-                                savedTick++
-                                refreshTick++
-                            },
+                            onMutation = app.invalidator::post,
                             onNeedsMembership = { openMembership() },
                         ).also { it.open() }
                     }
