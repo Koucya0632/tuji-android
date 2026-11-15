@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.core.study.AppMutation
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -28,8 +29,8 @@ import kotlinx.coroutines.launch
 class CollectionEditViewModel(
     val collectionId: String,
     private val authoring: CollectionAuthoring,
-    /** Something other people see changed — 物見, the author's page, 我的合集. */
-    private val onChanged: () -> Unit = {},
+    /** A write landed — what it reaches is [AppMutation]'s to say. */
+    private val onMutation: (AppMutation) -> Unit = {},
     private val scope: CoroutineScope? = null,
     /** A write refused by plan (402) — 會員方案, beside the usual failure line. */
     private val onNeedsMembership: () -> Unit = {},
@@ -122,7 +123,7 @@ class CollectionEditViewModel(
                 },
             )
             if (ok) {
-                onChanged()
+                onMutation(AppMutation.CollectionEdited(isPublic = _state.value.review == ReviewStatus.Approved))
                 onSaved()
             }
         }
@@ -140,7 +141,7 @@ class CollectionEditViewModel(
                         avatarPreviewUrl = r.avatarPreviewUrl ?: r.avatarImageUrl ?: _state.value.avatarPreviewUrl,
                         collection = _state.value.collection?.copy(avatarColor = r.avatarColor ?: _state.value.collection?.avatarColor),
                     )
-                    onChanged()
+                    onMutation(AppMutation.CollectionAvatarChanged(isPublic = _state.value.review == ReviewStatus.Approved))
                 }
                 .onFailure { _state.value = _state.value.copy(uploadingAvatar = false, failure = Failure.Avatar) }
         }
@@ -202,7 +203,7 @@ class CollectionEditViewModel(
             result
                 .onSuccess { r ->
                     _state.value = _state.value.copy(submitting = false, published = r.published)
-                    onChanged()
+                    onMutation(AppMutation.CollectionPublished)
                     reload(full = true)
                 }
                 .onFailure { _state.value = _state.value.copy(submitting = false, failure = Failure.Submit) }
@@ -216,7 +217,7 @@ class CollectionEditViewModel(
             val ok = attempt { authoring.withdrawCollection(collectionId) }.isSuccess
             _state.value = _state.value.copy(withdrawing = false, failure = if (ok) null else Failure.Withdraw)
             if (ok) {
-                onChanged()
+                onMutation(AppMutation.CollectionWithdrawn)
                 reload(full = true)
             }
         }

@@ -78,12 +78,35 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
         app.tuji.android.core.network.AppAnalytics(api, appScope)
     }
 
+    /** 罐頭點數: the catalog, the wallet, 打卡 and the capture's confirm all read one client. */
+    val credits: app.tuji.android.core.network.CreditRepository by lazy {
+        app.tuji.android.core.network.CreditRepository(api)
+    }
+
+    /** 點數明細. */
+    val creditLedger: app.tuji.android.core.network.CreditLedgerRepository by lazy {
+        app.tuji.android.core.network.CreditLedgerRepository(api)
+    }
+
+    /** 助手's four features, one client each. */
+    val vocabulary: app.tuji.android.core.network.VocabularyRepository by lazy {
+        app.tuji.android.core.network.VocabularyRepository(api)
+    }
+    val grammar: app.tuji.android.core.network.GrammarRepository by lazy {
+        app.tuji.android.core.network.GrammarRepository(api)
+    }
+    val story: app.tuji.android.core.network.StoryRepository by lazy {
+        app.tuji.android.core.network.StoryRepository(api)
+    }
+    val topicChat: app.tuji.android.core.network.TopicChatRepository by lazy {
+        app.tuji.android.core.network.TopicChatRepository(api)
+    }
+
     /** The transport. [catalog] is the store that holds what it fetched. */
     val catalogReading: CatalogRepository by lazy { CatalogRepository(api) }
 
     /** 永久會員 and 罐頭點數 packs through Google Play; the server grants. */
     val playBilling: app.tuji.android.billing.PlayBilling by lazy {
-        val credits = app.tuji.android.core.network.CreditRepository(api)
         val billing = app.tuji.android.core.network.BillingRepository(api)
         app.tuji.android.billing.PlayBilling(
             context = this,
@@ -91,8 +114,16 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
             catalog = { credits.catalog() },
             currentUser = { (auth.session.value.state as? app.tuji.android.core.auth.AuthState.SignedIn)?.user?.id },
             scope = appScope,
+            onDelivered = { invalidator.post(app.tuji.android.core.study.AppMutation.PurchaseDelivered) },
         )
     }
+
+    /**
+     * Where a write that other screens draw is reported — a view model's, the
+     * capture queue's, Play's. The shell is the one reader; see
+     * [app.tuji.android.core.study.AppMutation] for what each write refreshes.
+     */
+    val invalidator: app.tuji.android.core.study.Invalidator by lazy { app.tuji.android.core.study.Invalidator() }
 
     /** The catalogue, once, for 圖鑑 / 搜尋 / 聽句. */
     val catalog: app.tuji.android.atlas.CatalogStore by lazy {
@@ -134,7 +165,6 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
 
     /** 打卡: the catalog, the wallet and the calendar — 今日's chip, its sheet, and the study finish screens. */
     val checkInStore: app.tuji.android.account.CheckInStore by lazy {
-        val credits = app.tuji.android.core.network.CreditRepository(api)
         app.tuji.android.account.CheckInStore(
             loadCatalog = credits::catalog,
             loadWallet = credits::wallet,
@@ -184,16 +214,10 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
             authoring = atlas,
             journal = app.tuji.android.capture.FileCaptureJobJournal(this),
             scope = appScope,
-            // What a finished capture refreshes: the shelf it landed on.
-            // Forced, because the server has a word it did not have a moment
-            // ago and the store's own freshness window would hide it. The two
-            // arguments come from settings rather than from a screen, which is
-            // the only reason this can live here at all.
-            onCompleted = {
-                val settings = settingsStore.current.value
-                cardsSourceStore.load(settings.language.wire, settings.direction, force = true)
-            },
-            credits = app.tuji.android.capture.LiveCreditCardConfirming(app.tuji.android.core.network.CreditRepository(api)),
+            // Queued until the shell reads it, so a capture finishing while no
+            // screen is up still reaches 圖鑑 when one is.
+            onCompleted = { invalidator.post(app.tuji.android.core.study.AppMutation.CaptureCompleted) },
+            credits = app.tuji.android.capture.LiveCreditCardConfirming(credits),
         )
     }
 

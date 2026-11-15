@@ -1,5 +1,6 @@
 package app.tuji.android.manage
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -29,8 +30,8 @@ import kotlinx.coroutines.launch
 class AtlasManageViewModel(
     private val shelf: AtlasShelfManaging,
     private val language: TargetLanguage,
-    /** A card or its public copy is gone — 我做的, 今日 and 物見 draw them. */
-    private val onChanged: () -> Unit = {},
+    /** A delete, publish, withdraw or 景點 change landed — what it reaches is [AppMutation]'s to say. */
+    private val onMutation: (AppMutation) -> Unit = {},
     private val scope: CoroutineScope? = null,
     /** 發佈到物見 refused by plan (402). */
     private val onNeedsMembership: () -> Unit = {},
@@ -128,7 +129,7 @@ class AtlasManageViewModel(
                 selected = failed,
                 selecting = _state.value.selecting && failed.isNotEmpty(),
             )
-            if (failed.size < imageIds.size) onChanged()
+            if (failed.size < imageIds.size) onMutation(AppMutation.ItemsDeleted)
             if (failed.isEmpty()) onDone()
         }
     }
@@ -162,7 +163,7 @@ class AtlasManageViewModel(
             }
             _state.value = _state.value.copy(publishing = false, actionFailed = !ok)
             if (ok) {
-                onChanged()
+                onMutation(AppMutation.ItemPublished)
                 load()
             }
         }
@@ -183,7 +184,7 @@ class AtlasManageViewModel(
             }
             _state.value = _state.value.copy(withdrawing = false, actionFailed = !ok)
             if (ok) {
-                onChanged()
+                onMutation(AppMutation.ItemWithdrawn)
                 load()
             }
         }
@@ -212,7 +213,10 @@ class AtlasManageViewModel(
                 false
             }
             _state.value = _state.value.copy(savingSpot = false, actionFailed = !ok)
-            if (ok) load()
+            if (ok) {
+                onMutation(AppMutation.ItemSpotChanged)
+                load()
+            }
         }
     }
 

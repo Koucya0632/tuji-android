@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.membership.MembershipRefusal
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -43,7 +44,7 @@ class PublicItemViewModel(
      * A 加入學習 or 停止學習 landed. The card is added to or taken from the
      * reader's own 圖鑑 and study queue, which other tabs draw.
      */
-    private val onSaveChanged: () -> Unit = {},
+    private val onMutation: (AppMutation) -> Unit = {},
     private val scope: CoroutineScope? = null,
     /** 收藏 refused by plan (402) — 會員方案, not an error line. */
     private val onNeedsMembership: () -> Unit = {},
@@ -107,7 +108,7 @@ class PublicItemViewModel(
                 return@launch
             }
             _state.value = _state.value.copy(busy = false, saved = result.saved, saveCount = result.saveCount)
-            onSaveChanged()
+            onMutation(AppMutation.CommunityItemSaved)
         }
     }
 

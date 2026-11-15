@@ -1,5 +1,6 @@
 package app.tuji.android.community
 
+import app.tuji.android.core.study.AppMutation
 import app.tuji.android.core.model.AtlasAuthorPage
 import app.tuji.android.core.model.AtlasCollectionDetail
 import app.tuji.android.core.model.AtlasPublicCollection
@@ -87,7 +88,7 @@ class PublicItemViewModelTest {
     private fun vm(
         saver: Saver = Saver(),
         reader: Reader = Reader { detail },
-        onSaveChanged: () -> Unit = {},
+        onMutation: (AppMutation) -> Unit = {},
     ) = PublicItemViewModel(
         slug = "bag",
         atlas = reader,
@@ -95,7 +96,7 @@ class PublicItemViewModelTest {
         audio = Silent,
         direction = LearningDirection.ZH_JA,
         uiLang = "zh-Hant",
-        onSaveChanged = onSaveChanged,
+        onMutation = onMutation,
         scope = TestScope(dispatcher),
     )
 
@@ -110,8 +111,8 @@ class PublicItemViewModelTest {
     }
 
     @Test fun `the toggle goes both ways and tells the other tabs each time`() = runTest(dispatcher) {
-        var told = 0
-        val vm = vm(Saver(saved = false, count = 2), onSaveChanged = { told++ })
+        val told = mutableListOf<AppMutation>()
+        val vm = vm(Saver(saved = false, count = 2), onMutation = { told += it })
         vm.open(); advanceUntilIdle()
 
         vm.toggleSave(); advanceUntilIdle()
@@ -121,20 +122,20 @@ class PublicItemViewModelTest {
         vm.toggleSave(); advanceUntilIdle()
         assertFalse(vm.state.value.saved)
         assertEquals(2, vm.state.value.saveCount)
-        assertEquals(2, told)
+        assertEquals(listOf(AppMutation.CommunityItemSaved, AppMutation.CommunityItemSaved), told)
     }
 
     /** A word the reader believes is out of their 圖鑑 and is not is worse than a second tap. */
     @Test fun `a failed unsave leaves it saved and tells nobody`() = runTest(dispatcher) {
-        var told = 0
-        val vm = vm(Saver(saved = true, failWrites = IOException("nope")), onSaveChanged = { told++ })
+        val told = mutableListOf<AppMutation>()
+        val vm = vm(Saver(saved = true, failWrites = IOException("nope")), onMutation = { told += it })
         vm.open(); advanceUntilIdle()
         vm.toggleSave(); advanceUntilIdle()
 
         assertTrue(vm.state.value.saved)
         assertEquals(PublicItemViewModel.Error.Failed, vm.state.value.error)
         assertFalse(vm.state.value.busy)
-        assertEquals(0, told)
+        assertTrue(told.isEmpty())
     }
 
     @Test fun `a full 圖鑑 is told apart from any other failure`() = runTest(dispatcher) {

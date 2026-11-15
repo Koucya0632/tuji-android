@@ -71,7 +71,7 @@ sealed interface TourAdvance {
 class FeatureTourFlow(
     val steps: List<TourStep> = SCRIPT,
     /** What the closing card's button opens. */
-    val routeAfterFinishing: AppRoute = AppRoute.LearnNew,
+    val routeAfterFinishing: AppRoute = app.tuji.android.StudyRoute(app.tuji.android.core.model.StudyMode.New),
 ) {
 
     /**
@@ -127,7 +127,7 @@ class FeatureTourFlow(
                     words[2].copy(id = 3),
                     TourStep(4, AppRoute.Today, null, null, TourCutoutShape.Square, TourLine.TryScene),
                 ),
-                routeAfterFinishing = AppRoute.ScenePractice(TRIAL_SCENE),
+                routeAfterFinishing = app.tuji.android.SceneRoute.Practice(TRIAL_SCENE),
             )
         }
 
