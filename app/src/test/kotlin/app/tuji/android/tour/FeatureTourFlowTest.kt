@@ -87,7 +87,7 @@ class FeatureTourFlowTest {
 
     @Test fun `finishing opens new words, which is what the closing card offers`() {
         assertEquals(AppRoute.Today, FeatureTourFlow.tabAfterFinishing)
-        assertEquals(AppRoute.LearnNew, FeatureTourFlow.forDirection(hasScenes = false).routeAfterFinishing)
+        assertEquals(AppRoute.Study(app.tuji.android.core.model.StudyMode.New), FeatureTourFlow.forDirection(hasScenes = false).routeAfterFinishing)
     }
 
     /** A Japanese learner tries a free scene first; the word steps are still in it. */

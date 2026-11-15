@@ -20,14 +20,11 @@ import app.tuji.android.wordlists.MeWordListsRow
 import app.tuji.android.wordlists.WordListButton
 import app.tuji.android.wordlists.WordListDetailScreen
 import app.tuji.android.wordlists.WordListDetailViewModel
-import app.tuji.android.wordlists.WordListQueue
-import app.tuji.android.travel.SpotQueue
 import app.tuji.android.travel.TravelCityScreen
 import app.tuji.android.travel.TravelDestinationScreen
 import app.tuji.android.travel.TravelEntryBand
 import app.tuji.android.travel.TravelSpotScreen
 import app.tuji.android.core.model.TravelDecisions
-import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.CreditPackButtons
@@ -203,7 +200,6 @@ import app.tuji.android.core.network.TravelRepository
 import app.tuji.android.core.catalog.CategoryShelf
 import app.tuji.android.core.catalog.StudyThemes
 import app.tuji.android.core.study.CompletionReadout
-import app.tuji.android.core.study.StudyQuotas
 import app.tuji.android.core.study.ThemeStatus
 import app.tuji.android.settings.StudyThemesScreen
 import app.tuji.android.core.study.TodayInputs
@@ -224,6 +220,7 @@ import app.tuji.android.study.isOnline
 import app.tuji.android.study.ReviewScreen
 import app.tuji.android.study.ReviewViewModel
 import app.tuji.android.study.StudyReporter
+import app.tuji.android.study.StudySource
 import app.tuji.android.study.SessionCheckInCard
 import app.tuji.android.checkin.CheckInSheet
 import app.tuji.android.core.study.TodayDecisions
@@ -865,9 +862,9 @@ private fun SignedInScreens(
             onStudy = {
                 showCheckIn = false
                 when (val call = TodayDecisions(todayInputs).call) {
-                    is TodayCall.Study -> nav = nav.push(if (call.mode == StudyMode.Review) AppRoute.Review else AppRoute.LearnNew)
+                    is TodayCall.Study -> nav = nav.push(AppRoute.Study(call.mode))
                     TodayCall.PickThemes -> nav = nav.push(AppRoute.StudyThemes)
-                    TodayCall.Unknown -> nav = nav.push(AppRoute.Review)
+                    TodayCall.Unknown -> nav = nav.push(AppRoute.Study(StudyMode.Review))
                     is TodayCall.Blocked -> Unit
                 }
             },
@@ -878,19 +875,6 @@ private fun SignedInScreens(
     // The study flows own the whole screen — no tab bar, no account row: a
     // session that can be left by tapping a tab is a session that gets left by
     // accident.
-    // A session from a 詞表 is the same flow with a different source of cards.
-    val listStudy = nav.current as? AppRoute.WordListStudy
-    // …and so is one from a 景點.
-    val spotStudy = nav.current as? AppRoute.TravelSpotStudy
-    // Either way the queue is its own selection: no themes, no 再來一輪.
-    val scopedStudy = listStudy != null || spotStudy != null
-    val scopedQueue: StudyQueueReading? = listStudy?.let { WordListQueue(app.study, it.listId) }
-        ?: spotStudy?.let { SpotQueue(app.travel, it.spotId) }
-    val studyFlow: AppRoute = when (listStudy?.mode ?: spotStudy?.mode) {
-        StudyMode.New -> AppRoute.LearnNew
-        StudyMode.Review -> AppRoute.Review
-        null -> nav.current
-    }
     // 報錯 from inside either session. Built once here so both screens send
     // the same version string and the same interface language.
     val studyReporter = remember(uiLang) {
@@ -909,12 +893,18 @@ private fun SignedInScreens(
         )
     }
     val context = LocalContext.current
-    when (studyFlow) {
-        AppRoute.Review -> {
+    val studyRoute = nav.current as? AppRoute.Study
+    if (studyRoute != null) {
+        // Everything about the session that is not the flow itself — which
+        // queue, how many, whether there is another round — is the source's.
+        val source = studyRoute.source
+        val queue = source.queue(themes = app.study, lists = app.study, travel = app.travel)
+        when (studyRoute.mode) {
+        StudyMode.Review -> {
             val haptics = rememberTujiHaptics()
-            val vm = remember(nav.current) {
+            val vm = remember(studyRoute) {
                 ReviewViewModel(
-                    queues = scopedQueue ?: app.study,
+                    queues = queue,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -925,9 +915,7 @@ private fun SignedInScreens(
                     online = { app.isOnline() },
                     hints = app.onboarding,
                     haptics = haptics,
-                ).also {
-                    if (scopedStudy) it.load(StudyMode.Review, limit = WordListQueue.REVIEW_LIMIT) else it.load(StudyMode.Review)
-                }
+                ).also { it.load(StudyMode.Review, limit = source.reviewLimit) }
             }
             // 再來一輪's count: what is still due once this round's answers have
             // landed. Re-read every time a round finishes, so a second round's
@@ -937,7 +925,7 @@ private fun SignedInScreens(
             var remainingDue by remember(vm) { mutableIntStateOf(0) }
             LaunchedEffect(vm, roundFinished) {
                 remainingDue = 0
-                if (!roundFinished || scopedStudy) return@LaunchedEffect
+                if (!roundFinished || !source.offersAnotherRound) return@LaunchedEffect
                 vm.awaitWrites()
                 remainingDue = runCatching { app.study.stats(direction).stats?.due ?: 0 }
                     .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
@@ -946,8 +934,7 @@ private fun SignedInScreens(
             ReviewScreen(
                 vm = vm,
                 remainingDue = remainingDue,
-                // A 個人詞表 session's summary would count every due word, not the list's.
-                onAnotherRound = if (!scopedStudy) ({ vm.anotherRound() }) else null,
+                onAnotherRound = if (source.offersAnotherRound) ({ vm.anotherRound() }) else null,
                 noteFor = { id -> if (notesExist) wordNotes.byWordId[id]?.body else null },
                 showChinese = settings.showZh,
                 fullDetail = { wordId ->
@@ -981,13 +968,12 @@ private fun SignedInScreens(
                     nav = nav.pop()
                 },
             )
-            return
         }
-        AppRoute.LearnNew -> {
+        StudyMode.New -> {
             val haptics = rememberTujiHaptics()
-            val vm = remember(nav.current) {
+            val vm = remember(studyRoute) {
                 NewFlowViewModel(
-                    queues = scopedQueue ?: app.study,
+                    queues = queue,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -999,24 +985,12 @@ private fun SignedInScreens(
                     haptics = haptics,
                     catalog = app.catalogReading,
                 ).also {
-                    // The goal from 設定, tapered by the backlog, from the
-                    // themes 設定 picked — the same numbers 今日 printed on
-                    // the button that opened this.
                     it.load(
-                        // A list's new words follow the daily goal, as on
-                        // iOS; the list is its own selection, so no themes.
-                        if (spotStudy != null) {
-                            // A spot is learned in one sitting, not paced by the daily goal.
-                            StudyQuotas.NewQueue(limit = SpotQueue.LIMIT, categories = emptyList())
-                        } else if (listStudy != null) {
-                            StudyQuotas.NewQueue(limit = settings.dailyGoal.coerceAtLeast(1), categories = emptyList())
-                        } else {
-                            StudyQuotas.newQueue(
-                                goal = settings.dailyGoal,
-                                due = todayInputs.stats?.due ?: 0,
-                                categories = studyCategories,
-                            )
-                        },
+                        source.newQueue(
+                            goal = settings.dailyGoal,
+                            due = todayInputs.stats?.due ?: 0,
+                            themes = studyCategories,
+                        ),
                     )
                 }
             }
@@ -1053,9 +1027,9 @@ private fun SignedInScreens(
                     nav = nav.pop()
                 },
             )
-            return
         }
-        else -> Unit
+        }
+        return
     }
 
     // Every return to 今日, not only at launch: a session that just wrote three
@@ -1168,7 +1142,7 @@ private fun SignedInScreens(
                 AppRoute.Today -> TodayColumn(
                     inputs = todayInputs,
                     identity = identity,
-                    onStudy = { mode -> nav = nav.push(if (mode == StudyMode.Review) AppRoute.Review else AppRoute.LearnNew) },
+                    onStudy = { mode -> nav = nav.push(AppRoute.Study(mode)) },
                     onSearch = { nav = nav.push(AppRoute.Search) },
                     themeName = { id -> catalog.categories.firstOrNull { it.id == id }?.let { CategoryShelf.title(it, uiLang) } },
                     onOpenStats = { nav = nav.push(AppRoute.ProgressStats) },
@@ -1653,7 +1627,7 @@ private fun SignedInScreens(
                     onBack = { nav = nav.pop() },
                     onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
                     onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                    onStudy = { mode -> nav = nav.push(AppRoute.TravelSpotStudy(route.spotId, mode)) },
+                    onStudy = { mode -> nav = nav.push(AppRoute.Study(mode, StudySource.Spot(route.spotId))) },
                     onNeedsMembership = openMembership,
                     ownWords = personal.mine.filter { it.id.removePrefix(CardsSourceRules.CUSTOM_PREFIX) in ownIds },
                     shared = SpotTagging.othersShared(shared, manageState.items) { communityBlocked.hides(it) },
@@ -1683,7 +1657,7 @@ private fun SignedInScreens(
                         bottomPadding = 0.dp,
                         onBack = { nav = nav.pop() },
                         onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
-                        onStudy = { mode -> nav = nav.push(AppRoute.WordListStudy(route.listId, mode)) },
+                        onStudy = { mode -> nav = nav.push(AppRoute.Study(mode, StudySource.WordList(route.listId))) },
                         onNeedsMembership = openMembership,
                     )
                 }

@@ -100,21 +100,21 @@ sealed interface AppRoute {
     /** 自製圖鑑：拍照 → 辨識 → 確認. */
     data object Capture : AppRoute
 
-    /** The study flows, which take over the whole screen. */
-    data object Review : AppRoute
-    data object LearnNew : AppRoute
+    /**
+     * 學新字 or 複習, which take over the whole screen. [source] is where the
+     * cards come from — 今日's themes, a 個人詞表 or a 景點 — and decides
+     * everything about the session that is not the flow itself.
+     */
+    data class Study(
+        val mode: app.tuji.android.core.model.StudyMode,
+        val source: app.tuji.android.study.StudySource = app.tuji.android.study.StudySource.Themes,
+    ) : AppRoute
 
     /** 個人詞表, from 我. */
     data object WordLists : AppRoute
 
     /** One 個人詞表. */
     data class WordList(val listId: String) : AppRoute
-
-    /**
-     * 學新字 or 複習 drawn from one 個人詞表 — the same two flows, fed by the
-     * list instead of 今日's themes.
-     */
-    data class WordListStudy(val listId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
 
     /** 跟著 Moira 去旅遊: one destination's map, from the band on 物見's 探索. */
     data class TravelDestination(val destinationId: String) : AppRoute
@@ -124,9 +124,6 @@ sealed interface AppRoute {
 
     /** One 景點: its progress, a way to study it, and its words. */
     data class TravelSpot(val spotId: String) : AppRoute
-
-    /** 學新字 or 複習 drawn from one 景點 — the same two flows, fed by the spot's words. */
-    data class TravelSpotStudy(val spotId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
 
     /** 場面練習's list, from 今天's scene card. */
     data object SceneList : AppRoute
@@ -203,8 +200,7 @@ object TabShell {
      */
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
-        if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy ||
-            current is AppRoute.TravelSpotStudy ||
+        if (current in focused || current is AppRoute.Word || current is AppRoute.Study ||
             current is AppRoute.ScenePractice ||
             current is AppRoute.SearchFor || current is AppRoute.TopicChat
         ) {
@@ -232,8 +228,6 @@ object TabShell {
     fun swipeEnabled(nav: NavStack): Boolean = nav.current is AppRoute.Tab
 
     private val focused: Set<AppRoute> = setOf(
-        AppRoute.Review,
-        AppRoute.LearnNew,
         AppRoute.Search,
         AppRoute.CommunitySearch,
         AppRoute.Capture,

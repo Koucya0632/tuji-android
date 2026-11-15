@@ -1,5 +1,7 @@
 package app.tuji.android
 
+import app.tuji.android.core.model.StudyMode
+import app.tuji.android.study.StudySource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -9,6 +11,8 @@ class NavStackTest {
 
     private val shelf = AppRoute.Shelf("kitchen", "廚房")
     private val word = AppRoute.Word("kettle")
+    private val review = AppRoute.Study(StudyMode.Review)
+    private val learnNew = AppRoute.Study(StudyMode.New)
 
     @Test fun `it starts on 今日 with nowhere to go back to`() {
         val nav = NavStack()
@@ -53,8 +57,8 @@ class NavStackTest {
     }
 
     @Test fun `a study flow stacks and pops like anything else`() {
-        val nav = NavStack().push(AppRoute.Review)
-        assertEquals(AppRoute.Review, nav.current)
+        val nav = NavStack().push(review)
+        assertEquals(review, nav.current)
         assertEquals(AppRoute.Today, nav.pop().current)
     }
 
@@ -93,9 +97,9 @@ class NavStackTest {
 
     @Test fun `a focused screen hides the bar whichever tab it was opened from`() {
         listOf(
-            AppRoute.Review, AppRoute.LearnNew, AppRoute.Search, AppRoute.Capture, word,
+            review, learnNew, AppRoute.Search, AppRoute.Capture, word,
             AppRoute.Vocabulary, AppRoute.Grammar, AppRoute.Story, AppRoute.CreditStatement, AppRoute.TopicChatHistory, AppRoute.TopicChat(app.tuji.android.assistant.TopicChatEntry.Choose), AppRoute.SearchFor("cat"),
-            AppRoute.WordListStudy("l1", app.tuji.android.core.model.StudyMode.Review),
+            AppRoute.Study(StudyMode.Review, StudySource.WordList("l1")),
         ).forEach { route ->
             assertFalse("$route from 今天", TabShell.tabBarVisible(NavStack().push(route)))
             assertFalse("$route from 圖鑑", TabShell.tabBarVisible(NavStack().select(AppRoute.Atlas).push(route)))
@@ -140,8 +144,8 @@ class NavStackTest {
 
     @Test fun `a study session cannot be swiped out of`() {
         // The one that matters most: a session left by accident is answers lost.
-        assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.Review)))
-        assertFalse(TabShell.swipeEnabled(NavStack().push(AppRoute.LearnNew)))
+        assertFalse(TabShell.swipeEnabled(NavStack().push(review)))
+        assertFalse(TabShell.swipeEnabled(NavStack().push(learnNew)))
     }
 
     @Test fun `the membership page never wears the tab bar`() {
