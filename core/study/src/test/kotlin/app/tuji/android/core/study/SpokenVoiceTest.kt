@@ -14,12 +14,13 @@ class SpokenVoiceTest {
     @Test fun `the saved accent picks the English recording`() {
         assertEquals("en-US", SpokenVoice.key(en, accent = "us"))
         assertEquals("en-GB", SpokenVoice.key(en, accent = "uk"))
+        assertEquals("en-AU", SpokenVoice.key(en, accent = "au"))
     }
 
     /** The server's default, and what every row that never touched the setting holds. */
     @Test fun `an unknown accent is US`() {
         assertEquals("en-US", SpokenVoice.key(en, accent = ""))
-        assertEquals("en-US", SpokenVoice.key(en, accent = "au"))
+        assertEquals("en-US", SpokenVoice.key(en, accent = "unknown"))
     }
 
     /** A Japanese recording has one accent; the setting means nothing here. */
@@ -50,6 +51,13 @@ class SpokenVoiceTest {
     @Test fun `the other accent answers when the asked-for one is missing`() {
         assertEquals("us.mp3", SpokenVoice.clip(mapOf("en-US" to "us.mp3"), en, accent = "uk"))
         assertEquals("uk.mp3", SpokenVoice.clip(mapOf("en-GB" to "uk.mp3"), en, accent = "us"))
+    }
+
+    @Test fun `Australian accent uses its clip and does not play a different accent`() {
+        val clips = mapOf("en-AU" to "au.mp3", "en-GB" to "uk.mp3", "en-US" to "us.mp3")
+        assertEquals("au.mp3", SpokenVoice.clip(clips, en, accent = "au"))
+        assertNull(SpokenVoice.clip(mapOf("en-GB" to "uk.mp3"), en, accent = "au"))
+        assertNull(SpokenVoice.clip(mapOf("en-US" to "us.mp3"), en, accent = "au"))
     }
 
     /** Japanese has no second option: no ja-JP clip means no recording. */

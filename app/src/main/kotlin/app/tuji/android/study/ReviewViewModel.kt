@@ -25,6 +25,8 @@ import app.tuji.android.core.study.ReviewRevealMode
 import app.tuji.android.core.study.ReviewSession
 import app.tuji.android.core.model.ClipPlayback
 import app.tuji.android.core.model.ClipPlaying
+import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.study.StudyWriteOutcome
 import app.tuji.android.core.study.StudyChoiceSession
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +70,7 @@ class ReviewViewModel(
      * reports [ClipPlaying.canPlay] false, and every card lands on 選字.
      */
     private val audio: ClipPlaying = SilentPlaying,
+    private val speech: WordSpeaking? = null,
     /**
      * Whether the device has usable internet, asked per card rather than held.
      * Freezing it when the queue loaded would decide a whole session's
@@ -390,7 +393,7 @@ class ReviewViewModel(
             revealMode = revealMode,
             flash = flash,
             unsynced = unsynced,
-            canPlayWord = wordClip(session) != null,
+            canPlayWord = wordClip(session) != null || canSynthesizeAustralian(session),
             playingWord = playingWord,
             hintTaught = hints.reviewHintTaught,
         )
@@ -402,17 +405,24 @@ class ReviewViewModel(
      * Play the word on the current card.
      *
      * The same [ClipPlaying] seam 聽句 uses, and the same pre-generated
-     * recordings — this is 圖鑑's pronunciation button on a study screen, not a
-     * second way to make sound. It shares the one player, so a word cuts a
+     * recordings, with Australian device speech when its recording is absent.
+     * It shares the one player, so a word cuts a
      * sentence off; the two never appear on the same card, and cutting is the
      * right answer if they ever do.
      */
     fun playWord() {
-        val url = wordClip(current()?.session) ?: return
+        val session = current()?.session ?: return
+        val item = session.question?.item ?: return
+        val url = wordClip(session)
+        val hasClip = url != null && audio.canPlay(url, online())
+        if (!hasClip && !canSynthesizeAustralian(session)) return
         wordJob?.cancel()
         wordJob = work.launch {
             setPlayingWord(true)
-            audio.play(url)
+            val result = if (hasClip) audio.play(url) else ClipPlayback.Failed
+            if (result == ClipPlayback.Failed && canSynthesizeAustralian(session)) {
+                speech?.speak(item.word.word, TargetLanguage.EN, accent)
+            }
             setPlayingWord(false)
         }
     }
@@ -429,6 +439,12 @@ class ReviewViewModel(
     private fun wordClip(session: ReviewSession?): String? {
         val id = session?.question?.item?.word?.id ?: return null
         return pool().firstOrNull { it.id == id }?.audioUrls?.get(voice)
+    }
+
+    private fun canSynthesizeAustralian(session: ReviewSession?): Boolean {
+        val word = session?.question?.item?.word ?: return false
+        return accent == "au" && (word.targetLanguage ?: direction.targetLanguage) == TargetLanguage.EN &&
+            speech?.canSpeak(TargetLanguage.EN, accent) == true
     }
 
     private fun setPlayingWord(value: Boolean) {
@@ -582,10 +598,12 @@ class ReviewViewModel(
     private fun stopAudio() {
         clipJob?.cancel()
         clipJob = null
+        val speakingWord = wordJob?.isActive == true
         wordJob?.cancel()
         wordJob = null
         playingWord = false
         audio.stop()
+        if (speakingWord) speech?.stop()
     }
 
     /** Which recording to ask for — the rule, not a second copy of it. */

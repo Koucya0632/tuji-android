@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import app.tuji.android.core.design.TujiHaptics
 import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.model.ClipPlaying
+import app.tuji.android.core.model.ClipPlayback
+import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.Milestone
 import app.tuji.android.core.model.SRSRating
@@ -58,6 +61,7 @@ class NewFlowViewModel(
     private val requestDrain: () -> Unit = {},
     /** Says the word. [SilentPlaying] draws no button, which is right for a build with no audio. */
     private val audio: ClipPlaying = SilentPlaying,
+    private val speech: WordSpeaking? = null,
     /** The saved 發音口音. */
     private val accent: String = "us",
     private val online: () -> Boolean = { false },
@@ -413,11 +417,17 @@ class NewFlowViewModel(
      */
     fun playWord() {
         val now = studying() ?: return
-        val url = wordClip(now.stage.item) ?: return
+        val item = now.stage.item
+        val url = wordClip(item)
+        val hasClip = url != null && audio.canPlay(url, online())
+        if (!hasClip && !canSynthesizeAustralian(item)) return
         wordJob?.cancel()
         wordJob = work.launch {
             setPlayingWord(true)
-            audio.play(url)
+            val result = if (hasClip) audio.play(url) else ClipPlayback.Failed
+            if (result == ClipPlayback.Failed && canSynthesizeAustralian(item)) {
+                speech?.speak(item.word.word, TargetLanguage.EN, accent)
+            }
             setPlayingWord(false)
         }
     }
@@ -430,8 +440,10 @@ class NewFlowViewModel(
     fun leave() {
         beat?.cancel()
         beat = null
+        val speakingWord = wordJob?.isActive == true
         wordJob?.cancel()
         audio.stop()
+        if (speakingWord) speech?.stop()
     }
 
     override fun onCleared() {
@@ -509,7 +521,7 @@ class NewFlowViewModel(
             total = total,
             steps = ladder.stagePlan(item, recognized = item.card.id in pendingRatings),
             teach = taught[item.word.id],
-            canPlayWord = wordClip(item).let { it != null && audio.canPlay(it, online()) },
+            canPlayWord = wordClip(item).let { (it != null && audio.canPlay(it, online())) || canSynthesizeAustralian(item) },
         )
     }
 
@@ -547,6 +559,10 @@ class NewFlowViewModel(
     private fun wordClip(item: StudyQueueItem): String? =
         pool().firstOrNull { it.id == item.word.id }?.audioUrls
             ?.let { SpokenVoice.clip(it, direction, accent, item.word.targetLanguage) }
+
+    private fun canSynthesizeAustralian(item: StudyQueueItem): Boolean =
+        accent == "au" && (item.word.targetLanguage ?: direction.targetLanguage) == TargetLanguage.EN &&
+            speech?.canSpeak(TargetLanguage.EN, accent) == true
 
     private fun setPlayingWord(value: Boolean) {
         val now = studying() ?: return

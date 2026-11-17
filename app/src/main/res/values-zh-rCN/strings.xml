@@ -7,14 +7,15 @@
   defaulted to.
 -->
 <resources>
+    <string name="study_themes_choose_current">请选择当前图鉴的学习主题。</string>
     <string name="app_name">Tuji</string>
-    <string name="onboarding_which_language">你想学哪种语言？</string>
+    <string name="onboarding_which_language">你想从哪个图鉴开始？</string>
     <string name="onboarding_greeting">嗨，我是 Moira！</string>
-    <string name="onboarding_which_language_detail">之后可以随时在设置中切换，两种语言的学习进度会分开保留。</string>
-    <string name="direction_en_title">英文</string>
-    <string name="direction_en_detail">看图记单词，听英文发音</string>
-    <string name="direction_ja_title">日文</string>
-    <string name="direction_ja_detail">看图记单词，听日文发音，附假名</string>
+    <string name="onboarding_which_language_detail">可随时在设置中切换图鉴，学习进度会分别保存。</string>
+    <string name="direction_en_title">澳大利亚图鉴</string>
+    <string name="direction_en_detail">为澳大利亚生活做准备，先看图学英语</string>
+    <string name="direction_ja_title">日本图鉴</string>
+    <string name="direction_ja_detail">从日本日常看图学日语</string>
     <string name="welcome_continue_with_apple">继续使用 Apple</string>
     <string name="welcome_headline">创建账号，开始收集单词</string>
     <string name="welcome_continue_with_google">继续使用 Google</string>
@@ -179,8 +180,8 @@
     <string name="settings_group_display">显示</string>
     <string name="settings_group_account">账号</string>
     <string name="settings_group_other">其他</string>
-    <string name="settings_direction">学习语言</string>
-    <string name="settings_direction_why">英文与日文的学习进度会分开保留</string>
+    <string name="settings_direction">学习图鉴</string>
+    <string name="settings_direction_why">各图鉴的学习进度会分别保存</string>
     <string name="settings_daily_goal">每日目标题数</string>
     <string name="settings_daily_goal_why">每天想新学的题数，复习多时会自动调降</string>
     <string name="settings_goal_value">%1$d 题</string>
@@ -245,6 +246,7 @@
     <string name="language_en">English</string>
     <string name="accent_us">美式</string>
     <string name="accent_uk">英式</string>
+    <string name="accent_au">澳式</string>
     <string name="about_body">Tuji 图记用图片教单字——把字当成东西来认，而不是一张清单。忘记的会再问一次，看过的留得住。</string>
     <string name="word_play">播放发音</string>
     <string name="word_details_title">字词资料 · DETAILS</string>
@@ -352,8 +354,6 @@
     <string name="manage_empty">还没有自制图鉴卡片</string>
     <string name="manage_empty_hint">点底下中间的相机，拍一张就能做卡片。</string>
     <string name="manage_hidden">另有 %1$d 张卡片属于%2$s</string>
-    <string name="manage_atlas_en">英文图鉴</string>
-    <string name="manage_atlas_ja">日文图鉴</string>
     <string name="manage_action_failed">操作没有完成，请稍后再试</string>
     <string name="manage_delete_count">删除 %1$d 张卡片</string>
     <string name="manage_deleting">删除中…</string>

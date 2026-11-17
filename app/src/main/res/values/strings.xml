@@ -7,14 +7,15 @@
   defaulted to.
 -->
 <resources>
+    <string name="study_themes_choose_current">Choose a study theme for the current atlas.</string>
     <string name="app_name">Tuji</string>
-    <string name="onboarding_which_language">Which language do you want to learn?</string>
+    <string name="onboarding_which_language">Which atlas would you like to start with?</string>
     <string name="onboarding_greeting">Hi, I’m Moira!</string>
-    <string name="onboarding_which_language_detail">You can switch anytime in Settings. Progress for each language is kept separately.</string>
-    <string name="direction_en_title">English</string>
-    <string name="direction_en_detail">Learn words from pictures, with English audio</string>
-    <string name="direction_ja_title">Japanese</string>
-    <string name="direction_ja_detail">Learn words from pictures, with Japanese audio and furigana</string>
+    <string name="onboarding_which_language_detail">Switch atlases anytime in Settings. Progress is saved separately for each atlas.</string>
+    <string name="direction_en_title">Australia Atlas</string>
+    <string name="direction_en_detail">Get ready for life in Australia by learning English with pictures</string>
+    <string name="direction_ja_title">Japan Atlas</string>
+    <string name="direction_ja_detail">Learn Japanese with pictures from everyday life in Japan</string>
     <string name="welcome_continue_with_apple">Continue with Apple</string>
     <string name="welcome_headline">Create an account and start collecting words</string>
     <string name="welcome_continue_with_google">Continue with Google</string>
@@ -179,8 +180,8 @@
     <string name="settings_group_display">Display</string>
     <string name="settings_group_account">Account</string>
     <string name="settings_group_other">Other</string>
-    <string name="settings_direction">Learning language</string>
-    <string name="settings_direction_why">English and Japanese progress are kept separately</string>
+    <string name="settings_direction">Study atlas</string>
+    <string name="settings_direction_why">Progress is saved separately for each atlas</string>
     <string name="settings_daily_goal">Daily goal questions</string>
     <string name="settings_daily_goal_why">New questions per day — automatically reduced when reviews pile up</string>
     <string name="settings_goal_value">%1$d questions</string>
@@ -245,6 +246,7 @@
     <string name="language_en">English</string>
     <string name="accent_us">American</string>
     <string name="accent_uk">British</string>
+    <string name="accent_au">Australian</string>
     <string name="about_body">Tuji teaches words with pictures — as things you meet, not as a list. What you forget comes back; what you have seen sticks.</string>
     <string name="word_play">Play pronunciation</string>
     <string name="word_details_title">Details</string>
@@ -352,8 +354,6 @@
     <string name="manage_empty">No custom atlas cards yet</string>
     <string name="manage_empty_hint">Tap the camera in the middle of the bar below and take a photo to make a card.</string>
     <string name="manage_hidden">%1$d more cards are in %2$s</string>
-    <string name="manage_atlas_en">English atlas</string>
-    <string name="manage_atlas_ja">Japanese atlas</string>
     <string name="manage_action_failed">That didn\'t go through. Please try again.</string>
     <string name="manage_delete_count">Delete %1$d cards</string>
     <string name="manage_deleting">Deleting…</string>

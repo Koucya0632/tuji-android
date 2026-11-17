@@ -32,7 +32,7 @@ fun SentenceSpeakerButton(
     accent: String,
     modifier: Modifier = Modifier,
 ) {
-    if (speech == null || !speech.canSpeak(language)) return
+    if (speech == null || !speech.canSpeak(language, accent)) return
     val scope = rememberCoroutineScope()
     var speaking by remember(sentence) { mutableStateOf(false) }
     TujiIconButton(

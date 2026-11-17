@@ -14,6 +14,7 @@ import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
 import app.tuji.android.core.model.WordDetail
 import app.tuji.android.core.model.WordExample
+import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.model.WordsListResponse
 import app.tuji.android.core.network.CatalogReading
 import app.tuji.android.core.network.StudyQueueReading
@@ -32,6 +33,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -90,14 +93,14 @@ class NewFlowTeachTest {
     private class FakeCatalog(private val details: Map<String, WordDetail>) : CatalogReading {
         val asked = mutableListOf<String>()
         override suspend fun words(lang: String, learning: LearningDirection) = WordsListResponse(words = emptyList())
-        override suspend fun categories(lang: String) = CategoriesResponse(categories = emptyList())
+        override suspend fun categories(lang: String, learning: LearningDirection) = CategoriesResponse(categories = emptyList())
         override suspend fun word(id: String, lang: String, learning: LearningDirection): WordDetail {
             asked += id
             return details[id] ?: error("no detail for $id")
         }
     }
 
-    private fun vm(queue: List<StudyQueueItem>, catalog: CatalogReading?): NewFlowViewModel {
+    private fun vm(queue: List<StudyQueueItem>, catalog: CatalogReading?, direction: LearningDirection = LearningDirection.ZH_JA, speech: WordSpeaking? = null): NewFlowViewModel {
         val queues = object : StudyQueueReading {
             override suspend fun queue(
                 mode: StudyMode, limit: Int, new: Int,
@@ -110,7 +113,9 @@ class NewFlowTeachTest {
             writer = DurableAnswerWriter(
                 AnswerSubmitting { StudyAnswerResponse(ok = true) }, outbox, backoff = {},
             ),
-            direction = LearningDirection.ZH_JA,
+            direction = direction,
+            accent = if (direction == LearningDirection.ZH_EN) "au" else "us",
+            speech = speech,
             uiLang = "zh-Hant",
             pool = { emptyList<Word>() },
             nowMs = { 0L },
@@ -120,6 +125,35 @@ class NewFlowTeachTest {
     }
 
     private fun NewFlowViewModel.studying() = state.value as NewFlowViewModel.State.Studying
+
+    @Test fun `Australian word without recording uses Australian speech only when available`() = runTest(dispatcher) {
+        var spoken = ""
+        var available = true
+        val speech = object : WordSpeaking {
+            override fun canSpeak(language: TargetLanguage) = available
+            override fun canSpeak(language: TargetLanguage, accent: String) = available && language == TargetLanguage.EN && accent == "au"
+            override suspend fun speak(text: String, language: TargetLanguage, accent: String) { spoken = "$text:$accent" }
+            override fun stop() = Unit
+        }
+        val australian = item("au").let { it.copy(word = it.word.copy(word = "bond", targetLanguage = TargetLanguage.EN)) }
+        val vm = vm(listOf(australian), null, LearningDirection.ZH_EN, speech)
+        vm.load()
+        advanceUntilIdle()
+        assertTrue(vm.studying().canPlayWord)
+        vm.playWord()
+        advanceUntilIdle()
+        assertEquals("bond:au", spoken)
+
+        available = false
+        spoken = ""
+        val unavailable = vm(listOf(australian), null, LearningDirection.ZH_EN, speech)
+        unavailable.load()
+        advanceUntilIdle()
+        assertFalse(unavailable.studying().canPlayWord)
+        unavailable.playWord()
+        advanceUntilIdle()
+        assertEquals("", spoken)
+    }
 
     @Test fun `the card on screen gains its entry when the fetch lands`() = runTest(dispatcher) {
         val catalog = FakeCatalog(mapOf("w1" to detail("w1", "窓を開けます。")))
@@ -148,7 +182,7 @@ class NewFlowTeachTest {
         // still on screen and the ladder has not moved.
         val catalog = object : CatalogReading {
             override suspend fun words(lang: String, learning: LearningDirection) = WordsListResponse(words = emptyList())
-            override suspend fun categories(lang: String) = CategoriesResponse(categories = emptyList())
+            override suspend fun categories(lang: String, learning: LearningDirection) = CategoriesResponse(categories = emptyList())
             override suspend fun word(id: String, lang: String, learning: LearningDirection): WordDetail =
                 throw IllegalStateException("offline")
         }

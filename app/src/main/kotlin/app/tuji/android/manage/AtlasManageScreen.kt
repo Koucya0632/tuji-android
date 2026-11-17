@@ -316,7 +316,7 @@ enum class ManageSection { Cards, Collections }
 /** Not an empty state: "nothing here" and "your cards are on the other side" are different sentences. */
 @Composable
 private fun HiddenRow(count: Int, language: TargetLanguage, onSwitch: () -> Unit) {
-    val other = stringResource(if (language == TargetLanguage.JA) R.string.manage_atlas_en else R.string.manage_atlas_ja)
+    val other = stringResource(if (language == TargetLanguage.JA) R.string.direction_en_title else R.string.direction_ja_title)
     // The whole band is the button, as on iOS: saying where the cards are and
     // then refusing to go there is the "fake link" iOS #211 made real.
     Row(

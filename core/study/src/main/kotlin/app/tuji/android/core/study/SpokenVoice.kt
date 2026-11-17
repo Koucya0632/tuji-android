@@ -21,13 +21,14 @@ object SpokenVoice {
 
     const val US = "en-US"
     const val UK = "en-GB"
+    const val AUSTRALIA = "en-AU"
     const val JAPANESE = "ja-JP"
 
     /**
      * @param language the word's own target language when the payload carries
      *   one — a Japanese word speaks Japanese even inside an English session —
      *   and null to follow [direction].
-     * @param accent the saved 發音口音, `"us"` or `"uk"`. Anything else is `us`,
+     * @param accent the saved 發音口音, `"us"`, `"uk"`, or `"au"`. Anything else is `us`,
      *   which is the server's default and the one every existing row holds.
      */
     fun key(
@@ -36,11 +37,16 @@ object SpokenVoice {
         language: TargetLanguage? = null,
     ): String = when (language ?: direction.targetLanguage) {
         TargetLanguage.JA -> JAPANESE
-        else -> if (accent == "uk") UK else US
+        else -> when (accent) {
+            "uk" -> UK
+            "au" -> AUSTRALIA
+            else -> US
+        }
     }
 
     /**
-     * The clip to play, honouring the accent but not insisting on it.
+     * The clip to play. An Australian selection never substitutes another
+     * recording: absent en-AU falls through to an Australian device voice.
      *
      * A word with only one English recording is normal — the pair is generated,
      * and generation can be partial — and 英式 is a *preference*, not a demand

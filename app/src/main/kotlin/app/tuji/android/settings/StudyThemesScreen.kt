@@ -153,6 +153,12 @@ fun StudyThemesScreen(
             }
         }
 
+        if (TopicPresetChoice.hasOnlyHiddenSelection(picked, catalogIds)) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(stringResource(R.string.study_themes_choose_current), style = TujiType.label, color = TujiColor.Ink3)
+            }
+        }
+
         item(span = { GridItemSpan(maxLineSpan) }) {
             Row(
                 Modifier.fillMaxWidth().padding(bottom = TujiSpace.S2),
@@ -161,12 +167,15 @@ fun StudyThemesScreen(
             ) {
                 TextAction(stringResource(R.string.study_themes_select_all)) {
                     // Only what may be studied: a locked theme counts toward nothing.
-                    onChange(SettingsRules.selection(categories.map { it.id }.filterNot { StudyThemes.isLocked(it, studyable) }))
+                    val available = categories.map { it.id }.filterNot { StudyThemes.isLocked(it, studyable) }.toSet()
+                    onChange(SettingsRules.selection(TopicPresetChoice.replacingVisible(picked, catalogIds, available)))
                 }
-                TextAction(stringResource(R.string.study_themes_clear)) { onChange(emptyList()) }
+                TextAction(stringResource(R.string.study_themes_clear)) {
+                    onChange(SettingsRules.selection(TopicPresetChoice.replacingVisible(picked, catalogIds, emptySet())))
+                }
                 Spacer(Modifier.weight(1f))
                 Text(
-                    stringResource(R.string.study_themes_selected, picked.size),
+                    stringResource(R.string.study_themes_selected, picked.intersect(catalogIds).size),
                     style = TujiType.label,
                     color = TujiColor.Ink3,
                 )

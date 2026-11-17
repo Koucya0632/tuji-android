@@ -41,6 +41,17 @@ class TopicPresetChoiceTest {
         assertFalse(TopicPresetChoice.isChosen(gone, emptySet(), catalog))
     }
 
+    @Test fun `hidden regional selections survive presets select all and clear`() {
+        val selection = setOf("australia-housing", "kitchen", "custom")
+        val after = TopicPresetChoice.applying(student, selection, catalog)
+        assertEquals(setOf("australia-housing", "campus", "bank", "custom"), after)
+        assertTrue(TopicPresetChoice.isChosen(student, after, catalog))
+        assertEquals(setOf("australia-housing"), TopicPresetChoice.replacingVisible(selection, catalog, emptySet()))
+        assertEquals(catalog + "australia-housing", TopicPresetChoice.replacingVisible(selection, catalog, catalog))
+        assertTrue(TopicPresetChoice.hasOnlyHiddenSelection(setOf("australia-housing"), catalog))
+        assertFalse(TopicPresetChoice.hasOnlyHiddenSelection(emptySet(), catalog))
+    }
+
     @Test fun `one locked theme locks the whole preset`() {
         assertTrue(TopicPresetChoice.isLocked(student, catalog) { it == "bank" })
         assertFalse(TopicPresetChoice.isLocked(student, catalog) { it == "kitchen" })

@@ -188,7 +188,7 @@ internal fun StoryStage(
             quiet()
             shown += 1
             // Narration is in the interface language, so it is not read aloud.
-            if (next.speaker != Story.Speaker.Narrator && speech?.canSpeak(language) == true) {
+            if (next.speaker != Story.Speaker.Narrator && speech?.canSpeak(language, accent) == true) {
                 speaking = scope.launch { speech.speak(next.text, language, accent) }
             }
         } else if (finished) {

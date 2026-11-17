@@ -115,14 +115,14 @@ class PublicItemViewModel(
     /** Whether there is anything to play — a recording, or a voice for its language. */
     fun canPlay(): Boolean {
         val word = _state.value.item?.learningWord ?: return false
-        return clipUrl() != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage) == true
+        return clipUrl() != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage, accent) == true
     }
 
     fun play() {
         val word = _state.value.item?.learningWord ?: return
         val url = clipUrl()
         val language = word.targetLanguage ?: direction.targetLanguage
-        if (url == null && speech?.canSpeak(language) != true) return
+        if (url == null && speech?.canSpeak(language, accent) != true) return
         clip?.cancel()
         clip = work.launch {
             _state.value = _state.value.copy(playing = true)

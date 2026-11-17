@@ -7,14 +7,15 @@
   defaulted to.
 -->
 <resources>
+    <string name="study_themes_choose_current">請選擇目前圖鑑的學習主題。</string>
     <string name="app_name">Tuji</string>
-    <string name="onboarding_which_language">你想學哪種語言？</string>
+    <string name="onboarding_which_language">你想從哪個圖鑑開始？</string>
     <string name="onboarding_greeting">嗨，我是 Moira！</string>
-    <string name="onboarding_which_language_detail">之後可以隨時在設定中切換，兩種語言的學習進度會分開保留。</string>
-    <string name="direction_en_title">英文</string>
-    <string name="direction_en_detail">看圖記單字，聽英文發音</string>
-    <string name="direction_ja_title">日文</string>
-    <string name="direction_ja_detail">看圖記單字，聽日文發音，附假名</string>
+    <string name="onboarding_which_language_detail">可隨時在設定切換圖鑑，學習進度會分開保留。</string>
+    <string name="direction_en_title">澳洲圖鑑</string>
+    <string name="direction_en_detail">為澳洲生活準備，先看圖學英文</string>
+    <string name="direction_ja_title">日本圖鑑</string>
+    <string name="direction_ja_detail">從日本日常看圖學日文</string>
     <string name="welcome_continue_with_apple">繼續使用 Apple</string>
     <string name="welcome_headline">建立帳號，開始收集單字</string>
     <string name="welcome_continue_with_google">繼續使用 Google</string>
@@ -179,8 +180,8 @@
     <string name="settings_group_display">顯示</string>
     <string name="settings_group_account">帳號</string>
     <string name="settings_group_other">其他</string>
-    <string name="settings_direction">學習語言</string>
-    <string name="settings_direction_why">英文與日文的學習進度會分開保留</string>
+    <string name="settings_direction">學習圖鑑</string>
+    <string name="settings_direction_why">各圖鑑的學習進度會分開保留</string>
     <string name="settings_daily_goal">每日目標題數</string>
     <string name="settings_daily_goal_why">每天想新學的題數，複習多時會自動調降</string>
     <string name="settings_goal_value">%1$d 題</string>
@@ -245,6 +246,7 @@
     <string name="language_en">English</string>
     <string name="accent_us">美式</string>
     <string name="accent_uk">英式</string>
+    <string name="accent_au">澳式</string>
     <string name="about_body">Tuji 圖記用圖片教單字——把字當成東西來認，而不是一張清單。忘記的會再問一次，看過的留得住。</string>
     <string name="word_play">播放發音</string>
     <string name="word_details_title">字詞資料 · DETAILS</string>
@@ -352,8 +354,6 @@
     <string name="manage_empty">還沒有自制圖鑑卡片</string>
     <string name="manage_empty_hint">點底下中間的相機，拍一張就能做卡片。</string>
     <string name="manage_hidden">另有 %1$d 張卡片屬於%2$s</string>
-    <string name="manage_atlas_en">英文圖鑑</string>
-    <string name="manage_atlas_ja">日文圖鑑</string>
     <string name="manage_action_failed">操作沒有完成，請稍後再試</string>
     <string name="manage_delete_count">刪除 %1$d 張卡片</string>
     <string name="manage_deleting">刪除中…</string>

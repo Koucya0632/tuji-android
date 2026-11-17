@@ -96,7 +96,7 @@ class WordDetailViewModel(
         val word = loaded.word
         val url = clipFor(word)
         val language = word.targetLanguage ?: direction.targetLanguage
-        if (url == null && speech?.canSpeak(language) != true) return
+        if (url == null && speech?.canSpeak(language, accent) != true) return
         clip?.cancel()
         clip = work.launch {
             _state.value = loaded.copy(playing = true)
@@ -108,7 +108,7 @@ class WordDetailViewModel(
 
     /** Whether there is anything to play, so the button can say so. */
     fun canPlay(word: WordDetail): Boolean =
-        clipFor(word) != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage) == true
+        clipFor(word) != null || speech?.canSpeak(word.targetLanguage ?: direction.targetLanguage, accent) == true
 
     private fun clipFor(word: WordDetail): String? =
         SpokenVoice.clip(word.audioUrls, direction, accent, word.targetLanguage)

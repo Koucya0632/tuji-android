@@ -213,7 +213,7 @@ fun GlossCardHost(
                         scope.launch { voice.speak(span.text, selection.language, accent) }
                     }
                 },
-                canSpeak = speech?.canSpeak(selection.language) == true,
+                canSpeak = speech?.canSpeak(selection.language, accent) == true,
                 onOpenWord = onOpenWord?.let { open -> { id: String -> selection.clear(); open(id) } },
                 bookmarked = span.wordId?.let { bookmarks?.isMarked(it) } == true,
                 onBookmark = bookmarks?.let { marks -> { id: String -> marks.toggle(id) } },

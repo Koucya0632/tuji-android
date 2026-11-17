@@ -6,8 +6,8 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.WordSpeaking
+import app.tuji.android.core.study.SynthesisVoice
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
@@ -39,11 +39,15 @@ class TtsSpeaker(context: Context) : WordSpeaking {
     }
 
     override fun canSpeak(language: TargetLanguage): Boolean =
-        ready && engine.isLanguageAvailable(locale(language, "us")) >= TextToSpeech.LANG_AVAILABLE
+        canSpeak(language, "us")
+
+    override fun canSpeak(language: TargetLanguage, accent: String): Boolean =
+        ready && SynthesisVoice.supports(language, accent, engine.isLanguageAvailable(SynthesisVoice.locale(language, accent)))
 
     override suspend fun speak(text: String, language: TargetLanguage, accent: String) {
-        if (!ready || text.isBlank()) return
-        engine.language = locale(language, accent)
+        if (text.isBlank() || !canSpeak(language, accent)) return
+        val selected = engine.setLanguage(SynthesisVoice.locale(language, accent))
+        if (!SynthesisVoice.supports(language, accent, selected)) return
         val id = "tuji-${ids.incrementAndGet()}"
         suspendCancellableCoroutine { cont ->
             waiting[id] = { if (cont.isActive) cont.resume(Unit) }
@@ -60,12 +64,6 @@ class TtsSpeaker(context: Context) : WordSpeaking {
 
     override fun stop() {
         engine.stop()
-    }
-
-    /** The saved 發音口音 decides which English; Japanese has one. */
-    private fun locale(language: TargetLanguage, accent: String): Locale = when (language) {
-        TargetLanguage.JA -> Locale.JAPAN
-        TargetLanguage.EN -> if (accent == "uk") Locale.UK else Locale.US
     }
 
     private companion object {

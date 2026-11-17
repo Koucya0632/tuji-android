@@ -24,11 +24,16 @@ object TopicPresetChoice {
 
     /**
      * The selection after choosing [preset]: its public themes replace the
-     * current public ones; the sources stay exactly as they were. Choosing a
-     * second preset therefore replaces the first rather than stacking.
+     * visible public ones; hidden regions and sources stay as they were.
      */
     fun applying(preset: TopicPreset, selection: Set<String>, catalogIds: Set<String>): Set<String> =
-        selection.intersect(SOURCE_IDS) + themes(preset, catalogIds)
+        replacingVisible(selection, catalogIds - SOURCE_IDS, themes(preset, catalogIds))
+
+    fun replacingVisible(selection: Set<String>, visibleIds: Set<String>, replacement: Set<String>): Set<String> =
+        (selection - visibleIds) + replacement.intersect(visibleIds)
+
+    fun hasOnlyHiddenSelection(selection: Set<String>, visibleIds: Set<String>): Boolean =
+        selection.isNotEmpty() && selection.intersect(visibleIds).isEmpty()
 
     /**
      * Chosen only while the ticked public themes are exactly the preset's —
@@ -36,7 +41,7 @@ object TopicPresetChoice {
      */
     fun isChosen(preset: TopicPreset, selection: Set<String>, catalogIds: Set<String>): Boolean {
         val themes = themes(preset, catalogIds)
-        return themes.isNotEmpty() && selection - SOURCE_IDS == themes
+        return themes.isNotEmpty() && (selection.intersect(catalogIds) - SOURCE_IDS) == themes
     }
 
     /**

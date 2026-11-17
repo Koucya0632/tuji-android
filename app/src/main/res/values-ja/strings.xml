@@ -7,14 +7,15 @@
   defaulted to.
 -->
 <resources>
+    <string name="study_themes_choose_current">現在の図鑑の学習テーマを選んでください。</string>
     <string name="app_name">Tuji</string>
-    <string name="onboarding_which_language">どの言語を学びたいですか？</string>
+    <string name="onboarding_which_language">どの図鑑から始めますか？</string>
     <string name="onboarding_greeting">やあ、Moiraだよ！</string>
-    <string name="onboarding_which_language_detail">後から設定でいつでも切り替えられます。2つの言語の学習進捗は別々に保存されます。</string>
-    <string name="direction_en_title">英語</string>
-    <string name="direction_en_detail">絵で単語を覚えて、英語の発音を聞く</string>
-    <string name="direction_ja_title">日本語</string>
-    <string name="direction_ja_detail">絵で単語を覚えて、日本語の発音を聞く（ふりがな付き）</string>
+    <string name="onboarding_which_language_detail">設定からいつでも図鑑を切り替えられます。学習の進み具合は図鑑ごとに保存されます。</string>
+    <string name="direction_en_title">オーストラリア図鑑</string>
+    <string name="direction_en_detail">オーストラリアでの生活に向けて、絵で英語を学ぶ</string>
+    <string name="direction_ja_title">日本図鑑</string>
+    <string name="direction_ja_detail">日本の日常を題材に、絵で日本語を学ぶ</string>
     <string name="welcome_continue_with_apple">Appleで続ける</string>
     <string name="welcome_headline">アカウントを作って、単語集めを始めよう</string>
     <string name="welcome_continue_with_google">Googleで続ける</string>
@@ -179,8 +180,8 @@
     <string name="settings_group_display">表示</string>
     <string name="settings_group_account">アカウント</string>
     <string name="settings_group_other">その他</string>
-    <string name="settings_direction">学習言語</string>
-    <string name="settings_direction_why">英語と日本語の学習進捗は別々に保存されます</string>
+    <string name="settings_direction">学習図鑑</string>
+    <string name="settings_direction_why">学習の進み具合は図鑑ごとに保存されます</string>
     <string name="settings_daily_goal">毎日の目標問題数</string>
     <string name="settings_daily_goal_why">1日に新しく学びたい問題数。復習が多い日は自動で減ります</string>
     <string name="settings_goal_value">%1$d問</string>
@@ -245,6 +246,7 @@
     <string name="language_en">English</string>
     <string name="accent_us">アメリカ式</string>
     <string name="accent_uk">イギリス式</string>
+    <string name="accent_au">オーストラリア式</string>
     <string name="about_body">Tuji は写真で単語を教えます。リストではなく「もの」として。忘れたものはまた出てきて、見たものは残ります。</string>
     <string name="word_play">発音を再生</string>
     <string name="word_details_title">単語データ · DETAILS</string>
@@ -352,8 +354,6 @@
     <string name="manage_empty">まだマイ図鑑カードがありません</string>
     <string name="manage_empty_hint">下のバー中央のカメラをタップして撮影すると、カードを作れます。</string>
     <string name="manage_hidden">他に%1$d枚のカードが%2$sにあります</string>
-    <string name="manage_atlas_en">英語図鑑</string>
-    <string name="manage_atlas_ja">日本語図鑑</string>
     <string name="manage_action_failed">操作を完了できませんでした。しばらくしてからもう一度お試しください</string>
     <string name="manage_delete_count">%1$d枚のカードを削除</string>
     <string name="manage_deleting">削除中…</string>

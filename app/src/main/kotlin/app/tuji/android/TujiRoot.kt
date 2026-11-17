@@ -420,6 +420,14 @@ private fun SignedInScreens(
         app.cardsSourceStore.retune()
         app.cardsSourceStore.load(uiLang, direction)
     }
+    var catalogHasStarted by remember { mutableStateOf(false) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_START) {
+        if (catalogHasStarted) {
+            scope.launch { app.catalog.load(direction, force = true) }
+        } else {
+            catalogHasStarted = true // the initial LaunchedEffect already loads it
+        }
+    }
     val catalog by app.catalog.contents.collectAsStateWithLifecycle()
     val scores by app.masteryStore.scores.collectAsStateWithLifecycle()
     val personal by app.cardsSourceStore.personal.collectAsStateWithLifecycle()
@@ -469,8 +477,8 @@ private fun SignedInScreens(
     // account may study. The pick itself stays as chosen — 設定 shows it, and
     // it comes back whole the day the account becomes a member.
     val studyable = accountState.entitlement?.membership?.studyableCategories
-    val studyCategories = remember(settings.studyCategories, studyable) {
-        StudyThemes.effective(settings.studyCategories, studyable)
+    val studyCategories = remember(settings.studyCategories, studyable, catalog.categories) {
+        StudyThemes.effective(settings.studyCategories, studyable, catalog.categories.map { it.id }.toSet().ifEmpty { null })
     }
 
     // Every word the 學習主題 selection can reach. 自定義 and 物見 are themes

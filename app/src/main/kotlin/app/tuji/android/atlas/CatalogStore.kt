@@ -2,7 +2,6 @@ package app.tuji.android.atlas
 
 import android.util.Log
 import app.tuji.android.core.catalog.CategoryShelf
-import app.tuji.android.core.model.CategoriesResponse
 import app.tuji.android.core.model.Category
 import app.tuji.android.core.model.LearningDirection
 import app.tuji.android.core.model.TopicPreset
@@ -40,9 +39,12 @@ class CatalogStore(
     private var uiLang: String = "zh-Hant",
 ) {
     /** Change the language and drop what was fetched in the old one. */
-    fun retune(lang: String) {
-        if (lang == uiLang) return
+    fun retune(lang: String) = synchronized(stateLock) {
+        if (lang == uiLang) return@synchronized
         uiLang = lang
+        requested = null
+        revision++
+        categoriesLoaded = false
         _contents.value = Contents()
     }
 
@@ -63,6 +65,11 @@ class CatalogStore(
     val words: List<Word> get() = _contents.value.words
 
     private val gate = Mutex()
+    private val stateLock = Any()
+    private data class Context(val lang: String, val learning: LearningDirection)
+    private var requested: Context? = null
+    private var revision = 0L
+    private var categoriesLoaded = false
 
     /**
      * Fill it, once per direction.
@@ -72,32 +79,55 @@ class CatalogStore(
      * twice.
      */
     suspend fun load(learning: LearningDirection, force: Boolean = false) {
+        val (context, ticket) = synchronized(stateLock) {
+            val context = Context(uiLang, learning)
+            if (requested != context) {
+                requested = context
+                revision++
+                categoriesLoaded = false
+                _contents.value = Contents()
+            }
+            context to revision
+        }
         gate.withLock {
-            if (_contents.value.loaded && !force) return
+            val alreadyLoaded = synchronized(stateLock) {
+                ticket != revision || (_contents.value.loaded && categoriesLoaded && !force)
+            }
+            if (alreadyLoaded) return
             // Not `runCatching`: it catches `CancellationException` as well,
             // so a torn-down load is reported as a failed one and the caller's
             // cancellation never propagates. See MasteryStore, where that
             // swallow hid a refresh that never ran.
             val words = try {
-                catalog.words(uiLang, learning).words
+                catalog.words(context.lang, context.learning).words
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "catalogue load failed", failure)
                 return
             }
+            if (synchronized(stateLock) { ticket != revision }) return
             // Categories are a smaller, separate failure: without them 圖鑑 has
             // no shelves, but 聽句 and 搜尋 still work off the words. So the
             // words are kept even when this half fails.
             val response = try {
-                catalog.categories(uiLang)
+                catalog.categories(context.lang, context.learning)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
                 Log.w(TAG, "categories load failed", failure)
-                CategoriesResponse()
+                null
             }
-            _contents.value = Contents(words = words, categories = response.categories, presets = response.presets)
+            synchronized(stateLock) {
+                if (ticket != revision) return
+                val previous = _contents.value
+                _contents.value = Contents(
+                    words = words,
+                    categories = response?.categories ?: previous.categories,
+                    presets = response?.presets ?: previous.presets,
+                )
+                categoriesLoaded = response != null
+            }
         }
     }
 

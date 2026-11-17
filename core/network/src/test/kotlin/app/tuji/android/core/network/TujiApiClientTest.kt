@@ -146,6 +146,33 @@ class TujiApiClientTest {
     }
 
     @Test
+    fun `category requests include language and learning direction`() = runTest {
+        var url = ""
+        var cacheControl: String? = null
+        val engine = MockEngine { request ->
+            url = request.url.toString()
+            cacheControl = request.headers[HttpHeaders.CacheControl]
+            respond("""{"categories":[]}""", HttpStatusCode.OK, jsonHeaders)
+        }
+        val api = TujiApiClient("https://example.test", engine = engine)
+        CatalogRepository(api).categories("zh-Hant", LearningDirection.ZH_JA)
+        assertTrue(url, url.contains("learning=zh-ja"))
+        assertTrue(url, url.contains("lang=zh-Hant"))
+        assertEquals("no-cache", cacheControl)
+    }
+
+    @Test
+    fun `catalogue requests require fresh responses rather than old cache entries`() {
+        val endpoints = listOf(
+            Endpoint.Words("zh-Hant", LearningDirection.ZH_EN),
+            Endpoint.Word("mug", "zh-Hant", LearningDirection.ZH_EN),
+            Endpoint.Categories("zh-Hant", LearningDirection.ZH_EN),
+            Endpoint.Search("mug", "zh-Hant", LearningDirection.ZH_EN),
+        )
+        endpoints.forEach { assertEquals(CachePolicy.ReloadIgnoringCache, it.descriptor.policy.cachePolicy) }
+    }
+
+    @Test
     fun `a 401 on an authenticated read is retried once with a fresh token`() = runTest {
         val sent = mutableListOf<String?>()
         val engine = MockEngine { request ->

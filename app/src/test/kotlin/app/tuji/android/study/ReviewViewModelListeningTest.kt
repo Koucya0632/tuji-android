@@ -11,6 +11,7 @@ import app.tuji.android.core.model.StudyQueueResponse
 import app.tuji.android.core.model.StudyQueueWord
 import app.tuji.android.core.model.TargetLanguage
 import app.tuji.android.core.model.Word
+import app.tuji.android.core.model.WordSpeaking
 import app.tuji.android.core.network.StudyQueueReading
 import app.tuji.android.core.study.ActiveAccount
 import app.tuji.android.core.study.AnswerSubmitting
@@ -114,6 +115,8 @@ class ReviewViewModelListeningTest {
         audio: ClipPlaying = FakePlayer(),
         online: Boolean = true,
         pool: List<Word> = this.pool,
+        direction: LearningDirection = LearningDirection.ZH_JA,
+        speech: WordSpeaking? = null,
     ): ReviewViewModel {
         val queues = object : StudyQueueReading {
             override suspend fun queue(
@@ -127,7 +130,9 @@ class ReviewViewModelListeningTest {
             writer = DurableAnswerWriter(
                 AnswerSubmitting { StudyAnswerResponse(ok = true) }, outbox, backoff = {},
             ),
-            direction = LearningDirection.ZH_JA,
+            direction = direction,
+            accent = if (direction == LearningDirection.ZH_EN) "au" else "us",
+            speech = speech,
             uiLang = "zh-Hant",
             pool = { pool },
             audio = audio,
@@ -138,6 +143,38 @@ class ReviewViewModelListeningTest {
     }
 
     private fun ReviewViewModel.studying() = state.value as ReviewViewModel.State.Studying
+
+    @Test fun `Australian review word uses device voice without changing listening questions`() = runTest(dispatcher) {
+        var spoken = ""
+        var available = true
+        val speech = object : WordSpeaking {
+            override fun canSpeak(language: TargetLanguage) = available
+            override fun canSpeak(language: TargetLanguage, accent: String) = available && language == TargetLanguage.EN && accent == "au"
+            override suspend fun speak(text: String, language: TargetLanguage, accent: String) { spoken = "$text:$accent" }
+            override fun stop() = Unit
+        }
+        val australian = item(slotted).let { it.copy(word = it.word.copy(word = "bond", targetLanguage = TargetLanguage.EN)) }
+        val player = FakePlayer()
+        val vm = vm(listOf(australian), audio = player, direction = LearningDirection.ZH_EN, speech = speech)
+        vm.load(StudyMode.Review)
+        advanceUntilIdle()
+        assertEquals(ReviewQuestionKind.PickWord, vm.studying().session.question!!.kind)
+        assertTrue(vm.studying().canPlayWord)
+        vm.playWord()
+        advanceUntilIdle()
+        assertEquals("bond:au", spoken)
+        assertEquals(0, player.plays)
+
+        available = false
+        spoken = ""
+        val unavailable = vm(listOf(australian), direction = LearningDirection.ZH_EN, speech = speech)
+        unavailable.load(StudyMode.Review)
+        advanceUntilIdle()
+        assertFalse(unavailable.studying().canPlayWord)
+        unavailable.playWord()
+        advanceUntilIdle()
+        assertEquals("", spoken)
+    }
 
     @Test fun `a slotted card with a clip is asked as 聽句`() = runTest(dispatcher) {
         val vm = vm(listOf(item(slotted)))

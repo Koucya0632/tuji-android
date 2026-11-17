@@ -25,7 +25,7 @@ interface CatalogReading {
      * a hard-coded copy on the client is a third place to forget when the
      * copy changes.
      */
-    suspend fun categories(lang: String): CategoriesResponse
+    suspend fun categories(lang: String, learning: LearningDirection): CategoriesResponse
 }
 
 /**
@@ -57,8 +57,8 @@ class CatalogRepository(private val api: TujiApiClient) : CatalogReading, WordSe
     override suspend fun word(id: String, lang: String, learning: LearningDirection): WordDetail =
         api.get(Endpoint.Word(id = id, lang = lang, learning = learning))
 
-    override suspend fun categories(lang: String): CategoriesResponse =
-        api.get(Endpoint.Categories(lang = lang))
+    override suspend fun categories(lang: String, learning: LearningDirection): CategoriesResponse =
+        api.get(Endpoint.Categories(lang = lang, learning = learning))
 
     override suspend fun search(
         query: String,

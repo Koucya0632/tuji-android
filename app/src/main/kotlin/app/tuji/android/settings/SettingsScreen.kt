@@ -266,7 +266,7 @@ fun SettingsScreen(
 
         Picker.Accent -> OptionSheet(
             title = stringResource(R.string.settings_accent),
-            options = listOf("us" to accentLabel("us"), "uk" to accentLabel("uk")),
+            options = listOf("us" to accentLabel("us"), "uk" to accentLabel("uk"), "au" to accentLabel("au")),
             selected = settings.accent,
             onPick = { value ->
                 onChange { it.copy(accent = value) }
@@ -359,8 +359,8 @@ private enum class Confirm { SignOut, Clear, DeleteFirst, DeleteSecond }
 @Composable
 private fun directionLabel(direction: LearningDirection): String = stringResource(
     when (direction) {
-        LearningDirection.ZH_EN -> R.string.direction_zh_en
-        LearningDirection.ZH_JA -> R.string.direction_zh_ja
+        LearningDirection.ZH_EN -> R.string.direction_en_title
+        LearningDirection.ZH_JA -> R.string.direction_ja_title
     },
 )
 
@@ -376,7 +376,13 @@ private fun languageLabel(language: UiLanguage): String = stringResource(
 
 @Composable
 private fun accentLabel(accent: String): String =
-    stringResource(if (accent == "uk") R.string.accent_uk else R.string.accent_us)
+    stringResource(
+        when (accent) {
+            "uk" -> R.string.accent_uk
+            "au" -> R.string.accent_au
+            else -> R.string.accent_us
+        },
+    )
 
 /**
  * 全部 when nothing is picked — the same reading every other consumer gives an

@@ -45,8 +45,14 @@ class StudyThemesTest {
     fun `a gated pick with nothing studyable falls back to the studyable list, never to empty`() {
         // Empty means "every theme" to the queue and to 完成度.
         val studyable = listOf("fruits", "bedroom")
-        assertEquals(listOf("bedroom", "fruits"), StudyThemes.effective(listOf("kitchen"), studyable))
+        assertEquals(listOf("bedroom", "fruits"), StudyThemes.effective(listOf("kitchen"), studyable, setOf("kitchen", "fruits", "bedroom")))
         assertEquals(listOf("bedroom", "fruits"), StudyThemes.effective(emptyList(), studyable))
+    }
+
+    @Test fun `hidden region selection never widens to free themes`() {
+        assertEquals(listOf("australia-housing"), StudyThemes.effective(listOf("australia-housing"), listOf("fruits"), setOf("fruits", "kitchen")))
+        assertEquals(listOf("australia-housing"), StudyThemes.effective(listOf("australia-housing"), listOf("fruits")))
+        assertEquals(0, StudyThemes.countIn(catalogue, StudyThemes.effective(listOf("australia-housing"), listOf("fruits"), setOf("fruits", "kitchen"))))
     }
 
     @Test

@@ -33,7 +33,7 @@ interface Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/words",
             query = listOf("lang" to lang, "learning" to learning.wire),
-            policy = EndpointPolicy.PublicCached,
+            policy = EndpointPolicy.PublicFresh,
         )
     }
 
@@ -52,7 +52,7 @@ interface Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/search",
             query = listOf("q" to q, "lang" to lang, "learning" to learning.wire),
-            policy = EndpointPolicy.PublicCached,
+            policy = EndpointPolicy.PublicFresh,
         )
     }
 
@@ -60,7 +60,7 @@ interface Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/words/$id",
             query = listOf("lang" to lang, "learning" to learning.wire),
-            policy = EndpointPolicy.PublicCached,
+            policy = EndpointPolicy.PublicFresh,
         )
     }
 
@@ -632,11 +632,11 @@ interface Endpoint {
         )
     }
 
-    data class Categories(val lang: String) : Endpoint {
+    data class Categories(val lang: String, val learning: LearningDirection) : Endpoint {
         override val descriptor get() = EndpointDescriptor(
             path = "/api/categories",
-            query = listOf("lang" to lang),
-            policy = EndpointPolicy.PublicCached,
+            query = listOf("lang" to lang, "learning" to learning.wire),
+            policy = EndpointPolicy.PublicFresh,
         )
     }
 

@@ -37,7 +37,7 @@ class WordDetailViewModelTest {
     private class Catalog(val word: WordDetail) : CatalogReading {
         override suspend fun words(lang: String, learning: LearningDirection) = WordsListResponse(words = emptyList())
         override suspend fun word(id: String, lang: String, learning: LearningDirection) = word
-        override suspend fun categories(lang: String) = CategoriesResponse()
+        override suspend fun categories(lang: String, learning: LearningDirection) = CategoriesResponse()
     }
 
     private class Player : ClipPlaying {
@@ -47,20 +47,22 @@ class WordDetailViewModelTest {
         override fun stop() = Unit
     }
 
-    private class Voice(val languages: Set<TargetLanguage>) : WordSpeaking {
+    private class Voice(val languages: Set<TargetLanguage>, val australianAvailable: Boolean = true) : WordSpeaking {
         val spoken = mutableListOf<Triple<String, TargetLanguage, String>>()
         override fun canSpeak(language: TargetLanguage) = language in languages
+        override fun canSpeak(language: TargetLanguage, accent: String) =
+            canSpeak(language) && (language != TargetLanguage.EN || accent != "au" || australianAvailable)
         override suspend fun speak(text: String, language: TargetLanguage, accent: String) { spoken += Triple(text, language, accent) }
         override fun stop() = Unit
     }
 
-    private fun vm(word: WordDetail, player: Player, voice: WordSpeaking?) = WordDetailViewModel(
+    private fun vm(word: WordDetail, player: Player, voice: WordSpeaking?, accent: String = "uk") = WordDetailViewModel(
         catalog = Catalog(word),
         atlas = object : AtlasItemReading { override suspend fun itemDetail(itemId: String, lang: String) = word },
         audio = player,
         direction = LearningDirection.ZH_JA,
         uiLang = "zh-Hant",
-        accent = "uk",
+        accent = accent,
         speech = voice,
         scope = TestScope(dispatcher),
     )
@@ -94,5 +96,29 @@ class WordDetailViewModelTest {
         val vm = vm(noClip, Player(), Voice(setOf(TargetLanguage.EN)))
         vm.load(noClip.id); advanceUntilIdle()
         assertFalse(vm.canPlay(noClip))
+    }
+
+    @Test fun `missing Australian clip uses Australian synthesis and never plays another accent`() = runTest(dispatcher) {
+        val word = WordDetail(id = "mug", word = "mug", targetLanguage = TargetLanguage.EN, audioUrls = mapOf("en-US" to "https://clip/us.mp3"))
+        val player = Player()
+        val voice = Voice(setOf(TargetLanguage.EN))
+        val vm = vm(word, player, voice, accent = "au")
+        vm.load(word.id); advanceUntilIdle()
+        assertTrue(vm.canPlay(word))
+        vm.play(); advanceUntilIdle()
+        assertEquals(listOf(Triple("mug", TargetLanguage.EN, "au")), voice.spoken)
+        assertTrue(player.played.isEmpty())
+    }
+
+    @Test fun `missing Australian clip and Australian voice offers no false playback`() = runTest(dispatcher) {
+        val word = WordDetail(id = "mug", word = "mug", targetLanguage = TargetLanguage.EN, audioUrls = mapOf("en-US" to "https://clip/us.mp3"))
+        val player = Player()
+        val voice = Voice(setOf(TargetLanguage.EN), australianAvailable = false)
+        val vm = vm(word, player, voice, accent = "au")
+        vm.load(word.id); advanceUntilIdle()
+        assertFalse(vm.canPlay(word))
+        vm.play(); advanceUntilIdle()
+        assertTrue(player.played.isEmpty())
+        assertTrue(voice.spoken.isEmpty())
     }
 }
