@@ -55,7 +55,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "TUJI_BASE_URL", "\"${secret("TUJI_BASE_URL", "https://everyday-english-picture-dictionary.vercel.app")}\"")
+        buildConfigField("String", "TUJI_BASE_URL", "\"${secret("TUJI_BASE_URL", "https://tuji.nexflow.team")}\"")
         buildConfigField("String", "TUJI_SUPABASE_URL", "\"${secret("TUJI_SUPABASE_URL")}\"")
         buildConfigField("String", "TUJI_SUPABASE_ANON_KEY", "\"${secret("TUJI_SUPABASE_ANON_KEY")}\"")
         // The **web** client ID. Credential Manager wants that one, not the
