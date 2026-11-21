@@ -23,48 +23,36 @@ class MembershipOfferTest {
             ),
         )
 
-    @Test fun `before the cutover there is no lifetime card and Pro keeps its old quota`() {
+    @Test fun `before the cutover there is no lifetime card`() {
         val offer = MembershipOffer.from(entitlement("free", policy = "v1"))
         assertFalse(offer.showsLifetime)
-        // 詞表 does not exist under v1.
-        assertFalse(R.string.membership_benefit_lists_100 in offer.proRows)
-        assertTrue(R.string.membership_benefit_ai_500 in offer.proRows)
-        assertEquals(R.string.membership_pro_headline, offer.headline)
     }
 
-    @Test fun `a v2 non-member is sold lifetime first`() {
+    @Test fun `a v2 non-member is sold lifetime`() {
         val offer = MembershipOffer.from(entitlement("free"))
         assertTrue(offer.showsLifetime)
         assertFalse(offer.ownsLifetime)
         assertEquals(R.string.membership_lifetime_headline, offer.headline)
-        assertTrue(R.string.membership_benefit_ai_200 in offer.proRows)
-        assertEquals(R.string.membership_benefit_notes, offer.lifetimeRows.last())
-        assertTrue(R.string.membership_benefit_lists_20 in offer.lifetimeRows)
-        assertTrue(R.string.membership_benefit_lists_100 in offer.proRows)
     }
 
-    @Test fun `under points the lifetime card sells sightings, notes, lists and the atlas`() {
-        val offer = MembershipOffer.from(entitlement("free").copy(billingMode = "credits"))
-        assertEquals(
-            listOf(
-                R.string.membership_benefit_all_series,
-                R.string.membership_benefit_community,
-                R.string.membership_benefit_notes,
-                R.string.membership_benefit_lists_20,
-                R.string.membership_benefit_slots_200,
-                R.string.membership_benefit_ai_credits,
-            ),
-            offer.lifetimeRows,
+    @Test fun `the lifetime card leads with the atlas and scenes, the same under points`() {
+        val expected = listOf(
+            R.string.membership_benefit_all_series,
+            R.string.membership_benefit_scenes,
+            R.string.membership_benefit_slots_200,
+            R.string.membership_benefit_lists_20,
+            R.string.membership_benefit_notes,
+            R.string.membership_benefit_community,
+            R.string.membership_benefit_ai_credits,
         )
-        // No monthly AI quota under points: it is paid per use.
-        assertFalse(R.string.membership_benefit_ai_10 in offer.lifetimeRows)
+        assertEquals(expected, MembershipOffer.from(entitlement("free")).lifetimeRows)
+        assertEquals(expected, MembershipOffer.from(entitlement("free").copy(billingMode = "credits")).lifetimeRows)
     }
 
-    @Test fun `a lifetime member is shown what Pro adds`() {
+    @Test fun `a lifetime member owns lifetime and no Pro`() {
         val offer = MembershipOffer.from(entitlement("lifetime", lifetime = true))
         assertTrue(offer.ownsLifetime)
         assertFalse(offer.ownsPro)
-        assertEquals(R.string.membership_pro_headline, offer.headline)
     }
 
     @Test fun `a Pro subscriber who also bought lifetime owns both`() {
