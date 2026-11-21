@@ -35,8 +35,8 @@ import app.tuji.android.credits.tierCard
  * 會員方案 — where every lock and every 402 in this app leads. iOS's `PaywallView`.
  *
  * Under 罐頭點數 billing it is iOS's 「會員與罐頭點數」: the wallet first, then
- * 永久會員 with what the membership itself opens. Tuji Pro is no longer sold;
- * a legacy Pro account only sees that it still has Pro.
+ * 永久會員 with what the membership itself opens. Tuji Pro is no longer sold
+ * and its holders were moved to 永久會員.
  *
  * 永久會員 is bought through Google Play ([purchase]); the point packs sit on
  * the wallet card. Without [purchase] — no signed-in account to bind a
@@ -94,11 +94,6 @@ fun MembershipScreen(
                         buy = purchase.takeUnless { offer.ownsLifetime },
                     )
                 }
-            }
-            if (offer.ownsPro) {
-                Text(stringResource(R.string.membership_owns_pro), style = TujiType.bodySmStrong, color = TujiColor.Accumulation)
-            } else if (!offer.showsLifetime && !credits) {
-                Text(stringResource(R.string.credit_pro_closed), style = TujiType.label, color = TujiColor.Ink2)
             }
 
             purchase?.let {

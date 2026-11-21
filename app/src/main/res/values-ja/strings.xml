@@ -518,19 +518,13 @@
     <string name="nav_capture">撮って単語ゲット</string>
     <string name="nav_close">閉じる</string>
     <string name="me_plan_free">無料プラン</string>
-    <string name="me_plan_pro">Pro</string>
     <string name="me_expires">%1$s まで</string>
     <string name="me_usage_slots">自作図鑑 %1$d / %2$d</string>
     <string name="me_usage_saved">保存 %1$d / %2$d</string>
     <string name="me_settings">設定</string>
     <string name="me_language">学習言語</string>
     <string name="me_sign_out">ログアウト</string>
-    <string name="paywall_title">Pro にアップグレード</string>
     <string name="paywall_subtitle">自作図鑑の枠を増やし、AI の補完を増やし、広告をなくします。</string>
-    <string name="paywall_cta">Pro を購読する</string>
-    <string name="paywall_already">すでに Pro をご利用中です</string>
-    <string name="paywall_elsewhere_appstore">Pro は App Store で購読されています。変更や解約は iPhone の「設定 → Apple アカウント → サブスクリプション」から行ってください。</string>
-    <string name="paywall_elsewhere_other">Pro は %1$s で購読されています。購入元で管理してください。</string>
     <string name="paywall_unavailable">Android ではまだ購読できません</string>
     <string name="paywall_unavailable_why">Play ストアの設定が未完了です。完了するまで、このボタンは使えるふりをしません。</string>
     <string name="capture_shutter">撮影</string>
@@ -586,7 +580,6 @@
     <string name="membership_lifetime_once">買い切り・ずっと有効</string>
     <string name="membership_lifetime_headline">一度の購入で、すべての公式図鑑と場面が使えます。</string>
     <string name="membership_owns_lifetime">すでに永久会員です</string>
-    <string name="membership_owns_pro">すでにTuji Proです。ご支援ありがとうございます！</string>
     <string name="membership_lifetime_note">永久会員は買い切りで、自動更新されません。</string>
     <string name="membership_android_soon">Android版での購入はまもなく開始します。iPhoneで購入済みの方は、同じアカウントでログインすると反映されます。</string>
     <string name="membership_benefit_all_series">すべての公式図鑑を永久に解放</string>
@@ -597,9 +590,7 @@
     <string name="membership_benefit_slots_200">自作図鑑200枠</string>
     <string name="membership_benefit_ai_credits">AI認識・単語検索・文法は缶詰ポイントを使います</string>
     <string name="membership_view_plans">メンバーシッププランを見る</string>
-    <string name="membership_subscribed">購読中</string>
     <string name="membership_limit_reached">利用上限に達しました。アップグレードで継続できます</string>
-    <string name="me_grace_notice">Proが終了しました。%1$d枠を超えるマイ図鑑のカードは%2$sからロックされます。Proを更新すると引き続き使えます。</string>
     <string name="study_themes_locked_note">ロック中のテーマは、会員になると学習できます。</string>
     <string name="theme_locked">会員になると学習できます</string>
     <string name="manage_status_locked">ロック中</string>
@@ -669,7 +660,6 @@
     <string name="feedback_thanks">ご意見ありがとうございます！参考にして改善を続けます。</string>
 
     <string name="credit_title">缶詰ポイント</string>
-    <string name="credit_pro_closed">新規Proプランの販売は終了しました。既存の特典は引き続き有効です。</string>
     <string name="credit_balances">予約 %1$d · 特典 %2$d · 購入 %3$d</string>
     <string name="credit_refund_hold">返金分のポイントを確認中です。新しいAI処理は一時停止しています。</string>
     <string name="credit_monthly_claimed">今月は受取済み</string>

@@ -518,19 +518,13 @@
     <string name="nav_capture">Snap to collect words</string>
     <string name="nav_close">Close</string>
     <string name="me_plan_free">Free plan</string>
-    <string name="me_plan_pro">Pro</string>
     <string name="me_expires">Ends %1$s</string>
     <string name="me_usage_slots">My atlas %1$d / %2$d</string>
     <string name="me_usage_saved">Saved %1$d / %2$d</string>
     <string name="me_settings">Settings</string>
     <string name="me_language">Learning language</string>
     <string name="me_sign_out">Sign out</string>
-    <string name="paywall_title">Upgrade to Pro</string>
     <string name="paywall_subtitle">More of your own atlas entries, more AI enrichment, no ads.</string>
-    <string name="paywall_cta">Subscribe to Pro</string>
-    <string name="paywall_already">You’re already on Pro</string>
-    <string name="paywall_elsewhere_appstore">Your Pro subscription was bought on the App Store. To change or cancel it, go to Settings → Apple Account → Subscriptions on your iPhone.</string>
-    <string name="paywall_elsewhere_other">Your Pro subscription was bought on %1$s. Please manage it where you bought it.</string>
     <string name="paywall_unavailable">Subscribing isn’t available on Android yet</string>
     <string name="paywall_unavailable_why">The Play Store setup isn’t finished. Until it is, this button won’t pretend to work.</string>
     <string name="capture_shutter">Take photo</string>
@@ -586,7 +580,6 @@
     <string name="membership_lifetime_once">One-time purchase, yours forever</string>
     <string name="membership_lifetime_headline">One purchase unlocks every official atlas and every scene.</string>
     <string name="membership_owns_lifetime">You\'re already a Lifetime Member</string>
-    <string name="membership_owns_pro">You\'re already Tuji Pro — thanks for your support!</string>
     <string name="membership_lifetime_note">Lifetime Membership is a one-time purchase and does not renew.</string>
     <string name="membership_android_soon">Purchases are coming soon on Android. If you bought a membership on iPhone, sign in with the same account and it applies here too.</string>
     <string name="membership_benefit_all_series">Unlock all official atlases permanently</string>
@@ -597,9 +590,7 @@
     <string name="membership_benefit_slots_200">200 custom atlas slots</string>
     <string name="membership_benefit_ai_credits">AI recognition, word lookup and grammar use Can Points</string>
     <string name="membership_view_plans">See membership plans</string>
-    <string name="membership_subscribed">Subscribed</string>
     <string name="membership_limit_reached">Limit reached — upgrade to continue</string>
-    <string name="me_grace_notice">Pro has ended. Custom cards beyond %1$d will lock on %2$s. Renew Pro to keep using them.</string>
     <string name="study_themes_locked_note">Locked themes open up once you become a member.</string>
     <string name="theme_locked">Available to study once you become a member</string>
     <string name="manage_status_locked">Locked</string>
@@ -669,7 +660,6 @@
     <string name="feedback_thanks">Thanks for the feedback! We\'ll use it to keep improving.</string>
 
     <string name="credit_title">Can Points</string>
-    <string name="credit_pro_closed">New Pro plans are no longer sold. Existing benefits remain valid.</string>
     <string name="credit_balances">Reserved %1$d · Bonus %2$d · Purchased %3$d</string>
     <string name="credit_refund_hold">Refunded points are being reconciled. New AI tasks are paused.</string>
     <string name="credit_monthly_claimed">Claimed this month</string>
