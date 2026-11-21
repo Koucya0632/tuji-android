@@ -319,6 +319,36 @@ class ReviewViewModelListeningTest {
             )
         }
 
+    private fun withWordClip(id: String) = pool + Word(
+        id = id, word = "窓", chinese = "窗戶",
+        imageUrl = "https://img.test/$id.webp",
+        category = "bedroom", targetLanguage = TargetLanguage.JA,
+        audioUrls = mapOf("ja-JP" to "https://clips.test/word.mp3"),
+    )
+
+    @Test fun `a right pick reads the word once`() = runTest(dispatcher) {
+        val player = FakePlayer()
+        val vm = vm(listOf(item(offSlot)), audio = player, pool = withWordClip(offSlot))
+        vm.load(StudyMode.Review)
+        advanceUntilIdle()
+        assertEquals(ReviewQuestionKind.PickWord, vm.studying().session.question!!.kind)
+
+        vm.pick("窓")
+        advanceUntilIdle()
+        assertEquals(1, player.plays)
+    }
+
+    @Test fun `a wrong pick reads nothing`() = runTest(dispatcher) {
+        val player = FakePlayer()
+        val vm = vm(listOf(item(offSlot)), audio = player, pool = withWordClip(offSlot))
+        vm.load(StudyMode.Review)
+        advanceUntilIdle()
+
+        vm.pick("語0")
+        advanceUntilIdle()
+        assertEquals(0, player.plays)
+    }
+
     @Test fun `leaving stops the audio`() = runTest(dispatcher) {
         val player = FakePlayer()
         val vm = vm(listOf(item(slotted)), audio = player)

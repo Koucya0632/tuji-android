@@ -327,9 +327,17 @@ class ReviewViewModel(
      * The question is over. Felt before it is drawn — soft when it went in,
      * firm when it did not — because the sheet that says so is 600ms away and
      * the answer is already decided.
+     *
+     * A right answer also reads the word once. In 聽句 that cuts the sentence
+     * off, which is fine: the question is answered.
      */
     private fun settled(step: ReviewSession.Step) {
-        if (step.session.question?.wasCorrect == true) haptics.soft() else haptics.firm()
+        if (step.session.question?.wasCorrect == true) {
+            haptics.soft()
+            playWord()
+        } else {
+            haptics.firm()
+        }
     }
 
     private fun scheduleAdvance(after: Long) {
