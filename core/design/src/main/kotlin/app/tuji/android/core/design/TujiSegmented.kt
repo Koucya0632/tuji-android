@@ -2,23 +2,29 @@ package app.tuji.android.core.design
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 /**
@@ -28,12 +34,15 @@ import androidx.compose.ui.unit.dp
  * no sliding thumb, all of which are the platform's picture of a segmented
  * control rather than this app's.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun <T> TujiSegmented(
     options: List<Pair<T, String>>,
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    /** Smaller only where long labels would not fit side by side. */
+    textStyle: TextStyle = TujiType.h3,
 ) {
     Row(
         modifier.horizontalScroll(rememberScrollState()).padding(horizontal = TujiSpace.S4),
@@ -54,8 +63,15 @@ fun <T> TujiSegmented(
                 TujiMotion.ease(TujiMotion.D1),
                 label = "segmentInk",
             )
+            // An option past the edge comes fully into view once chosen. Only
+            // on a change: the first selection is where the row starts anyway,
+            // and asking then could also scroll the page it sits in.
+            val requester = remember { BringIntoViewRequester() }
+            val initiallyOn = remember { on }
+            LaunchedEffect(on) { if (on && !initiallyOn) requester.bringIntoView() }
             Box(
                 Modifier
+                    .bringIntoViewRequester(requester)
                     .height(40.dp)
                     .background(ground)
                     .tujiClickable { if (!on) onSelect(value) }
@@ -66,7 +82,7 @@ fun <T> TujiSegmented(
                     .padding(horizontal = TujiSpace.S3),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(title, style = TujiType.h3, color = ink)
+                Text(title, style = textStyle, color = ink)
             }
         }
     }

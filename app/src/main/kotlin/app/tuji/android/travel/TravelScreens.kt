@@ -25,6 +25,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -49,6 +53,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.atlas.MasteryScale
+import app.tuji.android.community.PublicItemTile
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
@@ -58,11 +63,11 @@ import app.tuji.android.core.design.TujiProgressBar
 import app.tuji.android.core.design.TujiRow
 import app.tuji.android.core.design.TujiRowDivider
 import app.tuji.android.core.design.TujiScreenTitle
+import app.tuji.android.core.design.TujiSegmented
 import app.tuji.android.core.design.TujiSpace
 import app.tuji.android.core.design.TujiType
 import app.tuji.android.core.design.WordTile
 import app.tuji.android.core.design.tujiClickable
-import app.tuji.android.community.PublicItemTile
 import app.tuji.android.core.model.AtlasPublicItem
 import app.tuji.android.core.model.StudyMode
 import app.tuji.android.core.model.TravelCity
@@ -523,75 +528,86 @@ fun TravelSpotScreen(
             }
             SpotActions(s, onStudy, onNeedsMembership)
         }
-        Text(
-            stringResource(R.string.travel_seen_here),
-            style = TujiType.label,
-            color = TujiColor.Ink3,
-            modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S4, bottom = TujiSpace.S2),
+        // What the page lists under its hero: the spot's words, or the
+        // 自製圖鑑 cards taken here — one at a time, as iOS's filter has it.
+        var shelf by rememberSaveable(spotId) { mutableStateOf(SpotShelf.Words) }
+        TujiSegmented(
+            options = listOf(
+                SpotShelf.Words to stringResource(R.string.travel_seen_here),
+                SpotShelf.Own to stringResource(R.string.travel_shot_here_mine),
+                SpotShelf.Shared to stringResource(R.string.travel_shot_here_others),
+            ),
+            selected = shelf,
+            onSelect = { shelf = it },
+            textStyle = TujiType.bodyStrong,
+            modifier = Modifier.padding(top = TujiSpace.S4, bottom = TujiSpace.S3),
         )
-        // Three to a row, laid out by hand: the page already scrolls, and a
-        // lazy grid inside a scrolling column has no height to measure against.
-        Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-            s.words.chunked(3).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                    row.forEach { word ->
-                        WordTile(
-                            word = word,
-                            modifier = Modifier.weight(1f).tujiClickable { onOpenWord(word.id) },
-                            badge = { MasteryScale(score(word.id)) },
-                        )
-                    }
-                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+        when (shelf) {
+            SpotShelf.Words -> SpotWordGrid(s.words, score, onOpenWord)
+            SpotShelf.Own ->
+                if (ownWords.isEmpty()) {
+                    SpotEmptyLine(stringResource(R.string.travel_spot_mine_empty))
+                } else {
+                    SpotWordGrid(ownWords, score, onOpenWord)
                 }
-            }
-        }
-        // The 自製圖鑑 cards taken here. Each section is absent when empty.
-        if (ownWords.isNotEmpty()) {
-            SpotSectionTitle(stringResource(R.string.travel_shot_here_mine))
-            Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-                ownWords.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                        row.forEach { word ->
-                            WordTile(
-                                word = word,
-                                modifier = Modifier.weight(1f).tujiClickable { onOpenWord(word.id) },
-                                badge = { MasteryScale(score(word.id)) },
-                            )
+            SpotShelf.Shared ->
+                if (shared.isEmpty()) {
+                    SpotEmptyLine(stringResource(R.string.travel_spot_others_empty))
+                } else {
+                    Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+                        shared.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                                row.forEach { item ->
+                                    PublicItemTile(
+                                        item = item,
+                                        enabled = true,
+                                        onOpen = { onOpenShared(item.slug) },
+                                        onOpenAuthor = item.author?.let { author -> { onOpenAuthor(author.handle) } },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                                repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                            }
                         }
-                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
-            }
         }
-        if (shared.isNotEmpty()) {
-            SpotSectionTitle(stringResource(R.string.travel_shot_here_others))
-            Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
-                shared.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-                        row.forEach { item ->
-                            PublicItemTile(
-                                item = item,
-                                enabled = true,
-                                onOpen = { onOpenShared(item.slug) },
-                                onOpenAuthor = item.author?.let { author -> { onOpenAuthor(author.handle) } },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                        repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
-                    }
+    }
+}
+
+/** What the spot page lists under its hero. */
+private enum class SpotShelf { Words, Own, Shared }
+
+/**
+ * Three to a row, laid out by hand: the page already scrolls, and a lazy grid
+ * inside a scrolling column has no height to measure against.
+ */
+@Composable
+private fun SpotWordGrid(words: List<Word>, score: (String) -> Int?, onOpenWord: (String) -> Unit) {
+    Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
+        words.chunked(3).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                row.forEach { word ->
+                    WordTile(
+                        word = word,
+                        modifier = Modifier.weight(1f).tujiClickable { onOpenWord(word.id) },
+                        badge = { MasteryScale(score(word.id)) },
+                    )
                 }
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
 }
 
+/** One short line where a shelf has nothing yet. */
 @Composable
-private fun SpotSectionTitle(text: String) {
+private fun SpotEmptyLine(text: String) {
     Text(
         text,
-        style = TujiType.label,
+        style = TujiType.bodySm,
         color = TujiColor.Ink3,
-        modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S4, bottom = TujiSpace.S2),
+        modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(top = TujiSpace.S2),
     )
 }
 

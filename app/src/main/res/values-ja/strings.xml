@@ -1299,5 +1299,7 @@
     <string name="travel_study_here">ここの単語を学ぶ</string>
     <string name="travel_shot_here_mine">あなたがここで撮ったもの</string>
     <string name="travel_shot_here_others">みんなが撮ったもの</string>
+    <string name="travel_spot_mine_empty">ここで撮ったカードはまだありません</string>
+    <string name="travel_spot_others_empty">ここで撮ったものはまだ共有されていません</string>
     <string name="travel_spot_photographed">%1$s、ここで撮ったことがあります</string>
 </resources>
