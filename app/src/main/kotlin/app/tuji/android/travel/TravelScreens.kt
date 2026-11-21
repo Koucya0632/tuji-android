@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.tuji.android.R
 import app.tuji.android.atlas.MasteryScale
-import app.tuji.android.core.design.MascotPose
 import app.tuji.android.core.design.TujiBorder
 import app.tuji.android.core.design.TujiColor
 import app.tuji.android.core.design.TujiGlyph
@@ -109,7 +108,7 @@ fun TravelEntryBand(destination: TravelDestination, onOpen: () -> Unit) {
         }
         Box(Modifier.width(112.dp).fillMaxHeight().background(TujiColor.BrandPrimary), contentAlignment = Alignment.Center) {
             Image(
-                painterResource(MascotPose.Think.res),
+                painterResource(R.drawable.story_moira_check_map),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize().padding(TujiSpace.S1),
             )
@@ -231,7 +230,7 @@ private fun TravelGridMap(destination: TravelDestination, modifier: Modifier = M
                 // The lower right of the grid is open sea on every map drawn
                 // so far, which is where Moira stands.
                 Image(
-                    painterResource(MascotPose.Wave.res),
+                    painterResource(R.drawable.story_moira_point),
                     contentDescription = null,
                     modifier = Modifier.align(Alignment.BottomEnd).size(side * 4.5f),
                 )
