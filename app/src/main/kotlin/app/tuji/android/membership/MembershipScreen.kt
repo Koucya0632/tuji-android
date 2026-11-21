@@ -35,9 +35,8 @@ import app.tuji.android.credits.tierCard
  * 會員方案 — where every lock and every 402 in this app leads. iOS's `PaywallView`.
  *
  * Under 罐頭點數 billing it is iOS's 「會員與罐頭點數」: the wallet first, then
- * 永久會員 with what the membership itself opens. Otherwise, the two plan cards,
- * each with only its own benefits, so nobody reads Pro's list as part of
- * 永久會員's.
+ * 永久會員 with what the membership itself opens. Tuji Pro is no longer sold
+ * and its holders were moved to 永久會員.
  *
  * 永久會員 is bought through Google Play ([purchase]); the point packs sit on
  * the wallet card. Without [purchase] — no signed-in account to bind a
@@ -65,9 +64,8 @@ fun MembershipScreen(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
                 TujiGlyph.Crown()
-                // Under points billing there is no Pro to sell, so the line
-                // only speaks while 永久會員 is still to be had.
-                if (!credits || (offer.showsLifetime && !offer.ownsLifetime)) {
+                // The line only speaks while 永久會員 is still to be had.
+                if (offer.showsLifetime && !offer.ownsLifetime) {
                     Text(stringResource(offer.headline), style = TujiType.h3, color = TujiColor.Ink)
                 }
             }
@@ -96,15 +94,6 @@ fun MembershipScreen(
                         buy = purchase.takeUnless { offer.ownsLifetime },
                     )
                 }
-                if (offer.ownsPro) PlanCard(
-                    title = "Tuji Pro",
-                    // Under v2 Pro contains 永久會員, and says so before listing
-                    // only what it adds.
-                    caption = stringResource(R.string.membership_pro_includes).takeIf { offer.showsLifetime },
-                    rows = offer.proRows,
-                    owned = stringResource(R.string.membership_owns_pro).takeIf { offer.ownsPro },
-                )
-                Text(stringResource(R.string.credit_pro_closed), style = TujiType.label, color = TujiColor.Ink2)
             }
 
             purchase?.let {
@@ -123,7 +112,7 @@ fun MembershipScreen(
                         .padding(TujiSpace.S3),
                 )
             }
-            Legal(showsLifetime = offer.showsLifetime)
+            Legal()
         }
     }
 }
@@ -169,15 +158,13 @@ private fun PlanCard(
 
 /** iOS's `legal`: what 永久會員 is, and the two documents every paywall links. */
 @Composable
-private fun Legal(showsLifetime: Boolean) {
+private fun Legal() {
     val context = LocalContext.current
     fun open(url: String) {
         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
-        if (showsLifetime) {
-            Text(stringResource(R.string.membership_lifetime_note), style = TujiType.label, color = TujiColor.Ink3)
-        }
+        Text(stringResource(R.string.membership_lifetime_note), style = TujiType.label, color = TujiColor.Ink3)
         Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
             Text(
                 stringResource(R.string.membership_terms),

@@ -6,64 +6,37 @@ import app.tuji.android.core.model.Entitlement
 import app.tuji.android.core.model.MembershipTier
 
 /**
- * What 會員方案 shows — iOS's `PaywallOffer` and `MembershipBenefits`, minus
- * the purchase: this build cannot take money yet (ADR-0001, Play Billing not
- * set up), so the page says what each plan gives and where it can be bought.
+ * What 會員方案 shows — iOS's `PaywallOffer` and `MembershipBenefits`.
  *
- * The numbers must match docs/MEMBERSHIP_PUBLIC_COPY.md §1.
+ * Tuji Pro is no longer sold (2026-10-06): the page sells 永久會員 only, and a
+ * legacy Pro account just sees that it still has Pro. The rows must match
+ * docs/marketing/CLAIMS.md §1.
  */
 data class MembershipOffer(
     /** The 永久會員 card exists only under policy v2: before that it bought nothing. */
     val showsLifetime: Boolean,
     val ownsLifetime: Boolean,
     val ownsPro: Boolean,
-    /** Pro's AI line follows the limits in force (500 under v1, 200 under v2). */
-    val isV2: Boolean,
     val credits: Boolean = false,
 ) {
-    val lifetimeRows: List<Int> get() = if (credits) CREDITS_LIFETIME else LIFETIME
+    val lifetimeRows: List<Int> get() = LIFETIME
 
-    val proRows: List<Int>
-        get() = buildList {
-            add(R.string.membership_benefit_slots_300)
-            add(if (isV2) R.string.membership_benefit_ai_200 else R.string.membership_benefit_ai_500)
-            add(R.string.membership_benefit_precision)
-            // 詞表 does not exist under v1.
-            if (isV2) add(R.string.membership_benefit_lists_100)
-            add(R.string.membership_benefit_support)
-        }
-
-    /** Under v2 the headline sells 永久會員 — unless it is already owned. */
     @get:StringRes
-    val headline: Int
-        get() = if (showsLifetime && !ownsLifetime) {
-            R.string.membership_lifetime_headline
-        } else {
-            R.string.membership_pro_headline
-        }
+    val headline: Int get() = R.string.membership_lifetime_headline
 
     companion object {
+        /**
+         * 圖鑑 and 場面 first — what the app is for — then what the membership
+         * opens on top, then which AI features draw on 罐頭點數 (paid per use,
+         * no monthly quota). iOS's `MembershipBenefits.lifetime`.
+         */
         private val LIFETIME = listOf(
             R.string.membership_benefit_all_series,
-            R.string.membership_benefit_slots_20,
-            R.string.membership_benefit_ai_10,
-            R.string.membership_benefit_community,
-            R.string.membership_benefit_lists_20,
-            R.string.membership_benefit_notes,
-        )
-
-        /**
-         * 永久會員 once billing is on 罐頭點數: AI has no monthly quota any
-         * more — it is paid per use from the points — so the card sells what
-         * the membership itself opens, then says which AI features draw on
-         * the points. iOS's `MembershipBenefits.creditsLifetime`.
-         */
-        private val CREDITS_LIFETIME = listOf(
-            R.string.membership_benefit_all_series,
-            R.string.membership_benefit_community,
-            R.string.membership_benefit_notes,
-            R.string.membership_benefit_lists_20,
+            R.string.membership_benefit_scenes,
             R.string.membership_benefit_slots_200,
+            R.string.membership_benefit_lists_20,
+            R.string.membership_benefit_notes,
+            R.string.membership_benefit_community,
             R.string.membership_benefit_ai_credits,
         )
 
@@ -74,7 +47,6 @@ data class MembershipOffer(
                 showsLifetime = v2,
                 ownsLifetime = tier == MembershipTier.Lifetime || entitlement?.membership?.lifetime != null,
                 ownsPro = tier == MembershipTier.Pro,
-                isV2 = v2,
                 credits = entitlement?.billingMode == "credits",
             )
         }

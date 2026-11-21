@@ -197,13 +197,13 @@ fun SettingsScreen(
 
         // One row for everyone, as on iOS: the pitch belongs where a limit
         // bites, and here it only says what this account has.
-        TujiSection(title = "Tuji Pro") {
-            // The product's name, as iOS's row reads; 會員方案 is the page it opens.
+        TujiSection(title = stringResource(R.string.membership_lifetime)) {
+            // As iOS's row reads; 會員方案 is the page it opens.
             TujiSettingRow(
-                label = "Tuji Pro",
+                label = stringResource(R.string.membership_title_credits),
                 subtitle = when (tier) {
-                    MembershipTier.Pro -> stringResource(R.string.membership_subscribed)
-                    MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)
+                    // Pro is off sale and its holders were moved to 永久會員.
+                    MembershipTier.Pro, MembershipTier.Lifetime -> stringResource(R.string.membership_lifetime)
                     MembershipTier.Free -> stringResource(offer.headline)
                 },
                 onClick = onOpenMembership,
