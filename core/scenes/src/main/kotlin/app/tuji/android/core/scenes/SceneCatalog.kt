@@ -68,7 +68,7 @@ class SceneCatalog(groups: List<SceneGroup>) {
     }
 }
 
-/** From the third scene on, practice is for 永久會員. 進店前看一眼 stays open to everyone. */
+/** From the third scene on, a 場面 is for 永久會員 — practice and 進店前看一眼 alike. */
 fun PracticeScene.canPractise(isMember: Boolean): Boolean = when (access) {
     SceneAccess.Free -> true
     SceneAccess.Lifetime -> isMember

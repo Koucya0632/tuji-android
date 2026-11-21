@@ -5,11 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import app.tuji.android.AccountRoute
 import app.tuji.android.AppRoute
 import app.tuji.android.SceneRoute
 import app.tuji.android.ShellContext
 import app.tuji.android.core.model.MembershipTier
 import app.tuji.android.core.scenes.SceneId
+import app.tuji.android.core.scenes.canPractise
 
 /** 場面練習's three pages. */
 @Composable
@@ -22,10 +24,12 @@ fun SceneHost(route: SceneRoute, shell: ShellContext) {
             language = shell.uiLanguage,
             isMember = shell.sceneMember,
             onBack = page::pop,
-            onOpen = { page.push(SceneRoute.Detail(it.raw)) },
+            onOpen = { shell.openScene(it) { route -> page.push(route) } },
         )
 
-        is SceneRoute.Detail -> SceneDetailScreen(
+        is SceneRoute.Detail -> if (shell.sceneLocked(SceneId(route.sceneId))) {
+            ToMembership(route, shell)
+        } else if (shell.sceneMember || shell.sceneIsFree(SceneId(route.sceneId))) SceneDetailScreen(
             scenes = scenes,
             sceneId = SceneId(route.sceneId),
             language = shell.uiLanguage,
@@ -37,7 +41,9 @@ fun SceneHost(route: SceneRoute, shell: ShellContext) {
             onOpenWord = { page.openWord(it, fromScene = route.sceneId) },
         )
 
-        is SceneRoute.Practice -> ScenePracticeScreen(
+        is SceneRoute.Practice -> if (shell.sceneLocked(SceneId(route.sceneId))) {
+            ToMembership(route, shell)
+        } else if (shell.sceneMember || shell.sceneIsFree(SceneId(route.sceneId))) ScenePracticeScreen(
             scenes = scenes,
             sceneId = SceneId(route.sceneId),
             routeId = route.routeId,
@@ -72,7 +78,7 @@ fun sceneTodayCard(shell: ShellContext): (@Composable (Modifier) -> Unit)? =
                 language = shell.uiLanguage,
                 isMember = shell.sceneMember,
                 onOpenList = { shell.push(SceneRoute.All) },
-                onOpen = { shell.push(SceneRoute.Detail(it.raw)) },
+                onOpen = { shell.openScene(it, shell::push) },
                 modifier = modifier,
             )
         }
@@ -87,7 +93,7 @@ fun themeScenes(shell: ShellContext, categoryId: String, from: AppRoute): (@Comp
             val words = shell.learning.catalog.words
             val topicOf = remember(words) { words.mapNotNull { w -> w.category?.let { w.id to it } }.toMap() }
             TopicSceneEntries(shell.app.scenes, categoryId, topicOf, shell.uiLanguage) {
-                shell.from(from).push(SceneRoute.Detail(it.raw))
+                shell.openScene(it, shell.from(from)::push)
             }
         }
     }
@@ -98,13 +104,34 @@ fun WordScenes(shell: ShellContext, wordId: String, fromScene: String?, from: Ap
     if (!shell.direction.hasScenes) return
     Box(modifier) {
         WordSceneSection(shell.app.scenes, wordId, fromScene?.let(::SceneId), shell.uiLanguage) {
-            shell.from(from).push(SceneRoute.Detail(it.raw))
+            shell.openScene(it, shell.from(from)::push)
         }
     }
 }
 
 /** From the third scene on, practice is for 永久會員. */
 private val ShellContext.sceneMember: Boolean get() = tier != MembershipTier.Free
+
+/**
+ * A locked 場面 is the paid content itself — its lines, replies and audio —
+ * so a free account taps through to 會員方案, not to the scene's page. Only
+ * once the plan is known: before then a member's restored page stays blank
+ * rather than bouncing them to the paywall.
+ */
+private fun ShellContext.sceneLocked(id: SceneId): Boolean =
+    entitlement != null && !sceneMember && !sceneIsFree(id)
+
+private fun ShellContext.sceneIsFree(id: SceneId): Boolean =
+    app.scenes.catalog.scene(id)?.canPractise(isMember = false) != false
+
+private fun ShellContext.openScene(id: SceneId, push: (AppRoute) -> Unit) =
+    if (sceneLocked(id)) openMembership() else push(SceneRoute.Detail(id.raw))
+
+/** A locked page reached anyway — a downgrade, a restored stack: 會員方案 takes its place. */
+@Composable
+private fun ToMembership(route: SceneRoute, shell: ShellContext) {
+    LaunchedEffect(route) { shell.from(route).replace(AccountRoute.Membership) }
+}
 
 /** A 場面's word ids, as the catalogue's words this account may open. */
 private fun ShellContext.sceneWords(ids: List<String>): List<SceneWord> =
