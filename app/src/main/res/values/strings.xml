@@ -1299,5 +1299,7 @@
     <string name="travel_study_here">Study these words</string>
     <string name="travel_shot_here_mine">Your photos here</string>
     <string name="travel_shot_here_others">Shot here by others</string>
+    <string name="travel_spot_mine_empty">None of your photos here yet</string>
+    <string name="travel_spot_others_empty">Nobody has shared one here yet</string>
     <string name="travel_spot_photographed">%1$s, you\'ve taken photos here</string>
 </resources>
