@@ -108,14 +108,16 @@ fun SceneTodayCard(
  * and a way into its scene. A page opened from one scene leaves that scene out.
  */
 @Composable
-fun WordSceneSection(scenes: Scenes, wordId: String, excluding: SceneId?, language: UiLanguage, onOpen: (SceneId) -> Unit) {
+fun WordSceneSection(scenes: Scenes, wordId: String, excluding: SceneId?, language: UiLanguage, isMember: Boolean, onOpen: (SceneId) -> Unit) {
     val mentions = SceneLinks.mentions(wordId, scenes.catalog, excluding)
     if (mentions.isEmpty()) return
     Column(verticalArrangement = Arrangement.spacedBy(TujiSpace.S3)) {
         Text(stringResource(R.string.scene_word_section), style = TujiType.label.copy(letterSpacing = 2.sp), color = TujiColor.Ink3, modifier = Modifier.padding(top = TujiSpace.S4))
         mentions.forEach { mention ->
+            // A locked 場面's lines are what 永久會員 buys: its name only.
+            val open = mention.scene.canPractise(isMember)
             Column(Modifier.fillMaxWidth().border(1.dp, TujiColor.Rule)) {
-                mention.questions.forEach { question ->
+                if (open) mention.questions.forEach { question ->
                     Row(Modifier.padding(start = 18.dp, end = 12.dp, top = 18.dp, bottom = TujiSpace.S3), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             SceneSpeakerTag(question.lookSpeaker)
@@ -131,7 +133,11 @@ fun WordSceneSection(scenes: Scenes, wordId: String, excluding: SceneId?, langua
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(mention.scene.title.resolved(language), style = TujiType.bodyStrong, color = TujiColor.Ink, modifier = Modifier.weight(1f))
-                    Text(stringResource(R.string.scene_count, mention.scene.practiceCount) + "  ›", style = TujiType.bodySm, color = TujiColor.Ink2)
+                    if (open) {
+                        Text(stringResource(R.string.scene_count, mention.scene.practiceCount) + "  ›", style = TujiType.bodySm, color = TujiColor.Ink2)
+                    } else {
+                        Text(stringResource(R.string.scene_lifetime), style = TujiType.label, color = TujiColor.Ink3)
+                    }
                 }
             }
         }
