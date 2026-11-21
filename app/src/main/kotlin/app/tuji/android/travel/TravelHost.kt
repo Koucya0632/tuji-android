@@ -7,6 +7,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.tuji.android.AccountRoute
 import app.tuji.android.CommunityRoute
 import app.tuji.android.ShellContext
 import app.tuji.android.StudyRoute
@@ -15,6 +16,8 @@ import app.tuji.android.core.catalog.CardsSourceRules
 import app.tuji.android.core.model.AtlasPublicItem
 import app.tuji.android.core.model.SpotTagging
 import app.tuji.android.core.model.TravelDecisions
+import app.tuji.android.core.model.TravelSpot
+import app.tuji.android.core.model.TravelSpotAccess
 import app.tuji.android.study.StudySource
 import kotlinx.coroutines.launch
 
@@ -51,12 +54,19 @@ fun TravelHost(route: TravelRoute, shell: ShellContext) {
                 bottomPadding = 0.dp,
                 onBack = page::pop,
                 onRetry = retry,
-                onOpenSpot = { page.push(TravelRoute.Spot(it)) },
+                onOpenSpot = { id ->
+                    if (shell.spotLocked(travel.spot(id))) shell.openMembership() else page.push(TravelRoute.Spot(id))
+                },
                 photographed = SpotTagging.photographedSpotIds(manage.items),
             )
         }
 
         is TravelRoute.Spot -> {
+            // A locked spot's words are the paid content: its page is 會員方案.
+            if (shell.spotLocked(travel.spot(route.spotId))) {
+                LaunchedEffect(route) { page.replace(AccountRoute.Membership) }
+                return
+            }
             val manage by shell.models.manage.state.collectAsStateWithLifecycle()
             val blocked by shell.models.community.blocked.collectAsStateWithLifecycle()
             OwnCardsSync(shell)
@@ -111,6 +121,10 @@ fun TravelEntry(shell: ShellContext) {
 fun TravelLoad(shell: ShellContext) {
     LaunchedEffect(shell.uiLang, shell.direction) { shell.app.travelStore.loadIfNeeded(shell.uiLang, shell.direction) }
 }
+
+/** Locked for this account — opening it leads to 會員方案, not the spot's page. */
+private fun ShellContext.spotLocked(spot: TravelSpot?): Boolean =
+    spot != null && TravelDecisions.access(spot, studyable) == TravelSpotAccess.NeedsMembership
 
 /** The map and a spot's page show this account's own tagged cards, which arrive with 圖鑑管理's sync — not run at launch. */
 @Composable
