@@ -66,6 +66,8 @@ fun CommunityScreen(
     onOpenMyPage: (String) -> Unit,
     onSearch: () -> Unit = {},
     onRefresh: suspend () -> Unit = {},
+    /** 跟著 Moira 去旅遊's entry; null until the server names somewhere to go. */
+    travelEntry: (@Composable () -> Unit)? = null,
 ) {
     var shelf by rememberSaveable { mutableStateOf(CommunityShelf.Explore) }
     // Asked for the first time 已收藏 is opened, and again on each return to
@@ -107,6 +109,8 @@ fun CommunityScreen(
             }
         }
         Spacer(Modifier.height(TujiSpace.S3))
+        // 跟著 Moira 去旅遊 heads 探索 only: 已收藏 is the reader's own shelf.
+        if (shelf == CommunityShelf.Explore) travelEntry?.invoke()
 
         // The list, not the whole page: the identity row above is a header
         // that scrolls with nothing, and a pull starting on it would have no

@@ -112,6 +112,18 @@ sealed interface AppRoute {
      * list instead of 今日's themes.
      */
     data class WordListStudy(val listId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
+
+    /** 跟著 Moira 去旅遊 — one destination's grid map, from 物見's 探索. */
+    data class TravelDestination(val destinationId: String) : AppRoute
+
+    /** One city's schematic map and its 景點. */
+    data class TravelCity(val cityId: String, val destinationId: String) : AppRoute
+
+    /** One 景點: its words and a way to study them. */
+    data class TravelSpot(val spotId: String) : AppRoute
+
+    /** 學新字 or 複習 drawn from one 景點 — the same two flows, fed by the spot. */
+    data class TravelSpotStudy(val spotId: String, val mode: app.tuji.android.core.model.StudyMode) : AppRoute
 }
 
 /**
@@ -180,6 +192,7 @@ object TabShell {
     fun tabBarVisible(nav: NavStack): Boolean {
         val current = nav.current
         if (current in focused || current is AppRoute.Word || current is AppRoute.WordListStudy ||
+            current is AppRoute.TravelSpotStudy ||
             current is AppRoute.SearchFor || current is AppRoute.TopicChat
         ) {
             return false

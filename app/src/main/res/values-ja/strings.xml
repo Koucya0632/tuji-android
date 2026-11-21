@@ -1187,4 +1187,26 @@
     <string name="review_curve_on_time">時間どおりに復習</string>
     <string name="review_curve_no_review">復習なし</string>
     <string name="review_curve_time">時間 →</string>
+
+    <!-- 跟著 Moira 去旅遊 -->
+    <string name="travel_title">Moiraと旅に出る</string>
+    <string name="travel_entry_subtitle">%1$s · スポット %2$d件</string>
+    <string name="travel_see_map">地図を見る</string>
+    <string name="travel_map_label">%1$sの地図</string>
+    <string name="travel_spot_closed_label">%1$s、準備中</string>
+    <string name="travel_free">無料</string>
+    <string name="travel_other_regions">ほかの地域</string>
+    <string name="travel_words_on_way">単語は準備中です</string>
+    <string name="travel_spot_locked_label">このスポットの学習には永久会員が必要です</string>
+    <string name="travel_study_here">ここの単語を学ぶ</string>
+    <string name="travel_study_needs_member">このスポットは永久会員で学べます</string>
+    <string name="travel_studied_count">学習済み %1$d / %2$d</string>
+    <string name="travel_you_will_see">ここで見かけるもの</string>
+    <string name="travel_all_studied">すべて学習済みです。期限が来たら復習に出ます。</string>
+    <string name="travel_not_open_here">ここは準備中です</string>
+    <string name="travel_not_open">準備中</string>
+    <string name="travel_word_progress">%1$d / %2$d 語</string>
+    <plurals name="travel_things">
+        <item quantity="other">%d個</item>
+    </plurals>
 </resources>

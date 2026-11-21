@@ -1187,4 +1187,26 @@
     <string name="review_curve_on_time">按時複習</string>
     <string name="review_curve_no_review">不複習</string>
     <string name="review_curve_time">時間 →</string>
+
+    <!-- 跟著 Moira 去旅遊 -->
+    <string name="travel_title">跟著 Moira 去旅遊</string>
+    <string name="travel_entry_subtitle">%1$s · %2$d 個景點</string>
+    <string name="travel_see_map">看地圖</string>
+    <string name="travel_map_label">%1$s地圖</string>
+    <string name="travel_spot_closed_label">%1$s，還沒開</string>
+    <string name="travel_free">免費</string>
+    <string name="travel_other_regions">其他地區</string>
+    <string name="travel_words_on_way">字還在路上</string>
+    <string name="travel_spot_locked_label">學習這個景點需要永久會員</string>
+    <string name="travel_study_here">學這裡的字</string>
+    <string name="travel_study_needs_member">學這裡的字需要永久會員</string>
+    <string name="travel_studied_count">學過 %1$d / %2$d</string>
+    <string name="travel_you_will_see">這裡會看到</string>
+    <string name="travel_all_studied">這裡的字都學過了，到期會出現在複習</string>
+    <string name="travel_not_open_here">這裡還沒開</string>
+    <string name="travel_not_open">還沒開</string>
+    <string name="travel_word_progress">%1$d / %2$d 字</string>
+    <plurals name="travel_things">
+        <item quantity="other">%d 樣東西</item>
+    </plurals>
 </resources>

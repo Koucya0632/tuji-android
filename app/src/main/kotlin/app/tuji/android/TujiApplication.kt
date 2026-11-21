@@ -252,6 +252,11 @@ class TujiApplication : Application(), SingletonImageLoader.Factory {
 
     val study: StudyRepository by lazy { StudyRepository(api) }
 
+    /** 跟著 Moira 去旅遊's map — public, so not account-scoped. */
+    val travelStore: app.tuji.android.travel.TravelStore by lazy {
+        app.tuji.android.travel.TravelStore(app.tuji.android.core.network.TravelRepository(api))
+    }
+
     /** 物見 — reading, saving, reporting and the 封鎖 list, all one client. */
     val atlas: app.tuji.android.core.network.AtlasRepository by lazy {
         app.tuji.android.core.network.AtlasRepository(api)

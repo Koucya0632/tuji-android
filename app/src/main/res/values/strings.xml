@@ -1187,4 +1187,27 @@
     <string name="review_curve_on_time">Reviewed on time</string>
     <string name="review_curve_no_review">No review</string>
     <string name="review_curve_time">Time →</string>
+
+    <!-- 跟著 Moira 去旅遊 -->
+    <string name="travel_title">Travel with Moira</string>
+    <string name="travel_entry_subtitle">%1$s · %2$d to visit</string>
+    <string name="travel_see_map">See the map</string>
+    <string name="travel_map_label">Map of %1$s</string>
+    <string name="travel_spot_closed_label">%1$s, not open yet</string>
+    <string name="travel_free">Free</string>
+    <string name="travel_other_regions">Other regions</string>
+    <string name="travel_words_on_way">Words are on the way</string>
+    <string name="travel_spot_locked_label">Studying this spot needs Lifetime Membership</string>
+    <string name="travel_study_here">Study these words</string>
+    <string name="travel_study_needs_member">Lifetime Membership unlocks this spot</string>
+    <string name="travel_studied_count">%1$d / %2$d studied</string>
+    <string name="travel_you_will_see">You\'ll see here</string>
+    <string name="travel_all_studied">All studied. They\'ll come back in review when due.</string>
+    <string name="travel_not_open_here">Not open yet</string>
+    <string name="travel_not_open">Not open yet</string>
+    <string name="travel_word_progress">%1$d / %2$d words</string>
+    <plurals name="travel_things">
+        <item quantity="one">%d thing</item>
+        <item quantity="other">%d things</item>
+    </plurals>
 </resources>

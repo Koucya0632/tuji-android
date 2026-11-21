@@ -11,6 +11,13 @@ import app.tuji.android.wordlists.WordListButton
 import app.tuji.android.wordlists.WordListDetailScreen
 import app.tuji.android.wordlists.WordListDetailViewModel
 import app.tuji.android.wordlists.WordListQueue
+import app.tuji.android.core.network.StudyQueueReading
+import app.tuji.android.core.study.TravelDecisions
+import app.tuji.android.travel.SpotQueue
+import app.tuji.android.travel.TravelCityScreen
+import app.tuji.android.travel.TravelDestinationScreen
+import app.tuji.android.travel.TravelEntryBand
+import app.tuji.android.travel.TravelSpotScreen
 import app.tuji.android.wordlists.WordListsScreen
 import app.tuji.android.membership.MembershipOffer
 import app.tuji.android.membership.CreditPackButtons
@@ -645,6 +652,12 @@ private fun SignedInScreens(
         ).also { it.load() }
     }
     val communityExplore by community.explore.collectAsStateWithLifecycle()
+    // 跟著 Moira 去旅遊: asked when 物見 is shown, per language pair.
+    val travel by app.travelStore.state.collectAsStateWithLifecycle()
+    val onCommunity = nav.tab == AppRoute.Community
+    LaunchedEffect(onCommunity, uiLang, direction) {
+        if (onCommunity) app.travelStore.loadIfNeeded(uiLang, direction)
+    }
     val communitySaved by community.saved.collectAsStateWithLifecycle()
     val communityMe by community.me.collectAsStateWithLifecycle()
     val communityBlocked by community.blocked.collectAsStateWithLifecycle()
@@ -838,7 +851,12 @@ private fun SignedInScreens(
     // accident.
     // A session from a 詞表 is the same flow with a different source of cards.
     val listStudy = nav.current as? AppRoute.WordListStudy
-    val studyFlow: AppRoute = when (listStudy?.mode) {
+    // …and one from a 景點, likewise: no 再來一輪, since the follow-up counts
+    // every word due, not this spot's.
+    val spotStudy = nav.current as? AppRoute.TravelSpotStudy
+    val sourcedQueue: StudyQueueReading? = listStudy?.let { WordListQueue(app.study, it.listId) }
+        ?: spotStudy?.let { SpotQueue(app.travelStore.remote, it.spotId) }
+    val studyFlow: AppRoute = when (listStudy?.mode ?: spotStudy?.mode) {
         StudyMode.New -> AppRoute.LearnNew
         StudyMode.Review -> AppRoute.Review
         null -> nav.current
@@ -866,7 +884,7 @@ private fun SignedInScreens(
             val haptics = rememberTujiHaptics()
             val vm = remember(nav.current) {
                 ReviewViewModel(
-                    queues = listStudy?.let { WordListQueue(app.study, it.listId) } ?: app.study,
+                    queues = sourcedQueue ?: app.study,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -878,7 +896,11 @@ private fun SignedInScreens(
                     hints = app.onboarding,
                     haptics = haptics,
                 ).also {
-                    if (listStudy != null) it.load(StudyMode.Review, limit = WordListQueue.REVIEW_LIMIT) else it.load(StudyMode.Review)
+                    when {
+                        listStudy != null -> it.load(StudyMode.Review, limit = WordListQueue.REVIEW_LIMIT)
+                        spotStudy != null -> it.load(StudyMode.Review, limit = TravelDecisions.SPOT_QUEUE_LIMIT)
+                        else -> it.load(StudyMode.Review)
+                    }
                 }
             }
             // 再來一輪's count: what is still due once this round's answers have
@@ -889,7 +911,7 @@ private fun SignedInScreens(
             var remainingDue by remember(vm) { mutableIntStateOf(0) }
             LaunchedEffect(vm, roundFinished) {
                 remainingDue = 0
-                if (!roundFinished || listStudy != null) return@LaunchedEffect
+                if (!roundFinished || sourcedQueue != null) return@LaunchedEffect
                 vm.awaitWrites()
                 remainingDue = runCatching { app.study.stats(direction).stats?.due ?: 0 }
                     .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
@@ -899,7 +921,7 @@ private fun SignedInScreens(
                 vm = vm,
                 remainingDue = remainingDue,
                 // A 個人詞表 session's summary would count every due word, not the list's.
-                onAnotherRound = if (listStudy == null) ({ vm.anotherRound() }) else null,
+                onAnotherRound = if (sourcedQueue == null) ({ vm.anotherRound() }) else null,
                 noteFor = { id -> if (notesExist) wordNotes.byWordId[id]?.body else null },
                 showChinese = settings.showZh,
                 fullDetail = { wordId ->
@@ -939,7 +961,7 @@ private fun SignedInScreens(
             val haptics = rememberTujiHaptics()
             val vm = remember(nav.current) {
                 NewFlowViewModel(
-                    queues = listStudy?.let { WordListQueue(app.study, it.listId) } ?: app.study,
+                    queues = sourcedQueue ?: app.study,
                     writer = app.answerWriter,
                     direction = direction,
                     uiLang = uiLang,
@@ -959,6 +981,9 @@ private fun SignedInScreens(
                         // iOS; the list is its own selection, so no themes.
                         if (listStudy != null) {
                             StudyQuotas.NewQueue(limit = settings.dailyGoal.coerceAtLeast(1), categories = emptyList())
+                        } else if (spotStudy != null) {
+                            // A spot is learned in one sitting, not paced by the daily goal.
+                            StudyQuotas.NewQueue(limit = TravelDecisions.SPOT_QUEUE_LIMIT, categories = emptyList())
                         } else {
                             StudyQuotas.newQueue(
                                 goal = settings.dailyGoal,
@@ -1205,6 +1230,11 @@ private fun SignedInScreens(
                     // Not the learning policy: 物見 is other people's shelves,
                     // and none of the numbers this table is about are on it.
                     onRefresh = { community.reload(withSaved = true) },
+                    travelEntry = travel.destinations.firstOrNull()
+                        ?.takeIf { TravelDecisions.showsEntry(travel.destinations) }
+                        ?.let { destination ->
+                            { TravelEntryBand(destination) { nav = nav.push(AppRoute.TravelDestination(destination.id)) } }
+                        },
                 )
 
                 AppRoute.Me -> AccountScreen(
@@ -1936,6 +1966,36 @@ private fun SignedInScreens(
                     )
                 }
 
+                is AppRoute.TravelDestination -> TravelDestinationScreen(
+                    state = travel,
+                    destinationId = route.destinationId,
+                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
+                    onOpenCity = { nav = nav.push(AppRoute.TravelCity(it, route.destinationId)) },
+                )
+
+                is AppRoute.TravelCity -> TravelCityScreen(
+                    state = travel,
+                    cityId = route.cityId,
+                    destinationId = route.destinationId,
+                    scores = scores.byId,
+                    studyable = studyable,
+                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
+                    onOpenSpot = { nav = nav.push(AppRoute.TravelSpot(it)) },
+                )
+
+                is AppRoute.TravelSpot -> TravelSpotScreen(
+                    state = travel,
+                    spotId = route.spotId,
+                    words = catalog.words,
+                    scores = scores.byId,
+                    nextReview = scores.nextReviewById,
+                    studyable = studyable,
+                    onRetry = { scope.launch { app.travelStore.reload(uiLang, direction) } },
+                    onOpenWord = { nav = nav.push(AppRoute.Word(it)) },
+                    onStudy = { mode -> nav = nav.push(AppRoute.TravelSpotStudy(route.spotId, mode)) },
+                    onNeedsMembership = openMembership,
+                )
+
                 is AppRoute.Shelf -> AtlasThemeScreen(
                     category = catalog.categories.firstOrNull { it.id == route.categoryId },
                     words = CategoryShelf.words(route.categoryId, studyWords),
@@ -2195,7 +2255,8 @@ private fun hasBackBar(route: AppRoute): Boolean = when (route) {
     // whose bar carries 更多.
     is AppRoute.PublicItem,
     AppRoute.Settings, AppRoute.StudyThemes, AppRoute.Capture, AppRoute.BlockedAuthors, AppRoute.Membership,
-    is AppRoute.ManageCard -> true
+    is AppRoute.ManageCard,
+    is AppRoute.TravelDestination, is AppRoute.TravelCity, is AppRoute.TravelSpot -> true
     else -> false
 }
 

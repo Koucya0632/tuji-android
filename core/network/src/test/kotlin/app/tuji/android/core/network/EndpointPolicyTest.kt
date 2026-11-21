@@ -56,3 +56,30 @@ class EndpointPolicyTest {
         assertFalse(Endpoint.AtlasCollection("c").descriptor.policy.access.mayBeCachedAcrossCallers)
     }
 }
+
+/** 跟著 Moira 去旅遊's two requests — iOS `TravelTests`' request half. */
+class TravelEndpointTest {
+    @Test
+    fun `the map is public and scoped by both languages`() {
+        val d = Endpoint.Travel("zh-Hant", app.tuji.android.core.model.LearningDirection.ZH_JA).descriptor
+        assertTrue(d.path == "/api/travel")
+        assertTrue(d.query.map { it.first } == listOf("lang", "learning"))
+        assertTrue(d.query.last().second == "zh-ja")
+        assertTrue(d.policy.access == EndpointAccess.Anonymous)
+    }
+
+    @Test
+    fun `a spot queue names the spot and is the person's own`() {
+        val d = Endpoint.StudySpotQueue(
+            spotId = "akihabara",
+            mode = app.tuji.android.core.model.StudyMode.New,
+            limit = 30,
+            lang = "zh-Hant",
+            learning = app.tuji.android.core.model.LearningDirection.ZH_JA,
+        ).descriptor
+        assertTrue(d.path == "/api/study/queue")
+        assertTrue(d.query.firstOrNull { it.first == "spot" }?.second == "akihabara")
+        assertFalse(d.query.any { it.first == "category" || it.first == "list" })
+        assertTrue(d.policy == EndpointPolicy.PrivateFresh)
+    }
+}
