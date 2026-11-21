@@ -103,7 +103,7 @@ fun themeScenes(shell: ShellContext, categoryId: String, from: AppRoute): (@Comp
 fun WordScenes(shell: ShellContext, wordId: String, fromScene: String?, from: AppRoute, modifier: Modifier) {
     if (!shell.direction.hasScenes) return
     Box(modifier) {
-        WordSceneSection(shell.app.scenes, wordId, fromScene?.let(::SceneId), shell.uiLanguage) {
+        WordSceneSection(shell.app.scenes, wordId, fromScene?.let(::SceneId), shell.uiLanguage, shell.sceneMember) {
             shell.openScene(it, shell.from(from)::push)
         }
     }
