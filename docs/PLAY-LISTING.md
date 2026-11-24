@@ -1,5 +1,9 @@
 # Play 商店頁與隱私權標籤（草稿）
 
+> **第 2 節「商店頁文案」已過時，不要照抄。** 商店頁文字的正本在 [`docs/play-listing/`](play-listing/README.md)。
+> 這裡的舊草稿有對外說法的問題：名稱「Tuji — Picture Dictionary」、單字總數（「557 everyday words」），
+> 以及「real recordings, not synthesised speech」（場面是合成語音）。其餘章節（應用程式資訊、隱私權標籤）不受影響。
+
 上架需要的**文字**都在這裡，四種語言各一份。上傳需要通過驗證的開發者帳號，
 所以這份文件先寫好，帳號一通過就是貼上去。
 
