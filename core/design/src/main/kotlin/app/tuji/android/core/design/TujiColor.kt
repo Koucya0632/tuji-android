@@ -94,6 +94,31 @@ object TujiColor {
     /** Behind sheets and dialogs. */
     val Scrim = Color(0xFF191512).copy(alpha = 0.4f)
 
+    // 旅遊地圖
+    //
+    // A travel map is a drawn place, like the 場面 machines: its sea and its
+    // regions are the picture, not UI state, so they sit outside the six
+    // meanings. Nothing but a travel map uses them.
+
+    /** The sea on a country map; water on a city map. */
+    val MapSea = Color(0xFFC9E0E6)
+
+    /** Names written on water. */
+    val MapSeaInk = Color(0xFF2F5866)
+
+    /** Rivers on a city map, a shade deeper than the sea so a thin line reads. */
+    val MapRiver = Color(0xFF9CC9D6)
+
+    /** One colour per region, in the order the server's `tone` counts. A region with nothing open is [Paper3]. */
+    val MapTones = listOf(
+        Color(0xFFA9D69B), Color(0xFFF4A9B8), Color(0xFFF28C6B),
+        Color(0xFFCFDD8A), Color(0xFFF5C84B), Color(0xFF8ED1C0),
+        Color(0xFFC3A6E0), Color(0xFF8DB5EE), Color(0xFFF6B89A),
+    )
+
+    /** A region's colour; an older server sends no tone, and gets the brand's. */
+    fun mapTone(tone: Int?): Color = if (tone == null) BrandPrimary else MapTones[Math.floorMod(tone, MapTones.size)]
+
     /**
      * What a ground becomes under the finger.
      *

@@ -147,4 +147,58 @@ class TravelTest {
         assertEquals(338f, TravelDecisions.cellOffset(13f, side, 2f))
         assertEquals(0f, TravelDecisions.cellSide(100f, 0, 2f))
     }
+
+    // The 2026-11 maps
+
+    private val mapped = json.decodeFromString<TravelResponse>(
+        """
+        {"destinations":[{"id":"japan","name":"日本","grid":{"columns":14,"rows":16},
+          "map":{"aspect":0.7617,"coast":[[[0.1,0.1],[0.2,0.1],[0.2,0.2]]],
+            "frames":[{"at":[0.03,0.03],"size":[0.23,0.21]}],"seas":[{"name":"太平洋","at":[0.5,0.7]}]},
+          "regions":[
+            {"id":"kanto","name":"關東","tiles":[[9,7]],"nameAt":[11.8,7.5],"cityIds":["tokyo"],
+             "tone":2,"shapes":[[[0.6,0.6],[0.7,0.6],[0.7,0.7]]],"labelAt":[0.62,0.6],
+             "card":{"at":[0.73,0.57],"width":0.25,"pointAt":[0.64,0.6],"lines":["東京  日光"]}},
+            {"id":"chubu","name":"中部","tiles":[[8,6]],"nameAt":[5.8,7.5],"cityIds":[],
+             "tone":3,"shapes":[[[0.4,0.5],[0.5,0.5],[0.5,0.6]]],"labelAt":[0.49,0.59]}],
+          "cities":[{"id":"tokyo","name":"東京","regionId":"kanto","aspect":1.04,"mapAt":[0.62,0.62],"shapes":[],
+            "spots":[
+              {"id":"asakusa","name":"淺草","native":"浅草","reading":"あさくさ","at":[0.76,0.08],"label":"right",
+               "wordIds":["paper-lantern"],"open":true,"free":false,"pin":[0.75,0.1],"tag":[0.75,0.2]},
+              {"id":"ueno","name":"上野","native":"上野","reading":"うえの","at":[0.5,0.15],"label":"left",
+               "wordIds":["park"],"open":true,"free":true,"pin":[0.6,0.1],"tag":[0.6,0.3],"tagShort":true}]}]}]}
+        """.trimIndent(),
+    ).destinations.single()
+
+    @Test fun `the outline, cards and tags decode`() {
+        val outline = mapped.outline!!
+        assertEquals(3, outline.coast.single().size)
+        assertEquals(listOf("太平洋"), outline.seas.map { it.name })
+        assertEquals(2, mapped.region("kanto")?.tone)
+        assertEquals(listOf("東京  日光"), mapped.region("kanto")?.card?.lines)
+        assertEquals(null, mapped.region("chubu")?.card)
+        val tokyo = mapped.city("tokyo")!!
+        assertEquals(TravelPoint(0.62f, 0.62f), tokyo.mapAt)
+        assertTrue(tokyo.hasTaggedMap)
+        assertTrue(tokyo.spots[1].tagShort)
+        assertFalse(tokyo.spots[0].tagShort)
+    }
+
+    @Test fun `an older answer draws the grid and the nudged spots`() {
+        assertEquals(null, destination.map)
+        assertEquals(null, destination.outline)
+        assertFalse(destination.city("tokyo")!!.hasTaggedMap)
+    }
+
+    @Test fun `a card is as tall as its lines`() {
+        assertEquals(56f, TravelDecisions.cardHeight(1))
+        assertEquals(74f, TravelDecisions.cardHeight(2))
+    }
+
+    @Test fun `a city row names its open spots and the closed regions share one row`() {
+        assertEquals("淺草、上野", TravelDecisions.spotPreview(mapped.city("tokyo")!!))
+        assertEquals(", ", TravelDecisions.listSeparator(listOf("Asakusa", "Ueno")))
+        assertEquals("由", TravelDecisions.stampMark("由布院"))
+        assertEquals(listOf("chubu"), TravelDecisions.closedRegions(mapped).map { it.id })
+    }
 }

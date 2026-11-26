@@ -1302,4 +1302,9 @@
     <string name="travel_spot_mine_empty">None of your photos here yet</string>
     <string name="travel_spot_others_empty">Nobody has shared one here yet</string>
     <string name="travel_spot_photographed">%1$s, you\'ve taken photos here</string>
+    <string name="travel_cities_spots">%1$d cities · %2$d spots</string>
+    <string name="travel_cities">%1$d cities</string>
+    <string name="travel_spots">%1$d spots</string>
+    <string name="travel_words">%1$d words</string>
+    <string name="travel_photographed_here">You took a photo here</string>
 </resources>

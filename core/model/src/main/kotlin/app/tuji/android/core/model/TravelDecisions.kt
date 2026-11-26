@@ -81,4 +81,30 @@ object TravelDecisions {
 
     /** Left or top edge of the cell at `index` along one axis. */
     fun cellOffset(index: Float, side: Float, gap: Float): Float = index * (side + gap)
+
+    // The 2026-11 maps
+
+    /**
+     * A card's height on the country map, in dp: a 20dp name over 18dp lines,
+     * inside 6dp and 8dp of padding and a 2dp border. The server breaks the
+     * lines so at most two fit (tuji-web lib/travel/destinations.ts `cardLines`).
+     */
+    fun cardHeight(lines: Int): Float = 4f + 6f + 20f + lines * 18f + 8f
+
+    /** The open spots' names, for the line under a city's name. */
+    fun spotPreview(city: TravelCity): String {
+        val names = city.openSpots.map { it.name }
+        return names.joinToString(listSeparator(names))
+    }
+
+    /** 「、」 between Chinese or Japanese names, a comma between others. */
+    fun listSeparator(names: List<String>): String =
+        if (names.all { name -> name.firstOrNull()?.let { it.code >= 0x2E80 } ?: true }) "、" else ", "
+
+    /** The character on a city's stamp. */
+    fun stampMark(name: String): String = if (name.isEmpty()) "" else name.substring(0, Character.charCount(name.codePointAt(0)))
+
+    /** Regions with nothing open yet, in map order — named together on one row. */
+    fun closedRegions(destination: TravelDestination): List<TravelRegion> =
+        destination.regions.filter { destination.openCities(it).isEmpty() }
 }

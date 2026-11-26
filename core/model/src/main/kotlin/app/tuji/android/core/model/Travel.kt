@@ -17,6 +17,12 @@ import kotlinx.serialization.encoding.Encoder
  *
  * The maps arrive as shapes, not pictures: a grid of cells for the country and
  * a few lines for a city. Names come already in the interface language.
+ *
+ * Since 2026-11 the server also sends a second map of each: the country's real
+ * outline split into regions (`map`, region `shapes`, `card`, city `mapAt`),
+ * and each spot's true place with its tag (`pin`, `tag`). Every one of those
+ * fields is optional, so an answer without them still decodes and the grid and
+ * the nudged `at` are drawn instead.
  */
 @Serializable
 data class TravelResponse(val destinations: List<TravelDestination> = emptyList())
@@ -33,8 +39,16 @@ data class TravelDestination(
     val grid: TravelGrid,
     val regions: List<TravelRegion> = emptyList(),
     val cities: List<TravelCity> = emptyList(),
+    /** Missing from an older server; the grid is drawn then. */
+    val map: TravelCountryOutline? = null,
 ) {
     fun city(id: String): TravelCity? = cities.firstOrNull { it.id == id }
+
+    fun region(id: String): TravelRegion? = regions.firstOrNull { it.id == id }
+
+    /** The outline, when every region came with its area. */
+    val outline: TravelCountryOutline?
+        get() = map?.takeIf { regions.all { !it.shapes.isNullOrEmpty() } }
 
     /** The cities of one region that have something to open. */
     fun openCities(region: TravelRegion): List<TravelCity> =
@@ -53,6 +67,46 @@ data class TravelRegion(
     /** Where the name goes, in cells; may sit between cells. */
     val nameAt: TravelPoint,
     val cityIds: List<String> = emptyList(),
+    /** The rest draws the 2026-11 map. Which map colour fills the region. */
+    val tone: Int? = null,
+    /** Closed areas, 0–1 inside the country map. */
+    val shapes: List<List<TravelPoint>>? = null,
+    /** Where the plain name goes when there is no card. */
+    val labelAt: TravelPoint? = null,
+    /** Only while the region has an open city. */
+    val card: TravelRegionCard? = null,
+)
+
+/**
+ * A region's card on the country map: its top-left corner, its width as a
+ * share of the map's, where its line ends on the region, and the open cities'
+ * names, already broken into lines by the server.
+ */
+@Serializable
+data class TravelRegionCard(
+    val at: TravelPoint,
+    val width: Float,
+    val pointAt: TravelPoint,
+    val lines: List<String> = emptyList(),
+)
+
+/** A box drawn round an inset at its own scale (沖繩). */
+@Serializable
+data class TravelMapFrame(val at: TravelPoint, val size: TravelPoint)
+
+/** A name written on the sea. */
+@Serializable
+data class TravelMapLabel(val name: String, val at: TravelPoint)
+
+/** The country drawn from its real outline (2026-11 map). */
+@Serializable
+data class TravelCountryOutline(
+    /** Width over height. */
+    val aspect: Float,
+    /** Every island's outline, drawn as the coast. */
+    val coast: List<List<TravelPoint>> = emptyList(),
+    val frames: List<TravelMapFrame> = emptyList(),
+    val seas: List<TravelMapLabel> = emptyList(),
 )
 
 @Serializable
@@ -64,8 +118,13 @@ data class TravelCity(
     val aspect: Float,
     val shapes: List<TravelMapShape> = emptyList(),
     val spots: List<TravelSpot> = emptyList(),
+    /** The city's dot on the country map (2026-11 map). */
+    val mapAt: TravelPoint? = null,
 ) {
     val openSpots: List<TravelSpot> get() = spots.filter { it.open }
+
+    /** Every spot has a true place and a tag, so the 2026-11 map can be drawn. */
+    val hasTaggedMap: Boolean get() = spots.isNotEmpty() && spots.all { it.pin != null && it.tag != null }
 }
 
 /**
@@ -112,6 +171,12 @@ data class TravelSpot(
     val open: Boolean = false,
     /** A non-member may study this spot. */
     val free: Boolean = false,
+    /** The spot's true place, 0–1 inside the city map (2026-11 map). */
+    val pin: TravelPoint? = null,
+    /** The centre of the tag carrying the spot's number and name. */
+    val tag: TravelPoint? = null,
+    /** The tag carries only the number: the name had no room. */
+    val tagShort: Boolean = false,
 ) {
     val labelOnLeft: Boolean get() = label == "left"
 }

@@ -58,6 +58,7 @@ fun TravelHost(route: TravelRoute, shell: ShellContext) {
                     if (shell.spotLocked(travel.spot(id))) shell.openMembership() else page.push(TravelRoute.Spot(id))
                 },
                 photographed = SpotTagging.photographedSpotIds(manage.items),
+                words = shell.learning.catalog.words.associateBy { it.id },
             )
         }
 
