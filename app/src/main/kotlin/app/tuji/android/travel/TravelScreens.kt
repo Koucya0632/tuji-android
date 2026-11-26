@@ -20,13 +20,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +45,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -79,6 +85,7 @@ import app.tuji.android.core.model.TravelSpotAccess
 import app.tuji.android.core.model.TravelSpotState
 import app.tuji.android.core.model.Word
 import app.tuji.android.wordlists.BlankState
+import kotlinx.coroutines.launch
 
 /**
  * The way into 跟著 Moira 去旅遊, at the top of 物見's 探索 shelf.
@@ -122,10 +129,15 @@ fun TravelEntryBand(destination: TravelDestination, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun TravelScaffold(onBack: () -> Unit, bottomPadding: Dp, content: @Composable () -> Unit) {
+private fun TravelScaffold(
+    onBack: () -> Unit,
+    bottomPadding: Dp,
+    scroll: ScrollState = rememberScrollState(),
+    content: @Composable () -> Unit,
+) {
     Column(Modifier.fillMaxSize().background(TujiColor.Paper)) {
         TujiNavBar(onLeading = onBack, leadingLabel = stringResource(R.string.atlas_back))
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
             content()
             Spacer(Modifier.height(bottomPadding + TujiSpace.S6))
         }
@@ -144,8 +156,12 @@ private fun TravelMissing(phase: TravelStore.Phase, onRetry: () -> Unit) {
 }
 
 /**
- * One destination: the country as a grid of cells, lit where there is a city
- * to open, and those cities listed underneath.
+ * One destination: the country's map, and its open cities listed underneath.
+ *
+ * The map is the real outline when the server sends one ([TravelCountryMap]):
+ * a colour per region with somewhere to go and a card naming its cities, which
+ * scrolls the list to them; the cities are grouped by region. An older server
+ * sends only cells, drawn as the grid with one flat list.
  */
 @Composable
 fun TravelDestinationScreen(
@@ -156,13 +172,30 @@ fun TravelDestinationScreen(
     onRetry: () -> Unit,
     onOpenCity: (String) -> Unit,
 ) {
-    TravelScaffold(onBack, bottomPadding) {
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val sectionTops = remember { mutableStateMapOf<String, Int>() }
+    TravelScaffold(onBack, bottomPadding, scroll) {
         val destination = state.destination(destinationId)
         if (destination == null) {
             TravelMissing(state.phase, onRetry)
             return@TravelScaffold
         }
         TujiScreenTitle(destination.name)
+        val outline = destination.outline
+        if (outline != null) {
+            Text(
+                stringResource(R.string.travel_cities_spots, destination.cities.size, TravelDecisions.openSpotCount(destination)),
+                style = TujiType.bodySm,
+                color = TujiColor.Ink2,
+                modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(bottom = TujiSpace.S3),
+            )
+            TravelCountryMap(destination, outline) { regionId ->
+                sectionTops[regionId]?.let { top -> scope.launch { scroll.animateScrollTo(top) } }
+            }
+            RegionSections(destination, onOpenCity) { id, top -> sectionTops[id] = top }
+            return@TravelScaffold
+        }
         TravelGridMap(destination, Modifier.padding(horizontal = TujiSpace.S4).padding(bottom = TujiSpace.S4))
         val open = destination.regions.flatMap { region -> destination.openCities(region).map { region to it } }
         open.forEachIndexed { index, (region, city) ->
@@ -193,6 +226,72 @@ fun TravelDestinationScreen(
                         Text(stringResource(R.string.travel_other_regions), style = TujiType.bodyStrong, color = TujiColor.Ink2)
                         Text(stringResource(R.string.travel_not_open), style = TujiType.bodySm, color = TujiColor.Ink3)
                     }
+                }
+            }
+        }
+    }
+}
+
+/** Each region with an open city: its colour and name, then its cities, then one row for the rest. */
+@Composable
+private fun RegionSections(destination: TravelDestination, onOpenCity: (String) -> Unit, onSectionTop: (String, Int) -> Unit) {
+    destination.regions.filter { destination.openCities(it).isNotEmpty() }.forEach { region ->
+        val cities = destination.openCities(region)
+        Row(
+            Modifier
+                .onGloballyPositioned { onSectionTop(region.id, it.positionInParent().y.toInt()) }
+                .padding(horizontal = TujiSpace.S4)
+                .padding(top = TujiSpace.S4, bottom = TujiSpace.S1)
+                .semantics(mergeDescendants = true) { heading() },
+            horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(12.dp)
+                    .background(TujiColor.mapTone(region.tone), CircleShape)
+                    .border(1.5.dp, TujiColor.Ink, CircleShape),
+            )
+            Text(region.name, style = TujiType.h3, color = TujiColor.Ink)
+            Text(stringResource(R.string.travel_cities, cities.size), style = TujiType.bodySm, color = TujiColor.Ink3)
+        }
+        cities.forEachIndexed { index, city ->
+            if (index > 0) TujiRowDivider()
+            TujiRow(
+                onClick = { onOpenCity(city.id) },
+                trailing = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2), verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.travel_spots, city.openSpots.size), style = TujiType.body, color = TujiColor.Ink2)
+                        TujiGlyph.ArrowRight(size = 14.dp, tint = TujiColor.Ink3)
+                    }
+                },
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
+                    TravelStamp(TravelDecisions.stampMark(city.name), TujiColor.mapTone(region.tone))
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(city.name, style = TujiType.h3, color = TujiColor.Ink)
+                        Text(
+                            TravelDecisions.spotPreview(city),
+                            style = TujiType.bodySm,
+                            color = TujiColor.Ink3,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
+    }
+    val closed = TravelDecisions.closedRegions(destination)
+    if (closed.isNotEmpty()) {
+        Spacer(Modifier.height(TujiSpace.S4))
+        TujiRowDivider()
+        TujiRow {
+            Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S3), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(44.dp).background(TujiColor.Paper3, CircleShape).border(TujiBorder.Bw2, TujiColor.Ink3, CircleShape))
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(closed.joinToString("・") { it.name }, style = TujiType.bodyStrong, color = TujiColor.Ink2)
+                    Text(stringResource(R.string.travel_not_open), style = TujiType.bodySm, color = TujiColor.Ink3)
                 }
             }
         }
@@ -246,7 +345,7 @@ private fun TravelGridMap(destination: TravelDestination, modifier: Modifier = M
 
 /** Places `content` so its centre is at (`x`, `y`) of the parent, whatever its own size. */
 @Composable
-private fun CenteredAt(x: Dp, y: Dp, content: @Composable () -> Unit) {
+internal fun CenteredAt(x: Dp, y: Dp, content: @Composable () -> Unit) {
     val (px, py) = with(LocalDensity.current) { x.roundToPx() to y.roundToPx() }
     Layout(content) { measurables, constraints ->
         val placeable = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
@@ -273,6 +372,8 @@ fun TravelCityScreen(
     onOpenSpot: (String) -> Unit,
     /** Spots where this account has tagged a 自製圖鑑 card — marked 拍過. */
     photographed: Set<String> = emptySet(),
+    /** The catalogue by id: each spot's card shows its first word's picture. */
+    words: Map<String, Word> = emptyMap(),
 ) {
     TravelScaffold(onBack, bottomPadding) {
         val city = state.city(cityId, destinationId)
@@ -281,6 +382,42 @@ fun TravelCityScreen(
             return@TravelScaffold
         }
         TujiScreenTitle(city.name)
+        if (city.hasTaggedMap) {
+            val region = state.destination(destinationId)?.region(city.regionId)
+            val tone = TujiColor.mapTone(region?.tone)
+            if (region != null) {
+                Text(
+                    stringResource(R.string.travel_place_spots, region.name, city.openSpots.size),
+                    style = TujiType.bodySm,
+                    color = TujiColor.Ink2,
+                    modifier = Modifier.padding(horizontal = TujiSpace.S4).padding(bottom = TujiSpace.S3),
+                )
+            }
+            TravelCityTagMap(city, tone, photographed, onOpenSpot)
+            Spacer(Modifier.height(TujiSpace.S3))
+            Column(Modifier.padding(horizontal = TujiSpace.S4), verticalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                city.spots.withIndex().chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TujiSpace.S2)) {
+                        pair.forEach { (index, spot) ->
+                            TravelSpotCard(
+                                spot = spot,
+                                number = index + 1,
+                                tone = tone,
+                                cover = spot.wordIds.firstOrNull()?.let(words::get),
+                                access = TravelDecisions.access(spot, studyable),
+                                gated = studyable != null,
+                                studied = TravelDecisions.studiedCount(spot, scores),
+                                photographed = spot.id in photographed,
+                                onOpen = if (spot.open) ({ onOpenSpot(spot.id) }) else null,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            return@TravelScaffold
+        }
         TravelCityMap(city, photographed, onOpenSpot)
         Spacer(Modifier.height(TujiSpace.S3))
         city.spots.forEachIndexed { index, spot ->

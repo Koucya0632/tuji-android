@@ -1302,4 +1302,9 @@
     <string name="travel_spot_mine_empty">还没有在这里拍的卡片</string>
     <string name="travel_spot_others_empty">还没有人分享在这里拍的</string>
     <string name="travel_spot_photographed">%1$s，你在这里拍过</string>
+    <string name="travel_cities_spots">%1$d 个城市 · %2$d 个景点</string>
+    <string name="travel_cities">%1$d 个城市</string>
+    <string name="travel_spots">%1$d 个景点</string>
+    <string name="travel_words">%1$d 个词</string>
+    <string name="travel_photographed_here">你在这里拍过</string>
 </resources>

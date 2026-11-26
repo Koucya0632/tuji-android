@@ -1302,4 +1302,9 @@
     <string name="travel_spot_mine_empty">ここで撮ったカードはまだありません</string>
     <string name="travel_spot_others_empty">ここで撮ったものはまだ共有されていません</string>
     <string name="travel_spot_photographed">%1$s、ここで撮ったことがあります</string>
+    <string name="travel_cities_spots">%1$d都市・スポット %2$d件</string>
+    <string name="travel_cities">%1$d都市</string>
+    <string name="travel_spots">スポット %1$d件</string>
+    <string name="travel_words">%1$d語</string>
+    <string name="travel_photographed_here">ここで撮った</string>
 </resources>
